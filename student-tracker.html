@@ -437,9 +437,10 @@
 </header>
 
 <div class="nav-tabs">
-  <button class="nav-tab active" onclick="showView('today')">📅 Today</button>
-  <button class="nav-tab" onclick="showView('week')">🗓️ Week</button>
-  <button class="nav-tab" onclick="showView('roster')">👥 All Pupils</button>
+  <button class="nav-tab active" onclick="showView('today')">Today</button>
+  <button class="nav-tab" onclick="showView('week')">Week</button>
+  <button class="nav-tab" onclick="showView('roster')">All Pupils</button>
+  <button class="nav-tab" onclick="showView('waiting')">Waiting</button>
 </div>
 
 <!-- TODAY VIEW -->
@@ -469,6 +470,12 @@
   </details>
   <input type="file" id="ics-file-input" accept=".ics" style="display:none" onchange="handleIcsUpload(event)">
   <div id="week-grid"></div>
+</div>
+
+<!-- WAITING LIST VIEW -->
+<div id="view-waiting" class="view">
+  <button onclick="openAddWaitingModal()" style="width:100%;background:#29789E;color:#fff;border:none;border-radius:var(--radius);padding:15px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;margin-bottom:18px">＋ Add to waiting list</button>
+  <div id="waiting-list"></div>
 </div>
 
 <!-- ROSTER VIEW -->
@@ -555,8 +562,20 @@
       </div>
     </div>
     <div class="field-group">
-      <label class="field-label">Date of birth (optional)</label>
+      <label class="field-label">Birthday (optional)</label>
       <input type="date" id="new-dob">
+    </div>
+    <div class="field-group" id="new-schoolyear-group">
+      <label class="field-label">School year (optional)</label>
+      <select id="new-schoolyear">
+        <option value="">— not set —</option>
+        <option>Reception</option>
+        <option>Year 1</option><option>Year 2</option><option>Year 3</option>
+        <option>Year 4</option><option>Year 5</option><option>Year 6</option>
+        <option>Year 7</option><option>Year 8</option><option>Year 9</option>
+        <option>Year 10</option><option>Year 11</option>
+        <option>Sixth Form / College</option>
+      </select>
     </div>
     <div class="field-group">
       <label class="field-label">Parent / contact email (optional)</label>
@@ -600,6 +619,7 @@
       <input type="text" id="piece-search" placeholder="Search…" oninput="filterPieceDB()" style="flex:1;min-width:120px">
       <select id="piece-cat-filter" onchange="filterPieceDB()" style="width:auto">
         <option value="">All categories</option>
+        <option value="My Library">My Library</option>
         <option value="Scalability">Scalability</option>
         <option value="Scales & Exercises">Scales & Exercises</option>
         <option value="Technique">Technique</option>
@@ -628,8 +648,8 @@
       <input type="text" id="export-term" placeholder="e.g. Autumn Term 2026">
     </div>
     <div class="modal-actions" style="flex-direction:column;gap:10px">
-      <button class="btn-primary" onclick="exportAll()">🖨️ All pupils — one report</button>
-      <button class="btn-primary" style="background:var(--violin)" onclick="exportIndividual()">🖨️ One pupil — search by name</button>
+      <button class="btn-primary" onclick="exportAll()">🖨️&nbsp; All pupils — one report</button>
+      <button class="btn-primary" style="background:var(--violin)" onclick="exportIndividual()">🖨️&nbsp; One pupil — search by name</button>
       <button class="btn-ghost" onclick="closeExportModal()">Cancel</button>
     </div>
   </div>
@@ -694,8 +714,24 @@
       </div>
     </div>
     <div class="field-group">
-      <label class="field-label">Date of birth (optional)</label>
+      <label class="field-label">Birthday (optional)</label>
       <input type="date" id="edit-dob">
+    </div>
+    <div class="field-group">
+      <label class="field-label">School year (optional)</label>
+      <select id="edit-schoolyear">
+        <option value="">— not set —</option>
+        <option>Reception</option>
+        <option>Year 1</option><option>Year 2</option><option>Year 3</option>
+        <option>Year 4</option><option>Year 5</option><option>Year 6</option>
+        <option>Year 7</option><option>Year 8</option><option>Year 9</option>
+        <option>Year 10</option><option>Year 11</option>
+        <option>Sixth Form / College</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Lesson rate (£ per lesson)</label>
+      <input type="number" id="edit-rate" placeholder="e.g. 45" min="0" step="0.50" style="width:100%;font-family:'DM Sans',sans-serif;font-size:0.93rem;border:1.5px solid #e0ddd8;border-radius:8px;padding:9px 11px;background:var(--paper);color:var(--ink)">
     </div>
     <div class="field-group">
       <label class="field-label">Parent / contact email (optional)</label>
@@ -718,6 +754,26 @@
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeDeleteModal()">Cancel</button>
       <button class="btn-primary" style="background:#c0392b" onclick="confirmDeletePupil()">Yes, remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- WAITING LIST MODAL -->
+<div class="modal-overlay" id="waiting-modal">
+  <div class="modal">
+    <h2>Add to waiting list</h2>
+    <div class="field-group"><label class="field-label">Name</label><input type="text" id="wait-name" placeholder="Name"></div>
+    <div class="field-group"><label class="field-label">Instrument</label>
+      <div class="radio-group">
+        <div class="radio-opt"><input type="radio" name="wait-inst" id="wait-viola" value="Viola" checked><label for="wait-viola"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2F5C1A;margin-right:5px;vertical-align:middle"></span>Viola</label></div>
+        <div class="radio-opt"><input type="radio" name="wait-inst" id="wait-violin" value="Violin"><label for="wait-violin"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#29789E;margin-right:5px;vertical-align:middle"></span>Violin</label></div>
+      </div>
+    </div>
+    <div class="field-group"><label class="field-label">Contact email / phone</label><input type="text" id="wait-contact" placeholder="Email or phone number"></div>
+    <div class="field-group"><label class="field-label">Notes (optional)</label><textarea rows="2" id="wait-notes" placeholder="Any extra info…"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeAddWaitingModal()">Cancel</button>
+      <button class="btn-primary" onclick="addToWaitingList()">Add</button>
     </div>
   </div>
 </div>
@@ -780,10 +836,11 @@ const TECH_OPTIONS = [
 ];
 
 // ── STATE ──────────────────────────────────────────────────────────────────
-let students    = JSON.parse(localStorage.getItem('studio_students')      || '[]');
-let customChips = JSON.parse(localStorage.getItem('studio_custom_chips')  || '[]');
-// oneOffMoves: { studentId: { week: 'YYYY-Www', day: 'Monday', time: '14:00' } }
-let oneOffMoves = JSON.parse(localStorage.getItem('studio_one_off_moves') || '{}');
+let students     = JSON.parse(localStorage.getItem('studio_students')      || '[]');
+let customChips  = JSON.parse(localStorage.getItem('studio_custom_chips')  || '[]');
+let customPieces = JSON.parse(localStorage.getItem('studio_custom_pieces') || '[]');
+let oneOffMoves  = JSON.parse(localStorage.getItem('studio_one_off_moves') || '{}');
+let waitingList  = JSON.parse(localStorage.getItem('studio_waiting_list')  || '[]');
 
 let currentFilter  = 'all';
 let prevView       = 'roster';
@@ -791,9 +848,11 @@ let movingStudentId = null;
 
 // ── PERSISTENCE ───────────────────────────────────────────────────────────
 function save() {
-  localStorage.setItem('studio_students',      JSON.stringify(students));
-  localStorage.setItem('studio_custom_chips',  JSON.stringify(customChips));
-  localStorage.setItem('studio_one_off_moves', JSON.stringify(oneOffMoves));
+  localStorage.setItem('studio_students',       JSON.stringify(students));
+  localStorage.setItem('studio_custom_chips',   JSON.stringify(customChips));
+  localStorage.setItem('studio_custom_pieces',  JSON.stringify(customPieces));
+  localStorage.setItem('studio_one_off_moves',  JSON.stringify(oneOffMoves));
+  localStorage.setItem('studio_waiting_list',   JSON.stringify(waitingList));
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
@@ -853,11 +912,12 @@ function showView(name) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
   const tabs = document.querySelectorAll('.nav-tab');
-  const map = {today:0, week:1, roster:2};
+  const map = {today:0, week:1, roster:2, waiting:3};
   if (map[name] !== undefined) tabs[map[name]].classList.add('active');
-  if (name === 'today')  renderToday();
-  if (name === 'week')   renderWeek();
-  if (name === 'roster') renderRoster();
+  if (name === 'today')   renderToday();
+  if (name === 'week')    renderWeek();
+  if (name === 'roster')  renderRoster();
+  if (name === 'waiting') renderWaiting();
 }
 
 function goBack() {
@@ -1062,6 +1122,7 @@ function openAddModal() {
   document.getElementById('new-time').value = '';
   document.getElementById('new-day').value = '';
   document.getElementById('new-dob').value = '';
+  document.getElementById('new-schoolyear').value = '';
   document.getElementById('new-email').value = '';
   document.getElementById('add-modal').classList.add('open');
   setTimeout(() => document.getElementById('new-name').focus(), 100);
@@ -1083,10 +1144,11 @@ function addStudent() {
   const frequency  = document.querySelector('input[name="frequency"]:checked').value;
   const duration   = document.querySelector('input[name="duration"]:checked').value;
   const dob        = document.getElementById('new-dob').value;
+  const schoolYear = document.getElementById('new-schoolyear').value;
   const email      = document.getElementById('new-email').value.trim();
   students.push({
     id: Date.now().toString(),
-    name, instrument, level, pupilType, lessonDay, lessonTime, frequency, duration, dob, email,
+    name, instrument, level, pupilType, lessonDay, lessonTime, frequency, duration, dob, schoolYear, email,
     pieces: [''], techFocus: [],
     goals: {longTerm:'',medium:'',shortTerm:'',thisWeek:''},
     nextLesson: '', duringScratch: '', log: []
@@ -1141,7 +1203,8 @@ function renderDetail(s) {
   const piecesHTML = (s.pieces&&s.pieces.length?s.pieces:['']).map((p,i)=>
     `<div class="piece-item">
       <input type="text" placeholder="Piece or exercise…" value="${esc(p)}"
-        oninput="updatePiece('${s.id}',${i},this.value)">
+        oninput="updatePiece('${s.id}',${i},this.value)"
+        onblur="offerSavePieceToLibrary('${s.id}',${i},this.value)">
       <button class="remove-piece-btn" onclick="removePiece('${s.id}',${i})" title="Remove">×</button>
     </div>`).join('');
 
@@ -1168,10 +1231,12 @@ function renderDetail(s) {
           <span class="badge badge-${s.instrument}">${instrDot(s.instrument)}${s.instrument}</span>
           <span class="badge badge-${s.level}">${s.level}</span>
           <span class="badge" style="background:var(--warm);color:var(--muted)">${(s.pupilType||'child')==='adult'?'Adult':'School age'}</span>
+          ${s.rate ? `<span class="badge" style="background:#dff0d8;color:#2F5C1A">£${s.rate} per lesson</span>` : ''}
           ${slot.day?`<span class="badge" style="background:var(--warm);color:var(--muted)">${slot.day}${slot.time?' '+slot.time:''}${s.duration?' · '+s.duration+'min':''}</span>`:''}
         </div>
-        ${s.dob || s.email ? `<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;font-size:0.8rem;color:var(--muted)">
+        ${s.dob || s.email || s.schoolYear ? `<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;font-size:0.8rem;color:var(--muted)">
           ${s.dob ? `<span>${birthdayDisplay(s.dob)}</span>` : ''}
+          ${s.schoolYear ? `<span>📚 ${esc(s.schoolYear)}</span>` : ''}
           ${s.email ? `<span>✉ <a href="mailto:${esc(s.email)}" style="color:var(--viola)">${esc(s.email)}</a></span>` : ''}
         </div>` : ''}
       </div>
@@ -1179,11 +1244,13 @@ function renderDetail(s) {
       <button onclick="openEditModal('${s.id}')" style="background:none;border:1.5px solid var(--viola);border-radius:10px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--viola);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Edit pupil">✏️ Edit</button>
     </div>
 
-    <div class="moment-tabs">
-      <button class="moment-tab active" onclick="switchMoment(this,'panel-before')">📖 Before</button>
-      <button class="moment-tab" onclick="switchMoment(this,'panel-during')">✏️ During</button>
-      <button class="moment-tab" onclick="switchMoment(this,'panel-after')">💾 After</button>
-      <button class="moment-tab" onclick="switchMoment(this,'panel-goals')">🎯 Goals</button>
+    <div class="moment-tabs" style="flex-wrap:wrap">
+      <button class="moment-tab active" onclick="switchMoment(this,'panel-before')">Before</button>
+      <button class="moment-tab" onclick="switchMoment(this,'panel-during')">During</button>
+      <button class="moment-tab" onclick="switchMoment(this,'panel-after')">After</button>
+      <button class="moment-tab" onclick="switchMoment(this,'panel-goals')">Goals</button>
+      <button class="moment-tab" onclick="switchMoment(this,'panel-contacts')">Contacts</button>
+      <button class="moment-tab" onclick="switchMoment(this,'panel-history')">History</button>
     </div>
 
     <!-- BEFORE -->
@@ -1236,15 +1303,95 @@ function renderDetail(s) {
     <!-- AFTER -->
     <div class="moment-panel" id="panel-after">
       <div class="section-card">
-        <div class="section-label">📝 Lesson notes</div>
+        <div class="section-label">Attendance — today's lesson</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+          ${['present','absent-late','absent-notice','cancelled'].map(status => {
+            const labels = {
+              'present':       '✅ Present',
+              'absent-late':   '❌ Absent — last minute (charges apply)',
+              'absent-notice': '🔔 Absent — good notice (no charge)',
+              'cancelled':     '🚫 Cancelled by me'
+            };
+            const last = (s.log||[]).slice(-1)[0];
+            const cur = last && last.attendance ? last.attendance : '';
+            return `<button onclick="setAttendance('${s.id}','${status}')"
+              style="padding:8px 12px;border-radius:9px;border:1.5px solid ${cur===status?'var(--viola)':'#e0ddd8'};
+              background:${cur===status?'var(--viola)':'transparent'};color:${cur===status?'#fff':'var(--muted)'};
+              font-family:\'DM Sans\',sans-serif;font-size:0.8rem;cursor:pointer;font-weight:${cur===status?'600':'400'};
+              text-align:left;line-height:1.4">${labels[status]}</button>`;
+          }).join('')}
+        </div>
+        <div class="save-toast" id="toast-attendance-${s.id}">✓ Attendance saved</div>
+      </div>
+      <div class="section-card">
+        <div class="section-label">Lesson notes</div>
         <textarea rows="4" placeholder="What went well, what to remember for next time…"
           id="after-note-${s.id}"></textarea>
         <button class="save-btn" onclick="saveLog('${s.id}')">Add to lesson log</button>
         <div class="save-toast" id="toast-after-${s.id}">✓ Added to log</div>
       </div>
       <div class="section-card">
-        <div class="section-label">📚 Lesson history</div>
+        <div class="section-label">Lesson history</div>
         ${logHTML}
+      </div>
+    </div>
+
+    <!-- CONTACTS -->
+    <div class="moment-panel" id="panel-contacts">
+      <div class="section-card">
+        <div class="section-label">Parent / contact log</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <select id="contact-type-${s.id}" style="flex:1">
+            <option value="Email sent">Email sent</option>
+            <option value="Email received">Email received</option>
+            <option value="Phone call">Phone call</option>
+            <option value="Message sent">Message sent</option>
+            <option value="Message received">Message received</option>
+            <option value="Invoice sent">Invoice sent</option>
+            <option value="Payment received">Payment received</option>
+            <option value="In person">In person</option>
+          </select>
+        </div>
+        <textarea rows="3" placeholder="Note about the contact…" id="contact-note-${s.id}"></textarea>
+        <button class="save-btn" onclick="saveContact('${s.id}')">Log contact</button>
+        <div class="save-toast" id="toast-contact-${s.id}">✓ Contact logged</div>
+      </div>
+      ${(s.contacts||[]).length ? `
+      <div class="section-card">
+        <div class="section-label">Contact history</div>
+        ${[...(s.contacts||[])].reverse().map(c=>`
+          <div class="log-entry">
+            <div class="log-date">${c.date} · ${c.type}</div>
+            <div class="log-text">${esc(c.note)}</div>
+          </div>`).join('')}
+      </div>` : ''}
+    </div>
+
+    <!-- HISTORY -->
+    <div class="moment-panel" id="panel-history">
+      <div class="section-card">
+        <div class="section-label">Completed pieces</div>
+        ${(s.completedPieces||[]).length === 0
+          ? `<p style="color:var(--muted);font-size:0.88rem">No completed pieces yet. Move a current piece here when it\'s finished.</p>`
+          : (s.completedPieces||[]).map((p,i)=>`
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--warm)">
+              <span style="flex:1;font-size:0.9rem">✓ ${esc(p.title)}</span>
+              <span style="font-size:0.75rem;color:var(--muted)">${p.date||''}</span>
+              <button onclick="restorePiece('${s.id}',${i})" style="background:none;border:none;color:var(--muted);font-size:0.8rem;cursor:pointer" title="Move back to current">↩</button>
+            </div>`).join('')}
+        <div style="margin-top:12px">
+          <div class="section-label" style="margin-bottom:6px">Move current piece to completed</div>
+          ${(s.pieces||[]).filter(Boolean).map((p,i)=>`
+            <button onclick="completePiece('${s.id}','${esc(p)}')"
+              style="display:block;width:100%;text-align:left;padding:8px 12px;margin-bottom:6px;border-radius:9px;
+              border:1.5px solid #e0ddd8;background:transparent;font-family:\'DM Sans\',sans-serif;
+              font-size:0.85rem;cursor:pointer;color:var(--ink)">✓ Mark done: ${esc(p)}</button>`).join('')}
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-label">Attendance summary</div>
+        ${attendanceSummary(s)}
       </div>
     </div>
 
@@ -1365,9 +1512,7 @@ function birthdayDisplay(dob) {
   if (!dob) return '';
   const d = new Date(dob);
   const today = new Date();
-  const age = today.getFullYear() - d.getFullYear();
-  const formatted = d.toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
-  // Check if birthday is within next 14 days
+  const formatted = d.toLocaleDateString('en-GB', {day:'numeric', month:'long'});
   const thisYear = new Date(today.getFullYear(), d.getMonth(), d.getDate());
   const diff = (thisYear - today) / (1000 * 60 * 60 * 24);
   const soon = diff >= 0 && diff <= 14;
@@ -1376,9 +1521,9 @@ function birthdayDisplay(dob) {
   const soonNext = diffNext >= 0 && diffNext <= 14;
   if (soon || soonNext) {
     const days = soon ? Math.round(diff) : Math.round(diffNext);
-    return `🎂 ${formatted} (age ${age}${soon?'':', turning '+(age+1)}) — birthday in ${days} day${days!==1?'s':''}!`;
+    return `🎂 Birthday ${formatted} — in ${days} day${days!==1?'s':''}!`;
   }
-  return `Born: ${formatted} (age ${age})`;
+  return `🎂 Birthday: ${formatted}`;
 }
 
 
@@ -1396,8 +1541,10 @@ function openEditModal(id) {
   document.querySelector('input[name="edit-frequency"][value="' + freq + '"]').checked = true;
   const dur = s.duration || '60';
   document.querySelector('input[name="edit-duration"][value="' + dur + '"]').checked = true;
-  document.getElementById('edit-dob').value   = s.dob   || '';
-  document.getElementById('edit-email').value = s.email || '';
+  document.getElementById('edit-dob').value        = s.dob        || '';
+  document.getElementById('edit-schoolyear').value = s.schoolYear || '';
+  document.getElementById('edit-email').value      = s.email      || '';
+  document.getElementById('edit-rate').value       = s.rate       || '';
   document.getElementById('edit-modal').classList.add('open');
 }
 function closeEditModal() {
@@ -1415,7 +1562,9 @@ function saveEditModal() {
   s.frequency  = document.querySelector('input[name="edit-frequency"]:checked').value;
   s.duration   = document.querySelector('input[name="edit-duration"]:checked').value;
   s.dob        = document.getElementById('edit-dob').value;
+  s.schoolYear = document.getElementById('edit-schoolyear').value;
   s.email      = document.getElementById('edit-email').value.trim();
+  s.rate       = document.getElementById('edit-rate').value;
   save();
   closeEditModal();
   renderDetail(s);
@@ -1674,7 +1823,45 @@ function closeImportModal() {
   document.getElementById('import-modal').classList.remove('open');
 }
 
-// ── PIECE DATABASE ────────────────────────────────────────────────────────
+function offerSavePieceToLibrary(studentId, idx, value) {
+  const val = value.trim();
+  if (!val) return;
+  // Check it's not already in the built-in or custom library
+  const alreadyIn = PIECE_DB.some(p => p.title.toLowerCase() === val.toLowerCase())
+    || customPieces.some(p => p.title.toLowerCase() === val.toLowerCase());
+  if (alreadyIn) return;
+  // Show a small toast-style prompt
+  const toastId = 'save-piece-toast-' + studentId + '-' + idx;
+  // Remove any existing
+  const old = document.getElementById(toastId);
+  if (old) old.remove();
+  const toast = document.createElement('div');
+  toast.id = toastId;
+  toast.style.cssText = 'background:#05270B;color:#fff;border-radius:10px;padding:10px 14px;font-size:0.82rem;margin-top:6px;display:flex;align-items:center;justify-content:space-between;gap:10px;';
+  toast.innerHTML = `<span>Add "<strong>${val}</strong>" to your library?</span>
+    <div style="display:flex;gap:6px;flex-shrink:0">
+      <button onclick="savePieceToLibrary('${studentId}',${idx},'${val.replace(/'/g,"\\'")}');document.getElementById('${toastId}').remove()"
+        style="background:#8AB640;color:#05270B;border:none;border-radius:6px;padding:5px 10px;font-size:0.8rem;font-weight:700;cursor:pointer">Yes</button>
+      <button onclick="document.getElementById('${toastId}').remove()"
+        style="background:none;border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:6px;padding:5px 10px;font-size:0.8rem;cursor:pointer">No</button>
+    </div>`;
+  // Insert after the piece item
+  const piecesEl = document.getElementById('pieces-list-' + studentId);
+  if (piecesEl) piecesEl.parentNode.insertBefore(toast, piecesEl.nextSibling);
+  // Auto-dismiss after 8 seconds
+  setTimeout(() => { if (document.getElementById(toastId)) document.getElementById(toastId).remove(); }, 8000);
+}
+
+function savePieceToLibrary(studentId, idx, title) {
+  const trimmed = title.trim();
+  if (!trimmed) return;
+  if (customPieces.some(p => p.title.toLowerCase() === trimmed.toLowerCase())) return;
+  customPieces.push({ title: trimmed, composer: '', grade: '', cat: 'My Library' });
+  save();
+  showToast('toast-during-' + studentId); // reuse existing toast element nearby
+}
+
+
 
 const PIECE_DB = [
   // SCALABILITY
@@ -1762,13 +1949,112 @@ const PIECE_DB = [
   { title:'Violin Star 3', composer:'Edward Huws Jones', grade:'Grade 1-2', cat:'Beginner Repertoire - Violin' },
 ];
 
+// ── ATTENDANCE ────────────────────────────────────────────────────────────
+function setAttendance(id, status) {
+  const s = getStudent(id); if (!s) return;
+  if (!s.log) s.log = [];
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  let entry = s.log.find(e => e.date === today);
+  if (!entry) { entry = { date: today, text: '', attendance: status }; s.log.push(entry); }
+  else { entry.attendance = status; }
+  save(); showToast('toast-attendance-' + id); renderDetail(s);
+  document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===2) t.click(); });
+}
+
+function attendanceSummary(s) {
+  const log = s.log || [];
+  const counts = { present:0, 'absent-late':0, 'absent-notice':0, cancelled:0 };
+  log.forEach(e => { if (e.attendance && counts[e.attendance] !== undefined) counts[e.attendance]++; });
+  const total = Object.values(counts).reduce((a,b)=>a+b,0);
+  if (total === 0) return '<p style="color:var(--muted);font-size:0.88rem">No attendance recorded yet.</p>';
+  return `<div style="font-size:0.88rem;line-height:2">
+    <div>✅ Present: <strong>${counts.present}</strong></div>
+    <div>❌ Late cancel (charges): <strong>${counts['absent-late']}</strong></div>
+    <div>🔔 Good notice (no charge): <strong>${counts['absent-notice']}</strong></div>
+    <div>🚫 Cancelled by teacher: <strong>${counts.cancelled}</strong></div>
+    <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--warm)">Total: <strong>${total}</strong></div>
+  </div>`;
+}
+
+// ── CONTACT LOG ───────────────────────────────────────────────────────────
+function saveContact(id) {
+  const s = getStudent(id); if (!s) return;
+  const note = document.getElementById('contact-note-' + id).value.trim();
+  if (!note) return;
+  const type = document.getElementById('contact-type-' + id).value;
+  if (!s.contacts) s.contacts = [];
+  s.contacts.push({ date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}), type, note });
+  document.getElementById('contact-note-' + id).value = '';
+  save(); showToast('toast-contact-' + id); renderDetail(s);
+  document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===4) t.click(); });
+}
+
+// ── COMPLETED PIECES ──────────────────────────────────────────────────────
+function completePiece(id, title) {
+  const s = getStudent(id); if (!s) return;
+  if (!s.completedPieces) s.completedPieces = [];
+  s.completedPieces.push({ title, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) });
+  s.pieces = (s.pieces||[]).filter(p => p !== title);
+  if (s.pieces.length === 0) s.pieces = [''];
+  save(); renderDetail(s);
+  document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===5) t.click(); });
+}
+function restorePiece(id, idx) {
+  const s = getStudent(id); if (!s) return;
+  const piece = (s.completedPieces||[])[idx]; if (!piece) return;
+  s.completedPieces.splice(idx, 1);
+  if (!s.pieces) s.pieces = [];
+  s.pieces.push(piece.title);
+  save(); renderDetail(s);
+  document.querySelectorAll('.moment-tab')[0].click();
+}
+
+// ── WAITING LIST ──────────────────────────────────────────────────────────
+function renderWaiting() {
+  const list = document.getElementById('waiting-list');
+  if (!list) return;
+  if (waitingList.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="big">📋</div><p>No one on the waiting list yet.</p></div>`;
+    return;
+  }
+  list.innerHTML = waitingList.map((w,i) => `
+    <div class="section-card" style="margin-bottom:10px">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:1rem;margin-bottom:4px">${esc(w.name)}</div>
+          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:4px">${instrDot(w.instrument.toLowerCase())}${w.instrument} · Added ${w.date}</div>
+          ${w.contact ? `<div style="font-size:0.8rem;color:var(--muted)">✉ ${esc(w.contact)}</div>` : ''}
+          ${w.notes ? `<div style="font-size:0.85rem;margin-top:6px">${esc(w.notes)}</div>` : ''}
+        </div>
+        <button onclick="removeFromWaiting(${i})" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px">×</button>
+      </div>
+    </div>`).join('');
+}
+function openAddWaitingModal() {
+  document.getElementById('wait-name').value = '';
+  document.getElementById('wait-contact').value = '';
+  document.getElementById('wait-notes').value = '';
+  document.getElementById('waiting-modal').classList.add('open');
+  setTimeout(() => document.getElementById('wait-name').focus(), 100);
+}
+function closeAddWaitingModal() { document.getElementById('waiting-modal').classList.remove('open'); }
+function addToWaitingList() {
+  const name = document.getElementById('wait-name').value.trim(); if (!name) return;
+  const instrument = document.querySelector('input[name="wait-inst"]:checked').value;
+  const contact = document.getElementById('wait-contact').value.trim();
+  const notes = document.getElementById('wait-notes').value.trim();
+  waitingList.push({ name, instrument, contact, notes, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) });
+  save(); closeAddWaitingModal(); renderWaiting();
+}
+function removeFromWaiting(idx) { waitingList.splice(idx,1); save(); renderWaiting(); }
+
 let pieceDBStudentId = null;
 
 function openPieceDB(studentId) {
   pieceDBStudentId = studentId;
   document.getElementById('piece-search').value = '';
   document.getElementById('piece-cat-filter').value = '';
-  renderPieceDB(PIECE_DB);
+  renderPieceDB([...customPieces, ...PIECE_DB]);
   document.getElementById('piece-db-modal').classList.add('open');
 }
 function closePieceDB() {
@@ -1778,8 +2064,9 @@ function closePieceDB() {
 function filterPieceDB() {
   const search = document.getElementById('piece-search').value.toLowerCase();
   const cat = document.getElementById('piece-cat-filter').value;
-  const filtered = PIECE_DB.filter(p => {
-    const matchSearch = !search || p.title.toLowerCase().includes(search) || p.composer.toLowerCase().includes(search);
+  const allPieces = [...customPieces, ...PIECE_DB];
+  const filtered = allPieces.filter(p => {
+    const matchSearch = !search || p.title.toLowerCase().includes(search) || (p.composer||'').toLowerCase().includes(search);
     const matchCat = !cat || p.cat === cat;
     return matchSearch && matchCat;
   });
@@ -1841,6 +2128,7 @@ function buildPupilHTML(s, term) {
       <h2>${s.name}</h2>
       <div class="pupil-meta">
         ${s.instrument} · ${s.level} · ${(s.pupilType||'child')==='adult'?'Adult':'School age'}
+        ${s.schoolYear ? ` · ${s.schoolYear}` : ''}
         ${slot.day ? ` · ${slot.day}${slot.time?' '+slot.time:''}` : ''}
         ${s.frequency==='fortnightly'?' · Fortnightly':''}
       </div>
@@ -1892,7 +2180,8 @@ function exportHTML(pupils, term) {
 </style>
 </head>
 <body>
-<button class="print-btn" onclick="window.print()">🖨️ Save as PDF / Print</button>
+<button class="print-btn" onclick="window.print()">🖨️&nbsp; Save as PDF / Print</button>
+<button onclick="window.close()" style="background:none;border:1.5px solid #2F5C1A;color:#2F5C1A;padding:10px 20px;border-radius:8px;font-size:0.9rem;cursor:pointer;margin-bottom:32px;margin-left:10px">← Close report</button>
 <h1>Studio Notebook</h1>
 <div class="report-meta">${termLabel} · ${pupils.length} pupil${pupils.length!==1?'s':''} · Generated ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
 ${pupils.map(s => buildPupilHTML(s, term)).join('')}
