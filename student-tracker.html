@@ -469,6 +469,8 @@
     <button class="filter-chip active" data-filter="all" onclick="setFilter(this,'all')">All</button>
     <button class="filter-chip" data-filter="viola" onclick="setFilter(this,'viola')">🟣 Viola</button>
     <button class="filter-chip" data-filter="violin" onclick="setFilter(this,'violin')">🔵 Violin</button>
+    <button class="filter-chip" data-filter="child" onclick="setFilter(this,'child')">🧒 Children</button>
+    <button class="filter-chip" data-filter="adult" onclick="setFilter(this,'adult')">🧑 Adults</button>
     <button class="filter-chip" data-filter="beginner" onclick="setFilter(this,'beginner')">Beginner</button>
     <button class="filter-chip" data-filter="intermediate" onclick="setFilter(this,'intermediate')">Intermediate</button>
     <button class="filter-chip" data-filter="advanced" onclick="setFilter(this,'advanced')">Advanced</button>
@@ -503,6 +505,13 @@
         <div class="radio-opt"><input type="radio" name="level" id="lv-beg" value="beginner" checked><label for="lv-beg">🌱 Beginner</label></div>
         <div class="radio-opt"><input type="radio" name="level" id="lv-int" value="intermediate"><label for="lv-int">🎵 Intermediate</label></div>
         <div class="radio-opt"><input type="radio" name="level" id="lv-adv" value="advanced"><label for="lv-adv">⭐ Advanced</label></div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Pupil type</label>
+      <div class="radio-group">
+        <div class="radio-opt"><input type="radio" name="pupiltype" id="type-child" value="child" checked><label for="type-child">🧒 Child</label></div>
+        <div class="radio-opt"><input type="radio" name="pupiltype" id="type-adult" value="adult"><label for="type-adult">🧑 Adult</label></div>
       </div>
     </div>
     <div class="field-group">
@@ -543,6 +552,55 @@
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeMoveModal()">Cancel</button>
       <button class="btn-primary" onclick="confirmMove()">Move lesson</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PUPIL MODAL -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <h2>Edit Pupil</h2>
+    <div class="field-group">
+      <label class="field-label">Name</label>
+      <input type="text" id="edit-name" placeholder="Pupil's name">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Instrument</label>
+      <div class="radio-group">
+        <div class="radio-opt"><input type="radio" name="edit-instrument" id="edit-inst-viola" value="viola"><label for="edit-inst-viola">🟣 Viola</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-instrument" id="edit-inst-violin" value="violin"><label for="edit-inst-violin">🔵 Violin</label></div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Level</label>
+      <div class="radio-group">
+        <div class="radio-opt"><input type="radio" name="edit-level" id="edit-lv-beg" value="beginner"><label for="edit-lv-beg">🌱 Beginner</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-level" id="edit-lv-int" value="intermediate"><label for="edit-lv-int">🎵 Intermediate</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-level" id="edit-lv-adv" value="advanced"><label for="edit-lv-adv">⭐ Advanced</label></div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Pupil type</label>
+      <div class="radio-group">
+        <div class="radio-opt"><input type="radio" name="edit-pupiltype" id="edit-type-child" value="child"><label for="edit-type-child">🧒 Child</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-pupiltype" id="edit-type-adult" value="adult"><label for="edit-type-adult">🧑 Adult</label></div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Lesson day</label>
+      <select id="edit-day">
+        <option value="">— not set —</option>
+        <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+        <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Lesson time (e.g. 14:30)</label>
+      <input type="text" id="edit-time" placeholder="HH:MM" maxlength="5">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveEditModal()">Save changes</button>
     </div>
   </div>
 </div>
@@ -858,7 +916,7 @@ function renderRoster() {
     students.length + ' pupil' + (students.length!==1?'s':'');
 
   let filtered = currentFilter === 'all' ? students
-    : students.filter(s => s.instrument===currentFilter || s.level===currentFilter);
+    : students.filter(s => s.instrument===currentFilter || s.level===currentFilter || (s.pupilType||'child')===currentFilter);
 
   if (students.length === 0) {
     list.innerHTML = `<div class="empty-state"><div class="big">🎶</div><p>No pupils yet.<br>Tap <strong>Add Pupil</strong> to get started.</p></div>`;
@@ -882,6 +940,7 @@ function renderRoster() {
         <div class="student-meta">
           <span class="badge badge-${s.instrument}">${s.instrument==='violin'?'🔵':'🟣'} ${s.instrument}</span>
           <span class="badge badge-${s.level}">${levelEmoji(s.level)} ${s.level}</span>
+          <span class="badge" style="background:var(--warm);color:var(--muted)">${(s.pupilType||'child')==='adult'?'🧑 Adult':'🧒 Child'}</span>
           ${dayLabel}
         </div>
         ${snippet ? `<div class="student-snippet">${esc(snippet)}</div>` : ''}
@@ -909,11 +968,12 @@ function addStudent() {
   if (!name) { document.getElementById('new-name').focus(); return; }
   const instrument = document.querySelector('input[name="instrument"]:checked').value;
   const level      = document.querySelector('input[name="level"]:checked').value;
+  const pupilType  = document.querySelector('input[name="pupiltype"]:checked').value;
   const lessonDay  = document.getElementById('new-day').value;
   const lessonTime = document.getElementById('new-time').value.trim();
   students.push({
     id: Date.now().toString(),
-    name, instrument, level, lessonDay, lessonTime,
+    name, instrument, level, pupilType, lessonDay, lessonTime,
     pieces: [''], techFocus: [],
     goals: {longTerm:'',medium:'',shortTerm:'',thisWeek:''},
     nextLesson: '', duringScratch: '', log: []
@@ -994,10 +1054,12 @@ function renderDetail(s) {
         <div class="student-meta">
           <span class="badge badge-${s.instrument}">${s.instrument==='violin'?'🔵':'🟣'} ${s.instrument}</span>
           <span class="badge badge-${s.level}">${levelEmoji(s.level)} ${s.level}</span>
+          <span class="badge" style="background:var(--warm);color:var(--muted)">${(s.pupilType||'child')==='adult'?'🧑 Adult':'🧒 Child'}</span>
           ${slot.day?`<span class="badge" style="background:var(--warm);color:var(--muted)">${slot.day}${slot.time?' '+slot.time:''}</span>`:''}
         </div>
       </div>
       <button onclick="deletePupil('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:10px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--muted);cursor:pointer;flex-shrink:0;align-self:flex-start" title="Remove pupil">🗑️ Remove</button>
+      <button onclick="openEditModal('${s.id}')" style="background:none;border:1.5px solid var(--viola);border-radius:10px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--viola);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Edit pupil">✏️ Edit</button>
     </div>
 
     <div class="moment-tabs">
@@ -1159,9 +1221,38 @@ function saveLog(id) {
 }
 function saveGoals(id) { save(); showToast(`toast-goals-${id}`); }
 
+function openEditModal(id) {
+  const s = getStudent(id); if (!s) return;
+  document.getElementById('edit-modal').dataset.pupilId = id;
+  document.getElementById('edit-name').value = s.name;
+  document.getElementById('edit-day').value  = s.lessonDay  || '';
+  document.getElementById('edit-time').value = s.lessonTime || '';
+  document.querySelector('input[name="edit-instrument"][value="' + s.instrument + '"]').checked = true;
+  document.querySelector('input[name="edit-level"][value="' + s.level + '"]').checked = true;
+  const pt = s.pupilType || 'child';
+  document.querySelector('input[name="edit-pupiltype"][value="' + pt + '"]').checked = true;
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+}
+function saveEditModal() {
+  const id = document.getElementById('edit-modal').dataset.pupilId;
+  const s = getStudent(id); if (!s) return;
+  s.name       = document.getElementById('edit-name').value.trim() || s.name;
+  s.instrument = document.querySelector('input[name="edit-instrument"]:checked').value;
+  s.level      = document.querySelector('input[name="edit-level"]:checked').value;
+  s.pupilType  = document.querySelector('input[name="edit-pupiltype"]:checked').value;
+  s.lessonDay  = document.getElementById('edit-day').value;
+  s.lessonTime = document.getElementById('edit-time').value.trim();
+  save();
+  closeEditModal();
+  renderDetail(s);
+}
+
+
 function deletePupil(id) {
   const s = getStudent(id); if (!s) return;
-  document.getElementById('delete-pupil-name').textContent = s.name;
   document.getElementById('delete-modal').dataset.pupilId = id;
   document.getElementById('delete-modal').classList.add('open');
 }
@@ -1177,6 +1268,7 @@ function confirmDeletePupil() {
 }
 
 
+function showToast(toastId) {
   const t=document.getElementById(toastId); if(!t)return;
   t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000);
 }
