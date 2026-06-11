@@ -547,6 +547,20 @@
   </div>
 </div>
 
+<!-- DELETE CONFIRMATION MODAL -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal">
+    <h2>Remove pupil?</h2>
+    <p style="font-size:0.88rem;color:var(--muted);margin-bottom:20px;line-height:1.5">
+      This will permanently remove <strong id="delete-pupil-name"></strong> and all their notes. This cannot be undone.
+    </p>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn-primary" style="background:#c0392b" onclick="confirmDeletePupil()">Yes, remove</button>
+    </div>
+  </div>
+</div>
+
 <!-- SYNC URL MODAL -->
 <div class="modal-overlay" id="url-modal">
   <div class="modal">
@@ -975,7 +989,7 @@ function renderDetail(s) {
   el.innerHTML = `
     <div class="detail-header">
       <div class="detail-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
-      <div>
+      <div style="flex:1">
         <div class="detail-name">${s.name}</div>
         <div class="student-meta">
           <span class="badge badge-${s.instrument}">${s.instrument==='violin'?'🔵':'🟣'} ${s.instrument}</span>
@@ -983,6 +997,7 @@ function renderDetail(s) {
           ${slot.day?`<span class="badge" style="background:var(--warm);color:var(--muted)">${slot.day}${slot.time?' '+slot.time:''}</span>`:''}
         </div>
       </div>
+      <button onclick="deletePupil('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:10px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--muted);cursor:pointer;flex-shrink:0;align-self:flex-start" title="Remove pupil">🗑️ Remove</button>
     </div>
 
     <div class="moment-tabs">
@@ -1144,7 +1159,24 @@ function saveLog(id) {
 }
 function saveGoals(id) { save(); showToast(`toast-goals-${id}`); }
 
-function showToast(toastId) {
+function deletePupil(id) {
+  const s = getStudent(id); if (!s) return;
+  document.getElementById('delete-pupil-name').textContent = s.name;
+  document.getElementById('delete-modal').dataset.pupilId = id;
+  document.getElementById('delete-modal').classList.add('open');
+}
+function closeDeleteModal() {
+  document.getElementById('delete-modal').classList.remove('open');
+}
+function confirmDeletePupil() {
+  const id = document.getElementById('delete-modal').dataset.pupilId;
+  students = students.filter(x => x.id !== id);
+  save();
+  closeDeleteModal();
+  showView(prevView);
+}
+
+
   const t=document.getElementById(toastId); if(!t)return;
   t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000);
 }
@@ -1380,6 +1412,52 @@ function closeImportModal() {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────
+
+// Pre-load pupils from calendar if none exist yet
+if (students.length === 0) {
+  const defaultPupils = [
+    { name: 'Penny',      instrument: 'viola',  level: 'intermediate' },
+    { name: 'Anna',       instrument: 'viola',  level: 'intermediate' },
+    { name: 'Oliver',     instrument: 'violin', level: 'beginner' },
+    { name: 'Amelie',     instrument: 'viola',  level: 'intermediate' },
+    { name: 'Caitlin',    instrument: 'viola',  level: 'intermediate' },
+    { name: 'Christopher',instrument: 'viola',  level: 'intermediate' },
+    { name: 'Annabelle',  instrument: 'viola',  level: 'beginner' },
+    { name: 'Eric',       instrument: 'viola',  level: 'intermediate' },
+    { name: 'Abigail',    instrument: 'violin', level: 'beginner' },
+    { name: 'Ethan',      instrument: 'violin', level: 'beginner' },
+    { name: 'Keira',      instrument: 'viola',  level: 'intermediate' },
+    { name: 'Clara',      instrument: 'viola',  level: 'intermediate' },
+    { name: 'Rose',       instrument: 'viola',  level: 'beginner' },
+    { name: 'Oona',       instrument: 'viola',  level: 'intermediate' },
+    { name: 'Tara',       instrument: 'viola',  level: 'intermediate' },
+    { name: 'Amelia',     instrument: 'violin', level: 'beginner' },
+    { name: 'Lucy',       instrument: 'viola',  level: 'intermediate' },
+    { name: 'Marcus',     instrument: 'violin', level: 'intermediate' },
+    { name: 'Chu',        instrument: 'viola',  level: 'advanced' },
+    { name: 'Euan',       instrument: 'viola',  level: 'intermediate' },
+    { name: 'Nicky',      instrument: 'viola',  level: 'advanced' },
+    { name: 'Felicity',   instrument: 'viola',  level: 'intermediate' },
+    { name: 'Paula',      instrument: 'viola',  level: 'advanced' },
+    { name: 'Lillith',    instrument: 'viola',  level: 'beginner' },
+    { name: 'Talia',      instrument: 'viola',  level: 'intermediate' },
+    { name: 'Hanna',      instrument: 'viola',  level: 'intermediate' },
+    { name: 'Ellie',      instrument: 'violin', level: 'beginner' },
+    { name: 'Peter',      instrument: 'viola',  level: 'advanced' },
+    { name: 'Charles',    instrument: 'viola',  level: 'intermediate' },
+    { name: 'Beth',       instrument: 'viola',  level: 'intermediate' },
+  ];
+  students = defaultPupils.map(p => ({
+    id: (Date.now() + Math.random()).toString(),
+    name: p.name, instrument: p.instrument, level: p.level,
+    lessonDay: '', lessonTime: '',
+    pieces: [''], techFocus: [],
+    goals: { longTerm: '', medium: '', shortTerm: '', thisWeek: '' },
+    nextLesson: '', duringScratch: '', log: []
+  }));
+  save();
+}
+
 renderToday();
 renderRoster();
 </script>
