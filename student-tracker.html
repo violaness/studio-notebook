@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Studio Notebook</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --ink:      #1a1a2e;
+    --paper:    #f7f4ef;
+    --warm:     #f0ebe2;
+    --viola:    #6b4f8c;
+    --violin:   #2a6bb8;
+    --string:   #c9a84c;
+    --sage:     #5a7a5a;
+    --muted:    #8a8a9a;
+    --beginner: #5a9a6f;
+    --inter:    #c9883a;
+    --advanced: #7a5ab8;
+    --card-bg:  #ffffff;
+    --shadow:   0 2px 12px rgba(26,26,46,0.08);
+    --radius:   14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; }
+
+  /* ── NAV ── */
+  header {
+    background: var(--ink); padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  header h1 { font-family: 'DM Serif Display', serif; color: var(--string); font-size: 1.3rem; }
+  header span { color: var(--muted); font-size: 0.82rem; }
+
+  .nav-tabs {
+    display: flex; background: var(--ink);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    position: sticky; top: 53px; z-index: 99;
+  }
+  .nav-tab {
+    flex: 1; padding: 11px 8px; border: none; background: transparent;
+    font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500;
+    color: var(--muted); cursor: pointer; text-align: center;
+    border-bottom: 2px solid transparent; transition: all 0.15s;
+  }
+  .nav-tab.active { color: var(--string); border-bottom-color: var(--string); font-weight: 700; }
+
+  /* ── VIEWS ── */
+  .view { display: none; padding: 16px; max-width: 700px; margin: 0 auto; }
+  .view.active { display: block; }
+
+  /* ── TIMETABLE ── */
+  .today-date {
+    font-family: 'DM Serif Display', serif; font-size: 1.4rem;
+    margin-bottom: 4px; color: var(--ink);
+  }
+  .today-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 16px; }
+
+  .timetable-empty {
+    text-align: center; padding: 40px 20px; color: var(--muted);
+  }
+  .timetable-empty .big { font-size: 2.5rem; margin-bottom: 10px; }
+  .timetable-empty p { font-size: 0.9rem; line-height: 1.6; }
+
+  /* lesson summary card */
+  .lesson-summary {
+    background: var(--card-bg); border-radius: var(--radius);
+    box-shadow: var(--shadow); margin-bottom: 12px;
+    border-left: 5px solid transparent; overflow: hidden;
+  }
+  .lesson-summary.viola-card  { border-left-color: var(--viola); }
+  .lesson-summary.violin-card { border-left-color: var(--violin); }
+  .lesson-summary.next-up     { outline: 2px solid var(--string); outline-offset: 1px; }
+
+  .lesson-summary-header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; cursor: pointer;
+  }
+  .ls-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; font-weight: 700; flex-shrink: 0;
+  }
+  .ls-info { flex: 1; min-width: 0; }
+  .ls-name { font-size: 1rem; font-weight: 700; margin-bottom: 3px; }
+  .ls-time { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+  .ls-chevron { color: var(--muted); font-size: 1.1rem; transition: transform 0.2s; flex-shrink: 0; }
+  .lesson-summary.expanded .ls-chevron { transform: rotate(90deg); }
+
+  .lesson-summary-body {
+    display: none; padding: 0 16px 14px; border-top: 1px solid var(--warm);
+  }
+  .lesson-summary.expanded .lesson-summary-body { display: block; }
+
+  .summary-row {
+    display: flex; gap: 8px; margin-top: 10px; align-items: flex-start;
+  }
+  .summary-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; width: 20px; text-align: center; }
+  .summary-content { flex: 1; }
+  .summary-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+  .summary-text { font-size: 0.88rem; line-height: 1.4; color: var(--ink); }
+  .summary-text.muted { color: var(--muted); font-style: italic; }
+
+  .open-notes-btn {
+    display: block; width: 100%; margin-top: 14px;
+    background: var(--viola); color: #fff; border: none;
+    border-radius: 10px; padding: 11px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; text-align: center;
+  }
+  .open-notes-btn:hover { background: #7d5fa0; }
+  .open-notes-btn.violin-btn { background: var(--violin); }
+  .open-notes-btn.violin-btn:hover { background: #3a7bc8; }
+
+  .next-badge {
+    background: var(--string); color: var(--ink);
+    font-size: 0.68rem; font-weight: 800; padding: 2px 8px;
+    border-radius: 999px; letter-spacing: 0.06em; text-transform: uppercase;
+    margin-left: 6px; vertical-align: middle;
+  }
+
+  /* ── WEEK VIEW ── */
+  .week-day { margin-bottom: 20px; }
+  .week-day-header {
+    font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted);
+    padding: 6px 0; margin-bottom: 8px;
+    border-bottom: 1px solid #e8e4de;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .week-day-header.today-header { color: var(--viola); border-bottom-color: var(--viola); }
+  .today-dot { width: 7px; height: 7px; background: var(--viola); border-radius: 50%; }
+
+  .week-slot {
+    background: var(--card-bg); border-radius: 10px;
+    box-shadow: var(--shadow); padding: 12px 14px;
+    margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
+    border-left: 4px solid transparent;
+  }
+  .week-slot.viola-slot  { border-left-color: var(--viola); }
+  .week-slot.violin-slot { border-left-color: var(--violin); }
+  .slot-time { font-size: 0.78rem; font-weight: 700; color: var(--muted); width: 44px; flex-shrink: 0; }
+  .slot-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+  }
+  .slot-info { flex: 1; min-width: 0; }
+  .slot-name { font-size: 0.92rem; font-weight: 600; }
+  .slot-meta { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+  .slot-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .slot-btn {
+    background: none; border: 1.5px solid #e0ddd8; border-radius: 8px;
+    padding: 5px 10px; font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem; font-weight: 600; cursor: pointer; color: var(--muted);
+    white-space: nowrap;
+  }
+  .slot-btn:hover { border-color: var(--viola); color: var(--viola); }
+  .slot-btn.move-btn:hover { border-color: var(--inter); color: var(--inter); }
+
+  .add-slot-btn {
+    width: 100%; background: none; border: 1.5px dashed #d0ccc6;
+    border-radius: 10px; padding: 10px; color: var(--muted);
+    font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .add-slot-btn:hover { border-color: var(--viola); color: var(--viola); }
+
+  /* ── ROSTER ── */
+  #add-btn {
+    width: 100%; background: var(--viola); color: #fff; border: none;
+    border-radius: var(--radius); padding: 15px;
+    font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 600;
+    cursor: pointer; margin-bottom: 18px; letter-spacing: 0.02em;
+  }
+  #add-btn:hover { background: #7d5fa0; }
+
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+  .filter-chip {
+    padding: 6px 13px; border-radius: 999px;
+    border: 1.5px solid var(--muted); background: transparent;
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.15s;
+  }
+  .filter-chip.active, .filter-chip:hover { border-color: var(--viola); background: var(--viola); color: #fff; }
+
+  .student-card {
+    background: var(--card-bg); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 16px 18px; margin-bottom: 10px;
+    cursor: pointer; display: flex; align-items: center; gap: 14px;
+    transition: transform 0.12s, box-shadow 0.12s;
+    border-left: 5px solid transparent;
+  }
+  .student-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,26,46,0.12); }
+  .student-card.viola-card  { border-left-color: var(--viola); }
+  .student-card.violin-card { border-left-color: var(--violin); }
+
+  .student-avatar {
+    width: 46px; height: 46px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0; font-weight: 700;
+  }
+  .avatar-viola  { background: #ede5f7; color: var(--viola); }
+  .avatar-violin { background: #e3edf8; color: var(--violin); }
+
+  .student-info { flex: 1; min-width: 0; }
+  .student-name { font-size: 1rem; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .student-meta { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+  .badge {
+    font-size: 0.7rem; font-weight: 600; padding: 2px 8px;
+    border-radius: 999px; letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .badge-beginner    { background: #e8f5ec; color: var(--beginner); }
+  .badge-intermediate{ background: #fdf0e3; color: var(--inter); }
+  .badge-advanced    { background: #efe8f7; color: var(--advanced); }
+  .badge-viola       { background: #ede5f7; color: var(--viola); }
+  .badge-violin      { background: #e3edf8; color: var(--violin); }
+  .student-snippet { font-size: 0.8rem; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ── STUDENT DETAIL ── */
+  .back-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: none; border: none; color: var(--viola);
+    font-family: 'DM Sans', sans-serif; font-size: 0.92rem; font-weight: 600;
+    cursor: pointer; padding: 0; margin-bottom: 18px;
+  }
+  .detail-header {
+    background: var(--card-bg); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 18px; margin-bottom: 14px;
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+  .detail-avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; flex-shrink: 0; font-weight: 700;
+  }
+  .detail-name { font-family: 'DM Serif Display', serif; font-size: 1.5rem; margin-bottom: 5px; }
+
+  /* ── MOMENT TABS ── */
+  .moment-tabs {
+    display: flex; background: var(--warm); border-radius: var(--radius);
+    padding: 4px; margin-bottom: 14px; gap: 3px;
+  }
+  .moment-tab {
+    flex: 1; padding: 9px 6px; border: none; border-radius: 10px;
+    background: transparent; font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem; font-weight: 500; cursor: pointer; color: var(--muted);
+    transition: all 0.15s; text-align: center;
+  }
+  .moment-tab.active { background: var(--card-bg); color: var(--ink); font-weight: 600; box-shadow: 0 1px 4px rgba(26,26,46,0.1); }
+  .moment-panel { display: none; }
+  .moment-panel.active { display: block; }
+
+  /* ── SECTION CARDS ── */
+  .section-card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; margin-bottom: 12px; }
+  .section-label {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  /* ── GOALS ── */
+  .goal-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+  .goal-emoji { font-size: 1.3rem; width: 30px; flex-shrink: 0; text-align: center; margin-top: 2px; }
+  .goal-block { flex: 1; }
+  .goal-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .goal-label.long-term { color: var(--advanced); }
+  .goal-label.medium    { color: var(--viola); }
+  .goal-label.short     { color: var(--inter); }
+  .goal-label.this-week { color: var(--sage); }
+
+  /* ── INPUTS ── */
+  textarea, input[type="text"] {
+    width: 100%; font-family: 'DM Sans', sans-serif; font-size: 0.93rem;
+    border: 1.5px solid #e0ddd8; border-radius: 8px; padding: 9px 11px;
+    background: var(--paper); color: var(--ink); resize: vertical;
+    transition: border-color 0.15s; line-height: 1.5;
+  }
+  textarea:focus, input[type="text"]:focus { outline: none; border-color: var(--viola); background: #fff; }
+  textarea.quick-note { font-size: 1rem; min-height: 90px; background: #fffdf7; border-style: dashed; }
+
+  .pieces-list { display: flex; flex-direction: column; gap: 7px; }
+  .piece-item { display: flex; gap: 9px; align-items: center; }
+  .piece-item input { flex: 1; }
+  .remove-piece-btn { background: none; border: none; color: var(--muted); font-size: 1.1rem; cursor: pointer; padding: 4px; line-height: 1; flex-shrink: 0; }
+  .remove-piece-btn:hover { color: #c0392b; }
+  .add-piece-btn {
+    background: none; border: 1.5px dashed var(--viola); color: var(--viola);
+    border-radius: 8px; padding: 7px 13px; font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 6px; width: 100%;
+  }
+  .add-piece-btn:hover { background: #ede5f7; }
+
+  /* ── TECH CHIPS ── */
+  .tech-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .tech-chip {
+    padding: 6px 13px; border-radius: 999px; border: 1.5px solid #e0ddd8;
+    background: transparent; font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem; font-weight: 500; cursor: pointer; color: var(--muted); transition: all 0.15s;
+  }
+  .tech-chip.selected { border-color: var(--viola); background: var(--viola); color: #fff; }
+  .tech-chip.custom-chip.selected { border-color: var(--violin); background: var(--violin); }
+  .add-custom-chip-btn {
+    padding: 6px 13px; border-radius: 999px; border: 1.5px dashed var(--muted);
+    background: transparent; font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem; font-weight: 500; cursor: pointer; color: var(--muted); transition: all 0.15s;
+  }
+  .add-custom-chip-btn:hover { border-color: var(--viola); color: var(--viola); }
+  .custom-chip-input-row { display: flex; gap: 7px; margin-top: 9px; align-items: center; }
+  .custom-chip-input-row input { flex: 1; padding: 6px 11px; font-size: 0.86rem; border-radius: 999px; }
+  .custom-chip-input-row .confirm-btn {
+    background: var(--viola); color: #fff; border: none; border-radius: 999px;
+    padding: 6px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
+    font-weight: 600; cursor: pointer; white-space: nowrap;
+  }
+  .custom-chip-input-row .cancel-btn {
+    background: none; border: 1.5px solid #e0ddd8; border-radius: 999px;
+    padding: 6px 12px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
+    cursor: pointer; color: var(--muted);
+  }
+
+  /* ── LOG ── */
+  .log-entry { border-left: 3px solid var(--string); padding: 9px 13px; margin-bottom: 9px; background: var(--warm); border-radius: 0 8px 8px 0; }
+  .log-date { font-size: 0.72rem; color: var(--muted); font-weight: 600; margin-bottom: 4px; letter-spacing: 0.04em; }
+  .log-text { font-size: 0.88rem; line-height: 1.5; }
+
+  /* ── BUTTONS ── */
+  .save-btn {
+    width: 100%; background: var(--sage); color: #fff; border: none;
+    border-radius: var(--radius); padding: 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; margin-top: 8px; letter-spacing: 0.02em;
+  }
+  .save-btn:hover { background: #4a6a4a; }
+  .save-toast { text-align: center; color: var(--sage); font-weight: 600; font-size: 0.88rem; margin-top: 7px; opacity: 0; transition: opacity 0.3s; }
+  .save-toast.show { opacity: 1; }
+
+  /* ── MODALS ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(26,26,46,0.5); z-index: 200;
+    align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card-bg); border-radius: var(--radius);
+    padding: 24px; width: 100%; max-width: 420px;
+    box-shadow: 0 20px 60px rgba(26,26,46,0.25); max-height: 90vh; overflow-y: auto;
+  }
+  .modal h2 { font-family: 'DM Serif Display', serif; font-size: 1.3rem; margin-bottom: 18px; }
+  .field-group { margin-bottom: 14px; }
+  .field-label { display: block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+  .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .radio-opt { flex: 1; min-width: 75px; }
+  .radio-opt input { display: none; }
+  .radio-opt label {
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    padding: 9px 6px; border-radius: 10px; border: 1.5px solid #e0ddd8;
+    cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.15s; text-align: center;
+  }
+  .radio-opt input:checked + label { border-color: var(--viola); background: var(--viola); color: #fff; }
+  .modal-actions { display: flex; gap: 9px; margin-top: 20px; }
+  .btn-primary {
+    flex: 1; background: var(--viola); color: #fff; border: none;
+    border-radius: 10px; padding: 12px; font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem; font-weight: 600; cursor: pointer;
+  }
+  .btn-primary:hover { background: #7d5fa0; }
+  .btn-ghost {
+    padding: 12px 16px; background: none; border: 1.5px solid #e0ddd8;
+    border-radius: 10px; font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem; cursor: pointer; color: var(--muted);
+  }
+  .btn-ghost:hover { border-color: var(--muted); }
+
+  select {
+    width: 100%; font-family: 'DM Sans', sans-serif; font-size: 0.93rem;
+    border: 1.5px solid #e0ddd8; border-radius: 8px; padding: 9px 11px;
+    background: var(--paper); color: var(--ink); -webkit-appearance: none;
+  }
+  select:focus { outline: none; border-color: var(--viola); }
+
+  .empty-state { text-align: center; padding: 44px 20px; color: var(--muted); }
+  .empty-state .big { font-size: 2.8rem; margin-bottom: 10px; }
+  .empty-state p { font-size: 0.9rem; line-height: 1.6; }
+
+  /* ── IMPORT ── */
+  .import-bar {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--warm); border-radius: var(--radius);
+    padding: 12px 14px; margin-bottom: 16px;
+    border: 1.5px dashed #c9c4bc;
+  }
+  .import-bar-text { flex: 1; font-size: 0.82rem; color: var(--muted); line-height: 1.4; }
+  .import-bar-text strong { color: var(--ink); display: block; margin-bottom: 2px; }
+  .import-btn {
+    background: var(--violin); color: #fff; border: none;
+    border-radius: 10px; padding: 9px 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  }
+  .import-btn:hover { background: #3a7bc8; }
+
+  .import-result-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 9px; margin-bottom: 7px;
+    font-size: 0.85rem;
+  }
+  .import-result-row.matched  { background: #e8f5ec; color: var(--sage); }
+  .import-result-row.unmatched{ background: #fdf0e3; color: var(--inter); }
+  .import-result-row.skipped  { background: var(--warm); color: var(--muted); }
+  .import-result-icon { font-size: 1rem; flex-shrink: 0; }
+  .import-result-name { font-weight: 600; }
+  .import-result-detail { font-size: 0.78rem; opacity: 0.8; margin-top: 1px; }
+
+  @media (max-width: 480px) {
+    header h1 { font-size: 1.1rem; }
+    .detail-name { font-size: 1.3rem; }
+    .moment-tab { font-size: 0.75rem; padding: 8px 3px; }
+    .slot-actions { flex-direction: column; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎻 Studio Notebook</h1>
+  <span id="header-count"></span>
+</header>
+
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="showView('today')">📅 Today</button>
+  <button class="nav-tab" onclick="showView('week')">🗓️ Week</button>
+  <button class="nav-tab" onclick="showView('roster')">👥 All Pupils</button>
+</div>
+
+<!-- TODAY VIEW -->
+<div id="view-today" class="view active">
+  <div class="today-date" id="today-heading"></div>
+  <div class="today-sub" id="today-sub"></div>
+  <div id="today-list"></div>
+</div>
+
+<!-- WEEK VIEW -->
+<div id="view-week" class="view">
+  <div class="import-bar">
+    <div class="import-bar-text">
+      <strong>📥 Import from Outlook / Live</strong>
+      Sync via URL, paste .ics text, or upload a file.
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+      <button id="sync-url-btn" class="import-btn" onclick="openUrlModal()">🔗 Sync URL</button>
+      <button class="import-btn" onclick="openPasteModal()">Paste .ics</button>
+      <button class="import-btn" style="background:var(--muted)" onclick="document.getElementById('ics-file-input').click()">Upload file</button>
+    </div>
+  </div>
+  <input type="file" id="ics-file-input" accept=".ics" style="display:none" onchange="handleIcsUpload(event)">
+  <div id="week-grid"></div>
+</div>
+
+<!-- ROSTER VIEW -->
+<div id="view-roster" class="view">
+  <button id="add-btn" onclick="openAddModal()">＋ Add Pupil</button>
+  <div class="filter-row">
+    <button class="filter-chip active" data-filter="all" onclick="setFilter(this,'all')">All</button>
+    <button class="filter-chip" data-filter="viola" onclick="setFilter(this,'viola')">🟣 Viola</button>
+    <button class="filter-chip" data-filter="violin" onclick="setFilter(this,'violin')">🔵 Violin</button>
+    <button class="filter-chip" data-filter="beginner" onclick="setFilter(this,'beginner')">Beginner</button>
+    <button class="filter-chip" data-filter="intermediate" onclick="setFilter(this,'intermediate')">Intermediate</button>
+    <button class="filter-chip" data-filter="advanced" onclick="setFilter(this,'advanced')">Advanced</button>
+  </div>
+  <div id="roster-list"></div>
+</div>
+
+<!-- DETAIL VIEW -->
+<div id="view-detail" class="view">
+  <button class="back-btn" id="back-btn" onclick="goBack()">← Back</button>
+  <div id="detail-content"></div>
+</div>
+
+<!-- ADD PUPIL MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <h2>New Pupil</h2>
+    <div class="field-group">
+      <label class="field-label">Name</label>
+      <input type="text" id="new-name" placeholder="Pupil's name">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Instrument</label>
+      <div class="radio-group">
+        <div class="radio-opt"><input type="radio" name="instrument" id="inst-viola" value="viola" checked><label for="inst-viola">🟣 Viola</label></div>
+        <div class="radio-opt"><input type="radio" name="instrument" id="inst-violin" value="violin"><label for="inst-violin">🔵 Violin</label></div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Level</label>
+      <div class="radio-group">
+        <div class="radio-opt"><input type="radio" name="level" id="lv-beg" value="beginner" checked><label for="lv-beg">🌱 Beginner</label></div>
+        <div class="radio-opt"><input type="radio" name="level" id="lv-int" value="intermediate"><label for="lv-int">🎵 Intermediate</label></div>
+        <div class="radio-opt"><input type="radio" name="level" id="lv-adv" value="advanced"><label for="lv-adv">⭐ Advanced</label></div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Lesson day</label>
+      <select id="new-day">
+        <option value="">— not set —</option>
+        <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+        <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Lesson time (e.g. 14:30)</label>
+      <input type="text" id="new-time" placeholder="HH:MM" maxlength="5">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-primary" onclick="addStudent()">Add Pupil</button>
+    </div>
+  </div>
+</div>
+
+<!-- MOVE LESSON MODAL -->
+<div class="modal-overlay" id="move-modal">
+  <div class="modal">
+    <h2>Move lesson</h2>
+    <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px">Move <strong id="move-pupil-name"></strong> to a different slot this week only.</p>
+    <div class="field-group">
+      <label class="field-label">New day</label>
+      <select id="move-day">
+        <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+        <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label class="field-label">New time</label>
+      <input type="text" id="move-time" placeholder="HH:MM" maxlength="5">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeMoveModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmMove()">Move lesson</button>
+    </div>
+  </div>
+</div>
+
+<!-- SYNC URL MODAL -->
+<div class="modal-overlay" id="url-modal">
+  <div class="modal">
+    <h2>Sync from Outlook</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:14px;line-height:1.5">
+      Paste your Outlook calendar URL below. It ends in <strong>.ics</strong> and starts with <strong>outlook.live.com</strong>.
+    </p>
+    <div class="field-group">
+      <label class="field-label">Calendar URL</label>
+      <input type="text" id="cal-url-input" placeholder="https://outlook.live.com/…/calendar.ics">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeUrlModal()">Cancel</button>
+      <button class="btn-primary" onclick="doSyncFromUrl()">Sync</button>
+    </div>
+  </div>
+</div>
+
+<!-- PASTE ICS MODAL -->
+<div class="modal-overlay" id="paste-modal">
+  <div class="modal">
+    <h2>Paste calendar data</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:14px;line-height:1.5">
+      In Outlook / Live calendar, open a recurring lesson event, tap <strong>···</strong> → <strong>Edit</strong>, then select and copy all the text. Paste it below.
+    </p>
+    <div class="field-group">
+      <label class="field-label">Paste .ics text here</label>
+      <textarea id="ics-paste-area" rows="7" placeholder="BEGIN:VCALENDAR&#10;...paste your calendar data here..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closePasteModal()">Cancel</button>
+      <button class="btn-primary" onclick="handleIcsPaste()">Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT RESULTS MODAL -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal">
+    <h2>Import results</h2>
+    <div id="import-results-list" style="margin-bottom:4px"></div>
+    <div id="import-summary" style="font-size:0.82rem;color:var(--muted);margin-top:10px;margin-bottom:4px"></div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="closeImportModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONSTANTS ──────────────────────────────────────────────────────────────
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const TECH_OPTIONS = [
+  '🏹 Bowing','🎯 Intonation','🖐️ Left hand','🌿 Posture',
+  '📏 Scales','🎼 Sight-reading','🎭 Expression','🔄 Shifting',
+  '🎻 Vibrato','🎵 Rhythm','🤫 Dynamics','📖 Theory'
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let students    = JSON.parse(localStorage.getItem('studio_students')      || '[]');
+let customChips = JSON.parse(localStorage.getItem('studio_custom_chips')  || '[]');
+// oneOffMoves: { studentId: { week: 'YYYY-Www', day: 'Monday', time: '14:00' } }
+let oneOffMoves = JSON.parse(localStorage.getItem('studio_one_off_moves') || '{}');
+
+let currentFilter  = 'all';
+let prevView       = 'roster';
+let movingStudentId = null;
+
+// ── PERSISTENCE ───────────────────────────────────────────────────────────
+function save() {
+  localStorage.setItem('studio_students',      JSON.stringify(students));
+  localStorage.setItem('studio_custom_chips',  JSON.stringify(customChips));
+  localStorage.setItem('studio_one_off_moves', JSON.stringify(oneOffMoves));
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function getInitials(name) {
+  return name.split(' ').map(w => w[0]||'').join('').toUpperCase().slice(0,2) || '?';
+}
+function levelEmoji(l) { return {beginner:'🌱',intermediate:'🎵',advanced:'⭐'}[l]||''; }
+function esc(str) {
+  return String(str||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function getStudent(id) { return students.find(x => x.id === id); }
+
+// Returns Monday-based day name for today
+function todayDayName() {
+  const d = new Date();
+  return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()];
+}
+
+// ISO week string e.g. "2025-W23"
+function isoWeek(date) {
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() + 3 - (d.getDay()+6)%7);
+  const week1 = new Date(d.getFullYear(),0,4);
+  const wn = 1 + Math.round(((d - week1)/86400000 - 3 + (week1.getDay()+6)%7)/7);
+  return `${d.getFullYear()}-W${String(wn).padStart(2,'0')}`;
+}
+const currentWeek = isoWeek(new Date());
+
+// Get effective day/time for a student this week (respects one-off moves)
+function effectiveSlot(s) {
+  const move = oneOffMoves[s.id];
+  if (move && move.week === currentWeek) {
+    return { day: move.day, time: move.time };
+  }
+  return { day: s.lessonDay || '', time: s.lessonTime || '' };
+}
+
+// Sort by time string "HH:MM"
+function sortByTime(arr) {
+  return [...arr].sort((a,b) => {
+    const ta = effectiveSlot(a).time || '99:99';
+    const tb = effectiveSlot(b).time || '99:99';
+    return ta.localeCompare(tb);
+  });
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────────
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  const tabs = document.querySelectorAll('.nav-tab');
+  const map = {today:0, week:1, roster:2};
+  if (map[name] !== undefined) tabs[map[name]].classList.add('active');
+  if (name === 'today')  renderToday();
+  if (name === 'week')   renderWeek();
+  if (name === 'roster') renderRoster();
+}
+
+function goBack() {
+  showView(prevView);
+}
+
+// ── TODAY VIEW ────────────────────────────────────────────────────────────
+function renderToday() {
+  const now = new Date();
+  const dayName = todayDayName();
+  document.getElementById('today-heading').textContent =
+    now.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
+
+  const todayStudents = students.filter(s => effectiveSlot(s).day === dayName);
+  const sorted = sortByTime(todayStudents);
+
+  // Work out who's "next" (first lesson whose time is >= now)
+  const nowTime = now.getHours()*60 + now.getMinutes();
+  let nextId = null;
+  for (const s of sorted) {
+    const t = effectiveSlot(s).time;
+    if (t) {
+      const [h,m] = t.split(':').map(Number);
+      if ((h*60+m) >= nowTime) { nextId = s.id; break; }
+    }
+  }
+
+  const sub = document.getElementById('today-sub');
+  if (sorted.length === 0) {
+    sub.textContent = 'No lessons scheduled today.';
+    document.getElementById('today-list').innerHTML = `
+      <div class="timetable-empty">
+        <div class="big">☕</div>
+        <p>No lessons today.<br>Head to <strong>Week</strong> to set up your timetable,<br>or <strong>All Pupils</strong> to add pupils.</p>
+      </div>`;
+    return;
+  }
+  sub.textContent = sorted.length + ' lesson' + (sorted.length!==1?'s':'') + ' today';
+
+  document.getElementById('today-list').innerHTML = sorted.map(s => {
+    const slot = effectiveSlot(s);
+    const isNext = s.id === nextId;
+    const lastLog = (s.log||[]).slice(-1)[0];
+    const pieces = (s.pieces||[]).filter(Boolean);
+    const tech = (s.techFocus||[]).slice(0,3);
+    const plan = s.nextLesson || '';
+    const thisWeek = (s.goals||{}).thisWeek || '';
+
+    return `<div class="lesson-summary ${s.instrument}-card${isNext?' next-up':''}" id="lsc-${s.id}">
+      <div class="lesson-summary-header" onclick="toggleSummary('${s.id}')">
+        <div class="ls-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
+        <div class="ls-info">
+          <div class="ls-name">${s.name}${isNext?'<span class="next-badge">Next</span>':''}</div>
+          <div class="ls-time">${slot.time || 'time not set'} · ${s.instrument} · ${levelEmoji(s.level)} ${s.level}</div>
+        </div>
+        <div class="ls-chevron">›</div>
+      </div>
+      <div class="lesson-summary-body">
+        ${plan ? `<div class="summary-row">
+          <div class="summary-icon">📌</div>
+          <div class="summary-content">
+            <div class="summary-label">Plan for today</div>
+            <div class="summary-text">${esc(plan)}</div>
+          </div>
+        </div>` : ''}
+        ${pieces.length ? `<div class="summary-row">
+          <div class="summary-icon">🎵</div>
+          <div class="summary-content">
+            <div class="summary-label">Pieces</div>
+            <div class="summary-text">${pieces.map(p=>esc(p)).join(' · ')}</div>
+          </div>
+        </div>` : ''}
+        ${tech.length ? `<div class="summary-row">
+          <div class="summary-icon">🔧</div>
+          <div class="summary-content">
+            <div class="summary-label">Technical focus</div>
+            <div class="summary-text">${tech.map(t=>esc(t)).join(' · ')}</div>
+          </div>
+        </div>` : ''}
+        ${thisWeek ? `<div class="summary-row">
+          <div class="summary-icon">⚡</div>
+          <div class="summary-content">
+            <div class="summary-label">This week's goal</div>
+            <div class="summary-text">${esc(thisWeek)}</div>
+          </div>
+        </div>` : ''}
+        ${lastLog ? `<div class="summary-row">
+          <div class="summary-icon">📝</div>
+          <div class="summary-content">
+            <div class="summary-label">Last lesson (${lastLog.date})</div>
+            <div class="summary-text">${esc(lastLog.text.slice(0,120))}${lastLog.text.length>120?'…':''}</div>
+          </div>
+        </div>` : `<div class="summary-row">
+          <div class="summary-icon">📝</div>
+          <div class="summary-content">
+            <div class="summary-label">Last lesson</div>
+            <div class="summary-text muted">No notes yet</div>
+          </div>
+        </div>`}
+        ${!plan && !pieces.length && !tech.length && !thisWeek && !lastLog ? `
+          <p style="color:var(--muted);font-size:0.85rem;margin-top:10px">No notes yet — open full notes to add some.</p>
+        ` : ''}
+        <button class="open-notes-btn ${s.instrument}-btn" onclick="openStudentFrom('${s.id}','today')">Open full notes →</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSummary(id) {
+  const el = document.getElementById('lsc-' + id);
+  if (el) el.classList.toggle('expanded');
+}
+
+// ── WEEK VIEW ─────────────────────────────────────────────────────────────
+function renderWeek() {
+  const todayName = todayDayName();
+  let html = '';
+  for (const day of DAYS) {
+    const isToday = day === todayName;
+    const dayStudents = sortByTime(students.filter(s => effectiveSlot(s).day === day));
+
+    html += `<div class="week-day">
+      <div class="week-day-header ${isToday?'today-header':''}">
+        ${isToday?'<div class="today-dot"></div>':''}
+        ${day}${isToday?' — Today':''}
+        <span style="margin-left:auto;font-weight:400;letter-spacing:0">${dayStudents.length?dayStudents.length+' lesson'+(dayStudents.length!==1?'s':''):'no lessons'}</span>
+      </div>`;
+
+    for (const s of dayStudents) {
+      const slot = effectiveSlot(s);
+      const moved = oneOffMoves[s.id] && oneOffMoves[s.id].week === currentWeek;
+      html += `<div class="week-slot ${s.instrument}-slot">
+        <div class="slot-time">${slot.time||'—'}</div>
+        <div class="slot-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
+        <div class="slot-info">
+          <div class="slot-name">${s.name}${moved?` <span style="font-size:0.68rem;color:var(--inter);font-weight:700">MOVED</span>`:''}
+          </div>
+          <div class="slot-meta">${s.instrument} · ${levelEmoji(s.level)} ${s.level}</div>
+        </div>
+        <div class="slot-actions">
+          <button class="slot-btn" onclick="openStudentFrom('${s.id}','week')">Notes</button>
+          <button class="slot-btn move-btn" onclick="openMoveModal('${s.id}')">Move</button>
+        </div>
+      </div>`;
+    }
+
+    html += `<button class="add-slot-btn" onclick="openAddModalForDay('${day}')">＋ Add lesson on ${day}</button>
+    </div>`;
+  }
+  document.getElementById('week-grid').innerHTML = html;
+}
+
+// ── ROSTER ────────────────────────────────────────────────────────────────
+function setFilter(btn, f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderRoster();
+}
+
+function renderRoster() {
+  const list = document.getElementById('roster-list');
+  document.getElementById('header-count').textContent =
+    students.length + ' pupil' + (students.length!==1?'s':'');
+
+  let filtered = currentFilter === 'all' ? students
+    : students.filter(s => s.instrument===currentFilter || s.level===currentFilter);
+
+  if (students.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="big">🎶</div><p>No pupils yet.<br>Tap <strong>Add Pupil</strong> to get started.</p></div>`;
+    return;
+  }
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="big">🔍</div><p>No pupils match this filter.</p></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(s => {
+    const lastNote = (s.log||[]).slice(-1)[0];
+    const snippet = lastNote ? lastNote.text.slice(0,60)+(lastNote.text.length>60?'…':'')
+                             : ((s.goals||{}).thisWeek||'');
+    const slot = effectiveSlot(s);
+    const dayLabel = slot.day ? `<span style="font-size:0.72rem;color:var(--muted);background:var(--warm);padding:2px 8px;border-radius:999px">${slot.day}${slot.time?' '+slot.time:''}</span>` : '';
+    return `<div class="student-card ${s.instrument}-card" onclick="openStudentFrom('${s.id}','roster')">
+      <div class="student-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
+      <div class="student-info">
+        <div class="student-name">${s.name}</div>
+        <div class="student-meta">
+          <span class="badge badge-${s.instrument}">${s.instrument==='violin'?'🔵':'🟣'} ${s.instrument}</span>
+          <span class="badge badge-${s.level}">${levelEmoji(s.level)} ${s.level}</span>
+          ${dayLabel}
+        </div>
+        ${snippet ? `<div class="student-snippet">${esc(snippet)}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── ADD PUPIL MODAL ───────────────────────────────────────────────────────
+function openAddModal() {
+  document.getElementById('new-name').value = '';
+  document.getElementById('new-time').value = '';
+  document.getElementById('new-day').value = '';
+  document.getElementById('add-modal').classList.add('open');
+  setTimeout(() => document.getElementById('new-name').focus(), 100);
+}
+function openAddModalForDay(day) {
+  openAddModal();
+  document.getElementById('new-day').value = day;
+}
+function closeAddModal() { document.getElementById('add-modal').classList.remove('open'); }
+
+function addStudent() {
+  const name = document.getElementById('new-name').value.trim();
+  if (!name) { document.getElementById('new-name').focus(); return; }
+  const instrument = document.querySelector('input[name="instrument"]:checked').value;
+  const level      = document.querySelector('input[name="level"]:checked').value;
+  const lessonDay  = document.getElementById('new-day').value;
+  const lessonTime = document.getElementById('new-time').value.trim();
+  students.push({
+    id: Date.now().toString(),
+    name, instrument, level, lessonDay, lessonTime,
+    pieces: [''], techFocus: [],
+    goals: {longTerm:'',medium:'',shortTerm:'',thisWeek:''},
+    nextLesson: '', duringScratch: '', log: []
+  });
+  save(); closeAddModal(); renderRoster();
+}
+
+// ── MOVE MODAL ────────────────────────────────────────────────────────────
+function openMoveModal(id) {
+  movingStudentId = id;
+  const s = getStudent(id);
+  document.getElementById('move-pupil-name').textContent = s ? s.name : '';
+  const cur = effectiveSlot(s);
+  document.getElementById('move-day').value  = cur.day  || 'Monday';
+  document.getElementById('move-time').value = cur.time || '';
+  document.getElementById('move-modal').classList.add('open');
+}
+function closeMoveModal() {
+  document.getElementById('move-modal').classList.remove('open');
+  movingStudentId = null;
+}
+function confirmMove() {
+  if (!movingStudentId) return;
+  const day  = document.getElementById('move-day').value;
+  const time = document.getElementById('move-time').value.trim();
+  oneOffMoves[movingStudentId] = { week: currentWeek, day, time };
+  save(); closeMoveModal(); renderWeek();
+}
+
+// ── STUDENT DETAIL ────────────────────────────────────────────────────────
+function openStudentFrom(id, from) {
+  prevView = from;
+  const s = getStudent(id); if (!s) return;
+  document.getElementById('back-btn').textContent =
+    from==='today' ? '← Back to today' : from==='week' ? '← Back to week' : '← Back to all pupils';
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-detail').classList.add('active');
+  renderDetail(s);
+}
+
+function switchMoment(tab, panel) {
+  document.querySelectorAll('.moment-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.moment-panel').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(panel).classList.add('active');
+}
+
+function renderDetail(s) {
+  const el = document.getElementById('detail-content');
+  const slot = effectiveSlot(s);
+
+  const piecesHTML = (s.pieces&&s.pieces.length?s.pieces:['']).map((p,i)=>
+    `<div class="piece-item">
+      <input type="text" placeholder="Piece or exercise…" value="${esc(p)}"
+        oninput="updatePiece('${s.id}',${i},this.value)">
+      <button class="remove-piece-btn" onclick="removePiece('${s.id}',${i})" title="Remove">×</button>
+    </div>`).join('');
+
+  const allTech = [...TECH_OPTIONS,...customChips];
+  const techHTML = allTech.map((t,i)=>{
+    const isCustom = i >= TECH_OPTIONS.length;
+    return `<button class="tech-chip ${isCustom?'custom-chip':''} ${(s.techFocus||[]).includes(t)?'selected':''}"
+      onclick="toggleTech('${s.id}','${esc(t)}',this)">${esc(t)}${isCustom?` <span onclick="event.stopPropagation();removeCustomChip('${esc(t)}','${s.id}')" style="margin-left:4px;opacity:0.6;font-size:0.8em" title="Remove">×</span>`:''}
+    </button>`;
+  }).join('');
+
+  const logHTML = (s.log||[]).length===0
+    ? `<p style="color:var(--muted);font-size:0.88rem;">No lesson notes yet.</p>`
+    : [...(s.log||[])].reverse().map(e=>
+        `<div class="log-entry"><div class="log-date">${e.date}</div><div class="log-text">${esc(e.text)}</div></div>`
+      ).join('');
+
+  el.innerHTML = `
+    <div class="detail-header">
+      <div class="detail-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
+      <div>
+        <div class="detail-name">${s.name}</div>
+        <div class="student-meta">
+          <span class="badge badge-${s.instrument}">${s.instrument==='violin'?'🔵':'🟣'} ${s.instrument}</span>
+          <span class="badge badge-${s.level}">${levelEmoji(s.level)} ${s.level}</span>
+          ${slot.day?`<span class="badge" style="background:var(--warm);color:var(--muted)">${slot.day}${slot.time?' '+slot.time:''}</span>`:''}
+        </div>
+      </div>
+    </div>
+
+    <div class="moment-tabs">
+      <button class="moment-tab active" onclick="switchMoment(this,'panel-before')">📖 Before</button>
+      <button class="moment-tab" onclick="switchMoment(this,'panel-during')">✏️ During</button>
+      <button class="moment-tab" onclick="switchMoment(this,'panel-after')">💾 After</button>
+      <button class="moment-tab" onclick="switchMoment(this,'panel-goals')">🎯 Goals</button>
+    </div>
+
+    <!-- BEFORE -->
+    <div class="moment-panel active" id="panel-before">
+      <div class="section-card">
+        <div class="section-label">📌 Plan for today's lesson</div>
+        <textarea rows="3" placeholder="What you want to cover today…"
+          oninput="updateField('${s.id}','nextLesson',this.value)">${esc(s.nextLesson||'')}</textarea>
+      </div>
+      <div class="section-card">
+        <div class="section-label">🎵 Pieces &amp; exercises</div>
+        <div class="pieces-list" id="pieces-list-${s.id}">${piecesHTML}</div>
+        <button class="add-piece-btn" onclick="addPiece('${s.id}')">＋ Add piece</button>
+      </div>
+      <div class="section-card">
+        <div class="section-label">🔧 Technical focus</div>
+        <div class="tech-chips" id="tech-chips-${s.id}">${techHTML}
+          <button class="add-custom-chip-btn" onclick="showCustomChipInput('${s.id}')">＋ Add your own</button>
+        </div>
+        <div class="custom-chip-input-row" id="custom-chip-row-${s.id}" style="display:none">
+          <input type="text" id="custom-chip-input-${s.id}" placeholder="e.g. Sautillé, Thumb position…" maxlength="30"
+            onkeydown="if(event.key==='Enter')confirmCustomChip('${s.id}')">
+          <button class="confirm-btn" onclick="confirmCustomChip('${s.id}')">Add</button>
+          <button class="cancel-btn" onclick="hideCustomChipInput('${s.id}')">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DURING -->
+    <div class="moment-panel" id="panel-during">
+      <div class="section-card">
+        <div class="section-label">✏️ Quick notes — right now</div>
+        <textarea class="quick-note" rows="5"
+          placeholder="Jot anything — key words, reminders, 'try this'… Tidy up later."
+          id="during-scratch-${s.id}">${esc(s.duringScratch||'')}</textarea>
+        <button class="save-btn" onclick="saveDuring('${s.id}')">Save scratchpad</button>
+        <div class="save-toast" id="toast-during-${s.id}">✓ Saved</div>
+      </div>
+    </div>
+
+    <!-- AFTER -->
+    <div class="moment-panel" id="panel-after">
+      <div class="section-card">
+        <div class="section-label">📝 Lesson notes</div>
+        <textarea rows="4" placeholder="What went well, what to remember for next time…"
+          id="after-note-${s.id}"></textarea>
+        <button class="save-btn" onclick="saveLog('${s.id}')">Add to lesson log</button>
+        <div class="save-toast" id="toast-after-${s.id}">✓ Added to log</div>
+      </div>
+      <div class="section-card">
+        <div class="section-label">📚 Lesson history</div>
+        ${logHTML}
+      </div>
+    </div>
+
+    <!-- GOALS -->
+    <div class="moment-panel" id="panel-goals">
+      <div class="section-card">
+        <div class="goal-row"><div class="goal-emoji">🏔️</div><div class="goal-block">
+          <div class="goal-label long-term">Long-term goal</div>
+          <textarea rows="2" placeholder="Where are they heading overall?"
+            oninput="updateGoal('${s.id}','longTerm',this.value)">${esc((s.goals||{}).longTerm||'')}</textarea>
+        </div></div>
+        <div class="goal-row"><div class="goal-emoji">🗺️</div><div class="goal-block">
+          <div class="goal-label medium">Medium-term goal</div>
+          <textarea rows="2" placeholder="Next few months…"
+            oninput="updateGoal('${s.id}','medium',this.value)">${esc((s.goals||{}).medium||'')}</textarea>
+        </div></div>
+        <div class="goal-row"><div class="goal-emoji">🎯</div><div class="goal-block">
+          <div class="goal-label short">Short-term goal</div>
+          <textarea rows="2" placeholder="Next few weeks…"
+            oninput="updateGoal('${s.id}','shortTerm',this.value)">${esc((s.goals||{}).shortTerm||'')}</textarea>
+        </div></div>
+        <div class="goal-row"><div class="goal-emoji">⚡</div><div class="goal-block">
+          <div class="goal-label this-week">This week</div>
+          <textarea rows="2" placeholder="Homework / focus for this week"
+            oninput="updateGoal('${s.id}','thisWeek',this.value)">${esc((s.goals||{}).thisWeek||'')}</textarea>
+        </div></div>
+        <button class="save-btn" onclick="saveGoals('${s.id}')">Save goals</button>
+        <div class="save-toast" id="toast-goals-${s.id}">✓ Goals saved</div>
+      </div>
+    </div>`;
+}
+
+// ── UPDATE HELPERS ────────────────────────────────────────────────────────
+function updateField(id, field, val) { const s=getStudent(id); if(s){s[field]=val;save();} }
+function updateGoal(id, key, val)    { const s=getStudent(id); if(s){if(!s.goals)s.goals={};s.goals[key]=val;save();} }
+function updatePiece(id, i, val)     { const s=getStudent(id); if(s){if(!s.pieces)s.pieces=[];s.pieces[i]=val;save();} }
+
+function addPiece(id) {
+  const s=getStudent(id); if(!s)return;
+  if(!s.pieces)s.pieces=[];
+  s.pieces.push(''); save(); renderDetail(s);
+  document.querySelectorAll('.moment-tab')[0].click();
+  setTimeout(()=>{
+    const inputs=document.querySelectorAll(`#pieces-list-${id} input`);
+    if(inputs.length)inputs[inputs.length-1].focus();
+  },50);
+}
+function removePiece(id, i) {
+  const s=getStudent(id); if(!s)return;
+  s.pieces.splice(i,1);
+  if(s.pieces.length===0)s.pieces=[''];
+  save(); renderDetail(s);
+}
+
+function toggleTech(id, tech, btn) {
+  const s=getStudent(id); if(!s)return;
+  if(!s.techFocus)s.techFocus=[];
+  if(s.techFocus.includes(tech)){s.techFocus=s.techFocus.filter(t=>t!==tech);btn.classList.remove('selected');}
+  else{s.techFocus.push(tech);btn.classList.add('selected');}
+  save();
+}
+
+function showCustomChipInput(id) {
+  document.getElementById(`custom-chip-row-${id}`).style.display='flex';
+  setTimeout(()=>document.getElementById(`custom-chip-input-${id}`).focus(),50);
+}
+function hideCustomChipInput(id) {
+  document.getElementById(`custom-chip-row-${id}`).style.display='none';
+  document.getElementById(`custom-chip-input-${id}`).value='';
+}
+function confirmCustomChip(id) {
+  const input=document.getElementById(`custom-chip-input-${id}`);
+  const val=input.value.trim(); if(!val)return;
+  if(!customChips.includes(val)){customChips.push(val);save();}
+  const s=getStudent(id);
+  if(s&&!(s.techFocus||[]).includes(val)){if(!s.techFocus)s.techFocus=[];s.techFocus.push(val);save();}
+  hideCustomChipInput(id);
+  if(s){renderDetail(s);document.querySelectorAll('.moment-tab')[0].click();}
+}
+function removeCustomChip(chip, studentId) {
+  customChips=customChips.filter(c=>c!==chip);
+  students.forEach(s=>{if(s.techFocus)s.techFocus=s.techFocus.filter(t=>t!==chip);});
+  save();
+  const s=getStudent(studentId); if(s)renderDetail(s);
+}
+
+function saveDuring(id) {
+  const s=getStudent(id); if(!s)return;
+  s.duringScratch=document.getElementById(`during-scratch-${id}`).value;
+  save(); showToast(`toast-during-${id}`);
+}
+function saveLog(id) {
+  const s=getStudent(id); if(!s)return;
+  const el=document.getElementById(`after-note-${id}`);
+  const text=el.value.trim(); if(!text)return;
+  if(!s.log)s.log=[];
+  s.log.push({date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),text});
+  s.duringScratch=''; save(); el.value='';
+  showToast(`toast-after-${id}`); renderDetail(s);
+}
+function saveGoals(id) { save(); showToast(`toast-goals-${id}`); }
+
+function showToast(toastId) {
+  const t=document.getElementById(toastId); if(!t)return;
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+// ── ICS IMPORT ────────────────────────────────────────────────────────────
+
+function handleIcsUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => parseAndImportIcs(e.target.result);
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function openPasteModal() {
+  document.getElementById('ics-paste-area').value = '';
+  document.getElementById('paste-modal').classList.add('open');
+  setTimeout(() => document.getElementById('ics-paste-area').focus(), 100);
+}
+function closePasteModal() {
+  document.getElementById('paste-modal').classList.remove('open');
+}
+function handleIcsPaste() {
+  const text = document.getElementById('ics-paste-area').value.trim();
+  if (!text) return;
+  closePasteModal();
+  const wrapped = text.includes('BEGIN:VCALENDAR') ? text
+    : 'BEGIN:VCALENDAR\n' + text + '\nEND:VCALENDAR';
+  parseAndImportIcs(wrapped);
+}
+
+function openUrlModal() {
+  const saved = localStorage.getItem('studio_cal_url') || '';
+  document.getElementById('cal-url-input').value = saved;
+  document.getElementById('url-modal').classList.add('open');
+  setTimeout(() => document.getElementById('cal-url-input').focus(), 100);
+}
+function closeUrlModal() {
+  document.getElementById('url-modal').classList.remove('open');
+}
+async function doSyncFromUrl() {
+  const url = document.getElementById('cal-url-input').value.trim();
+  if (!url) return;
+  localStorage.setItem('studio_cal_url', url);
+  closeUrlModal();
+  const btn = document.getElementById('sync-url-btn');
+  if (btn) { btn.textContent = 'Syncing…'; btn.disabled = true; }
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const text = await resp.text();
+    parseAndImportIcs(text);
+  } catch(e) {
+    alert('Could not fetch the calendar — try the Paste .ics option instead.');
+  } finally {
+    if (btn) { btn.textContent = '🔗 Sync URL'; btn.disabled = false; }
+  }
+}
+
+function parseAndImportIcs(text) {
+  const eventBlocks = [];
+  // Unfold continuation lines, normalise line endings
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n')
+    .replace(/\n[ \t]/g,'').split('\n');
+
+  let inEvent = false, current = {};
+  for (const line of lines) {
+    if (line === 'BEGIN:VEVENT') { inEvent = true; current = {}; continue; }
+    if (line === 'END:VEVENT')   { inEvent = false; if (current.summary) eventBlocks.push(current); continue; }
+    if (!inEvent) continue;
+    const colon = line.indexOf(':');
+    if (colon < 0) continue;
+    const fullKey = line.slice(0, colon).toUpperCase();   // e.g. DTSTART;TZID=GMT STANDARD TIME
+    const baseKey = fullKey.split(';')[0];                 // e.g. DTSTART
+    const val     = line.slice(colon + 1).trim();
+    if (baseKey === 'SUMMARY') current.summary  = val;
+    if (baseKey === 'DTSTART') {
+      current.dtstart    = val;       // the date/time value
+      current.dtstart_full = line;    // full line inc. TZID param
+    }
+    if (baseKey === 'RRULE')   current.rrule    = val;
+    // Skip RECURRENCE-ID events (one-off overrides) — they're not the master slot
+    if (baseKey === 'RECURRENCE-ID') current.isException = true;
+  }
+
+  const results = [];
+  let matched = 0, unmatched = 0;
+
+  // De-duplicate: if the same pupil appears in multiple events, use the one
+  // with an RRULE (the master recurring event)
+  const seen = new Map(); // pupil id -> event
+  for (const ev of eventBlocks) {
+    if (ev.isException) continue;   // skip one-off overrides
+    const summary = ev.summary || '';
+
+    // Skip non-lesson and cancelled events:
+    // - Starts with "NO " or "no " (your cancellation convention)
+    // - Contains " ill" or " sick" anywhere (illness notes)
+    // - Known non-lesson keywords
+    const sumLow = summary.toLowerCase().trim();
+    if (/^no\s/i.test(sumLow)) continue;
+    if (/\bill\b|\bsick\b|\bcancell?ed\b/.test(sumLow)) continue;
+    if (/^(break|half term|nyso|hco|cbso|dentist|physio|hair|hrt|contact lens|book tickets|avenue|snape|stamford|bristol|jacky|libby|empty lesson|new event|uma|appointment)/i.test(sumLow)) continue;
+
+    const matchedPupil = students.find(s => {
+      const parts = s.name.toLowerCase().split(' ');
+      return parts.some(part => part.length > 1 && sumLow.includes(part));
+    });
+    if (!matchedPupil) continue;
+
+    // Prefer RRULE events over one-offs for the same pupil
+    const existing = seen.get(matchedPupil.id);
+    if (!existing || (!existing.rrule && ev.rrule)) {
+      seen.set(matchedPupil.id, ev);
+    }
+  }
+
+  for (const [pupilId, ev] of seen) {
+    const pupil = getStudent(pupilId);
+    if (!pupil) continue;
+    const summary = ev.summary || '';
+    const dt = parseDtstart(ev.dtstart_full || ev.dtstart);
+    if (dt) {
+      pupil.lessonDay  = dt.day;
+      pupil.lessonTime = dt.time;
+      results.push({ status:'matched', name: pupil.name, summary, day: dt.day, time: dt.time, recurring: !!ev.rrule });
+      matched++;
+    } else {
+      results.push({ status:'skipped', name: pupil.name, summary, reason: 'Could not read date/time' });
+    }
+  }
+
+  save();
+  showImportResults(results, matched, unmatched);
+  renderWeek();
+}
+
+function parseDtstart(line) {
+  // line is the FULL original line e.g.:
+  //   DTSTART;TZID=GMT Standard Time:20260310T153000
+  //   DTSTART:20260310T153000Z
+  //   or just the value part: 20260310T153000
+  if (!line) return null;
+
+  let valueStr = line;
+  // If it looks like a full property line, extract the value after the last colon
+  if (line.includes(':')) {
+    valueStr = line.slice(line.lastIndexOf(':') + 1).trim();
+  }
+
+  // Strip trailing Z (UTC flag — we treat TZID=GMT Standard Time as local UK time)
+  const isUTC = valueStr.endsWith('Z');
+  const clean = valueStr.replace('Z','');
+
+  // Must be at least 8 chars (YYYYMMDD)
+  if (clean.length < 8) return null;
+
+  const year  = parseInt(clean.slice(0,4));
+  const month = parseInt(clean.slice(4,6)) - 1;
+  const dayN  = parseInt(clean.slice(6,8));
+
+  let hour = 0, min = 0;
+  const tIdx = clean.indexOf('T');
+  if (tIdx >= 0 && clean.length > tIdx + 4) {
+    hour = parseInt(clean.slice(tIdx+1, tIdx+3));
+    min  = parseInt(clean.slice(tIdx+3, tIdx+5));
+  } else if (clean.length === 8) {
+    // All-day event — no time
+    return null;
+  }
+
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  if (isUTC) {
+    // UTC: use Date.UTC and convert to local
+    const d = new Date(Date.UTC(year, month, dayN, hour, min));
+    return {
+      day:  dayNames[d.getDay()],
+      time: String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0')
+    };
+  }
+
+  // TZID or floating — treat the digits as UK local time directly
+  return {
+    day:  dayNames[new Date(year, month, dayN).getDay()],
+    time: String(hour).padStart(2,'0') + ':' + String(min).padStart(2,'0')
+  };
+}
+
+function showImportResults(results, matched, unmatched) {
+  const list = document.getElementById('import-results-list');
+  const summary = document.getElementById('import-summary');
+
+  if (results.length === 0) {
+    list.innerHTML = `<div class="import-result-row skipped"><div class="import-result-icon">🔍</div><div><div class="import-result-name">No lesson events found</div><div class="import-result-detail">Make sure your .ics file contains recurring lesson events.</div></div></div>`;
+    summary.textContent = '';
+  } else {
+    list.innerHTML = results.map(r => {
+      if (r.status === 'matched') return `
+        <div class="import-result-row matched">
+          <div class="import-result-icon">✅</div>
+          <div>
+            <div class="import-result-name">${esc(r.name)}</div>
+            <div class="import-result-detail">${r.day}${r.time ? ' at ' + r.time : ''}${r.recurring ? ' · recurring' : ' · one-off'}</div>
+          </div>
+        </div>`;
+      if (r.status === 'unmatched') return `
+        <div class="import-result-row unmatched">
+          <div class="import-result-icon">⚠️</div>
+          <div>
+            <div class="import-result-name">No match: "${esc(r.summary)}"</div>
+            <div class="import-result-detail">Add this pupil first, then re-import.</div>
+          </div>
+        </div>`;
+      return `
+        <div class="import-result-row skipped">
+          <div class="import-result-icon">⏭️</div>
+          <div>
+            <div class="import-result-name">${esc(r.name)}</div>
+            <div class="import-result-detail">${r.reason}</div>
+          </div>
+        </div>`;
+    }).join('');
+    summary.textContent = `${matched} pupil${matched!==1?'s':''} updated · ${unmatched} unmatched event${unmatched!==1?'s':''}`;
+  }
+
+  document.getElementById('import-modal').classList.add('open');
+}
+
+function closeImportModal() {
+  document.getElementById('import-modal').classList.remove('open');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+renderToday();
+renderRoster();
+</script>
+</body>
+</html>
