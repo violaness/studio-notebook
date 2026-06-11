@@ -489,6 +489,14 @@
       style="background:transparent;border:none;padding:0;font-size:0.95rem;width:100%;resize:vertical;line-height:1.6;font-family:'DM Sans',sans-serif;color:#3a3000"></textarea>
     <div style="font-size:0.72rem;color:#b8a050;margin-top:6px;text-align:right" id="daily-notes-date"></div>
   </div>
+
+  <!-- PREVIOUS NOTES -->
+  <details style="margin-top:10px" id="prev-notes-details">
+    <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:8px 0;list-style:none;display:flex;align-items:center;gap:6px">
+      <span style="font-size:0.7rem">▶</span> Previous teaching day notes
+    </summary>
+    <div id="prev-notes-list" style="margin-top:8px"></div>
+  </details>
 </div>
 
 <!-- WEEK VIEW -->
@@ -2116,8 +2124,10 @@ function saveDailyNotes() {
   const text = document.getElementById('daily-notes').value;
   const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
   const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
-  allNotes[today] = text;
+  if (text.trim()) allNotes[today] = text;
+  else delete allNotes[today];
   localStorage.setItem('studio_daily_notes', JSON.stringify(allNotes));
+  renderPrevNotes();
 }
 
 function loadDailyNotes() {
@@ -2127,6 +2137,36 @@ function loadDailyNotes() {
   const dateEl = document.getElementById('daily-notes-date');
   if (el) el.value = allNotes[today] || '';
   if (dateEl) dateEl.textContent = today;
+  renderPrevNotes();
+}
+
+function renderPrevNotes() {
+  const list = document.getElementById('prev-notes-list'); if (!list) return;
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
+  const past = Object.entries(allNotes)
+    .filter(([date]) => date !== today)
+    .sort((a,b) => new Date(b[0].split(' ').reverse().join('-')) - new Date(a[0].split(' ').reverse().join('-')))
+    .slice(0, 30); // show last 30 entries
+
+  if (past.length === 0) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;padding:8px 0">No previous notes yet.</p>';
+    return;
+  }
+  list.innerHTML = past.map(([date, text]) => `
+    <div style="background:#fffef0;border:1px solid #e8d870;border-radius:10px;padding:12px 14px;margin-bottom:10px;position:relative">
+      <div style="font-size:0.72rem;font-weight:700;color:#8a7a3a;margin-bottom:6px;letter-spacing:0.05em">${date}</div>
+      <div style="font-size:0.88rem;line-height:1.6;color:#3a3000;white-space:pre-wrap">${esc(text)}</div>
+      <button onclick="deletePastNote('${date}')"
+        style="position:absolute;top:8px;right:8px;background:none;border:none;color:#c9a84c;font-size:0.8rem;cursor:pointer;opacity:0.6" title="Delete this note">×</button>
+    </div>`).join('');
+}
+
+function deletePastNote(date) {
+  const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
+  delete allNotes[date];
+  localStorage.setItem('studio_daily_notes', JSON.stringify(allNotes));
+  renderPrevNotes();
 }
 
 
