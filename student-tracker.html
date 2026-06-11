@@ -24,6 +24,30 @@
     --radius:   14px;
   }
 
+  body.dark-mode {
+    --ink:      #e8f0e4;
+    --paper:    #0d1f0f;
+    --warm:     #1a2e1c;
+    --viola:    #8AB640;
+    --violin:   #46C6E5;
+    --string:   #8AB640;
+    --sage:     #8AB640;
+    --muted:    #7aaa7a;
+    --beginner: #8AB640;
+    --inter:    #46C6E5;
+    --advanced: #29789E;
+    --card-bg:  #152417;
+    --shadow:   0 2px 12px rgba(0,0,0,0.3);
+  }
+
+  .theme-toggle {
+    background: none; border: 1.5px solid rgba(255,255,255,0.25);
+    border-radius: 999px; padding: 4px 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
+    color: var(--string); cursor: pointer; transition: all 0.2s;
+  }
+  .theme-toggle:hover { background: rgba(255,255,255,0.1); }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; }
 
@@ -433,8 +457,17 @@
 
 <header>
   <h1>🎻 Studio Notebook</h1>
-  <span id="header-count"></span>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span id="header-count"></span>
+    <button class="theme-toggle" onclick="toggleDarkMode()" id="theme-btn">🌙 Dark</button>
+  </div>
 </header>
+
+<!-- SEARCH BAR -->
+<div id="search-bar" style="display:none;padding:8px 16px;background:var(--card-bg);border-bottom:1px solid var(--warm)">
+  <input type="text" id="search-input" placeholder="Search pupils…" oninput="filterRosterBySearch()"
+    style="width:100%;padding:8px 12px;border:1.5px solid var(--warm);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.95rem;background:var(--paper);color:var(--ink)">
+</div>
 
 <div class="nav-tabs">
   <button class="nav-tab active" onclick="showView('today')">Today</button>
@@ -448,6 +481,14 @@
   <div class="today-date" id="today-heading"></div>
   <div class="today-sub" id="today-sub"></div>
   <div id="today-list"></div>
+  <div class="section-card" style="margin-top:16px;background:#fffef0;border:1.5px dashed #c9a84c">
+    <div class="section-label" style="color:#8a7a3a">📝 Teaching day notes</div>
+    <textarea id="daily-notes" rows="10"
+      placeholder="Things to remember, follow up, sort out…"
+      oninput="saveDailyNotes()"
+      style="background:transparent;border:none;padding:0;font-size:0.95rem;width:100%;resize:vertical;line-height:1.6;font-family:'DM Sans',sans-serif;color:#3a3000"></textarea>
+    <div style="font-size:0.72rem;color:#b8a050;margin-top:6px;text-align:right" id="daily-notes-date"></div>
+  </div>
 </div>
 
 <!-- WEEK VIEW -->
@@ -480,10 +521,34 @@
 
 <!-- ROSTER VIEW -->
 <div id="view-roster" class="view">
-  <div style="display:flex;gap:10px;margin-bottom:16px">
+  <div style="display:flex;gap:10px;margin-bottom:10px">
     <button id="add-btn" style="margin-bottom:0;flex:1" onclick="openAddModal()">＋ Add Pupil</button>
-    <button onclick="openExportModal()" style="background:var(--sage);color:#fff;border:none;border-radius:var(--radius);padding:15px 16px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;flex-shrink:0">↓ Export</button>
+    <button onclick="toggleSearch()" style="background:var(--violin);color:#fff;border:none;border-radius:var(--radius);padding:15px 14px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;flex-shrink:0">🔍</button>
+    <button onclick="openExportModal()" style="background:var(--sage);color:#fff;border:none;border-radius:var(--radius);padding:15px 14px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;flex-shrink:0">↓</button>
   </div>
+  <!-- TERM DATES -->
+  <details style="margin-bottom:14px">
+    <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:6px 0;list-style:none;display:flex;align-items:center;gap:6px">
+      <span style="font-size:0.7rem">▶</span> Term dates
+    </summary>
+    <div class="section-card" style="margin-top:8px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div style="flex:1;min-width:120px">
+          <label class="field-label">Term name</label>
+          <input type="text" id="term-name" placeholder="e.g. Autumn Term 2026" oninput="saveTermDates()" style="margin-top:4px">
+        </div>
+        <div style="flex:1;min-width:120px">
+          <label class="field-label">Start date</label>
+          <input type="date" id="term-start" onchange="saveTermDates()" style="margin-top:4px">
+        </div>
+        <div style="flex:1;min-width:120px">
+          <label class="field-label">End date</label>
+          <input type="date" id="term-end" onchange="saveTermDates()" style="margin-top:4px">
+        </div>
+      </div>
+      <div id="term-info" style="font-size:0.82rem;color:var(--muted);margin-top:10px"></div>
+    </div>
+  </details>
   <div class="filter-row">
     <button class="filter-chip active" data-filter="all" onclick="setFilter(this,'all')">All</button>
     <button class="filter-chip" data-filter="viola" onclick="setFilter(this,'viola')"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2F5C1A;margin-right:5px;vertical-align:middle"></span>Viola</button>
@@ -828,7 +893,7 @@
 
 <script>
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const DAYS = ['Saturday','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday'];
 const TECH_OPTIONS = [
   'Bowing', 'Intonation', 'Left hand', 'Posture',
   'Scales', 'Sight-reading', 'Expression', 'Shifting',
@@ -1024,6 +1089,7 @@ function renderToday() {
       </div>
     </div>`;
   }).join('');
+  loadDailyNotes();
 }
 
 function toggleSummary(id) {
@@ -1078,13 +1144,16 @@ function setFilter(btn, f) {
 }
 
 function renderRoster() {
-  const list = document.getElementById('roster-list');
   document.getElementById('header-count').textContent =
     students.length + ' pupil' + (students.length!==1?'s':'');
-
   let filtered = currentFilter === 'all' ? students
     : students.filter(s => s.instrument===currentFilter || s.level===currentFilter || (s.pupilType||'child')===currentFilter);
+  renderRosterList(filtered);
+  loadTermDates();
+}
 
+function renderRosterList(filtered) {
+  const list = document.getElementById('roster-list');
   if (students.length === 0) {
     list.innerHTML = `<div class="empty-state"><div class="big">🎶</div><p>No pupils yet.<br>Tap <strong>Add Pupil</strong> to get started.</p></div>`;
     return;
@@ -1093,7 +1162,6 @@ function renderRoster() {
     list.innerHTML = `<div class="empty-state"><div class="big">🔍</div><p>No pupils match this filter.</p></div>`;
     return;
   }
-
   list.innerHTML = filtered.map(s => {
     const lastNote = (s.log||[]).slice(-1)[0];
     const snippet = lastNote ? lastNote.text.slice(0,60)+(lastNote.text.length>60?'…':'')
@@ -1259,6 +1327,17 @@ function renderDetail(s) {
         <div class="section-label">📌 Plan for today's lesson</div>
         <textarea rows="3" placeholder="What you want to cover today…"
           oninput="updateField('${s.id}','nextLesson',this.value)">${esc(s.nextLesson||'')}</textarea>
+        ${(s.log||[]).filter(e=>e.text).length > 0 ? `
+        <button onclick="copyLastLesson('${s.id}')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-family:'DM Sans',sans-serif;font-size:0.8rem;cursor:pointer;width:100%">↑ Copy last lesson notes as plan</button>` : ''}
+      </div>
+      <div class="section-card" style="background:var(--warm)">
+        <div class="section-label">Pupil notes</div>
+        <textarea rows="2" placeholder="Long-term notes about this pupil — learning style, what works, exam plans…"
+          oninput="updateField('${s.id}','pupilNotes',this.value)"
+          style="background:transparent;border-color:rgba(0,0,0,0.1)">${esc(s.pupilNotes||'')}</textarea>
+      </div>
+      <div style="font-size:0.78rem;color:var(--muted);text-align:right;margin-bottom:8px">
+        ${lessonCount(s)}
       </div>
       <div class="section-card">
         <div class="section-label">🎵 Pieces &amp; exercises</div>
@@ -1949,7 +2028,108 @@ const PIECE_DB = [
   { title:'Violin Star 3', composer:'Edward Huws Jones', grade:'Grade 1-2', cat:'Beginner Repertoire - Violin' },
 ];
 
-// ── ATTENDANCE ────────────────────────────────────────────────────────────
+// ── DARK MODE ─────────────────────────────────────────────────────────────
+function toggleDarkMode() {
+  const dark = document.body.classList.toggle('dark-mode');
+  localStorage.setItem('studio_dark_mode', dark ? '1' : '0');
+  document.getElementById('theme-btn').textContent = dark ? '☀️ Light' : '🌙 Dark';
+}
+function initDarkMode() {
+  if (localStorage.getItem('studio_dark_mode') === '1') {
+    document.body.classList.add('dark-mode');
+    document.getElementById('theme-btn').textContent = '☀️ Light';
+  }
+}
+
+// ── SEARCH ────────────────────────────────────────────────────────────────
+function toggleSearch() {
+  const bar = document.getElementById('search-bar');
+  const showing = bar.style.display !== 'none';
+  bar.style.display = showing ? 'none' : 'block';
+  if (!showing) setTimeout(() => document.getElementById('search-input').focus(), 50);
+  else { document.getElementById('search-input').value = ''; renderRoster(); }
+}
+function filterRosterBySearch() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  let filtered = q ? students.filter(s => s.name.toLowerCase().includes(q)) : students;
+  if (currentFilter !== 'all') filtered = filtered.filter(s => s.instrument===currentFilter||s.level===currentFilter||(s.pupilType||'child')===currentFilter);
+  renderRosterList(filtered);
+}
+
+// ── TERM DATES ────────────────────────────────────────────────────────────
+function saveTermDates() {
+  const name  = document.getElementById('term-name').value;
+  const start = document.getElementById('term-start').value;
+  const end   = document.getElementById('term-end').value;
+  localStorage.setItem('studio_term', JSON.stringify({name, start, end}));
+  updateTermInfo();
+}
+function loadTermDates() {
+  const t = JSON.parse(localStorage.getItem('studio_term') || '{}');
+  const tn = document.getElementById('term-name');
+  const ts = document.getElementById('term-start');
+  const te = document.getElementById('term-end');
+  if (tn) tn.value = t.name  || '';
+  if (ts) ts.value = t.start || '';
+  if (te) te.value = t.end   || '';
+  updateTermInfo();
+}
+function updateTermInfo() {
+  const el = document.getElementById('term-info'); if (!el) return;
+  const start = document.getElementById('term-start').value;
+  const end   = document.getElementById('term-end').value;
+  if (!start || !end) { el.textContent = ''; return; }
+  const s = new Date(start), e = new Date(end), today = new Date();
+  const totalWeeks = Math.round((e-s)/(1000*60*60*24*7));
+  const weeksLeft  = Math.max(0, Math.round((e-today)/(1000*60*60*24*7)));
+  const weekOf     = today >= s && today <= e ? Math.round((today-s)/(1000*60*60*24*7))+1 : null;
+  el.textContent = `${totalWeeks} week term · ${weeksLeft} week${weeksLeft!==1?'s':''} remaining${weekOf?' · Week '+weekOf+' of term':''}`;
+}
+
+// ── COPY LAST LESSON ──────────────────────────────────────────────────────
+function copyLastLesson(id) {
+  const s = getStudent(id); if (!s) return;
+  const lastNote = [...(s.log||[])].filter(e=>e.text).pop();
+  if (!lastNote) return;
+  s.nextLesson = lastNote.text;
+  save(); renderDetail(s);
+  document.querySelectorAll('.moment-tab')[0].click();
+}
+
+// ── LESSON COUNT ──────────────────────────────────────────────────────────
+function lessonCount(s) {
+  const log = s.log || [];
+  const t = JSON.parse(localStorage.getItem('studio_term') || '{}');
+  if (!t.start) {
+    const total = log.filter(e=>e.attendance).length;
+    const present = log.filter(e=>e.attendance==='present').length;
+    return total > 0 ? `${present} attended · ${total} recorded total` : '';
+  }
+  const start = new Date(t.start);
+  const termLogs = log.filter(e => { try { const d = new Date(e.date); return d >= start; } catch(e){return false;} });
+  const termPresent = termLogs.filter(e=>e.attendance==='present').length;
+  const termTotal   = termLogs.filter(e=>e.attendance).length;
+  return termTotal > 0 ? `This term: ${termPresent} attended of ${termTotal} lessons` : '';
+}
+
+function saveDailyNotes() {
+  const text = document.getElementById('daily-notes').value;
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
+  allNotes[today] = text;
+  localStorage.setItem('studio_daily_notes', JSON.stringify(allNotes));
+}
+
+function loadDailyNotes() {
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
+  const el = document.getElementById('daily-notes');
+  const dateEl = document.getElementById('daily-notes-date');
+  if (el) el.value = allNotes[today] || '';
+  if (dateEl) dateEl.textContent = today;
+}
+
+
 function setAttendance(id, status) {
   const s = getStudent(id); if (!s) return;
   if (!s.log) s.log = [];
@@ -2281,6 +2461,7 @@ if (students.length === 0) {
 
 renderToday();
 renderRoster();
+initDarkMode();
 </script>
 </body>
 </html>
