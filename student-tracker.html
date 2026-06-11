@@ -8,19 +8,19 @@
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap');
 
   :root {
-    --ink:      #1a1a2e;
-    --paper:    #f7f4ef;
-    --warm:     #f0ebe2;
-    --viola:    #6b4f8c;
-    --violin:   #2a6bb8;
-    --string:   #c9a84c;
-    --sage:     #5a7a5a;
-    --muted:    #8a8a9a;
-    --beginner: #5a9a6f;
-    --inter:    #c9883a;
-    --advanced: #7a5ab8;
+    --ink:      #05270B;
+    --paper:    #f4f8f2;
+    --warm:     #e8f0e4;
+    --viola:    #2F5C1A;
+    --violin:   #29789E;
+    --string:   #8AB640;
+    --sage:     #2F5C1A;
+    --muted:    #6b8a6b;
+    --beginner: #2F5C1A;
+    --inter:    #29789E;
+    --advanced: #123A5E;
     --card-bg:  #ffffff;
-    --shadow:   0 2px 12px rgba(26,26,46,0.08);
+    --shadow:   0 2px 12px rgba(5,39,11,0.08);
     --radius:   14px;
   }
 
@@ -112,9 +112,9 @@
     font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
     cursor: pointer; text-align: center;
   }
-  .open-notes-btn:hover { background: #7d5fa0; }
+  .open-notes-btn:hover { background: #2F5C1A; }
   .open-notes-btn.violin-btn { background: var(--violin); }
-  .open-notes-btn.violin-btn:hover { background: #3a7bc8; }
+  .open-notes-btn.violin-btn:hover { background: #1f6080; }
 
   .next-badge {
     background: var(--string); color: var(--ink);
@@ -139,10 +139,14 @@
     background: var(--card-bg); border-radius: 10px;
     box-shadow: var(--shadow); padding: 12px 14px;
     margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
-    border-left: 4px solid transparent;
+    border-left: 4px solid transparent; min-height: 58px;
   }
   .week-slot.viola-slot  { border-left-color: var(--viola); }
   .week-slot.violin-slot { border-left-color: var(--violin); }
+  .week-slot.dur-30 { min-height: 44px; padding: 8px 14px; }
+  .week-slot.dur-45 { min-height: 52px; padding: 10px 14px; }
+  .week-slot.dur-60 { min-height: 68px; padding: 14px 14px; }
+  .week-slot.dur-90 { min-height: 90px; padding: 20px 14px; }
   .slot-time { font-size: 0.78rem; font-weight: 700; color: var(--muted); width: 44px; flex-shrink: 0; }
   .slot-avatar {
     width: 34px; height: 34px; border-radius: 50%;
@@ -172,12 +176,12 @@
 
   /* ── ROSTER ── */
   #add-btn {
-    width: 100%; background: var(--viola); color: #fff; border: none;
+    width: 100%; background: #29789E; color: #fff; border: none;
     border-radius: var(--radius); padding: 15px;
     font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 600;
     cursor: pointer; margin-bottom: 18px; letter-spacing: 0.02em;
   }
-  #add-btn:hover { background: #7d5fa0; }
+  #add-btn:hover { background: #1f6080; }
 
   .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
   .filter-chip {
@@ -204,8 +208,8 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 1.1rem; flex-shrink: 0; font-weight: 700;
   }
-  .avatar-viola  { background: #ede5f7; color: var(--viola); }
-  .avatar-violin { background: #e3edf8; color: var(--violin); }
+  .avatar-viola  { background: #dff0d8; color: #2F5C1A; }
+  .avatar-violin { background: #d4eaf5; color: #29789E; }
 
   .student-info { flex: 1; min-width: 0; }
   .student-name { font-size: 1rem; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -214,11 +218,11 @@
     font-size: 0.7rem; font-weight: 600; padding: 2px 8px;
     border-radius: 999px; letter-spacing: 0.04em; text-transform: uppercase;
   }
-  .badge-beginner    { background: #e8f5ec; color: var(--beginner); }
-  .badge-intermediate{ background: #fdf0e3; color: var(--inter); }
-  .badge-advanced    { background: #efe8f7; color: var(--advanced); }
-  .badge-viola       { background: #ede5f7; color: var(--viola); }
-  .badge-violin      { background: #e3edf8; color: var(--violin); }
+  .badge-beginner    { background: #dff0d8; color: #2F5C1A; }
+  .badge-intermediate{ background: #d4eaf5; color: #29789E; }
+  .badge-advanced    { background: #d0dce8; color: #123A5E; }
+  .badge-viola       { background: #dff0d8; color: #2F5C1A; }
+  .badge-violin      { background: #d4eaf5; color: #29789E; }
   .student-snippet { font-size: 0.8rem; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* ── STUDENT DETAIL ── */
@@ -268,10 +272,10 @@
   .goal-emoji { font-size: 1.3rem; width: 30px; flex-shrink: 0; text-align: center; margin-top: 2px; }
   .goal-block { flex: 1; }
   .goal-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
-  .goal-label.long-term { color: var(--advanced); }
-  .goal-label.medium    { color: var(--viola); }
-  .goal-label.short     { color: var(--inter); }
-  .goal-label.this-week { color: var(--sage); }
+  .goal-label.long-term { color: #123A5E; }
+  .goal-label.medium    { color: #2F5C1A; }
+  .goal-label.short     { color: #29789E; }
+  .goal-label.this-week { color: #8AB640; }
 
   /* ── INPUTS ── */
   textarea, input[type="text"] {
@@ -293,7 +297,7 @@
     border-radius: 8px; padding: 7px 13px; font-family: 'DM Sans', sans-serif;
     font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 6px; width: 100%;
   }
-  .add-piece-btn:hover { background: #ede5f7; }
+  .add-piece-btn:hover { background: #dff0d8; }
 
   /* ── TECH CHIPS ── */
   .tech-chips { display: flex; flex-wrap: wrap; gap: 7px; }
@@ -335,7 +339,7 @@
     font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600;
     cursor: pointer; margin-top: 8px; letter-spacing: 0.02em;
   }
-  .save-btn:hover { background: #4a6a4a; }
+  .save-btn:hover { background: #2F5C1A; }
   .save-toast { text-align: center; color: var(--sage); font-weight: 600; font-size: 0.88rem; margin-top: 7px; opacity: 0; transition: opacity 0.3s; }
   .save-toast.show { opacity: 1; }
 
@@ -369,7 +373,7 @@
     border-radius: 10px; padding: 12px; font-family: 'DM Sans', sans-serif;
     font-size: 0.92rem; font-weight: 600; cursor: pointer;
   }
-  .btn-primary:hover { background: #7d5fa0; }
+  .btn-primary:hover { background: #2F5C1A; }
   .btn-ghost {
     padding: 12px 16px; background: none; border: 1.5px solid #e0ddd8;
     border-radius: 10px; font-family: 'DM Sans', sans-serif;
@@ -403,15 +407,15 @@
     font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
     cursor: pointer; white-space: nowrap; flex-shrink: 0;
   }
-  .import-btn:hover { background: #3a7bc8; }
+  .import-btn:hover { background: #1f6080; }
 
   .import-result-row {
     display: flex; align-items: center; gap: 10px;
     padding: 9px 12px; border-radius: 9px; margin-bottom: 7px;
     font-size: 0.85rem;
   }
-  .import-result-row.matched  { background: #e8f5ec; color: var(--sage); }
-  .import-result-row.unmatched{ background: #fdf0e3; color: var(--inter); }
+  .import-result-row.matched  { background: #dff0d8; color: #2F5C1A; }
+  .import-result-row.unmatched{ background: #d4eaf5; color: #29789E; }
   .import-result-row.skipped  { background: var(--warm); color: var(--muted); }
   .import-result-icon { font-size: 1rem; flex-shrink: 0; }
   .import-result-name { font-weight: 600; }
@@ -447,30 +451,38 @@
 
 <!-- WEEK VIEW -->
 <div id="view-week" class="view">
-  <div class="import-bar">
-    <div class="import-bar-text">
-      <strong>📥 Import from Outlook / Live</strong>
-      Sync via URL, paste .ics text, or upload a file.
+  <details style="margin-bottom:16px">
+    <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:8px 0;list-style:none;display:flex;align-items:center;gap:6px">
+      <span style="font-size:0.7rem">▶</span> Import / sync calendar
+    </summary>
+    <div class="import-bar" style="margin-top:10px">
+      <div class="import-bar-text">
+        <strong>📥 Import from Outlook / Live</strong>
+        Sync via URL, paste .ics text, or upload a file.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+        <button id="sync-url-btn" class="import-btn" onclick="openUrlModal()">🔗 Sync URL</button>
+        <button class="import-btn" onclick="openPasteModal()">Paste .ics</button>
+        <button class="import-btn" style="background:var(--muted)" onclick="document.getElementById('ics-file-input').click()">Upload file</button>
+      </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
-      <button id="sync-url-btn" class="import-btn" onclick="openUrlModal()">🔗 Sync URL</button>
-      <button class="import-btn" onclick="openPasteModal()">Paste .ics</button>
-      <button class="import-btn" style="background:var(--muted)" onclick="document.getElementById('ics-file-input').click()">Upload file</button>
-    </div>
-  </div>
+  </details>
   <input type="file" id="ics-file-input" accept=".ics" style="display:none" onchange="handleIcsUpload(event)">
   <div id="week-grid"></div>
 </div>
 
 <!-- ROSTER VIEW -->
 <div id="view-roster" class="view">
-  <button id="add-btn" onclick="openAddModal()">＋ Add Pupil</button>
+  <div style="display:flex;gap:10px;margin-bottom:16px">
+    <button id="add-btn" style="margin-bottom:0;flex:1" onclick="openAddModal()">＋ Add Pupil</button>
+    <button onclick="openExportModal()" style="background:var(--sage);color:#fff;border:none;border-radius:var(--radius);padding:15px 16px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;flex-shrink:0">↓ Export</button>
+  </div>
   <div class="filter-row">
     <button class="filter-chip active" data-filter="all" onclick="setFilter(this,'all')">All</button>
-    <button class="filter-chip" data-filter="viola" onclick="setFilter(this,'viola')">🟣 Viola</button>
-    <button class="filter-chip" data-filter="violin" onclick="setFilter(this,'violin')">🔵 Violin</button>
-    <button class="filter-chip" data-filter="child" onclick="setFilter(this,'child')">🧒 Children</button>
-    <button class="filter-chip" data-filter="adult" onclick="setFilter(this,'adult')">🧑 Adults</button>
+    <button class="filter-chip" data-filter="viola" onclick="setFilter(this,'viola')"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2F5C1A;margin-right:5px;vertical-align:middle"></span>Viola</button>
+    <button class="filter-chip" data-filter="violin" onclick="setFilter(this,'violin')"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#29789E;margin-right:5px;vertical-align:middle"></span>Violin</button>
+    <button class="filter-chip" data-filter="child" onclick="setFilter(this,'child')">School age</button>
+    <button class="filter-chip" data-filter="adult" onclick="setFilter(this,'adult')">Adults</button>
     <button class="filter-chip" data-filter="beginner" onclick="setFilter(this,'beginner')">Beginner</button>
     <button class="filter-chip" data-filter="intermediate" onclick="setFilter(this,'intermediate')">Intermediate</button>
     <button class="filter-chip" data-filter="advanced" onclick="setFilter(this,'advanced')">Advanced</button>
@@ -495,23 +507,23 @@
     <div class="field-group">
       <label class="field-label">Instrument</label>
       <div class="radio-group">
-        <div class="radio-opt"><input type="radio" name="instrument" id="inst-viola" value="viola" checked><label for="inst-viola">🟣 Viola</label></div>
-        <div class="radio-opt"><input type="radio" name="instrument" id="inst-violin" value="violin"><label for="inst-violin">🔵 Violin</label></div>
+        <div class="radio-opt"><input type="radio" name="instrument" id="inst-viola" value="viola" checked><label for="inst-viola"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2F5C1A;margin-right:5px;vertical-align:middle"></span>Viola</label></div>
+        <div class="radio-opt"><input type="radio" name="instrument" id="inst-violin" value="violin"><label for="inst-violin"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#29789E;margin-right:5px;vertical-align:middle"></span>Violin</label></div>
       </div>
     </div>
     <div class="field-group">
       <label class="field-label">Level</label>
       <div class="radio-group">
-        <div class="radio-opt"><input type="radio" name="level" id="lv-beg" value="beginner" checked><label for="lv-beg">🌱 Beginner</label></div>
-        <div class="radio-opt"><input type="radio" name="level" id="lv-int" value="intermediate"><label for="lv-int">🎵 Intermediate</label></div>
-        <div class="radio-opt"><input type="radio" name="level" id="lv-adv" value="advanced"><label for="lv-adv">⭐ Advanced</label></div>
+        <div class="radio-opt"><input type="radio" name="level" id="lv-beg" value="beginner" checked><label for="lv-beg">Beginner</label></div>
+        <div class="radio-opt"><input type="radio" name="level" id="lv-int" value="intermediate"><label for="lv-int">Intermediate</label></div>
+        <div class="radio-opt"><input type="radio" name="level" id="lv-adv" value="advanced"><label for="lv-adv">Advanced</label></div>
       </div>
     </div>
     <div class="field-group">
       <label class="field-label">Pupil type</label>
       <div class="radio-group">
-        <div class="radio-opt"><input type="radio" name="pupiltype" id="type-child" value="child" checked><label for="type-child">🧒 Child</label></div>
-        <div class="radio-opt"><input type="radio" name="pupiltype" id="type-adult" value="adult"><label for="type-adult">🧑 Adult</label></div>
+        <div class="radio-opt"><input type="radio" name="pupiltype" id="type-child" value="child" checked><label for="type-child">School age</label></div>
+        <div class="radio-opt"><input type="radio" name="pupiltype" id="type-adult" value="adult"><label for="type-adult">Adult</label></div>
       </div>
     </div>
     <div class="field-group">
@@ -525,6 +537,30 @@
     <div class="field-group">
       <label class="field-label">Lesson time (e.g. 14:30)</label>
       <input type="text" id="new-time" placeholder="HH:MM" maxlength="5">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Frequency</label>
+      <div class="radio-group">
+        <div class="radio-opt"><input type="radio" name="frequency" id="freq-weekly" value="weekly" checked><label for="freq-weekly">Weekly</label></div>
+        <div class="radio-opt"><input type="radio" name="frequency" id="freq-fortnightly" value="fortnightly"><label for="freq-fortnightly">Fortnightly</label></div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Lesson duration</label>
+      <div class="radio-group">
+        <div class="radio-opt"><input type="radio" name="duration" id="dur-30" value="30"><label for="dur-30">30 min</label></div>
+        <div class="radio-opt"><input type="radio" name="duration" id="dur-45" value="45"><label for="dur-45">45 min</label></div>
+        <div class="radio-opt"><input type="radio" name="duration" id="dur-60" value="60" checked><label for="dur-60">60 min</label></div>
+        <div class="radio-opt"><input type="radio" name="duration" id="dur-90" value="90"><label for="dur-90">90 min</label></div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Date of birth (optional)</label>
+      <input type="date" id="new-dob">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Parent / contact email (optional)</label>
+      <input type="text" id="new-email" placeholder="email@example.com">
     </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeAddModal()">Cancel</button>
@@ -556,6 +592,49 @@
   </div>
 </div>
 
+<!-- PIECE DATABASE MODAL -->
+<div class="modal-overlay" id="piece-db-modal">
+  <div class="modal" style="max-width:500px;max-height:85vh;display:flex;flex-direction:column">
+    <h2>Piece library</h2>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <input type="text" id="piece-search" placeholder="Search…" oninput="filterPieceDB()" style="flex:1;min-width:120px">
+      <select id="piece-cat-filter" onchange="filterPieceDB()" style="width:auto">
+        <option value="">All categories</option>
+        <option value="Scalability">Scalability</option>
+        <option value="Scales & Exercises">Scales & Exercises</option>
+        <option value="Technique">Technique</option>
+        <option value="Studies - Viola">Studies — Viola</option>
+        <option value="Studies - Violin">Studies — Violin</option>
+        <option value="Repertoire - Viola">Repertoire — Viola</option>
+        <option value="Repertoire - Violin">Repertoire — Violin</option>
+        <option value="Beginner Repertoire - Viola">Beginner Repertoire — Viola</option>
+        <option value="Beginner Repertoire - Violin">Beginner Repertoire — Violin</option>
+      </select>
+    </div>
+    <div id="piece-db-list" style="overflow-y:auto;flex:1;margin-bottom:12px"></div>
+    <button class="btn-ghost" onclick="closePieceDB()">Cancel</button>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="export-modal">
+  <div class="modal">
+    <h2>Export notes</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px;line-height:1.5">
+      Downloads a formatted report. Open it in your browser, then <strong>Print → Save as PDF</strong> to save to Google Drive.
+    </p>
+    <div class="field-group">
+      <label class="field-label">Term label (optional)</label>
+      <input type="text" id="export-term" placeholder="e.g. Autumn Term 2026">
+    </div>
+    <div class="modal-actions" style="flex-direction:column;gap:10px">
+      <button class="btn-primary" onclick="exportAll()">🖨️ All pupils — one report</button>
+      <button class="btn-primary" style="background:var(--violin)" onclick="exportIndividual()">🖨️ One pupil — search by name</button>
+      <button class="btn-ghost" onclick="closeExportModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- EDIT PUPIL MODAL -->
 <div class="modal-overlay" id="edit-modal">
   <div class="modal">
@@ -567,23 +646,23 @@
     <div class="field-group">
       <label class="field-label">Instrument</label>
       <div class="radio-group">
-        <div class="radio-opt"><input type="radio" name="edit-instrument" id="edit-inst-viola" value="viola"><label for="edit-inst-viola">🟣 Viola</label></div>
-        <div class="radio-opt"><input type="radio" name="edit-instrument" id="edit-inst-violin" value="violin"><label for="edit-inst-violin">🔵 Violin</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-instrument" id="edit-inst-viola" value="viola"><label for="edit-inst-viola"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2F5C1A;margin-right:5px;vertical-align:middle"></span>Viola</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-instrument" id="edit-inst-violin" value="violin"><label for="edit-inst-violin"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#29789E;margin-right:5px;vertical-align:middle"></span>Violin</label></div>
       </div>
     </div>
     <div class="field-group">
       <label class="field-label">Level</label>
       <div class="radio-group">
-        <div class="radio-opt"><input type="radio" name="edit-level" id="edit-lv-beg" value="beginner"><label for="edit-lv-beg">🌱 Beginner</label></div>
-        <div class="radio-opt"><input type="radio" name="edit-level" id="edit-lv-int" value="intermediate"><label for="edit-lv-int">🎵 Intermediate</label></div>
-        <div class="radio-opt"><input type="radio" name="edit-level" id="edit-lv-adv" value="advanced"><label for="edit-lv-adv">⭐ Advanced</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-level" id="edit-lv-beg" value="beginner"><label for="edit-lv-beg">Beginner</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-level" id="edit-lv-int" value="intermediate"><label for="edit-lv-int">Intermediate</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-level" id="edit-lv-adv" value="advanced"><label for="edit-lv-adv">Advanced</label></div>
       </div>
     </div>
     <div class="field-group">
       <label class="field-label">Pupil type</label>
       <div class="radio-group">
-        <div class="radio-opt"><input type="radio" name="edit-pupiltype" id="edit-type-child" value="child"><label for="edit-type-child">🧒 Child</label></div>
-        <div class="radio-opt"><input type="radio" name="edit-pupiltype" id="edit-type-adult" value="adult"><label for="edit-type-adult">🧑 Adult</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-pupiltype" id="edit-type-child" value="child"><label for="edit-type-child">School age</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-pupiltype" id="edit-type-adult" value="adult"><label for="edit-type-adult">Adult</label></div>
       </div>
     </div>
     <div class="field-group">
@@ -597,6 +676,30 @@
     <div class="field-group">
       <label class="field-label">Lesson time (e.g. 14:30)</label>
       <input type="text" id="edit-time" placeholder="HH:MM" maxlength="5">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Frequency</label>
+      <div class="radio-group">
+        <div class="radio-opt"><input type="radio" name="edit-frequency" id="edit-freq-weekly" value="weekly"><label for="edit-freq-weekly">Weekly</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-frequency" id="edit-freq-fortnightly" value="fortnightly"><label for="edit-freq-fortnightly">Fortnightly</label></div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Lesson duration</label>
+      <div class="radio-group">
+        <div class="radio-opt"><input type="radio" name="edit-duration" id="edit-dur-30" value="30"><label for="edit-dur-30">30 min</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-duration" id="edit-dur-45" value="45"><label for="edit-dur-45">45 min</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-duration" id="edit-dur-60" value="60"><label for="edit-dur-60">60 min</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-duration" id="edit-dur-90" value="90"><label for="edit-dur-90">90 min</label></div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Date of birth (optional)</label>
+      <input type="date" id="edit-dob">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Parent / contact email (optional)</label>
+      <input type="text" id="edit-email" placeholder="email@example.com">
     </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeEditModal()">Cancel</button>
@@ -671,9 +774,9 @@
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const TECH_OPTIONS = [
-  '🏹 Bowing','🎯 Intonation','🖐️ Left hand','🌿 Posture',
-  '📏 Scales','🎼 Sight-reading','🎭 Expression','🔄 Shifting',
-  '🎻 Vibrato','🎵 Rhythm','🤫 Dynamics','📖 Theory'
+  'Bowing', 'Intonation', 'Left hand', 'Posture',
+  'Scales', 'Sight-reading', 'Expression', 'Shifting',
+  'Vibrato', 'Rhythm', 'Dynamics', 'Theory'
 ];
 
 // ── STATE ──────────────────────────────────────────────────────────────────
@@ -694,10 +797,15 @@ function save() {
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
+function instrDot(instrument) {
+  const col = instrument === 'viola' ? '#2F5C1A' : '#29789E';
+  return `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${col};margin-right:4px;vertical-align:middle;flex-shrink:0"></span>`;
+}
+
 function getInitials(name) {
   return name.split(' ').map(w => w[0]||'').join('').toUpperCase().slice(0,2) || '?';
 }
-function levelEmoji(l) { return {beginner:'🌱',intermediate:'🎵',advanced:'⭐'}[l]||''; }
+function levelEmoji(l) { return ''; }
 function esc(str) {
   return String(str||'')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -803,7 +911,7 @@ function renderToday() {
         <div class="ls-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
         <div class="ls-info">
           <div class="ls-name">${s.name}${isNext?'<span class="next-badge">Next</span>':''}</div>
-          <div class="ls-time">${slot.time || 'time not set'} · ${s.instrument} · ${levelEmoji(s.level)} ${s.level}</div>
+          <div class="ls-time">${slot.time || 'time not set'} · ${instrDot(s.instrument)}${s.instrument} · ${s.level}</div>
         </div>
         <div class="ls-chevron">›</div>
       </div>
@@ -881,17 +989,16 @@ function renderWeek() {
     for (const s of dayStudents) {
       const slot = effectiveSlot(s);
       const moved = oneOffMoves[s.id] && oneOffMoves[s.id].week === currentWeek;
-      html += `<div class="week-slot ${s.instrument}-slot">
+      html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer">
         <div class="slot-time">${slot.time||'—'}</div>
         <div class="slot-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
         <div class="slot-info">
-          <div class="slot-name">${s.name}${moved?` <span style="font-size:0.68rem;color:var(--inter);font-weight:700">MOVED</span>`:''}
+          <div class="slot-name">${s.name}${moved?` <span style="font-size:0.68rem;color:var(--inter);font-weight:700">MOVED</span>`:''}${s.frequency==='fortnightly'?' <span style="font-size:0.68rem;color:var(--muted);font-weight:600">fortnightly</span>':''}
           </div>
-          <div class="slot-meta">${s.instrument} · ${levelEmoji(s.level)} ${s.level}</div>
+          <div class="slot-meta">${instrDot(s.instrument)}${s.instrument} · ${s.level}</div>
         </div>
         <div class="slot-actions">
-          <button class="slot-btn" onclick="openStudentFrom('${s.id}','week')">Notes</button>
-          <button class="slot-btn move-btn" onclick="openMoveModal('${s.id}')">Move</button>
+          <button class="slot-btn move-btn" onclick="event.stopPropagation();openMoveModal('${s.id}')">Move</button>
         </div>
       </div>`;
     }
@@ -938,9 +1045,9 @@ function renderRoster() {
       <div class="student-info">
         <div class="student-name">${s.name}</div>
         <div class="student-meta">
-          <span class="badge badge-${s.instrument}">${s.instrument==='violin'?'🔵':'🟣'} ${s.instrument}</span>
-          <span class="badge badge-${s.level}">${levelEmoji(s.level)} ${s.level}</span>
-          <span class="badge" style="background:var(--warm);color:var(--muted)">${(s.pupilType||'child')==='adult'?'🧑 Adult':'🧒 Child'}</span>
+          <span class="badge badge-${s.instrument}">${instrDot(s.instrument)}${s.instrument}</span>
+          <span class="badge badge-${s.level}">${s.level}</span>
+          <span class="badge" style="background:var(--warm);color:var(--muted)">${(s.pupilType||'child')==='adult'?'Adult':'School age'}</span>
           ${dayLabel}
         </div>
         ${snippet ? `<div class="student-snippet">${esc(snippet)}</div>` : ''}
@@ -954,6 +1061,8 @@ function openAddModal() {
   document.getElementById('new-name').value = '';
   document.getElementById('new-time').value = '';
   document.getElementById('new-day').value = '';
+  document.getElementById('new-dob').value = '';
+  document.getElementById('new-email').value = '';
   document.getElementById('add-modal').classList.add('open');
   setTimeout(() => document.getElementById('new-name').focus(), 100);
 }
@@ -971,9 +1080,13 @@ function addStudent() {
   const pupilType  = document.querySelector('input[name="pupiltype"]:checked').value;
   const lessonDay  = document.getElementById('new-day').value;
   const lessonTime = document.getElementById('new-time').value.trim();
+  const frequency  = document.querySelector('input[name="frequency"]:checked').value;
+  const duration   = document.querySelector('input[name="duration"]:checked').value;
+  const dob        = document.getElementById('new-dob').value;
+  const email      = document.getElementById('new-email').value.trim();
   students.push({
     id: Date.now().toString(),
-    name, instrument, level, pupilType, lessonDay, lessonTime,
+    name, instrument, level, pupilType, lessonDay, lessonTime, frequency, duration, dob, email,
     pieces: [''], techFocus: [],
     goals: {longTerm:'',medium:'',shortTerm:'',thisWeek:''},
     nextLesson: '', duringScratch: '', log: []
@@ -1052,11 +1165,15 @@ function renderDetail(s) {
       <div style="flex:1">
         <div class="detail-name">${s.name}</div>
         <div class="student-meta">
-          <span class="badge badge-${s.instrument}">${s.instrument==='violin'?'🔵':'🟣'} ${s.instrument}</span>
-          <span class="badge badge-${s.level}">${levelEmoji(s.level)} ${s.level}</span>
-          <span class="badge" style="background:var(--warm);color:var(--muted)">${(s.pupilType||'child')==='adult'?'🧑 Adult':'🧒 Child'}</span>
-          ${slot.day?`<span class="badge" style="background:var(--warm);color:var(--muted)">${slot.day}${slot.time?' '+slot.time:''}</span>`:''}
+          <span class="badge badge-${s.instrument}">${instrDot(s.instrument)}${s.instrument}</span>
+          <span class="badge badge-${s.level}">${s.level}</span>
+          <span class="badge" style="background:var(--warm);color:var(--muted)">${(s.pupilType||'child')==='adult'?'Adult':'School age'}</span>
+          ${slot.day?`<span class="badge" style="background:var(--warm);color:var(--muted)">${slot.day}${slot.time?' '+slot.time:''}${s.duration?' · '+s.duration+'min':''}</span>`:''}
         </div>
+        ${s.dob || s.email ? `<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;font-size:0.8rem;color:var(--muted)">
+          ${s.dob ? `<span>${birthdayDisplay(s.dob)}</span>` : ''}
+          ${s.email ? `<span>✉ <a href="mailto:${esc(s.email)}" style="color:var(--viola)">${esc(s.email)}</a></span>` : ''}
+        </div>` : ''}
       </div>
       <button onclick="deletePupil('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:10px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--muted);cursor:pointer;flex-shrink:0;align-self:flex-start" title="Remove pupil">🗑️ Remove</button>
       <button onclick="openEditModal('${s.id}')" style="background:none;border:1.5px solid var(--viola);border-radius:10px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--viola);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Edit pupil">✏️ Edit</button>
@@ -1079,7 +1196,10 @@ function renderDetail(s) {
       <div class="section-card">
         <div class="section-label">🎵 Pieces &amp; exercises</div>
         <div class="pieces-list" id="pieces-list-${s.id}">${piecesHTML}</div>
-        <button class="add-piece-btn" onclick="addPiece('${s.id}')">＋ Add piece</button>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="add-piece-btn" style="flex:1" onclick="openPieceDB('${s.id}')">＋ From library</button>
+          <button class="add-piece-btn" style="flex:1" onclick="addPiece('${s.id}')">＋ Add manually</button>
+        </div>
       </div>
       <div class="section-card">
         <div class="section-label">🔧 Technical focus</div>
@@ -1102,6 +1222,12 @@ function renderDetail(s) {
         <textarea class="quick-note" rows="5"
           placeholder="Jot anything — key words, reminders, 'try this'… Tidy up later."
           id="during-scratch-${s.id}">${esc(s.duringScratch||'')}</textarea>
+        <div style="margin-top:10px">
+          <div class="section-label" style="margin-bottom:8px">Tap to add to notes</div>
+          <div class="tech-chips" style="margin-bottom:8px">
+            ${allTech.map(t => `<button class="tech-chip" onclick="insertIntoScratch('${s.id}','${esc(t)}')">${esc(t)}</button>`).join('')}
+          </div>
+        </div>
         <button class="save-btn" onclick="saveDuring('${s.id}')">Save scratchpad</button>
         <div class="save-toast" id="toast-during-${s.id}">✓ Saved</div>
       </div>
@@ -1125,22 +1251,22 @@ function renderDetail(s) {
     <!-- GOALS -->
     <div class="moment-panel" id="panel-goals">
       <div class="section-card">
-        <div class="goal-row"><div class="goal-emoji">🏔️</div><div class="goal-block">
+        <div class="goal-row"><div class="goal-emoji"></div><div class="goal-block">
           <div class="goal-label long-term">Long-term goal</div>
           <textarea rows="2" placeholder="Where are they heading overall?"
             oninput="updateGoal('${s.id}','longTerm',this.value)">${esc((s.goals||{}).longTerm||'')}</textarea>
         </div></div>
-        <div class="goal-row"><div class="goal-emoji">🗺️</div><div class="goal-block">
+        <div class="goal-row"><div class="goal-emoji"></div><div class="goal-block">
           <div class="goal-label medium">Medium-term goal</div>
           <textarea rows="2" placeholder="Next few months…"
             oninput="updateGoal('${s.id}','medium',this.value)">${esc((s.goals||{}).medium||'')}</textarea>
         </div></div>
-        <div class="goal-row"><div class="goal-emoji">🎯</div><div class="goal-block">
+        <div class="goal-row"><div class="goal-emoji"></div><div class="goal-block">
           <div class="goal-label short">Short-term goal</div>
           <textarea rows="2" placeholder="Next few weeks…"
             oninput="updateGoal('${s.id}','shortTerm',this.value)">${esc((s.goals||{}).shortTerm||'')}</textarea>
         </div></div>
-        <div class="goal-row"><div class="goal-emoji">⚡</div><div class="goal-block">
+        <div class="goal-row"><div class="goal-emoji"></div><div class="goal-block">
           <div class="goal-label this-week">This week</div>
           <textarea rows="2" placeholder="Homework / focus for this week"
             oninput="updateGoal('${s.id}','thisWeek',this.value)">${esc((s.goals||{}).thisWeek||'')}</textarea>
@@ -1205,9 +1331,23 @@ function removeCustomChip(chip, studentId) {
   const s=getStudent(studentId); if(s)renderDetail(s);
 }
 
+function insertIntoScratch(id, text) {
+  const el = document.getElementById('during-scratch-' + id);
+  if (!el) return;
+  const cur = el.value;
+  // Add a space or newline separator if there's already content
+  const sep = cur.length > 0 && !cur.endsWith(' ') && !cur.endsWith('\n') ? ' · ' : '';
+  el.value = cur + sep + text;
+  // Update the stored value
+  const s = getStudent(id);
+  if (s) { s.duringScratch = el.value; save(); }
+  el.focus();
+  el.scrollTop = el.scrollHeight;
+}
+
+
 function saveDuring(id) {
   const s=getStudent(id); if(!s)return;
-  s.duringScratch=document.getElementById(`during-scratch-${id}`).value;
   save(); showToast(`toast-during-${id}`);
 }
 function saveLog(id) {
@@ -1221,16 +1361,43 @@ function saveLog(id) {
 }
 function saveGoals(id) { save(); showToast(`toast-goals-${id}`); }
 
+function birthdayDisplay(dob) {
+  if (!dob) return '';
+  const d = new Date(dob);
+  const today = new Date();
+  const age = today.getFullYear() - d.getFullYear();
+  const formatted = d.toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+  // Check if birthday is within next 14 days
+  const thisYear = new Date(today.getFullYear(), d.getMonth(), d.getDate());
+  const diff = (thisYear - today) / (1000 * 60 * 60 * 24);
+  const soon = diff >= 0 && diff <= 14;
+  const nextYear = new Date(today.getFullYear()+1, d.getMonth(), d.getDate());
+  const diffNext = (nextYear - today) / (1000 * 60 * 60 * 24);
+  const soonNext = diffNext >= 0 && diffNext <= 14;
+  if (soon || soonNext) {
+    const days = soon ? Math.round(diff) : Math.round(diffNext);
+    return `🎂 ${formatted} (age ${age}${soon?'':', turning '+(age+1)}) — birthday in ${days} day${days!==1?'s':''}!`;
+  }
+  return `Born: ${formatted} (age ${age})`;
+}
+
+
 function openEditModal(id) {
   const s = getStudent(id); if (!s) return;
   document.getElementById('edit-modal').dataset.pupilId = id;
-  document.getElementById('edit-name').value = s.name;
-  document.getElementById('edit-day').value  = s.lessonDay  || '';
-  document.getElementById('edit-time').value = s.lessonTime || '';
+  document.getElementById('edit-name').value  = s.name || '';
+  document.getElementById('edit-day').value   = s.lessonDay  || '';
+  document.getElementById('edit-time').value  = s.lessonTime || '';
   document.querySelector('input[name="edit-instrument"][value="' + s.instrument + '"]').checked = true;
   document.querySelector('input[name="edit-level"][value="' + s.level + '"]').checked = true;
   const pt = s.pupilType || 'child';
   document.querySelector('input[name="edit-pupiltype"][value="' + pt + '"]').checked = true;
+  const freq = s.frequency || 'weekly';
+  document.querySelector('input[name="edit-frequency"][value="' + freq + '"]').checked = true;
+  const dur = s.duration || '60';
+  document.querySelector('input[name="edit-duration"][value="' + dur + '"]').checked = true;
+  document.getElementById('edit-dob').value   = s.dob   || '';
+  document.getElementById('edit-email').value = s.email || '';
   document.getElementById('edit-modal').classList.add('open');
 }
 function closeEditModal() {
@@ -1245,6 +1412,10 @@ function saveEditModal() {
   s.pupilType  = document.querySelector('input[name="edit-pupiltype"]:checked').value;
   s.lessonDay  = document.getElementById('edit-day').value;
   s.lessonTime = document.getElementById('edit-time').value.trim();
+  s.frequency  = document.querySelector('input[name="edit-frequency"]:checked').value;
+  s.duration   = document.querySelector('input[name="edit-duration"]:checked').value;
+  s.dob        = document.getElementById('edit-dob').value;
+  s.email      = document.getElementById('edit-email').value.trim();
   save();
   closeEditModal();
   renderDetail(s);
@@ -1503,46 +1674,315 @@ function closeImportModal() {
   document.getElementById('import-modal').classList.remove('open');
 }
 
-// ── INIT ──────────────────────────────────────────────────────────────────
+// ── PIECE DATABASE ────────────────────────────────────────────────────────
+
+const PIECE_DB = [
+  // SCALABILITY
+  { title:'Scalability Stage 1 — 1 octave separate', composer:'Gaidoni', grade:'Pre-Grade 1', cat:'Scalability' },
+  { title:'Scalability Stage 1 — 1 octave slurred', composer:'Gaidoni', grade:'Pre-Grade 1', cat:'Scalability' },
+  { title:'Scalability Stage 2 — 2 octave separate', composer:'Gaidoni', grade:'Grade 1-3', cat:'Scalability' },
+  { title:'Scalability Stage 2 — 2 octave slurred', composer:'Gaidoni', grade:'Grade 1-3', cat:'Scalability' },
+  { title:'Scalability Stage 3 — 3 octave separate', composer:'Gaidoni', grade:'Grade 4+', cat:'Scalability' },
+  { title:'Scalability Stage 3 — 3 octave slurred', composer:'Gaidoni', grade:'Grade 4+', cat:'Scalability' },
+
+  // TECHNIQUE
+  { title:'Ultimate Shifting Exercise — Viola', composer:'Gaidoni', grade:'Grade 3+', cat:'Technique' },
+  { title:'Ultimate Shifting Exercise — Violin', composer:'Gaidoni', grade:'Grade 3+', cat:'Technique' },
+
+  // STUDIES — VIOLA
+  { title:'Superstudies 1', composer:'Mary Cohen', grade:'Grade 1', cat:'Studies - Viola' },
+  { title:'Superstudies 2', composer:'Mary Cohen', grade:'Grade 2-4', cat:'Studies - Viola' },
+  { title:'My First Studies', composer:'Valérie Bime-Apparailly', grade:'Grade 1-3', cat:'Studies - Viola' },
+  { title:'String Power 1 & 2', composer:'Sally O\'Reilly', grade:'Grade 1-3', cat:'Studies - Viola' },
+  { title:'Finger Fun Viola Workbook', composer:'Daryl Silberman', grade:'Grade 1', cat:'Studies - Viola' },
+  { title:'10 Studies for Viola', composer:'Peter Martin', grade:'Grade 2-3', cat:'Studies - Viola' },
+  { title:'10 More Studies for Viola', composer:'Peter Martin', grade:'Grade 3-4', cat:'Studies - Viola' },
+  { title:'Dancla — 36 Melodious & Easy Studies', composer:'Dancla', grade:'Grade 2-6', cat:'Studies - Viola' },
+  { title:'Wohlfahrt — Studies Op. 45', composer:'Wohlfahrt', grade:'Grade 2-8', cat:'Studies - Viola' },
+  { title:'Wohlfahrt — Foundation Studies Book 1', composer:'Wohlfahrt', grade:'Grade 3-5', cat:'Studies - Viola' },
+  { title:'The Positions', composer:'Samuel Flor', grade:'Grade 3-8', cat:'Studies - Viola' },
+  { title:'Schradieck — School of Technique Book I (Positions)', composer:'Schradieck', grade:'Grade 4-8', cat:'Studies - Viola' },
+  { title:'Schradieck — School of Technique Book II (Double Stopping)', composer:'Schradieck', grade:'Grade 5-8', cat:'Studies - Viola' },
+  { title:'Schradieck — School of Technique Book III (Bowing)', composer:'Schradieck', grade:'Grade 5-8', cat:'Studies - Viola' },
+  { title:'Melodious Double Stop', composer:'Josephine Trott', grade:'Grade 4-6', cat:'Studies - Viola' },
+  { title:'Mazas — Viola Studies Op. 36', composer:'Mazas', grade:'Grade 5-8+', cat:'Studies - Viola' },
+  { title:'Dancla — 15 Studies Op. 68 (Viola Duets)', composer:'Dancla', grade:'Grade 5-8', cat:'Studies - Viola' },
+  { title:'Sevcik Op. 3 — 40 Variations', composer:'Sevcik', grade:'All grades', cat:'Studies - Viola' },
+  { title:'Dont — 24 Exercises Op. 37', composer:'Dont', grade:'Grade 8+', cat:'Studies - Viola' },
+  { title:'Kreutzer — 42 Studies (Ricordi)', composer:'Kreutzer', grade:'Grade 6-8+', cat:'Studies - Viola' },
+  { title:'Campagnoli — 41 Caprices Op. 22', composer:'Campagnoli', grade:'Grade 8+', cat:'Studies - Viola' },
+  { title:'Rode — 24 Caprices', composer:'Rode', grade:'Grade 8+', cat:'Studies - Viola' },
+
+  // STUDIES — VIOLIN
+  { title:'Schradieck — School of Technique Book I (Positions)', composer:'Schradieck', grade:'Grade 4-8', cat:'Studies - Violin' },
+  { title:'Schradieck — School of Technique Book II (Double Stopping)', composer:'Schradieck', grade:'Grade 5-8', cat:'Studies - Violin' },
+  { title:'Schradieck — School of Technique Book III (Bowing)', composer:'Schradieck', grade:'Grade 5-8', cat:'Studies - Violin' },
+  { title:'Dancla — 36 Studies Op. 84', composer:'Dancla', grade:'Grade 2-6', cat:'Studies - Violin' },
+  { title:'Wohlfahrt — Studies Op. 45', composer:'Wohlfahrt', grade:'Grade 2-8', cat:'Studies - Violin' },
+  { title:'Melodious Double Stops', composer:'Josephine Trott', grade:'Grade 4-6', cat:'Studies - Violin' },
+  { title:'Mazas — Violin Studies Op. 36', composer:'Mazas', grade:'Grade 6-8', cat:'Studies - Violin' },
+  { title:'Sevcik Op. 3 — 40 Variations', composer:'Sevcik', grade:'All grades', cat:'Studies - Violin' },
+  { title:'Kreutzer — 42 Studies (Ricordi)', composer:'Kreutzer', grade:'Grade 6-8+', cat:'Studies - Violin' },
+  { title:'Kreutzer — 42 Studies (Galamian)', composer:'Kreutzer', grade:'Grade 6-8+', cat:'Studies - Violin' },
+
+  // REPERTOIRE — VIOLA
+  { title:'York Bowen — Sonata No. 1 in C minor', composer:'York Bowen', grade:'Grade 8+', cat:'Repertoire - Viola' },
+  { title:'Noack — Heinzelmännchens Wachtparade Op. 5', composer:'Noack/Birtel', grade:'Grade 3-5', cat:'Repertoire - Viola' },
+
+  // REPERTOIRE — VIOLIN
+  { title:'Rieding — Air Varié Op. 23 No. 3', composer:'Oscar Rieding', grade:'Grade 3-4', cat:'Repertoire - Violin' },
+  { title:'Viola Time Starters', composer:'Blackwell', grade:'Grade 1', cat:'Beginner Repertoire - Viola' },
+  { title:'Viola Time Joggers', composer:'Blackwell', grade:'Grade 1', cat:'Beginner Repertoire - Viola' },
+  { title:'Viola Time Runners', composer:'Blackwell', grade:'Grade 1-2', cat:'Beginner Repertoire - Viola' },
+  { title:'Viola Time Sprinters', composer:'Blackwell', grade:'Grade 2-3', cat:'Beginner Repertoire - Viola' },
+  { title:'Viola Time Scales 1', composer:'Blackwell', grade:'Grade 1-2', cat:'Beginner Repertoire - Viola' },
+  { title:'Viola Time Scales 2', composer:'Blackwell', grade:'Grade 3-4', cat:'Beginner Repertoire - Viola' },
+  { title:'Stepping Stones', composer:'Colledge', grade:'Grade 1', cat:'Beginner Repertoire - Viola' },
+  { title:'Waggon Wheels', composer:'Colledge', grade:'Grade 1-2', cat:'Beginner Repertoire - Viola' },
+  { title:'Fast Forward', composer:'Colledge', grade:'Grade 2-3', cat:'Beginner Repertoire - Viola' },
+  { title:'Shooting Stars', composer:'Colledge', grade:'Grade 3-4', cat:'Beginner Repertoire - Viola' },
+
+  // BEGINNER REPERTOIRE — VIOLIN
+  { title:'Fiddle Time Starters', composer:'Blackwell', grade:'Grade 1', cat:'Beginner Repertoire - Violin' },
+  { title:'Fiddle Time Joggers', composer:'Blackwell', grade:'Grade 1', cat:'Beginner Repertoire - Violin' },
+  { title:'Fiddle Time Runners', composer:'Blackwell', grade:'Grade 1-2', cat:'Beginner Repertoire - Violin' },
+  { title:'Fiddle Time Sprinters', composer:'Blackwell', grade:'Grade 2-3', cat:'Beginner Repertoire - Violin' },
+  { title:'Fiddle Time Scales 1', composer:'Blackwell', grade:'Grade 1-2', cat:'Beginner Repertoire - Violin' },
+  { title:'Fiddle Time Scales 2', composer:'Blackwell', grade:'Grade 3-4', cat:'Beginner Repertoire - Violin' },
+  { title:'Stepping Stones', composer:'Colledge', grade:'Grade 1', cat:'Beginner Repertoire - Violin' },
+  { title:'Waggon Wheels', composer:'Colledge', grade:'Grade 1-2', cat:'Beginner Repertoire - Violin' },
+  { title:'Fast Forward', composer:'Colledge', grade:'Grade 2-3', cat:'Beginner Repertoire - Violin' },
+  { title:'Shooting Stars', composer:'Colledge', grade:'Grade 3-4', cat:'Beginner Repertoire - Violin' },
+  { title:'Violin Playtime Book 3', composer:'Paul de Keyser', grade:'Grade 1-2', cat:'Beginner Repertoire - Violin' },
+  { title:'Violin Playtime Studies', composer:'Paul de Keyser', grade:'Grade 2-3', cat:'Beginner Repertoire - Violin' },
+  { title:'Violin Study Time', composer:'Paul de Keyser', grade:'Grade 3-4', cat:'Beginner Repertoire - Violin' },
+  { title:'The Young Violinist\'s Repertoire Book 4', composer:'de Keyser & Waterman', grade:'Grade 4-5', cat:'Beginner Repertoire - Violin' },
+  { title:'Violin Star 1', composer:'Edward Huws Jones', grade:'Beginner', cat:'Beginner Repertoire - Violin' },
+  { title:'Violin Star 2', composer:'Edward Huws Jones', grade:'Grade 1', cat:'Beginner Repertoire - Violin' },
+  { title:'Violin Star 3', composer:'Edward Huws Jones', grade:'Grade 1-2', cat:'Beginner Repertoire - Violin' },
+];
+
+let pieceDBStudentId = null;
+
+function openPieceDB(studentId) {
+  pieceDBStudentId = studentId;
+  document.getElementById('piece-search').value = '';
+  document.getElementById('piece-cat-filter').value = '';
+  renderPieceDB(PIECE_DB);
+  document.getElementById('piece-db-modal').classList.add('open');
+}
+function closePieceDB() {
+  document.getElementById('piece-db-modal').classList.remove('open');
+  pieceDBStudentId = null;
+}
+function filterPieceDB() {
+  const search = document.getElementById('piece-search').value.toLowerCase();
+  const cat = document.getElementById('piece-cat-filter').value;
+  const filtered = PIECE_DB.filter(p => {
+    const matchSearch = !search || p.title.toLowerCase().includes(search) || p.composer.toLowerCase().includes(search);
+    const matchCat = !cat || p.cat === cat;
+    return matchSearch && matchCat;
+  });
+  renderPieceDB(filtered);
+}
+function renderPieceDB(items) {
+  const list = document.getElementById('piece-db-list');
+  if (items.length === 0) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:0.88rem;text-align:center;padding:20px">No results</p>';
+    return;
+  }
+  // Group by category
+  const groups = {};
+  items.forEach(p => { if (!groups[p.cat]) groups[p.cat] = []; groups[p.cat].push(p); });
+  list.innerHTML = Object.entries(groups).map(([cat, pieces]) => `
+    <div style="margin-bottom:14px">
+      <div style="font-size:0.68rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${cat.replace(' - ',' — ')}</div>
+      ${pieces.map(p => `
+        <div onclick="selectPiece('${esc(p.title)} — ${esc(p.composer)}')"
+          style="padding:10px 12px;border-radius:9px;cursor:pointer;margin-bottom:4px;transition:background 0.12s"
+          onmouseover="this.style.background='var(--warm)'" onmouseout="this.style.background='transparent'">
+          <div style="font-size:0.9rem;font-weight:600">${esc(p.title)}</div>
+          <div style="font-size:0.75rem;color:var(--muted)">${esc(p.composer)} · ${esc(p.grade)}</div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+function selectPiece(title) {
+  if (!pieceDBStudentId) return;
+  const s = getStudent(pieceDBStudentId);
+  if (!s) return;
+  if (!s.pieces) s.pieces = [];
+  // Replace last empty slot or add new
+  const emptyIdx = s.pieces.findIndex(p => !p);
+  if (emptyIdx >= 0) s.pieces[emptyIdx] = title;
+  else s.pieces.push(title);
+  save();
+  closePieceDB();
+  renderDetail(s);
+  document.querySelectorAll('.moment-tab')[0].click();
+}
+
+
+
+function openExportModal() {
+  document.getElementById('export-term').value = '';
+  document.getElementById('export-modal').classList.add('open');
+}
+function closeExportModal() {
+  document.getElementById('export-modal').classList.remove('open');
+}
+
+function buildPupilHTML(s, term) {
+  const slot = effectiveSlot(s);
+  const pieces = (s.pieces||[]).filter(Boolean);
+  const goals = s.goals || {};
+  const log = s.log || [];
+  return `
+    <div class="pupil-section">
+      <h2>${s.name}</h2>
+      <div class="pupil-meta">
+        ${s.instrument} · ${s.level} · ${(s.pupilType||'child')==='adult'?'Adult':'School age'}
+        ${slot.day ? ` · ${slot.day}${slot.time?' '+slot.time:''}` : ''}
+        ${s.frequency==='fortnightly'?' · Fortnightly':''}
+      </div>
+      ${pieces.length ? `<div class="section"><div class="section-title">Current pieces</div><p>${pieces.map(p=>`<span class="piece">${p}</span>`).join(' ')}</p></div>` : ''}
+      ${(s.techFocus||[]).length ? `<div class="section"><div class="section-title">Technical focus</div><p>${s.techFocus.join(' · ')}</p></div>` : ''}
+      ${goals.longTerm||goals.medium||goals.shortTerm||goals.thisWeek ? `
+      <div class="section"><div class="section-title">Goals</div>
+        ${goals.longTerm  ? `<div class="goal-item"><span class="goal-label">Long-term:</span> ${goals.longTerm}</div>`  : ''}
+        ${goals.medium    ? `<div class="goal-item"><span class="goal-label">Medium-term:</span> ${goals.medium}</div>`  : ''}
+        ${goals.shortTerm ? `<div class="goal-item"><span class="goal-label">Short-term:</span> ${goals.shortTerm}</div>` : ''}
+        ${goals.thisWeek  ? `<div class="goal-item"><span class="goal-label">This week:</span> ${goals.thisWeek}</div>`   : ''}
+      </div>` : ''}
+      ${log.length ? `
+      <div class="section"><div class="section-title">Lesson notes (${log.length})</div>
+        ${[...log].reverse().map(e=>`<div class="log-entry"><span class="log-date">${e.date}</span> ${e.text}</div>`).join('')}
+      </div>` : '<div class="section no-notes">No lesson notes recorded.</div>'}
+    </div>`;
+}
+
+function exportHTML(pupils, term) {
+  const termLabel = term || new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Studio Notebook — ${termLabel}</title>
+<style>
+  body { font-family: Georgia, serif; max-width: 800px; margin: 40px auto; padding: 0 24px; color: #05270B; }
+  h1 { font-size: 1.8rem; color: #2F5C1A; margin-bottom: 4px; }
+  .report-meta { color: #6b8a6b; font-size: 0.9rem; margin-bottom: 40px; }
+  .print-btn { background: #29789E; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; cursor: pointer; margin-bottom: 32px; display: block; }
+  .print-btn:hover { background: #1f6080; }
+  .pupil-section { border-top: 2px solid #2F5C1A; padding: 24px 0; page-break-inside: avoid; }
+  h2 { font-size: 1.3rem; margin-bottom: 4px; color: #05270B; }
+  .pupil-meta { color: #6b8a6b; font-size: 0.85rem; margin-bottom: 14px; }
+  .section { margin-bottom: 14px; }
+  .section-title { font-size: 0.7rem; font-weight: bold; letter-spacing: 0.1em; text-transform: uppercase; color: #6b8a6b; margin-bottom: 6px; }
+  .piece { background: #dff0d8; color: #2F5C1A; padding: 2px 8px; border-radius: 999px; font-size: 0.88rem; margin-right: 4px; display: inline-block; margin-bottom: 4px; }
+  .goal-item { font-size: 0.9rem; margin-bottom: 4px; line-height: 1.5; }
+  .goal-label { font-weight: bold; color: #2F5C1A; }
+  .log-entry { font-size: 0.88rem; margin-bottom: 8px; line-height: 1.5; border-left: 3px solid #8AB640; padding-left: 10px; }
+  .log-date { font-weight: bold; color: #6b8a6b; margin-right: 8px; }
+  .no-notes { color: #6b8a6b; font-style: italic; font-size: 0.88rem; }
+  @media print {
+    body { margin: 20px; }
+    .print-btn { display: none; }
+    .pupil-section { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<button class="print-btn" onclick="window.print()">🖨️ Save as PDF / Print</button>
+<h1>Studio Notebook</h1>
+<div class="report-meta">${termLabel} · ${pupils.length} pupil${pupils.length!==1?'s':''} · Generated ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
+${pupils.map(s => buildPupilHTML(s, term)).join('')}
+</body></html>`;
+
+  const win = window.open('', '_blank');
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+  } else {
+    // Fallback to download if popup blocked
+    const blob = new Blob([html], {type:'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'Studio-Notebook-Report.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+}
+
+function exportAll() {
+  const term = document.getElementById('export-term').value.trim();
+  const sorted = [...students].sort((a,b) => a.name.localeCompare(b.name));
+  exportHTML(sorted, term);
+  closeExportModal();
+}
+
+function exportIndividual() {
+  const term = document.getElementById('export-term').value.trim();
+  closeExportModal();
+  // Pick a pupil from a simple list
+  const sorted = [...students].sort((a,b) => a.name.localeCompare(b.name));
+  const name = prompt('Type the pupil\'s name (or part of it):');
+  if (!name) return;
+  const match = sorted.filter(s => s.name.toLowerCase().includes(name.toLowerCase()));
+  if (match.length === 0) { alert('No pupil found matching that name.'); return; }
+  exportHTML(match.length === 1 ? match : match, term);
+}
+
+
+
+// Allow ?reset=1 in URL to wipe local data and reload with fresh defaults
+if (window.location.search.includes('reset=1')) {
+  localStorage.removeItem('studio_students');
+  localStorage.removeItem('studio_custom_chips');
+  localStorage.removeItem('studio_one_off_moves');
+  window.history.replaceState({}, '', window.location.pathname);
+  students = [];
+}
 
 // Pre-load pupils from calendar if none exist yet
 if (students.length === 0) {
   const defaultPupils = [
-    { name: 'Penny',      instrument: 'viola',  level: 'intermediate' },
-    { name: 'Anna',       instrument: 'viola',  level: 'intermediate' },
-    { name: 'Oliver',     instrument: 'violin', level: 'beginner' },
-    { name: 'Amelie',     instrument: 'viola',  level: 'intermediate' },
-    { name: 'Caitlin',    instrument: 'viola',  level: 'intermediate' },
-    { name: 'Christopher',instrument: 'viola',  level: 'intermediate' },
-    { name: 'Annabelle',  instrument: 'viola',  level: 'beginner' },
-    { name: 'Eric',       instrument: 'viola',  level: 'intermediate' },
-    { name: 'Abigail',    instrument: 'violin', level: 'beginner' },
-    { name: 'Ethan',      instrument: 'violin', level: 'beginner' },
-    { name: 'Keira',      instrument: 'viola',  level: 'intermediate' },
-    { name: 'Clara',      instrument: 'viola',  level: 'intermediate' },
-    { name: 'Rose',       instrument: 'viola',  level: 'beginner' },
-    { name: 'Oona',       instrument: 'viola',  level: 'intermediate' },
-    { name: 'Tara',       instrument: 'viola',  level: 'intermediate' },
-    { name: 'Amelia',     instrument: 'violin', level: 'beginner' },
-    { name: 'Lucy',       instrument: 'viola',  level: 'intermediate' },
-    { name: 'Marcus',     instrument: 'violin', level: 'intermediate' },
-    { name: 'Chu',        instrument: 'viola',  level: 'advanced' },
-    { name: 'Euan',       instrument: 'viola',  level: 'intermediate' },
-    { name: 'Nicky',      instrument: 'viola',  level: 'advanced' },
-    { name: 'Felicity',   instrument: 'viola',  level: 'intermediate' },
-    { name: 'Paula',      instrument: 'viola',  level: 'advanced' },
-    { name: 'Lillith',    instrument: 'viola',  level: 'beginner' },
-    { name: 'Talia',      instrument: 'viola',  level: 'intermediate' },
-    { name: 'Hanna',      instrument: 'viola',  level: 'intermediate' },
-    { name: 'Ellie',      instrument: 'violin', level: 'beginner' },
-    { name: 'Peter',      instrument: 'viola',  level: 'advanced' },
-    { name: 'Charles',    instrument: 'viola',  level: 'intermediate' },
-    { name: 'Beth',       instrument: 'viola',  level: 'intermediate' },
+    { name: 'Penny',       instrument: 'viola',  level: 'intermediate', pupilType: 'child',  lessonDay: 'Tuesday',   lessonTime: '15:30' },
+    { name: 'Anna',        instrument: 'violin', level: 'intermediate', pupilType: 'child',  lessonDay: 'Tuesday',   lessonTime: '16:00' },
+    { name: 'Oliver',      instrument: 'violin', level: 'beginner',     pupilType: 'child',  lessonDay: 'Tuesday',   lessonTime: '16:30' },
+    { name: 'Amelie',      instrument: 'viola',  level: 'intermediate', pupilType: 'child',  lessonDay: 'Tuesday',   lessonTime: '17:00' },
+    { name: 'Caitlin',     instrument: 'violin', level: 'intermediate', pupilType: 'child',  lessonDay: 'Tuesday',   lessonTime: '17:30' },
+    { name: 'Christopher', instrument: 'viola',  level: 'intermediate', pupilType: 'child',  lessonDay: 'Tuesday',   lessonTime: '18:00' },
+    { name: 'Annabelle',   instrument: 'viola',  level: 'beginner',     pupilType: 'child',  lessonDay: 'Tuesday',   lessonTime: '18:30' },
+    { name: 'Eric',        instrument: 'viola',  level: 'intermediate', pupilType: 'adult',  lessonDay: 'Tuesday',   lessonTime: '19:15' },
+    { name: 'Abigail',     instrument: 'violin', level: 'beginner',     pupilType: 'child',  lessonDay: 'Wednesday', lessonTime: '15:45' },
+    { name: 'Ethan',       instrument: 'violin', level: 'beginner',     pupilType: 'child',  lessonDay: 'Wednesday', lessonTime: '16:15' },
+    { name: 'Keira',       instrument: 'viola',  level: 'intermediate', pupilType: 'child',  lessonDay: 'Wednesday', lessonTime: '17:00' },
+    { name: 'Clara',       instrument: 'viola',  level: 'intermediate', pupilType: 'child',  lessonDay: 'Wednesday', lessonTime: '18:00' },
+    { name: 'Rose',        instrument: 'violin', level: 'beginner',     pupilType: 'child',  lessonDay: 'Wednesday', lessonTime: '18:30' },
+    { name: 'Charles',     instrument: 'viola',  level: 'intermediate', pupilType: 'adult',  lessonDay: 'Wednesday', lessonTime: '19:00', frequency: 'fortnightly' },
+    { name: 'Euan',        instrument: 'viola',  level: 'intermediate', pupilType: 'adult',  lessonDay: 'Monday',    lessonTime: '13:15', frequency: 'weekly' },
+    { name: 'Nicky',       instrument: 'viola',  level: 'advanced',     pupilType: 'adult',  lessonDay: 'Monday',    lessonTime: '14:45', frequency: 'weekly' },
+    { name: 'Felicity',    instrument: 'viola',  level: 'intermediate', pupilType: 'adult',  lessonDay: 'Monday',    lessonTime: '16:30', frequency: 'weekly' },
+    { name: 'Paula',       instrument: 'viola',  level: 'advanced',     pupilType: 'adult',  lessonDay: 'Monday',    lessonTime: '17:00', frequency: 'weekly' },
+    { name: 'Lillith',     instrument: 'violin', level: 'beginner',     pupilType: 'child',  lessonDay: 'Monday',    lessonTime: '17:30', frequency: 'weekly' },
+    { name: 'Talia',       instrument: 'viola',  level: 'intermediate', pupilType: 'child',  lessonDay: 'Monday',    lessonTime: '18:30', frequency: 'weekly' },
+    { name: 'Peter',       instrument: 'viola',  level: 'advanced',     pupilType: 'adult',  lessonDay: 'Monday',    lessonTime: '15:30', frequency: 'fortnightly' },
+    { name: 'Oona',        instrument: 'viola',  level: 'intermediate', pupilType: 'child',  lessonDay: 'Saturday',  lessonTime: '08:45' },
+    { name: 'Tara',        instrument: 'viola',  level: 'intermediate', pupilType: 'child',  lessonDay: 'Saturday',  lessonTime: '09:15' },
+    { name: 'Amelia',      instrument: 'violin', level: 'beginner',     pupilType: 'child',  lessonDay: 'Saturday',  lessonTime: '11:00' },
+    { name: 'Lucy',        instrument: 'viola',  level: 'intermediate', pupilType: 'child',  lessonDay: 'Saturday',  lessonTime: '11:30' },
+    { name: 'Marcus',      instrument: 'violin', level: 'intermediate', pupilType: 'child',  lessonDay: 'Sunday',    lessonTime: '09:00' },
+    { name: 'Chu',         instrument: 'viola',  level: 'advanced',     pupilType: 'adult',  lessonDay: 'Sunday',    lessonTime: '10:45' },
+    { name: 'Beth',        instrument: 'viola',  level: 'intermediate', pupilType: 'adult',  lessonDay: 'Sunday',    lessonTime: '16:00' },
+    { name: 'Hanna',       instrument: 'viola',  level: 'intermediate', pupilType: 'adult',  lessonDay: 'Sunday',    lessonTime: '14:00', frequency: 'fortnightly' },
+    { name: 'Ellie',       instrument: 'viola',  level: 'beginner',     pupilType: 'child',  lessonDay: 'Sunday',    lessonTime: '15:00', frequency: 'fortnightly' },
   ];
   students = defaultPupils.map(p => ({
     id: (Date.now() + Math.random()).toString(),
     name: p.name, instrument: p.instrument, level: p.level,
-    lessonDay: '', lessonTime: '',
+    pupilType: p.pupilType || 'child',
+    lessonDay: p.lessonDay || '', lessonTime: p.lessonTime || '',
+    frequency: p.frequency || 'weekly',
     pieces: [''], techFocus: [],
     goals: { longTerm: '', medium: '', shortTerm: '', thisWeek: '' },
     nextLesson: '', duringScratch: '', log: []
