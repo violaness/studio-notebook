@@ -1025,6 +1025,7 @@ function renderToday() {
       <div class="timetable-empty">
         <div class="big">☕</div>
         <p>No lessons today.<br>Head to <strong>Week</strong> to set up your timetable,<br>or <strong>All Pupils</strong> to add pupils.</p>
+        ${students.length === 0 ? `<button onclick="loadDefaultPupils()" style="margin-top:16px;background:var(--viola);color:#fff;border:none;border-radius:var(--radius);padding:14px 24px;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer">Load my pupils</button>` : ''}
       </div>`;
     return;
   }
@@ -1163,7 +1164,7 @@ function renderRoster() {
 function renderRosterList(filtered) {
   const list = document.getElementById('roster-list');
   if (students.length === 0) {
-    list.innerHTML = `<div class="empty-state"><div class="big">🎶</div><p>No pupils yet.<br>Tap <strong>Add Pupil</strong> to get started.</p></div>`;
+    list.innerHTML = `<div class="empty-state"><div class="big">🎶</div><p>No pupils yet.<br>Tap <strong>Add Pupil</strong> to get started.</p><button onclick="loadDefaultPupils()" style="margin-top:16px;background:var(--viola);color:#fff;border:none;border-radius:var(--radius);padding:14px 24px;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer">Load my pupils</button></div>`;
     return;
   }
   if (filtered.length === 0) {
@@ -2443,17 +2444,8 @@ function exportIndividual() {
 
 
 
-// Allow ?reset=1 in URL to wipe local data and reload with fresh defaults
-if (window.location.search.includes('reset=1')) {
-  localStorage.removeItem('studio_students');
-  localStorage.removeItem('studio_custom_chips');
-  localStorage.removeItem('studio_one_off_moves');
-  localStorage.removeItem('studio_custom_pieces');
-  localStorage.removeItem('studio_waiting_list');
-  window.history.replaceState({}, '', window.location.pathname);
-  students = [];
 
-  // Pre-load pupils from calendar only on explicit reset
+function loadDefaultPupils() {
   const defaultPupils = [
     { name: 'Penny',       instrument: 'viola',  level: 'intermediate', pupilType: 'child',  lessonDay: 'Tuesday',   lessonTime: '15:30' },
     { name: 'Anna',        instrument: 'violin', level: 'intermediate', pupilType: 'child',  lessonDay: 'Tuesday',   lessonTime: '16:00' },
@@ -2497,6 +2489,20 @@ if (window.location.search.includes('reset=1')) {
     nextLesson: '', duringScratch: '', log: []
   }));
   save();
+  renderToday();
+  renderRoster();
+}
+
+// Allow ?reset=1 in URL to wipe local data and reload with fresh defaults
+if (window.location.search.includes('reset=1')) {
+  localStorage.removeItem('studio_students');
+  localStorage.removeItem('studio_custom_chips');
+  localStorage.removeItem('studio_one_off_moves');
+  localStorage.removeItem('studio_custom_pieces');
+  localStorage.removeItem('studio_waiting_list');
+  window.history.replaceState({}, '', window.location.pathname);
+  students = [];
+  loadDefaultPupils();
 }
 
 renderToday();
