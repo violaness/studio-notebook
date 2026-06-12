@@ -2478,8 +2478,8 @@ function loadDefaultPupils() {
     { name: 'Hanna',       instrument: 'viola',  level: 'intermediate', pupilType: 'adult',  lessonDay: 'Sunday',    lessonTime: '14:00', frequency: 'fortnightly' },
     { name: 'Ellie',       instrument: 'viola',  level: 'beginner',     pupilType: 'child',  lessonDay: 'Sunday',    lessonTime: '15:00', frequency: 'fortnightly' },
   ];
-  students = defaultPupils.map(p => ({
-    id: (Date.now() + Math.random()).toString(),
+  students = defaultPupils.map((p, i) => ({
+    id: Date.now().toString() + '_' + i + '_' + Math.random().toString(36).slice(2),
     name: p.name, instrument: p.instrument, level: p.level,
     pupilType: p.pupilType || 'child',
     lessonDay: p.lessonDay || '', lessonTime: p.lessonTime || '',
@@ -2493,7 +2493,25 @@ function loadDefaultPupils() {
   renderRoster();
 }
 
-// Allow ?reset=1 in URL to wipe local data and reload with fresh defaults
+// ── ID REPAIR ─────────────────────────────────────────────────────────────
+// Runs on every load — fixes any duplicate or missing IDs without losing data
+function repairStudentIDs() {
+  const seen = new Set();
+  let repaired = false;
+  students = students.map((s, i) => {
+    if (!s.id || seen.has(s.id)) {
+      const newId = Date.now().toString() + '_' + i + '_' + Math.random().toString(36).slice(2);
+      seen.add(newId);
+      repaired = true;
+      return { ...s, id: newId };
+    }
+    seen.add(s.id);
+    return s;
+  });
+  if (repaired) save();
+}
+
+
 if (window.location.search.includes('reset=1')) {
   localStorage.removeItem('studio_students');
   localStorage.removeItem('studio_custom_chips');
@@ -2505,6 +2523,7 @@ if (window.location.search.includes('reset=1')) {
   loadDefaultPupils();
 }
 
+repairStudentIDs();
 renderToday();
 renderRoster();
 initDarkMode();
