@@ -2448,12 +2448,12 @@ if (window.location.search.includes('reset=1')) {
   localStorage.removeItem('studio_students');
   localStorage.removeItem('studio_custom_chips');
   localStorage.removeItem('studio_one_off_moves');
+  localStorage.removeItem('studio_custom_pieces');
+  localStorage.removeItem('studio_waiting_list');
   window.history.replaceState({}, '', window.location.pathname);
   students = [];
-}
 
-// Pre-load pupils from calendar if none exist yet
-if (students.length === 0) {
+  // Pre-load pupils from calendar only on explicit reset
   const defaultPupils = [
     { name: 'Penny',       instrument: 'viola',  level: 'intermediate', pupilType: 'child',  lessonDay: 'Tuesday',   lessonTime: '15:30' },
     { name: 'Anna',        instrument: 'violin', level: 'intermediate', pupilType: 'child',  lessonDay: 'Tuesday',   lessonTime: '16:00' },
