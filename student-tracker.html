@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Studio Notebook</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Lexend:wght@300;400;500;600;700&display=swap');
 
   :root {
     --ink:      #05270B;
@@ -43,13 +43,13 @@
   .theme-toggle {
     background: none; border: 1.5px solid rgba(255,255,255,0.25);
     border-radius: 999px; padding: 4px 10px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
+    font-family: 'Lexend', sans-serif; font-size: 0.8rem;
     color: var(--string); cursor: pointer; transition: all 0.2s;
   }
   .theme-toggle:hover { background: rgba(255,255,255,0.1); }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; }
+  body { font-family: 'Lexend', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; line-height: 1.65; font-size: 1rem; }
 
   /* ── NAV ── */
   header {
@@ -67,7 +67,7 @@
   }
   .nav-tab {
     flex: 1; padding: 11px 8px; border: none; background: transparent;
-    font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500;
+    font-family: 'Lexend', sans-serif; font-size: 0.82rem; font-weight: 500;
     color: var(--muted); cursor: pointer; text-align: center;
     border-bottom: 2px solid transparent; transition: all 0.15s;
   }
@@ -125,7 +125,7 @@
   }
   .summary-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; width: 20px; text-align: center; }
   .summary-content { flex: 1; }
-  .summary-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+  .summary-label { font-size: 0.68rem; font-weight: 700;   color: var(--muted); margin-bottom: 2px; }
   .summary-text { font-size: 0.88rem; line-height: 1.4; color: var(--ink); }
   .summary-text.muted { color: var(--muted); font-style: italic; }
 
@@ -133,7 +133,7 @@
     display: block; width: 100%; margin-top: 14px;
     background: var(--viola); color: #fff; border: none;
     border-radius: 10px; padding: 11px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
+    font-family: 'Lexend', sans-serif; font-size: 0.9rem; font-weight: 600;
     cursor: pointer; text-align: center;
   }
   .open-notes-btn:hover { background: #2F5C1A; }
@@ -143,15 +143,15 @@
   .next-badge {
     background: var(--string); color: var(--ink);
     font-size: 0.68rem; font-weight: 800; padding: 2px 8px;
-    border-radius: 999px; letter-spacing: 0.06em; text-transform: uppercase;
+    border-radius: 999px;  
     margin-left: 6px; vertical-align: middle;
   }
 
   /* ── WEEK VIEW ── */
   .week-day { margin-bottom: 20px; }
   .week-day-header {
-    font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em;
-    text-transform: uppercase; color: var(--muted);
+    font-size: 0.72rem; font-weight: 800; 
+     color: var(--muted);
     padding: 6px 0; margin-bottom: 8px;
     border-bottom: 1px solid #e8e4de;
     display: flex; align-items: center; gap: 8px;
@@ -183,7 +183,7 @@
   .slot-actions { display: flex; gap: 6px; flex-shrink: 0; }
   .slot-btn {
     background: none; border: 1.5px solid #e0ddd8; border-radius: 8px;
-    padding: 5px 10px; font-family: 'DM Sans', sans-serif;
+    padding: 5px 10px; font-family: 'Lexend', sans-serif;
     font-size: 0.75rem; font-weight: 600; cursor: pointer; color: var(--muted);
     white-space: nowrap;
   }
@@ -193,7 +193,7 @@
   .add-slot-btn {
     width: 100%; background: none; border: 1.5px dashed #d0ccc6;
     border-radius: 10px; padding: 10px; color: var(--muted);
-    font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500;
+    font-family: 'Lexend', sans-serif; font-size: 0.82rem; font-weight: 500;
     cursor: pointer; transition: all 0.15s;
   }
   .add-slot-btn:hover { border-color: var(--viola); color: var(--viola); }
@@ -202,8 +202,8 @@
   #add-btn {
     width: 100%; background: #29789E; color: #fff; border: none;
     border-radius: var(--radius); padding: 15px;
-    font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 600;
-    cursor: pointer; margin-bottom: 18px; letter-spacing: 0.02em;
+    font-family: 'Lexend', sans-serif; font-size: 1rem; font-weight: 600;
+    cursor: pointer; margin-bottom: 18px; 
   }
   #add-btn:hover { background: #1f6080; }
 
@@ -211,7 +211,7 @@
   .filter-chip {
     padding: 6px 13px; border-radius: 999px;
     border: 1.5px solid var(--muted); background: transparent;
-    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    color: var(--muted); font-family: 'Lexend', sans-serif;
     font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.15s;
   }
   .filter-chip.active, .filter-chip:hover { border-color: var(--viola); background: var(--viola); color: #fff; }
@@ -240,7 +240,7 @@
   .student-meta { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
   .badge {
     font-size: 0.7rem; font-weight: 600; padding: 2px 8px;
-    border-radius: 999px; letter-spacing: 0.04em; text-transform: uppercase;
+    border-radius: 999px;  
   }
   .badge-beginner    { background: #dff0d8; color: #2F5C1A; }
   .badge-intermediate{ background: #d4eaf5; color: #29789E; }
@@ -253,7 +253,7 @@
   .back-btn {
     display: flex; align-items: center; gap: 8px;
     background: none; border: none; color: var(--viola);
-    font-family: 'DM Sans', sans-serif; font-size: 0.92rem; font-weight: 600;
+    font-family: 'Lexend', sans-serif; font-size: 0.92rem; font-weight: 600;
     cursor: pointer; padding: 0; margin-bottom: 18px;
   }
   .detail-header {
@@ -275,7 +275,7 @@
   }
   .moment-tab {
     flex: 1; padding: 9px 6px; border: none; border-radius: 10px;
-    background: transparent; font-family: 'DM Sans', sans-serif;
+    background: transparent; font-family: 'Lexend', sans-serif;
     font-size: 0.82rem; font-weight: 500; cursor: pointer; color: var(--muted);
     transition: all 0.15s; text-align: center;
   }
@@ -286,8 +286,8 @@
   /* ── SECTION CARDS ── */
   .section-card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; margin-bottom: 12px; }
   .section-label {
-    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
-    text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+    font-size: 0.7rem; font-weight: 700; 
+     color: var(--muted); margin-bottom: 10px;
     display: flex; align-items: center; gap: 6px;
   }
 
@@ -295,7 +295,7 @@
   .goal-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
   .goal-emoji { font-size: 1.3rem; width: 30px; flex-shrink: 0; text-align: center; margin-top: 2px; }
   .goal-block { flex: 1; }
-  .goal-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .goal-label { font-size: 0.68rem; font-weight: 700;   margin-bottom: 4px; }
   .goal-label.long-term { color: #123A5E; }
   .goal-label.medium    { color: #2F5C1A; }
   .goal-label.short     { color: #29789E; }
@@ -303,7 +303,7 @@
 
   /* ── INPUTS ── */
   textarea, input[type="text"] {
-    width: 100%; font-family: 'DM Sans', sans-serif; font-size: 0.93rem;
+    width: 100%; font-family: 'Lexend', sans-serif; font-size: 0.93rem;
     border: 1.5px solid #e0ddd8; border-radius: 8px; padding: 9px 11px;
     background: var(--paper); color: var(--ink); resize: vertical;
     transition: border-color 0.15s; line-height: 1.5;
@@ -318,7 +318,7 @@
   .remove-piece-btn:hover { color: #c0392b; }
   .add-piece-btn {
     background: none; border: 1.5px dashed var(--viola); color: var(--viola);
-    border-radius: 8px; padding: 7px 13px; font-family: 'DM Sans', sans-serif;
+    border-radius: 8px; padding: 7px 13px; font-family: 'Lexend', sans-serif;
     font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 6px; width: 100%;
   }
   .add-piece-btn:hover { background: #dff0d8; }
@@ -327,14 +327,14 @@
   .tech-chips { display: flex; flex-wrap: wrap; gap: 7px; }
   .tech-chip {
     padding: 6px 13px; border-radius: 999px; border: 1.5px solid #e0ddd8;
-    background: transparent; font-family: 'DM Sans', sans-serif;
+    background: transparent; font-family: 'Lexend', sans-serif;
     font-size: 0.8rem; font-weight: 500; cursor: pointer; color: var(--muted); transition: all 0.15s;
   }
   .tech-chip.selected { border-color: var(--viola); background: var(--viola); color: #fff; }
   .tech-chip.custom-chip.selected { border-color: var(--violin); background: var(--violin); }
   .add-custom-chip-btn {
     padding: 6px 13px; border-radius: 999px; border: 1.5px dashed var(--muted);
-    background: transparent; font-family: 'DM Sans', sans-serif;
+    background: transparent; font-family: 'Lexend', sans-serif;
     font-size: 0.8rem; font-weight: 500; cursor: pointer; color: var(--muted); transition: all 0.15s;
   }
   .add-custom-chip-btn:hover { border-color: var(--viola); color: var(--viola); }
@@ -342,26 +342,26 @@
   .custom-chip-input-row input { flex: 1; padding: 6px 11px; font-size: 0.86rem; border-radius: 999px; }
   .custom-chip-input-row .confirm-btn {
     background: var(--viola); color: #fff; border: none; border-radius: 999px;
-    padding: 6px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
+    padding: 6px 14px; font-family: 'Lexend', sans-serif; font-size: 0.8rem;
     font-weight: 600; cursor: pointer; white-space: nowrap;
   }
   .custom-chip-input-row .cancel-btn {
     background: none; border: 1.5px solid #e0ddd8; border-radius: 999px;
-    padding: 6px 12px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
+    padding: 6px 12px; font-family: 'Lexend', sans-serif; font-size: 0.8rem;
     cursor: pointer; color: var(--muted);
   }
 
   /* ── LOG ── */
   .log-entry { border-left: 3px solid var(--string); padding: 9px 13px; margin-bottom: 9px; background: var(--warm); border-radius: 0 8px 8px 0; }
-  .log-date { font-size: 0.72rem; color: var(--muted); font-weight: 600; margin-bottom: 4px; letter-spacing: 0.04em; }
+  .log-date { font-size: 0.72rem; color: var(--muted); font-weight: 600; margin-bottom: 4px;  }
   .log-text { font-size: 0.88rem; line-height: 1.5; }
 
   /* ── BUTTONS ── */
   .save-btn {
     width: 100%; background: var(--sage); color: #fff; border: none;
     border-radius: var(--radius); padding: 14px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600;
-    cursor: pointer; margin-top: 8px; letter-spacing: 0.02em;
+    font-family: 'Lexend', sans-serif; font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; margin-top: 8px; 
   }
   .save-btn:hover { background: #2F5C1A; }
   .save-toast { text-align: center; color: var(--sage); font-weight: 600; font-size: 0.88rem; margin-top: 7px; opacity: 0; transition: opacity 0.3s; }
@@ -381,7 +381,7 @@
   }
   .modal h2 { font-family: 'DM Serif Display', serif; font-size: 1.3rem; margin-bottom: 18px; }
   .field-group { margin-bottom: 14px; }
-  .field-label { display: block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+  .field-label { display: block; font-size: 0.75rem; font-weight: 700;   color: var(--muted); margin-bottom: 5px; }
   .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
   .radio-opt { flex: 1; min-width: 75px; }
   .radio-opt input { display: none; }
@@ -394,19 +394,19 @@
   .modal-actions { display: flex; gap: 9px; margin-top: 20px; }
   .btn-primary {
     flex: 1; background: var(--viola); color: #fff; border: none;
-    border-radius: 10px; padding: 12px; font-family: 'DM Sans', sans-serif;
+    border-radius: 10px; padding: 12px; font-family: 'Lexend', sans-serif;
     font-size: 0.92rem; font-weight: 600; cursor: pointer;
   }
   .btn-primary:hover { background: #2F5C1A; }
   .btn-ghost {
     padding: 12px 16px; background: none; border: 1.5px solid #e0ddd8;
-    border-radius: 10px; font-family: 'DM Sans', sans-serif;
+    border-radius: 10px; font-family: 'Lexend', sans-serif;
     font-size: 0.92rem; cursor: pointer; color: var(--muted);
   }
   .btn-ghost:hover { border-color: var(--muted); }
 
   select {
-    width: 100%; font-family: 'DM Sans', sans-serif; font-size: 0.93rem;
+    width: 100%; font-family: 'Lexend', sans-serif; font-size: 0.93rem;
     border: 1.5px solid #e0ddd8; border-radius: 8px; padding: 9px 11px;
     background: var(--paper); color: var(--ink); -webkit-appearance: none;
   }
@@ -428,7 +428,7 @@
   .import-btn {
     background: var(--violin); color: #fff; border: none;
     border-radius: 10px; padding: 9px 14px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+    font-family: 'Lexend', sans-serif; font-size: 0.82rem; font-weight: 600;
     cursor: pointer; white-space: nowrap; flex-shrink: 0;
   }
   .import-btn:hover { background: #1f6080; }
@@ -466,7 +466,7 @@
 <!-- SEARCH BAR -->
 <div id="search-bar" style="display:none;padding:8px 16px;background:var(--card-bg);border-bottom:1px solid var(--warm)">
   <input type="text" id="search-input" placeholder="Search pupils…" oninput="filterRosterBySearch()"
-    style="width:100%;padding:8px 12px;border:1.5px solid var(--warm);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.95rem;background:var(--paper);color:var(--ink)">
+    style="width:100%;padding:8px 12px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Lexend',sans-serif;font-size:0.95rem;background:var(--paper);color:var(--ink)">
 </div>
 
 <div class="nav-tabs" style="flex-wrap:wrap">
@@ -511,18 +511,18 @@
   <div class="section-card" style="margin-bottom:14px">
     <div class="section-label">Technical focus words</div>
     <div style="margin-bottom:10px">
-      <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Built-in</div>
+      <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">Built-in</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px" id="lib-builtin-chips"></div>
     </div>
     <div id="lib-custom-chips-section" style="margin-bottom:10px">
-      <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">My custom words</div>
+      <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">My custom words</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px" id="lib-custom-chips"></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:10px">
       <input type="text" id="lib-new-chip" placeholder="Add a new focus word…" maxlength="40"
         onkeydown="if(event.key==='Enter')addLibChip()"
         style="flex:1;padding:8px 12px;border-radius:999px;font-size:0.88rem">
-      <button onclick="addLibChip()" style="background:var(--viola);color:#fff;border:none;border-radius:999px;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer">Add</button>
+      <button onclick="addLibChip()" style="background:var(--viola);color:#fff;border:none;border-radius:999px;padding:8px 16px;font-family:'Lexend',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer">Add</button>
     </div>
   </div>
 
@@ -560,7 +560,7 @@
           <option value="Studies - Violin">Studies — Violin</option>
           <option value="Technique">Technique</option>
         </select>
-        <button onclick="addLibPiece()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:11px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer">Add to library</button>
+        <button onclick="addLibPiece()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:11px;font-family:'Lexend',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer">Add to library</button>
       </div>
     </div>
   </div>
@@ -569,7 +569,7 @@
 <!-- PERSISTENT TEACHING NOTES BAR -->
 <div id="teaching-notes-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:#fffef0;border-top:1.5px dashed #c9a84c;padding:10px 16px;max-width:700px;margin:0 auto">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-    <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8a7a3a">📝 Teaching day notes</div>
+    <div style="font-size:0.7rem;font-weight:700;color:#8a7a3a">📝 Teaching day notes</div>
     <div style="display:flex;gap:8px;align-items:center">
       <span style="font-size:0.7rem;color:#b8a050" id="notes-bar-date"></span>
       <button onclick="toggleNotesBar()" style="background:none;border:none;color:#b8a050;font-size:1.1rem;cursor:pointer;padding:0">⌄</button>
@@ -578,20 +578,20 @@
   <textarea id="daily-notes-bar" rows="8"
     placeholder="Things to remember, follow up, sort out…"
     oninput="saveDailyNotesBar()"
-    style="background:transparent;border:none;padding:0;font-size:0.93rem;width:100%;resize:none;line-height:1.5;font-family:'DM Sans',sans-serif;color:#3a3000;outline:none"></textarea>
+    style="background:transparent;border:none;padding:0;font-size:0.93rem;width:100%;resize:none;line-height:1.5;font-family:'Lexend',sans-serif;color:#3a3000;outline:none"></textarea>
 </div>
 
 <!-- TEACHING NOTES TOGGLE BUTTON -->
 <div id="notes-toggle-btn" style="position:fixed;bottom:16px;right:16px;z-index:149;display:none">
-  <button onclick="toggleNotesBar()" style="background:#c9a84c;color:#fff;border:none;border-radius:999px;padding:10px 16px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">📝 Notes</button>
+  <button onclick="toggleNotesBar()" style="background:#c9a84c;color:#fff;border:none;border-radius:999px;padding:10px 16px;font-family:'Lexend',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">📝 Notes</button>
 </div>
 
 <!-- ROSTER VIEW -->
 <div id="view-roster" class="view">
   <div style="display:flex;gap:10px;margin-bottom:10px">
     <button id="add-btn" style="margin-bottom:0;flex:1" onclick="openAddModal()">＋ Add Pupil</button>
-    <button onclick="toggleSearch()" style="background:var(--violin);color:#fff;border:none;border-radius:var(--radius);padding:15px 14px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;flex-shrink:0">🔍</button>
-    <button onclick="openExportModal()" style="background:var(--sage);color:#fff;border:none;border-radius:var(--radius);padding:15px 14px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;flex-shrink:0">↓</button>
+    <button onclick="toggleSearch()" style="background:var(--violin);color:#fff;border:none;border-radius:var(--radius);padding:15px 14px;font-family:'Lexend',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;flex-shrink:0">🔍</button>
+    <button onclick="openExportModal()" style="background:var(--sage);color:#fff;border:none;border-radius:var(--radius);padding:15px 14px;font-family:'Lexend',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;flex-shrink:0">↓</button>
   </div>
   <!-- TERM DATES -->
   <details style="margin-bottom:14px">
@@ -631,8 +631,8 @@
   <!-- WAITING LIST AT BOTTOM OF ALL PUPILS -->
   <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div style="font-size:0.72rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Waiting list</div>
-      <button onclick="openAddWaitingModal()" style="background:var(--violin);color:#fff;border:none;border-radius:999px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer">＋ Add</button>
+      <div style="font-size:0.72rem;font-weight:800;color:var(--muted)">Waiting list</div>
+      <button onclick="openAddWaitingModal()" style="background:var(--violin);color:#fff;border:none;border-radius:999px;padding:6px 14px;font-family:'Lexend',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer">＋ Add</button>
     </div>
     <div id="waiting-list"></div>
   </div>
@@ -872,7 +872,7 @@
     </div>
     <div class="field-group">
       <label class="field-label">Lesson rate (£ per lesson)</label>
-      <input type="number" id="edit-rate" placeholder="e.g. 45" min="0" step="0.50" style="width:100%;font-family:'DM Sans',sans-serif;font-size:0.93rem;border:1.5px solid #e0ddd8;border-radius:8px;padding:9px 11px;background:var(--paper);color:var(--ink)">
+      <input type="number" id="edit-rate" placeholder="e.g. 45" min="0" step="0.50" style="width:100%;font-family:'Lexend',sans-serif;font-size:0.93rem;border:1.5px solid #e0ddd8;border-radius:8px;padding:9px 11px;background:var(--paper);color:var(--ink)">
     </div>
     <div class="field-group">
       <label class="field-label">Parent / contact email (optional)</label>
@@ -917,6 +917,56 @@
       <button class="btn-primary" onclick="addToWaitingList()">Add</button>
     </div>
   </div>
+</div>
+
+<!-- QUICK CAPTURE MODAL -->
+<div class="modal-overlay" id="quick-capture-modal">
+  <div class="modal">
+    <h2>Quick note</h2>
+    <textarea id="quick-capture-text" rows="5" placeholder="Jot anything down…" style="width:100%;font-family:'Lexend',sans-serif;font-size:1rem;line-height:1.65;padding:10px;border:1.5px solid var(--warm);border-radius:8px;background:var(--paper);color:var(--ink);resize:none"></textarea>
+    <div class="modal-actions" style="margin-top:12px">
+      <button class="btn-ghost" onclick="closeQuickCapture()">Cancel</button>
+      <button class="btn-primary" onclick="saveQuickCapture()">Save to today's notes</button>
+    </div>
+  </div>
+</div>
+
+<!-- END OF DAY CHECKLIST MODAL -->
+<div class="modal-overlay" id="eod-modal">
+  <div class="modal">
+    <h2>End of day checklist</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:14px">Tick off as you go. Resets each day.</p>
+    <div id="eod-list"></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <input type="text" id="eod-new-item" placeholder="Add a task…"
+        onkeydown="if(event.key==='Enter')addEodItem()"
+        style="flex:1;padding:8px 12px;border-radius:8px;font-family:'Lexend',sans-serif;font-size:0.9rem;border:1.5px solid var(--warm);background:var(--paper);color:var(--ink)">
+      <button onclick="addEodItem()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-family:'Lexend',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer">Add</button>
+    </div>
+    <button class="btn-ghost" onclick="closeEodModal()" style="margin-top:12px;width:100%">Close</button>
+  </div>
+</div>
+
+<!-- LESSON TIMER MODAL -->
+<div class="modal-overlay" id="timer-modal">
+  <div class="modal" style="text-align:center">
+    <h2 id="timer-pupil-name">Lesson timer</h2>
+    <div id="timer-display" style="font-size:3.5rem;font-weight:700;color:var(--viola);margin:20px 0;font-family:'Lexend',sans-serif;letter-spacing:0.05em">00:00</div>
+    <div id="timer-bar-wrap" style="background:var(--warm);border-radius:999px;height:8px;margin-bottom:20px;overflow:hidden">
+      <div id="timer-bar" style="height:100%;background:var(--viola);border-radius:999px;width:100%;transition:width 1s linear"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button id="timer-start-btn" onclick="startTimer()" style="background:var(--viola);color:#fff;border:none;border-radius:var(--radius);padding:12px 24px;font-family:'Lexend',sans-serif;font-size:1rem;font-weight:600;cursor:pointer">Start</button>
+      <button onclick="resetTimer()" style="background:none;border:1.5px solid var(--warm);color:var(--muted);border-radius:var(--radius);padding:12px 24px;font-family:'Lexend',sans-serif;font-size:1rem;cursor:pointer">Reset</button>
+      <button onclick="closeTimerModal()" style="background:none;border:1.5px solid var(--warm);color:var(--muted);border-radius:var(--radius);padding:12px 24px;font-family:'Lexend',sans-serif;font-size:1rem;cursor:pointer">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUICK CAPTURE + EOD FLOATING BUTTONS -->
+<div style="position:fixed;bottom:80px;right:16px;z-index:148;display:flex;flex-direction:column;gap:8px" id="floating-btns">
+  <button onclick="openQuickCapture()" title="Quick note" style="background:#29789E;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">✏️</button>
+  <button onclick="openEodModal()" title="End of day checklist" style="background:#8AB640;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">☑️</button>
 </div>
 
 <!-- SYNC URL MODAL -->
@@ -1099,7 +1149,7 @@ function renderToday() {
       <div class="timetable-empty">
         <div class="big">☕</div>
         <p>No lessons today.<br>Head to <strong>Week</strong> to set up your timetable,<br>or <strong>All Pupils</strong> to add pupils.</p>
-        ${students.length === 0 ? `<button onclick="loadDefaultPupils()" style="margin-top:16px;background:var(--viola);color:#fff;border:none;border-radius:var(--radius);padding:14px 24px;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer">Load my pupils</button>` : ''}
+        ${students.length === 0 ? `<button onclick="loadDefaultPupils()" style="margin-top:16px;background:var(--viola);color:#fff;border:none;border-radius:var(--radius);padding:14px 24px;font-family:'Lexend',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer">Load my pupils</button>` : ''}
       </div>`;
     return;
   }
@@ -1239,7 +1289,7 @@ function renderRoster() {
 function renderRosterList(filtered) {
   const list = document.getElementById('roster-list');
   if (students.length === 0) {
-    list.innerHTML = `<div class="empty-state"><div class="big">🎶</div><p>No pupils yet.<br>Tap <strong>Add Pupil</strong> to get started.</p><button onclick="loadDefaultPupils()" style="margin-top:16px;background:var(--viola);color:#fff;border:none;border-radius:var(--radius);padding:14px 24px;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer">Load my pupils</button></div>`;
+    list.innerHTML = `<div class="empty-state"><div class="big">🎶</div><p>No pupils yet.<br>Tap <strong>Add Pupil</strong> to get started.</p><button onclick="loadDefaultPupils()" style="margin-top:16px;background:var(--viola);color:#fff;border:none;border-radius:var(--radius);padding:14px 24px;font-family:'Lexend',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer">Load my pupils</button></div>`;
     return;
   }
   if (filtered.length === 0) {
@@ -1400,9 +1450,11 @@ function renderDetail(s) {
           ${s.email ? `<span>✉ <a href="mailto:${esc(s.email)}" style="color:var(--viola)">${esc(s.email)}</a></span>` : ''}
         </div>` : ''}
       </div>
-      <button onclick="deletePupil('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:10px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--muted);cursor:pointer;flex-shrink:0;align-self:flex-start" title="Remove pupil">🗑️ Remove</button>
-      <button onclick="openEditModal('${s.id}')" style="background:none;border:1.5px solid var(--viola);border-radius:10px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--viola);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Edit pupil">✏️ Edit</button>
+      <button onclick="deletePupil('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:10px;padding:8px 12px;font-family:'Lexend',sans-serif;font-size:0.8rem;color:var(--muted);cursor:pointer;flex-shrink:0;align-self:flex-start" title="Remove pupil">🗑️ Remove</button>
+      <button onclick="openEditModal('${s.id}')" style="background:none;border:1.5px solid var(--viola);border-radius:10px;padding:8px 12px;font-family:'Lexend',sans-serif;font-size:0.8rem;color:var(--viola);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Edit pupil">✏️ Edit</button>
+      <button onclick="openTimerModal('${s.name}','${s.duration||60}')" style="background:var(--violin);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-family:'Lexend',sans-serif;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Lesson timer">⏱ Timer</button>
     </div>
+    ${nextPupilHTML(s)}
 
     <div class="moment-tabs" style="flex-wrap:wrap">
       <button class="moment-tab active" onclick="switchMoment(this,'panel-before')">Before</button>
@@ -1428,7 +1480,7 @@ function renderDetail(s) {
         <textarea rows="3" placeholder="What you want to cover today…"
           oninput="updateField('${s.id}','nextLesson',this.value)">${esc(s.nextLesson||'')}</textarea>
         ${(s.log||[]).filter(e=>e.text).length > 0 ? `
-        <button onclick="copyLastLesson('${s.id}')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-family:'DM Sans',sans-serif;font-size:0.8rem;cursor:pointer;width:100%">↑ Copy last lesson notes as plan</button>` : ''}
+        <button onclick="copyLastLesson('${s.id}')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-family:'Lexend',sans-serif;font-size:0.8rem;cursor:pointer;width:100%">↑ Copy last lesson notes as plan</button>` : ''}
       </div>
       <div style="font-size:0.78rem;color:var(--muted);text-align:right;margin-bottom:8px">
         ${lessonCount(s)}
@@ -1511,7 +1563,7 @@ function renderDetail(s) {
             return `<button onclick="setAttendance('${s.id}','${status}')"
               style="padding:8px 12px;border-radius:9px;border:1.5px solid ${cur===status?'var(--viola)':'#e0ddd8'};
               background:${cur===status?'var(--viola)':'transparent'};color:${cur===status?'#fff':'var(--muted)'};
-              font-family:\'DM Sans\',sans-serif;font-size:0.8rem;cursor:pointer;font-weight:${cur===status?'600':'400'};
+              font-family:\'Lexend\',sans-serif;font-size:0.8rem;cursor:pointer;font-weight:${cur===status?'600':'400'};
               text-align:left;line-height:1.4">${labels[status]}</button>`;
           }).join('')}
         </div>
@@ -1571,7 +1623,7 @@ function renderDetail(s) {
           ${(s.pieces||[]).filter(Boolean).map((p,i)=>`
             <button onclick="completePiece('${s.id}','${esc(p)}')"
               style="display:block;width:100%;text-align:left;padding:8px 12px;margin-bottom:6px;border-radius:9px;
-              border:1.5px solid #e0ddd8;background:transparent;font-family:\'DM Sans\',sans-serif;
+              border:1.5px solid #e0ddd8;background:transparent;font-family:\'Lexend\',sans-serif;
               font-size:0.85rem;cursor:pointer;color:var(--ink)">✓ Mark done: ${esc(p)}</button>`).join('')}
         </div>
       </div>
@@ -2303,7 +2355,7 @@ function renderCanvasSaves(id) {
   const s = getStudent(id); if (!s) return;
   const saves = s.canvasSaves || [];
   if (saves.length === 0) { el.innerHTML = ''; return; }
-  el.innerHTML = `<div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase">Saved sketches</div>` +
+  el.innerHTML = `<div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;font-weight:700;text-transform:uppercase">Saved sketches</div>` +
     [...saves].reverse().map((sv, i) => `
       <div style="margin-bottom:8px">
         <div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px">${sv.date}
@@ -2384,7 +2436,7 @@ function renderLibPieces() {
   filtered.forEach(p => { if (!groups[p.cat]) groups[p.cat] = []; groups[p.cat].push(p); });
   list.innerHTML = Object.entries(groups).map(([cat, pieces]) => `
     <div style="margin-bottom:14px">
-      <div style="font-size:0.68rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${cat.replace(' - ',' — ')}</div>
+      <div style="font-size:0.68rem;font-weight:800;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${cat.replace(' - ',' — ')}</div>
       ${pieces.map((p,i) => {
         const isCustom = customPieces.includes(p);
         return `<div style="padding:8px 0;border-bottom:1px solid var(--warm);display:flex;align-items:center;gap:8px">
@@ -2454,6 +2506,155 @@ function saveDailyNotesBar() {
   localStorage.setItem('studio_daily_notes', JSON.stringify(allNotes));
 }
 
+
+// ── NEXT PUPIL ────────────────────────────────────────────────────────────
+function nextPupilHTML(s) {
+  const todayName = todayDayName();
+  const todaySlots = students
+    .filter(p => effectiveSlot(p).day === todayName)
+    .sort((a,b) => (effectiveSlot(a).time||'').localeCompare(effectiveSlot(b).time||''));
+  const idx = todaySlots.findIndex(p => p.id === s.id);
+  if (idx === -1 || idx >= todaySlots.length - 1) return '';
+  const next = todaySlots[idx + 1];
+  const slot = effectiveSlot(next);
+  return `<div style="margin-top:10px">
+    <button onclick="openStudentFrom('${next.id}','today')"
+      style="width:100%;background:var(--string);color:#05270B;border:none;border-radius:10px;padding:12px 16px;font-family:'Lexend',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+      <span>Next: ${next.name}${slot.time ? ' · ' + slot.time : ''}</span>
+      <span>→</span>
+    </button>
+  </div>`;
+}
+
+// ── LESSON TIMER ──────────────────────────────────────────────────────────
+let timerInterval = null;
+let timerSeconds = 0;
+let timerTotal = 0;
+let timerRunning = false;
+
+function openTimerModal(name, duration) {
+  timerTotal = parseInt(duration) * 60;
+  timerSeconds = timerTotal;
+  timerRunning = false;
+  clearInterval(timerInterval);
+  document.getElementById('timer-pupil-name').textContent = name + ' — ' + duration + ' min';
+  document.getElementById('timer-start-btn').textContent = 'Start';
+  document.getElementById('timer-display').style.color = 'var(--viola)';
+  updateTimerDisplay();
+  document.getElementById('timer-modal').classList.add('open');
+}
+function closeTimerModal() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  document.getElementById('timer-modal').classList.remove('open');
+}
+function startTimer() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timer-start-btn').textContent = 'Resume';
+  } else {
+    timerRunning = true;
+    document.getElementById('timer-start-btn').textContent = 'Pause';
+    timerInterval = setInterval(() => {
+      if (timerSeconds <= 0) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        document.getElementById('timer-display').textContent = "Time's up!";
+        document.getElementById('timer-display').style.color = '#c0392b';
+        document.getElementById('timer-bar').style.width = '0%';
+        return;
+      }
+      timerSeconds--;
+      updateTimerDisplay();
+    }, 1000);
+  }
+}
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerSeconds = timerTotal;
+  document.getElementById('timer-start-btn').textContent = 'Start';
+  document.getElementById('timer-display').style.color = 'var(--viola)';
+  updateTimerDisplay();
+}
+function updateTimerDisplay() {
+  const m = Math.floor(timerSeconds / 60);
+  const s = timerSeconds % 60;
+  document.getElementById('timer-display').textContent =
+    String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  const pct = timerTotal > 0 ? (timerSeconds / timerTotal) * 100 : 100;
+  document.getElementById('timer-bar').style.width = pct + '%';
+  const col = pct > 50 ? 'var(--viola)' : pct > 20 ? '#e67e22' : '#c0392b';
+  document.getElementById('timer-bar').style.background = col;
+  document.getElementById('timer-display').style.color = col;
+}
+
+// ── QUICK CAPTURE ─────────────────────────────────────────────────────────
+function openQuickCapture() {
+  document.getElementById('quick-capture-text').value = '';
+  document.getElementById('quick-capture-modal').classList.add('open');
+  setTimeout(() => document.getElementById('quick-capture-text').focus(), 100);
+}
+function closeQuickCapture() {
+  document.getElementById('quick-capture-modal').classList.remove('open');
+}
+function saveQuickCapture() {
+  const text = document.getElementById('quick-capture-text').value.trim();
+  if (!text) return;
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
+  const existing = allNotes[today] || '';
+  allNotes[today] = existing ? existing + '\n' + text : text;
+  localStorage.setItem('studio_daily_notes', JSON.stringify(allNotes));
+  closeQuickCapture();
+  if (notesBarOpen) loadNotesBar();
+}
+
+// ── END OF DAY CHECKLIST ──────────────────────────────────────────────────
+function openEodModal() { renderEodList(); document.getElementById('eod-modal').classList.add('open'); }
+function closeEodModal() { document.getElementById('eod-modal').classList.remove('open'); }
+function getEodData() {
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const all = JSON.parse(localStorage.getItem('studio_eod') || '{}');
+  if (!all[today]) all[today] = { items: ['Send follow-up emails', 'Write up lesson notes', 'Check tomorrow\'s plan'], checked: [] };
+  return { all, today, data: all[today] };
+}
+function saveEodData(all) { localStorage.setItem('studio_eod', JSON.stringify(all)); }
+function renderEodList() {
+  const { all, today, data } = getEodData();
+  const el = document.getElementById('eod-list'); if (!el) return;
+  const done = data.checked.length;
+  const total = data.items.length;
+  el.innerHTML = data.items.map((item, i) => {
+    const checked = data.checked.includes(i);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--warm)">
+      <input type="checkbox" ${checked?'checked':''} onchange="toggleEodItem(${i})"
+        style="width:20px;height:20px;accent-color:var(--viola);cursor:pointer;flex-shrink:0">
+      <span style="font-size:0.95rem;line-height:1.5;${checked?'text-decoration:line-through;color:var(--muted)':''}">${esc(item)}</span>
+      <button onclick="removeEodItem(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;margin-left:auto;font-size:0.9rem;flex-shrink:0">×</button>
+    </div>`;
+  }).join('') + `<div style="margin-top:10px;font-size:0.82rem;color:var(--muted)">${done} of ${total} done</div>`;
+}
+function toggleEodItem(idx) {
+  const { all, today, data } = getEodData();
+  const ci = data.checked.indexOf(idx);
+  if (ci >= 0) data.checked.splice(ci, 1); else data.checked.push(idx);
+  all[today] = data; saveEodData(all); renderEodList();
+}
+function addEodItem() {
+  const input = document.getElementById('eod-new-item');
+  const val = input.value.trim(); if (!val) return;
+  const { all, today, data } = getEodData();
+  data.items.push(val); all[today] = data; saveEodData(all);
+  input.value = ''; renderEodList();
+}
+function removeEodItem(idx) {
+  const { all, today, data } = getEodData();
+  data.items.splice(idx, 1);
+  data.checked = data.checked.filter(i => i !== idx).map(i => i > idx ? i-1 : i);
+  all[today] = data; saveEodData(all); renderEodList();
+}
 
 function toggleDarkMode() {
   const dark = document.body.classList.toggle('dark-mode');
@@ -2721,7 +2922,7 @@ function renderPieceDB(items) {
   items.forEach(p => { if (!groups[p.cat]) groups[p.cat] = []; groups[p.cat].push(p); });
   list.innerHTML = Object.entries(groups).map(([cat, pieces]) => `
     <div style="margin-bottom:14px">
-      <div style="font-size:0.68rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${cat.replace(' - ',' — ')}</div>
+      <div style="font-size:0.68rem;font-weight:800;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${cat.replace(' - ',' — ')}</div>
       ${pieces.map(p => `
         <div onclick="selectPiece('${esc(p.title)} — ${esc(p.composer)}')"
           style="padding:10px 12px;border-radius:9px;cursor:pointer;margin-bottom:4px;transition:background 0.12s"
@@ -2803,7 +3004,7 @@ function exportHTML(pupils, term) {
   h2 { font-size: 1.3rem; margin-bottom: 4px; color: #05270B; }
   .pupil-meta { color: #6b8a6b; font-size: 0.85rem; margin-bottom: 14px; }
   .section { margin-bottom: 14px; }
-  .section-title { font-size: 0.7rem; font-weight: bold; letter-spacing: 0.1em; text-transform: uppercase; color: #6b8a6b; margin-bottom: 6px; }
+  .section-title { font-size: 0.7rem; font-weight: bold;   color: #6b8a6b; margin-bottom: 6px; }
   .piece { background: #dff0d8; color: #2F5C1A; padding: 2px 8px; border-radius: 999px; font-size: 0.88rem; margin-right: 4px; display: inline-block; margin-bottom: 4px; }
   .goal-item { font-size: 0.9rem; margin-bottom: 4px; line-height: 1.5; }
   .goal-label { font-weight: bold; color: #2F5C1A; }
