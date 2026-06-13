@@ -2819,7 +2819,10 @@ function setAttendance(id, status) {
   const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
   let entry = s.log.find(e => e.date === today);
   if (!entry) { entry = { date: today, text: '', attendance: status }; s.log.push(entry); }
-  else { entry.attendance = status; }
+  else {
+    // Toggle off if already selected
+    entry.attendance = entry.attendance === status ? '' : status;
+  }
   save(); showToast('toast-attendance-' + id); renderDetail(s);
   document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===2) t.click(); });
 }
