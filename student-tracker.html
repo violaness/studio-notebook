@@ -469,11 +469,11 @@
     style="width:100%;padding:8px 12px;border:1.5px solid var(--warm);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.95rem;background:var(--paper);color:var(--ink)">
 </div>
 
-<div class="nav-tabs">
+<div class="nav-tabs" style="flex-wrap:wrap">
   <button class="nav-tab active" onclick="showView('today')">Today</button>
   <button class="nav-tab" onclick="showView('week')">Week</button>
   <button class="nav-tab" onclick="showView('roster')">All Pupils</button>
-  <button class="nav-tab" onclick="showView('waiting')">Waiting</button>
+  <button class="nav-tab" onclick="showView('library')">Library</button>
 </div>
 
 <!-- TODAY VIEW -->
@@ -481,22 +481,6 @@
   <div class="today-date" id="today-heading"></div>
   <div class="today-sub" id="today-sub"></div>
   <div id="today-list"></div>
-  <div class="section-card" style="margin-top:16px;background:#fffef0;border:1.5px dashed #c9a84c">
-    <div class="section-label" style="color:#8a7a3a">📝 Teaching day notes</div>
-    <textarea id="daily-notes" rows="10"
-      placeholder="Things to remember, follow up, sort out…"
-      oninput="saveDailyNotes()"
-      style="background:transparent;border:none;padding:0;font-size:0.95rem;width:100%;resize:vertical;line-height:1.6;font-family:'DM Sans',sans-serif;color:#3a3000"></textarea>
-    <div style="font-size:0.72rem;color:#b8a050;margin-top:6px;text-align:right" id="daily-notes-date"></div>
-  </div>
-
-  <!-- PREVIOUS NOTES -->
-  <details style="margin-top:10px" id="prev-notes-details">
-    <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:8px 0;list-style:none;display:flex;align-items:center;gap:6px">
-      <span style="font-size:0.7rem">▶</span> Previous teaching day notes
-    </summary>
-    <div id="prev-notes-list" style="margin-top:8px"></div>
-  </details>
 </div>
 
 <!-- WEEK VIEW -->
@@ -521,10 +505,85 @@
   <div id="week-grid"></div>
 </div>
 
-<!-- WAITING LIST VIEW -->
-<div id="view-waiting" class="view">
-  <button onclick="openAddWaitingModal()" style="width:100%;background:#29789E;color:#fff;border:none;border-radius:var(--radius);padding:15px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;margin-bottom:18px">＋ Add to waiting list</button>
-  <div id="waiting-list"></div>
+<!-- LIBRARY VIEW -->
+<div id="view-library" class="view">
+  <!-- TECHNICAL FOCUS -->
+  <div class="section-card" style="margin-bottom:14px">
+    <div class="section-label">Technical focus words</div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Built-in</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px" id="lib-builtin-chips"></div>
+    </div>
+    <div id="lib-custom-chips-section" style="margin-bottom:10px">
+      <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">My custom words</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px" id="lib-custom-chips"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <input type="text" id="lib-new-chip" placeholder="Add a new focus word…" maxlength="40"
+        onkeydown="if(event.key==='Enter')addLibChip()"
+        style="flex:1;padding:8px 12px;border-radius:999px;font-size:0.88rem">
+      <button onclick="addLibChip()" style="background:var(--viola);color:#fff;border:none;border-radius:999px;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer">Add</button>
+    </div>
+  </div>
+
+  <!-- PIECES BY CATEGORY -->
+  <div class="section-card" style="margin-bottom:14px">
+    <div class="section-label">My piece library</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <select id="lib-cat-filter" onchange="renderLibPieces()" style="flex:1">
+        <option value="">All categories</option>
+        <option value="My Library">My Library</option>
+        <option value="Scalability">Scalability</option>
+        <option value="Technique">Technique</option>
+        <option value="Studies - Viola">Studies — Viola</option>
+        <option value="Studies - Violin">Studies — Violin</option>
+        <option value="Repertoire - Viola">Repertoire — Viola</option>
+        <option value="Repertoire - Violin">Repertoire — Violin</option>
+        <option value="Beginner Repertoire - Viola">Beginner Repertoire — Viola</option>
+        <option value="Beginner Repertoire - Violin">Beginner Repertoire — Violin</option>
+      </select>
+      <input type="text" id="lib-piece-search" placeholder="Search…" oninput="renderLibPieces()"
+        style="flex:1;padding:8px 12px;border-radius:8px;font-size:0.88rem;min-width:100px">
+    </div>
+    <div id="lib-pieces-list" style="max-height:400px;overflow-y:auto"></div>
+    <div style="border-top:1px solid var(--warm);margin-top:14px;padding-top:14px">
+      <div class="section-label" style="margin-bottom:8px">Add to My Library</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input type="text" id="lib-new-piece-title" placeholder="Title" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
+        <input type="text" id="lib-new-piece-composer" placeholder="Composer (optional)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
+        <input type="text" id="lib-new-piece-grade" placeholder="Grade (optional)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
+        <select id="lib-new-piece-cat" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
+          <option value="My Library">My Library</option>
+          <option value="Repertoire - Viola">Repertoire — Viola</option>
+          <option value="Repertoire - Violin">Repertoire — Violin</option>
+          <option value="Studies - Viola">Studies — Viola</option>
+          <option value="Studies - Violin">Studies — Violin</option>
+          <option value="Technique">Technique</option>
+        </select>
+        <button onclick="addLibPiece()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:11px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer">Add to library</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PERSISTENT TEACHING NOTES BAR -->
+<div id="teaching-notes-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:#fffef0;border-top:1.5px dashed #c9a84c;padding:10px 16px;max-width:700px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+    <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8a7a3a">📝 Teaching day notes</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span style="font-size:0.7rem;color:#b8a050" id="notes-bar-date"></span>
+      <button onclick="toggleNotesBar()" style="background:none;border:none;color:#b8a050;font-size:1.1rem;cursor:pointer;padding:0">⌄</button>
+    </div>
+  </div>
+  <textarea id="daily-notes-bar" rows="4"
+    placeholder="Things to remember, follow up, sort out…"
+    oninput="saveDailyNotesBar()"
+    style="background:transparent;border:none;padding:0;font-size:0.93rem;width:100%;resize:none;line-height:1.5;font-family:'DM Sans',sans-serif;color:#3a3000;outline:none"></textarea>
+</div>
+
+<!-- TEACHING NOTES TOGGLE BUTTON -->
+<div id="notes-toggle-btn" style="position:fixed;bottom:16px;right:16px;z-index:149;display:none">
+  <button onclick="toggleNotesBar()" style="background:#c9a84c;color:#fff;border:none;border-radius:999px;padding:10px 16px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">📝 Notes</button>
 </div>
 
 <!-- ROSTER VIEW -->
@@ -568,6 +627,15 @@
     <button class="filter-chip" data-filter="advanced" onclick="setFilter(this,'advanced')">Advanced</button>
   </div>
   <div id="roster-list"></div>
+
+  <!-- WAITING LIST AT BOTTOM OF ALL PUPILS -->
+  <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:0.72rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Waiting list</div>
+      <button onclick="openAddWaitingModal()" style="background:var(--violin);color:#fff;border:none;border-radius:999px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer">＋ Add</button>
+    </div>
+    <div id="waiting-list"></div>
+  </div>
 </div>
 
 <!-- DETAIL VIEW -->
@@ -985,12 +1053,18 @@ function showView(name) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
   const tabs = document.querySelectorAll('.nav-tab');
-  const map = {today:0, week:1, roster:2, waiting:3};
+  const map = {today:0, week:1, roster:2, library:3};
   if (map[name] !== undefined) tabs[map[name]].classList.add('active');
   if (name === 'today')   renderToday();
   if (name === 'week')    renderWeek();
   if (name === 'roster')  renderRoster();
-  if (name === 'waiting') renderWaiting();
+  if (name === 'library') renderLibrary();
+  // Show notes bar on all tabs except detail view
+  const bar = document.getElementById('teaching-notes-bar');
+  const btn = document.getElementById('notes-toggle-btn');
+  if (bar && name !== 'detail') {
+    btn.style.display = 'block';
+  }
 }
 
 function goBack() {
@@ -1159,6 +1233,7 @@ function renderRoster() {
     : students.filter(s => s.instrument===currentFilter || s.level===currentFilter || (s.pupilType||'child')===currentFilter);
   renderRosterList(filtered);
   loadTermDates();
+  renderWaiting();
 }
 
 function renderRosterList(filtered) {
@@ -1271,6 +1346,14 @@ function switchMoment(tab, panel) {
   document.querySelectorAll('.moment-panel').forEach(p => p.classList.remove('active'));
   tab.classList.add('active');
   document.getElementById(panel).classList.add('active');
+  // Init canvas when During tab opened
+  if (panel === 'panel-during') {
+    const canvasEls = document.querySelectorAll('[id^="canvas-"]');
+    canvasEls.forEach(c => {
+      const id = c.id.replace('canvas-', '');
+      setTimeout(() => { initCanvas(id); renderCanvasSaves(id); }, 50);
+    });
+  }
 }
 
 function renderDetail(s) {
@@ -1333,22 +1416,6 @@ function renderDetail(s) {
     <!-- BEFORE -->
     <div class="moment-panel active" id="panel-before">
       <div class="section-card">
-        <div class="section-label">📌 Plan for today's lesson</div>
-        <textarea rows="3" placeholder="What you want to cover today…"
-          oninput="updateField('${s.id}','nextLesson',this.value)">${esc(s.nextLesson||'')}</textarea>
-        ${(s.log||[]).filter(e=>e.text).length > 0 ? `
-        <button onclick="copyLastLesson('${s.id}')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-family:'DM Sans',sans-serif;font-size:0.8rem;cursor:pointer;width:100%">↑ Copy last lesson notes as plan</button>` : ''}
-      </div>
-      <div class="section-card" style="background:var(--warm)">
-        <div class="section-label">Pupil notes</div>
-        <textarea rows="2" placeholder="Long-term notes about this pupil — learning style, what works, exam plans…"
-          oninput="updateField('${s.id}','pupilNotes',this.value)"
-          style="background:transparent;border-color:rgba(0,0,0,0.1)">${esc(s.pupilNotes||'')}</textarea>
-      </div>
-      <div style="font-size:0.78rem;color:var(--muted);text-align:right;margin-bottom:8px">
-        ${lessonCount(s)}
-      </div>
-      <div class="section-card">
         <div class="section-label">🎵 Pieces &amp; exercises</div>
         <div class="pieces-list" id="pieces-list-${s.id}">${piecesHTML}</div>
         <div style="display:flex;gap:8px;margin-top:6px">
@@ -1357,16 +1424,20 @@ function renderDetail(s) {
         </div>
       </div>
       <div class="section-card">
-        <div class="section-label">🔧 Technical focus</div>
-        <div class="tech-chips" id="tech-chips-${s.id}">${techHTML}
-          <button class="add-custom-chip-btn" onclick="showCustomChipInput('${s.id}')">＋ Add your own</button>
-        </div>
-        <div class="custom-chip-input-row" id="custom-chip-row-${s.id}" style="display:none">
-          <input type="text" id="custom-chip-input-${s.id}" placeholder="e.g. Sautillé, Thumb position…" maxlength="30"
-            onkeydown="if(event.key==='Enter')confirmCustomChip('${s.id}')">
-          <button class="confirm-btn" onclick="confirmCustomChip('${s.id}')">Add</button>
-          <button class="cancel-btn" onclick="hideCustomChipInput('${s.id}')">Cancel</button>
-        </div>
+        <div class="section-label">📌 Plan for today's lesson</div>
+        <textarea rows="3" placeholder="What you want to cover today…"
+          oninput="updateField('${s.id}','nextLesson',this.value)">${esc(s.nextLesson||'')}</textarea>
+        ${(s.log||[]).filter(e=>e.text).length > 0 ? `
+        <button onclick="copyLastLesson('${s.id}')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-family:'DM Sans',sans-serif;font-size:0.8rem;cursor:pointer;width:100%">↑ Copy last lesson notes as plan</button>` : ''}
+      </div>
+      <div style="font-size:0.78rem;color:var(--muted);text-align:right;margin-bottom:8px">
+        ${lessonCount(s)}
+      </div>
+      <div class="section-card" style="background:var(--warm)">
+        <div class="section-label">Pupil notes</div>
+        <textarea rows="2" placeholder="Long-term notes about this pupil — learning style, what works, exam plans…"
+          oninput="updateField('${s.id}','pupilNotes',this.value)"
+          style="background:transparent;border-color:rgba(0,0,0,0.1)">${esc(s.pupilNotes||'')}</textarea>
       </div>
     </div>
 
@@ -1376,7 +1447,7 @@ function renderDetail(s) {
         <div class="section-label">✏️ Quick notes — right now</div>
         <textarea class="quick-note" rows="5"
           placeholder="Jot anything — key words, reminders, 'try this'… Tidy up later."
-          id="during-scratch-${s.id}">${esc(s.duringScratch||'')}</textarea>
+          id="during-scratch-${s.id}">${esc(s.duringScratch || (s.nextLesson ? '📌 Plan: ' + s.nextLesson + '\n\n' : ''))}</textarea>
         <div style="margin-top:10px">
           <div class="section-label" style="margin-bottom:8px">Tap to add to notes</div>
           <div class="tech-chips" style="margin-bottom:8px">
@@ -1386,10 +1457,45 @@ function renderDetail(s) {
         <button class="save-btn" onclick="saveDuring('${s.id}')">Save scratchpad</button>
         <div class="save-toast" id="toast-during-${s.id}">✓ Saved</div>
       </div>
+
+      <div class="section-card">
+        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
+          <span>✏️ Sketch — bowings, fingerings, notation</span>
+          <div style="display:flex;gap:6px">
+            <button onclick="clearCanvas('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;color:var(--muted)">Clear</button>
+            <button onclick="saveCanvas('${s.id}')" style="background:var(--viola);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;font-weight:600">Save</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap">
+          <label style="font-size:0.75rem;color:var(--muted)">Colour:</label>
+          ${['#05270B','#2F5C1A','#29789E','#c0392b','#e67e22','#8e44ad'].map(col =>
+            `<button onclick="setDrawColour('${s.id}','${col}')" style="width:22px;height:22px;border-radius:50%;background:${col};border:2px solid transparent;cursor:pointer" class="colour-btn-${s.id}" data-col="${col}"></button>`
+          ).join('')}
+          <label style="font-size:0.75rem;color:var(--muted);margin-left:8px">Size:</label>
+          <input type="range" min="1" max="12" value="3" oninput="setDrawSize('${s.id}',this.value)" style="width:80px">
+          <button onclick="setDrawEraser('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:3px 8px;font-size:0.75rem;cursor:pointer;color:var(--muted)">Eraser</button>
+          <label style="font-size:0.75rem;color:var(--muted);margin-left:4px">
+            <input type="checkbox" id="stave-${s.id}" onchange="toggleStave('${s.id}')"> Stave
+          </label>
+        </div>
+        <canvas id="canvas-${s.id}"
+          style="width:100%;border-radius:8px;border:1.5px solid #e0ddd8;background:#fff;touch-action:none;display:block;cursor:crosshair"
+          height="220">
+        </canvas>
+        <div id="canvas-saves-${s.id}" style="margin-top:8px"></div>
+        <div class="save-toast" id="toast-canvas-${s.id}">✓ Sketch saved</div>
+      </div>
     </div>
 
     <!-- AFTER -->
     <div class="moment-panel" id="panel-after">
+      <div class="section-card">
+        <div class="section-label">Lesson notes</div>
+        <textarea rows="4" placeholder="What went well, what to remember for next time…"
+          id="after-note-${s.id}"></textarea>
+        <button class="save-btn" onclick="saveLog('${s.id}')">Add to lesson log</button>
+        <div class="save-toast" id="toast-after-${s.id}">✓ Added to log</div>
+      </div>
       <div class="section-card">
         <div class="section-label">Attendance — today's lesson</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">
@@ -1410,13 +1516,6 @@ function renderDetail(s) {
           }).join('')}
         </div>
         <div class="save-toast" id="toast-attendance-${s.id}">✓ Attendance saved</div>
-      </div>
-      <div class="section-card">
-        <div class="section-label">Lesson notes</div>
-        <textarea rows="4" placeholder="What went well, what to remember for next time…"
-          id="after-note-${s.id}"></textarea>
-        <button class="save-btn" onclick="saveLog('${s.id}')">Add to lesson log</button>
-        <div class="save-toast" id="toast-after-${s.id}">✓ Added to log</div>
       </div>
       <div class="section-card">
         <div class="section-label">Lesson history</div>
@@ -2037,7 +2136,325 @@ const PIECE_DB = [
   { title:'Violin Star 3', composer:'Edward Huws Jones', grade:'Grade 1-2', cat:'Beginner Repertoire - Violin' },
 ];
 
-// ── DARK MODE ─────────────────────────────────────────────────────────────
+// ── DRAWING CANVAS ────────────────────────────────────────────────────────
+const canvasState = {}; // per pupil: { colour, size, drawing, eraser }
+
+function initCanvas(id) {
+  const canvas = document.getElementById('canvas-' + id);
+  if (!canvas) return;
+
+  // Wait until canvas has a real width
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width === 0) {
+    setTimeout(() => initCanvas(id), 100);
+    return;
+  }
+
+  if (canvas._initialized) return;
+  canvas._initialized = true;
+
+  // Set actual pixel size
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = rect.width * dpr;
+  canvas.height = 220 * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  // Restore saved image if any
+  const s = getStudent(id);
+  if (s && s.canvasCurrent) {
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0, rect.width, 220);
+    img.src = s.canvasCurrent;
+  }
+
+  canvasState[id] = { colour: '#05270B', size: 3, drawing: false, eraser: false, lastX: 0, lastY: 0 };
+
+  function getPos(e) {
+    const r = canvas.getBoundingClientRect();
+    const touch = e.touches ? e.touches[0] : e;
+    return { x: touch.clientX - r.left, y: touch.clientY - r.top };
+  }
+
+  function startDraw(e) {
+    e.preventDefault();
+    const state = canvasState[id];
+    if (!state) return;
+    state.drawing = true;
+    const pos = getPos(e);
+    state.lastX = pos.x; state.lastY = pos.y;
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, (state.eraser ? state.size * 4 : state.size) / 2, 0, Math.PI * 2);
+    ctx.fillStyle = state.eraser ? '#ffffff' : state.colour;
+    ctx.fill();
+  }
+
+  function draw(e) {
+    e.preventDefault();
+    const state = canvasState[id];
+    if (!state || !state.drawing) return;
+    const pos = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(state.lastX, state.lastY);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.strokeStyle = state.eraser ? '#ffffff' : state.colour;
+    ctx.lineWidth  = state.eraser ? state.size * 4 : state.size;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    state.lastX = pos.x; state.lastY = pos.y;
+  }
+
+  function endDraw() {
+    if (canvasState[id]) canvasState[id].drawing = false;
+    const s = getStudent(id);
+    if (s) { s.canvasCurrent = canvas.toDataURL(); save(); }
+  }
+
+  canvas.addEventListener('mousedown',  startDraw);
+  canvas.addEventListener('mousemove',  draw);
+  canvas.addEventListener('mouseup',    endDraw);
+  canvas.addEventListener('mouseleave', endDraw);
+  canvas.addEventListener('touchstart', startDraw, {passive:false});
+  canvas.addEventListener('touchmove',  draw,      {passive:false});
+  canvas.addEventListener('touchend',   endDraw);
+
+  highlightColourBtn(id, '#05270B');
+}
+
+function highlightColourBtn(id, col) {
+  document.querySelectorAll('.colour-btn-' + id).forEach(btn => {
+    btn.style.border = btn.dataset.col === col ? '2px solid var(--string)' : '2px solid transparent';
+  });
+}
+
+function setDrawColour(id, col) {
+  if (!canvasState[id]) return;
+  canvasState[id].colour = col;
+  canvasState[id].eraser = false;
+  highlightColourBtn(id, col);
+}
+
+function setDrawSize(id, size) {
+  if (canvasState[id]) canvasState[id].size = parseInt(size);
+}
+
+function setDrawEraser(id) {
+  if (canvasState[id]) canvasState[id].eraser = true;
+}
+
+function clearCanvas(id) {
+  const canvas = document.getElementById('canvas-' + id); if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.getBoundingClientRect();
+  ctx.clearRect(0, 0, rect.width, 220);
+  // Redraw stave if active
+  if (document.getElementById('stave-' + id) && document.getElementById('stave-' + id).checked) {
+    drawStave(id);
+  }
+  const s = getStudent(id);
+  if (s) { s.canvasCurrent = ''; save(); }
+}
+
+function toggleStave(id) {
+  const canvas = document.getElementById('canvas-' + id); if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.getBoundingClientRect();
+  if (document.getElementById('stave-' + id).checked) {
+    drawStave(id);
+  } else {
+    ctx.clearRect(0, 0, rect.width, 220);
+  }
+}
+
+function drawStave(id) {
+  const canvas = document.getElementById('canvas-' + id); if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.getBoundingClientRect();
+  const w = rect.width;
+  // Draw 5 stave lines
+  const top = 40, spacing = 12;
+  ctx.strokeStyle = '#ccc';
+  ctx.lineWidth = 0.8;
+  for (let i = 0; i < 5; i++) {
+    const y = top + i * spacing;
+    ctx.beginPath(); ctx.moveTo(8, y); ctx.lineTo(w - 8, y); ctx.stroke();
+  }
+}
+
+function saveCanvas(id) {
+  const canvas = document.getElementById('canvas-' + id); if (!canvas) return;
+  const dataUrl = canvas.toDataURL();
+  const s = getStudent(id); if (!s) return;
+  if (!s.canvasSaves) s.canvasSaves = [];
+  s.canvasSaves.push({ date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}), img: dataUrl });
+  s.canvasCurrent = '';
+  save();
+  // Clear canvas
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.getBoundingClientRect();
+  ctx.clearRect(0, 0, rect.width, 220);
+  renderCanvasSaves(id);
+  showToast('toast-canvas-' + id);
+}
+
+function renderCanvasSaves(id) {
+  const el = document.getElementById('canvas-saves-' + id); if (!el) return;
+  const s = getStudent(id); if (!s) return;
+  const saves = s.canvasSaves || [];
+  if (saves.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase">Saved sketches</div>` +
+    [...saves].reverse().map((sv, i) => `
+      <div style="margin-bottom:8px">
+        <div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px">${sv.date}
+          <button onclick="deleteCanvasSave('${id}',${saves.length-1-i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;margin-left:6px">×</button>
+        </div>
+        <img src="${sv.img}" style="width:100%;border-radius:6px;border:1px solid #e0ddd8">
+      </div>`).join('');
+}
+
+function deleteCanvasSave(id, idx) {
+  const s = getStudent(id); if (!s || !s.canvasSaves) return;
+  s.canvasSaves.splice(idx, 1);
+  save(); renderCanvasSaves(id);
+}
+
+
+function renderLibrary() {
+  renderLibChips();
+  renderLibPieces();
+}
+
+function renderLibChips() {
+  // Built-in chips
+  const builtIn = document.getElementById('lib-builtin-chips');
+  if (builtIn) {
+    builtIn.innerHTML = TECH_OPTIONS.map(t =>
+      `<span style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;font-size:0.8rem;color:var(--muted)">${esc(t)}</span>`
+    ).join('');
+  }
+  // Custom chips
+  const custom = document.getElementById('lib-custom-chips');
+  if (custom) {
+    if (customChips.length === 0) {
+      custom.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">No custom words yet.</p>';
+    } else {
+      custom.innerHTML = customChips.map((t,i) =>
+        `<span style="padding:6px 12px;border-radius:999px;border:1.5px solid var(--viola);background:var(--viola);color:#fff;font-size:0.8rem;display:flex;align-items:center;gap:6px">
+          ${esc(t)}
+          <button onclick="removeLibChip(${i})" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:0.9rem;padding:0;line-height:1">×</button>
+        </span>`
+      ).join('');
+    }
+  }
+}
+
+function addLibChip() {
+  const input = document.getElementById('lib-new-chip');
+  const val = input.value.trim();
+  if (!val || customChips.includes(val)) return;
+  customChips.push(val);
+  save();
+  input.value = '';
+  renderLibChips();
+}
+
+function removeLibChip(idx) {
+  const chip = customChips[idx];
+  customChips.splice(idx, 1);
+  // Remove from all pupils too
+  students.forEach(s => { if (s.techFocus) s.techFocus = s.techFocus.filter(t => t !== chip); });
+  save();
+  renderLibChips();
+}
+
+function renderLibPieces() {
+  const list = document.getElementById('lib-pieces-list'); if (!list) return;
+  const search = (document.getElementById('lib-piece-search').value || '').toLowerCase();
+  const cat = document.getElementById('lib-cat-filter').value;
+  const allPieces = [...customPieces, ...PIECE_DB];
+  const filtered = allPieces.filter(p => {
+    const matchSearch = !search || p.title.toLowerCase().includes(search) || (p.composer||'').toLowerCase().includes(search);
+    const matchCat = !cat || p.cat === cat;
+    return matchSearch && matchCat;
+  });
+  if (filtered.length === 0) { list.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">No results.</p>'; return; }
+  // Group by category
+  const groups = {};
+  filtered.forEach(p => { if (!groups[p.cat]) groups[p.cat] = []; groups[p.cat].push(p); });
+  list.innerHTML = Object.entries(groups).map(([cat, pieces]) => `
+    <div style="margin-bottom:14px">
+      <div style="font-size:0.68rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${cat.replace(' - ',' — ')}</div>
+      ${pieces.map((p,i) => {
+        const isCustom = customPieces.includes(p);
+        return `<div style="padding:8px 0;border-bottom:1px solid var(--warm);display:flex;align-items:center;gap:8px">
+          <div style="flex:1">
+            <div style="font-size:0.88rem;font-weight:600">${esc(p.title)}</div>
+            ${p.composer||p.grade ? `<div style="font-size:0.75rem;color:var(--muted)">${[p.composer,p.grade].filter(Boolean).join(' · ')}</div>` : ''}
+          </div>
+          ${isCustom ? `<button onclick="removeLibPiece('${esc(p.title)}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px">×</button>` : ''}
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function addLibPiece() {
+  const title = document.getElementById('lib-new-piece-title').value.trim();
+  if (!title) return;
+  const composer = document.getElementById('lib-new-piece-composer').value.trim();
+  const grade    = document.getElementById('lib-new-piece-grade').value.trim();
+  const cat      = document.getElementById('lib-new-piece-cat').value;
+  if (customPieces.some(p => p.title.toLowerCase() === title.toLowerCase())) return;
+  customPieces.push({ title, composer, grade, cat });
+  save();
+  document.getElementById('lib-new-piece-title').value = '';
+  document.getElementById('lib-new-piece-composer').value = '';
+  document.getElementById('lib-new-piece-grade').value = '';
+  renderLibPieces();
+}
+
+function removeLibPiece(title) {
+  customPieces = customPieces.filter(p => p.title !== title);
+  save();
+  renderLibPieces();
+}
+
+// ── PERSISTENT NOTES BAR ──────────────────────────────────────────────────
+let notesBarOpen = false;
+
+function toggleNotesBar() {
+  notesBarOpen = !notesBarOpen;
+  const bar = document.getElementById('teaching-notes-bar');
+  const btn = document.getElementById('notes-toggle-btn');
+  if (notesBarOpen) {
+    bar.style.display = 'block';
+    btn.style.display = 'none';
+    loadNotesBar();
+  } else {
+    bar.style.display = 'none';
+    btn.style.display = 'block';
+  }
+}
+
+function loadNotesBar() {
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
+  const el = document.getElementById('daily-notes-bar');
+  const dateEl = document.getElementById('notes-bar-date');
+  if (el) el.value = allNotes[today] || '';
+  if (dateEl) dateEl.textContent = today;
+}
+
+function saveDailyNotesBar() {
+  const text = document.getElementById('daily-notes-bar').value;
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
+  if (text.trim()) allNotes[today] = text;
+  else delete allNotes[today];
+  localStorage.setItem('studio_daily_notes', JSON.stringify(allNotes));
+}
+
+
 function toggleDarkMode() {
   const dark = document.body.classList.toggle('dark-mode');
   localStorage.setItem('studio_dark_mode', dark ? '1' : '0');
@@ -2527,6 +2944,8 @@ repairStudentIDs();
 renderToday();
 renderRoster();
 initDarkMode();
+// Show the notes toggle button
+document.getElementById('notes-toggle-btn').style.display = 'block';
 </script>
 </body>
 </html>
