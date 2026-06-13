@@ -947,18 +947,28 @@
   </div>
 </div>
 
-<!-- LESSON TIMER MODAL -->
+<!-- FLOATING TIMER BAR -->
+<div id="floating-timer" style="display:none;position:fixed;top:0;left:0;right:0;z-index:200;max-width:700px;margin:0 auto">
+  <div style="background:var(--viola);color:#fff;padding:8px 16px;display:flex;align-items:center;gap:10px">
+    <span id="ft-name" style="font-size:0.82rem;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></span>
+    <span id="ft-display" style="font-size:1.1rem;font-weight:700;font-family:'Lexend',sans-serif;flex-shrink:0"></span>
+    <button onclick="startTimer()" id="ft-start-btn" style="background:rgba(255,255,255,0.2);border:none;border-radius:6px;padding:4px 10px;color:#fff;font-family:'Lexend',sans-serif;font-size:0.8rem;cursor:pointer;flex-shrink:0">Pause</button>
+    <button onclick="stopFloatingTimer()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:1rem;cursor:pointer;flex-shrink:0;padding:0">×</button>
+  </div>
+  <div id="ft-bar-wrap" style="height:4px;background:rgba(255,255,255,0.2)">
+    <div id="ft-bar" style="height:100%;background:#8AB640;width:100%;transition:width 1s linear"></div>
+  </div>
+</div>
+
+<!-- TIMER START MODAL (just to set up the timer) -->
 <div class="modal-overlay" id="timer-modal">
   <div class="modal" style="text-align:center">
-    <h2 id="timer-pupil-name">Lesson timer</h2>
-    <div id="timer-display" style="font-size:3.5rem;font-weight:700;color:var(--viola);margin:20px 0;font-family:'Lexend',sans-serif;letter-spacing:0.05em">00:00</div>
-    <div id="timer-bar-wrap" style="background:var(--warm);border-radius:999px;height:8px;margin-bottom:20px;overflow:hidden">
-      <div id="timer-bar" style="height:100%;background:var(--viola);border-radius:999px;width:100%;transition:width 1s linear"></div>
-    </div>
+    <h2 id="timer-pupil-name">Start lesson timer</h2>
+    <p style="font-size:0.88rem;color:var(--muted);margin-bottom:20px">The timer will float at the top of the screen so you can use the app while it counts down.</p>
+    <div id="timer-display" style="font-size:3rem;font-weight:700;color:var(--viola);margin-bottom:20px;font-family:'Lexend',sans-serif"></div>
     <div style="display:flex;gap:10px;justify-content:center">
-      <button id="timer-start-btn" onclick="startTimer()" style="background:var(--viola);color:#fff;border:none;border-radius:var(--radius);padding:12px 24px;font-family:'Lexend',sans-serif;font-size:1rem;font-weight:600;cursor:pointer">Start</button>
-      <button onclick="resetTimer()" style="background:none;border:1.5px solid var(--warm);color:var(--muted);border-radius:var(--radius);padding:12px 24px;font-family:'Lexend',sans-serif;font-size:1rem;cursor:pointer">Reset</button>
-      <button onclick="closeTimerModal()" style="background:none;border:1.5px solid var(--warm);color:var(--muted);border-radius:var(--radius);padding:12px 24px;font-family:'Lexend',sans-serif;font-size:1rem;cursor:pointer">Close</button>
+      <button onclick="startFloatingTimer()" style="background:var(--viola);color:#fff;border:none;border-radius:var(--radius);padding:14px 28px;font-family:'Lexend',sans-serif;font-size:1rem;font-weight:600;cursor:pointer">Start timer</button>
+      <button onclick="closeTimerModal()" style="background:none;border:1.5px solid var(--warm);color:var(--muted);border-radius:var(--radius);padding:14px 20px;font-family:'Lexend',sans-serif;font-size:1rem;cursor:pointer">Cancel</button>
     </div>
   </div>
 </div>
@@ -2537,57 +2547,71 @@ function openTimerModal(name, duration) {
   timerSeconds = timerTotal;
   timerRunning = false;
   clearInterval(timerInterval);
-  document.getElementById('timer-pupil-name').textContent = name + ' — ' + duration + ' min';
-  document.getElementById('timer-start-btn').textContent = 'Start';
+  const m = parseInt(duration);
+  document.getElementById('timer-pupil-name').textContent = name + ' — ' + m + ' min lesson';
+  document.getElementById('timer-display').textContent = String(m).padStart(2,'0') + ':00';
   document.getElementById('timer-display').style.color = 'var(--viola)';
-  updateTimerDisplay();
   document.getElementById('timer-modal').classList.add('open');
 }
 function closeTimerModal() {
-  clearInterval(timerInterval);
-  timerRunning = false;
   document.getElementById('timer-modal').classList.remove('open');
 }
+function startFloatingTimer() {
+  closeTimerModal();
+  document.getElementById('floating-timer').style.display = 'block';
+  document.getElementById('ft-name').textContent = document.getElementById('timer-pupil-name').textContent;
+  timerRunning = true;
+  document.getElementById('ft-start-btn').textContent = 'Pause';
+  updateFloatingTimer();
+  timerInterval = setInterval(() => {
+    if (timerSeconds <= 0) {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      document.getElementById('ft-display').textContent = "Time's up!";
+      document.getElementById('ft-bar').style.width = '0%';
+      document.getElementById('floating-timer').style.background = '#c0392b';
+      return;
+    }
+    timerSeconds--;
+    updateFloatingTimer();
+  }, 1000);
+}
 function startTimer() {
+  // This is now the pause/resume button on the floating bar
   if (timerRunning) {
     clearInterval(timerInterval);
     timerRunning = false;
-    document.getElementById('timer-start-btn').textContent = 'Resume';
+    document.getElementById('ft-start-btn').textContent = 'Resume';
   } else {
     timerRunning = true;
-    document.getElementById('timer-start-btn').textContent = 'Pause';
+    document.getElementById('ft-start-btn').textContent = 'Pause';
     timerInterval = setInterval(() => {
       if (timerSeconds <= 0) {
         clearInterval(timerInterval);
         timerRunning = false;
-        document.getElementById('timer-display').textContent = "Time's up!";
-        document.getElementById('timer-display').style.color = '#c0392b';
-        document.getElementById('timer-bar').style.width = '0%';
+        document.getElementById('ft-display').textContent = "Time's up!";
+        document.getElementById('ft-bar').style.width = '0%';
         return;
       }
       timerSeconds--;
-      updateTimerDisplay();
+      updateFloatingTimer();
     }, 1000);
   }
 }
-function resetTimer() {
+function stopFloatingTimer() {
   clearInterval(timerInterval);
   timerRunning = false;
-  timerSeconds = timerTotal;
-  document.getElementById('timer-start-btn').textContent = 'Start';
-  document.getElementById('timer-display').style.color = 'var(--viola)';
-  updateTimerDisplay();
+  document.getElementById('floating-timer').style.display = 'none';
 }
-function updateTimerDisplay() {
+function updateFloatingTimer() {
   const m = Math.floor(timerSeconds / 60);
   const s = timerSeconds % 60;
-  document.getElementById('timer-display').textContent =
+  document.getElementById('ft-display').textContent =
     String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
   const pct = timerTotal > 0 ? (timerSeconds / timerTotal) * 100 : 100;
-  document.getElementById('timer-bar').style.width = pct + '%';
-  const col = pct > 50 ? 'var(--viola)' : pct > 20 ? '#e67e22' : '#c0392b';
-  document.getElementById('timer-bar').style.background = col;
-  document.getElementById('timer-display').style.color = col;
+  document.getElementById('ft-bar').style.width = pct + '%';
+  const col = pct > 50 ? '#8AB640' : pct > 20 ? '#e67e22' : '#c0392b';
+  document.getElementById('ft-bar').style.background = col;
 }
 
 // ── QUICK CAPTURE ─────────────────────────────────────────────────────────
