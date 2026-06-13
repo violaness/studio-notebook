@@ -507,6 +507,28 @@
 
 <!-- LIBRARY VIEW -->
 <div id="view-library" class="view">
+
+  <!-- STUDIO ATTENDANCE OVERVIEW -->
+  <details style="margin-bottom:14px">
+    <summary style="font-size:0.88rem;color:var(--viola);cursor:pointer;padding:10px 0;font-weight:600;list-style:none;display:flex;align-items:center;gap:6px">
+      <span style="font-size:0.7rem">▶</span> Studio attendance overview
+    </summary>
+    <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap;align-items:flex-end">
+      <div style="flex:1;min-width:120px">
+        <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">From</label>
+        <input type="date" id="studio-att-from" onchange="renderStudioAttendance()"
+          style="width:100%;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Lexend',sans-serif;font-size:0.85rem;background:var(--paper);color:var(--ink)">
+      </div>
+      <div style="flex:1;min-width:120px">
+        <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">To</label>
+        <input type="date" id="studio-att-to" onchange="renderStudioAttendance()"
+          style="width:100%;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Lexend',sans-serif;font-size:0.85rem;background:var(--paper);color:var(--ink)">
+      </div>
+      <button onclick="document.getElementById('studio-att-from').value='';document.getElementById('studio-att-to').value='';renderStudioAttendance()"
+        style="background:none;border:1.5px solid var(--warm);border-radius:8px;padding:6px 10px;font-family:'Lexend',sans-serif;font-size:0.8rem;color:var(--muted);cursor:pointer;flex-shrink:0">All time</button>
+    </div>
+    <div id="studio-attendance"></div>
+  </details>
   <!-- TECHNICAL FOCUS -->
   <div class="section-card" style="margin-bottom:14px">
     <div class="section-label">Technical focus words</div>
@@ -1639,8 +1661,21 @@ function renderDetail(s) {
       </div>
 
       <div class="section-card">
-        <div class="section-label">Attendance summary</div>
-        ${attendanceSummary(s)}
+        <div class="section-label">Attendance</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:flex-end">
+          <div style="flex:1;min-width:120px">
+            <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">From</label>
+            <input type="date" id="att-from-${s.id}" onchange="renderAttendanceChart('${s.id}')"
+              style="width:100%;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Lexend',sans-serif;font-size:0.85rem;background:var(--paper);color:var(--ink)">
+          </div>
+          <div style="flex:1;min-width:120px">
+            <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">To</label>
+            <input type="date" id="att-to-${s.id}" onchange="renderAttendanceChart('${s.id}')"
+              style="width:100%;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Lexend',sans-serif;font-size:0.85rem;background:var(--paper);color:var(--ink)">
+          </div>
+          <button onclick="clearAttDates('${s.id}')" style="background:none;border:1.5px solid var(--warm);border-radius:8px;padding:6px 10px;font-family:'Lexend',sans-serif;font-size:0.8rem;color:var(--muted);cursor:pointer;flex-shrink:0">All time</button>
+        </div>
+        <div id="att-chart-${s.id}">${attendanceChart(s, null, null)}</div>
       </div>
     </div>
 
@@ -2382,9 +2417,72 @@ function deleteCanvasSave(id, idx) {
 }
 
 
+function renderStudioAttendance() {
+  const el = document.getElementById('studio-attendance'); if (!el) return;
+  const fromVal = document.getElementById('studio-att-from') ? document.getElementById('studio-att-from').value : '';
+  const toVal   = document.getElementById('studio-att-to')   ? document.getElementById('studio-att-to').value   : '';
+  const fromDate = fromVal ? new Date(fromVal) : null;
+  const toDate   = toVal   ? new Date(toVal)   : null;
+
+  function filterLog(log) {
+    if (!fromDate && !toDate) return log;
+    return log.filter(e => {
+      const parts = e.date.split(' ');
+      const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+      const d = new Date(parts[2], months[parts[1]], parseInt(parts[0]));
+      if (fromDate && d < fromDate) return false;
+      if (toDate   && d > toDate)   return false;
+      return true;
+    });
+  }
+
+  const pupilsWithData = students
+    .map(s => {
+      const log = filterLog((s.log||[]).filter(e => e.attendance));
+      const total = log.length;
+      const present = log.filter(e => e.attendance === 'present').length;
+      const pct = total > 0 ? Math.round((present/total)*100) : null;
+      return { s, total, present, pct };
+    })
+    .filter(p => p.total > 0)
+    .sort((a,b) => (a.pct||0) - (b.pct||0));
+
+  if (pupilsWithData.length === 0) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.88rem;padding:10px 0">No attendance recorded for this period.</p>';
+    return;
+  }
+
+  const avgPct = Math.round(pupilsWithData.reduce((sum,p) => sum + (p.pct||0), 0) / pupilsWithData.length);
+
+  el.innerHTML = `
+    <div class="section-card">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--warm)">
+        <div>
+          <div style="font-size:2rem;font-weight:700;color:var(--viola)">${avgPct}%</div>
+          <div style="font-size:0.8rem;color:var(--muted)">studio average · ${pupilsWithData.length} pupils</div>
+        </div>
+        <div style="flex:1;background:var(--warm);border-radius:999px;height:10px;overflow:hidden">
+          <div style="height:100%;background:var(--viola);border-radius:999px;width:${avgPct}%"></div>
+        </div>
+      </div>
+      ${pupilsWithData.map(({s, total, present, pct}) => {
+        const col = pct >= 80 ? '#2F5C1A' : pct >= 60 ? '#e67e22' : '#c0392b';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--warm);cursor:pointer" onclick="openStudentFrom('${s.id}','roster')">
+          <div style="width:36px;text-align:right;font-size:0.82rem;font-weight:700;color:${col};flex-shrink:0">${pct}%</div>
+          <div style="flex:1;background:var(--warm);border-radius:999px;height:7px;overflow:hidden">
+            <div style="height:100%;background:${col};border-radius:999px;width:${pct}%"></div>
+          </div>
+          <div style="font-size:0.85rem;flex-shrink:0;min-width:80px">${s.name}</div>
+          <div style="font-size:0.75rem;color:var(--muted);flex-shrink:0">${present}/${total}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
 function renderLibrary() {
   renderLibChips();
   renderLibPieces();
+  renderStudioAttendance();
 }
 
 function renderLibChips() {
@@ -2827,20 +2925,78 @@ function setAttendance(id, status) {
   document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===2) t.click(); });
 }
 
-function attendanceSummary(s) {
-  const log = s.log || [];
+function attendanceChart(s, fromDate, toDate) {
+  let log = (s.log || []).filter(e => e.attendance);
+
+  // Filter by date range if provided
+  if (fromDate || toDate) {
+    log = log.filter(e => {
+      const parts = e.date.split(' ');
+      const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+      const d = new Date(parts[2], months[parts[1]], parseInt(parts[0]));
+      if (fromDate && d < new Date(fromDate)) return false;
+      if (toDate   && d > new Date(toDate))   return false;
+      return true;
+    });
+  }
+
+  if (log.length === 0) return '<p style="color:var(--muted);font-size:0.88rem">No attendance recorded for this period.</p>';
+
   const counts = { present:0, 'absent-late':0, 'absent-notice':0, cancelled:0 };
-  log.forEach(e => { if (e.attendance && counts[e.attendance] !== undefined) counts[e.attendance]++; });
-  const total = Object.values(counts).reduce((a,b)=>a+b,0);
-  if (total === 0) return '<p style="color:var(--muted);font-size:0.88rem">No attendance recorded yet.</p>';
-  return `<div style="font-size:0.88rem;line-height:2">
-    <div>✅ Present: <strong>${counts.present}</strong></div>
-    <div>❌ Late cancel (charges): <strong>${counts['absent-late']}</strong></div>
-    <div>🔔 Good notice (no charge): <strong>${counts['absent-notice']}</strong></div>
-    <div>🚫 Cancelled by teacher: <strong>${counts.cancelled}</strong></div>
-    <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--warm)">Total: <strong>${total}</strong></div>
-  </div>`;
+  log.forEach(e => { if (counts[e.attendance] !== undefined) counts[e.attendance]++; });
+  const total = log.length;
+  const presentPct = Math.round((counts.present / total) * 100);
+
+  const dots = [...log].reverse().map(e => {
+    const colours = { 'present':'#2F5C1A', 'absent-late':'#c0392b', 'absent-notice':'#e67e22', 'cancelled':'#aaa' };
+    const labels  = { 'present':'Present', 'absent-late':'Absent — late cancel', 'absent-notice':'Absent — good notice', 'cancelled':'Cancelled by teacher' };
+    return `<span title="${e.date}: ${labels[e.attendance]||''}"
+      style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${colours[e.attendance]||'#ccc'};margin:2px;flex-shrink:0"></span>`;
+  }).join('');
+
+  const bars = [
+    { label: 'Present',        count: counts.present,           col: '#2F5C1A' },
+    { label: 'Late cancel',    count: counts['absent-late'],    col: '#c0392b' },
+    { label: 'Good notice',    count: counts['absent-notice'],  col: '#e67e22' },
+    { label: 'Teacher cancel', count: counts.cancelled,         col: '#aaa'    },
+  ].filter(b => b.count > 0);
+
+  return `
+    <div style="margin-bottom:12px">
+      <div style="font-size:2rem;font-weight:700;color:var(--viola)">${presentPct}%</div>
+      <div style="font-size:0.82rem;color:var(--muted)">${total} lesson${total!==1?'s':''} in this period</div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:14px">${dots}</div>
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      ${bars.map(b => `<div style="flex:${b.count};background:${b.col};border-radius:4px;height:10px;min-width:4px" title="${b.label}: ${b.count}"></div>`).join('')}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;font-size:0.82rem">
+      ${bars.map(b => `
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="width:10px;height:10px;border-radius:50%;background:${b.col};display:inline-block;flex-shrink:0"></span>
+          <span style="color:var(--muted)">${b.label}</span>
+          <span style="font-weight:600;margin-left:auto">${b.count}</span>
+        </div>`).join('')}
+    </div>`;
 }
+
+function renderAttendanceChart(id) {
+  const s = getStudent(id); if (!s) return;
+  const from = document.getElementById('att-from-' + id).value;
+  const to   = document.getElementById('att-to-'   + id).value;
+  const el   = document.getElementById('att-chart-' + id);
+  if (el) el.innerHTML = attendanceChart(s, from || null, to || null);
+}
+
+function clearAttDates(id) {
+  document.getElementById('att-from-' + id).value = '';
+  document.getElementById('att-to-'   + id).value = '';
+  renderAttendanceChart(id);
+}
+
+
+
+
 
 // ── CONTACT LOG ───────────────────────────────────────────────────────────
 function saveContact(id) {
