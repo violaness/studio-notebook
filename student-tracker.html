@@ -1600,6 +1600,7 @@ function renderDetail(s) {
           }).join('')}
         </div>
         <div class="save-toast" id="toast-attendance-${s.id}">✓ Attendance saved</div>
+        ${(()=>{ const last=(s.log||[]).slice(-1)[0]; return last&&last.attendance?`<button onclick="clearAttendance('${s.id}')" style="background:none;border:none;font-size:0.78rem;color:var(--muted);cursor:pointer;margin-top:4px;padding:0">Clear attendance</button>`:''; })()}
       </div>
       <div class="section-card">
         <div class="section-label">Lesson history</div>
@@ -2917,12 +2918,17 @@ function setAttendance(id, status) {
   const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
   let entry = s.log.find(e => e.date === today);
   if (!entry) { entry = { date: today, text: '', attendance: status }; s.log.push(entry); }
-  else {
-    // Toggle off if already selected
-    entry.attendance = entry.attendance === status ? '' : status;
-  }
+  else { entry.attendance = status; }
   save(); showToast('toast-attendance-' + id); renderDetail(s);
   document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===2) t.click(); });
+}
+
+function clearAttendance(id) {
+  const s = getStudent(id); if (!s) return;
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const entry = s.log && s.log.find(e => e.date === today);
+  if (entry) { entry.attendance = ''; save(); renderDetail(s);
+    document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===2) t.click(); }); }
 }
 
 function attendanceChart(s, fromDate, toDate) {
