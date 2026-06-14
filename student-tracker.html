@@ -951,10 +951,18 @@
     <div class="field-group">
       <label class="field-label">Key</label>
       <div style="display:flex;flex-wrap:wrap;gap:6px" id="scale-key-picker">
-        ${['C','D♭','D','E♭','E','F','F♯','G','A♭','A','B♭','B'].map(k =>
-          `<button type="button" class="key-btn" data-key="${k}" onclick="selectScaleKey('${k}')"
-            style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Lexend',sans-serif;font-size:0.85rem;cursor:pointer">${k}</button>`
-        ).join('')}
+        <button type="button" class="key-btn" data-key="C"  onclick="selectScaleKey('C')"  style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Lexend',sans-serif;font-size:0.85rem;cursor:pointer">C</button>
+        <button type="button" class="key-btn" data-key="D♭" onclick="selectScaleKey('D♭')" style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Lexend',sans-serif;font-size:0.85rem;cursor:pointer">D♭</button>
+        <button type="button" class="key-btn" data-key="D"  onclick="selectScaleKey('D')"  style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Lexend',sans-serif;font-size:0.85rem;cursor:pointer">D</button>
+        <button type="button" class="key-btn" data-key="E♭" onclick="selectScaleKey('E♭')" style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Lexend',sans-serif;font-size:0.85rem;cursor:pointer">E♭</button>
+        <button type="button" class="key-btn" data-key="E"  onclick="selectScaleKey('E')"  style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Lexend',sans-serif;font-size:0.85rem;cursor:pointer">E</button>
+        <button type="button" class="key-btn" data-key="F"  onclick="selectScaleKey('F')"  style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Lexend',sans-serif;font-size:0.85rem;cursor:pointer">F</button>
+        <button type="button" class="key-btn" data-key="F♯" onclick="selectScaleKey('F♯')" style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Lexend',sans-serif;font-size:0.85rem;cursor:pointer">F♯</button>
+        <button type="button" class="key-btn" data-key="G"  onclick="selectScaleKey('G')"  style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Lexend',sans-serif;font-size:0.85rem;cursor:pointer">G</button>
+        <button type="button" class="key-btn" data-key="A♭" onclick="selectScaleKey('A♭')" style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Lexend',sans-serif;font-size:0.85rem;cursor:pointer">A♭</button>
+        <button type="button" class="key-btn" data-key="A"  onclick="selectScaleKey('A')"  style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Lexend',sans-serif;font-size:0.85rem;cursor:pointer">A</button>
+        <button type="button" class="key-btn" data-key="B♭" onclick="selectScaleKey('B♭')" style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Lexend',sans-serif;font-size:0.85rem;cursor:pointer">B♭</button>
+        <button type="button" class="key-btn" data-key="B"  onclick="selectScaleKey('B')"  style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Lexend',sans-serif;font-size:0.85rem;cursor:pointer">B</button>
       </div>
     </div>
 
@@ -996,10 +1004,10 @@
     <div class="field-group">
       <label class="field-label">Progress</label>
       <div class="radio-group">
-        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-working" value="Working on it" checked><label for="prog-working">🔵 Working on it</label></div>
-        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-getting" value="Getting there"><label for="prog-getting">🟡 Getting there</label></div>
-        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-secure" value="Secure"><label for="prog-secure">🟢 Secure</label></div>
-        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-review" value="Needs review"><label for="prog-review">🔴 Needs review</label></div>
+        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-working" value="Working on it" checked><label for="prog-working" style="min-width:110px;text-align:center">🔵 Working on it</label></div>
+        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-getting" value="Getting there"><label for="prog-getting" style="min-width:110px;text-align:center">🟡 Getting there</label></div>
+        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-secure" value="Secure"><label for="prog-secure" style="min-width:110px;text-align:center">🟢 Secure</label></div>
+        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-review" value="Needs review"><label for="prog-review" style="min-width:110px;text-align:center">🔴 Needs review</label></div>
       </div>
     </div>
 
