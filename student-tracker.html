@@ -820,6 +820,34 @@
   </div>
 </div>
 
+<!-- FILL SLOT MODAL -->
+<div class="modal-overlay" id="fill-slot-modal">
+  <div class="modal">
+    <h2>Fill this slot</h2>
+    <p style="font-size:0.88rem;color:var(--muted);margin-bottom:4px;line-height:1.5">
+      <strong id="fill-slot-desc"></strong>
+    </p>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px;line-height:1.5">
+      Choose a pupil to give this slot to as an extra lesson.
+    </p>
+    <input type="hidden" id="fill-slot-date">
+    <input type="hidden" id="fill-slot-time">
+    <input type="hidden" id="fill-slot-day">
+    <div class="field-group">
+      <label class="field-label">Pupil</label>
+      <select id="fill-slot-pupil" style="width:100%;padding:10px 12px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.93rem;background:var(--paper);color:var(--ink)"></select>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Time</label>
+      <input type="time" id="fill-slot-time-input">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeFillSlotModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmFillSlot()">Add extra lesson</button>
+    </div>
+  </div>
+</div>
+
 <!-- EXTRA LESSON MODAL -->
 <div class="modal-overlay" id="extra-lesson-modal">
   <div class="modal">
@@ -1337,7 +1365,7 @@ function renderToday() {
   const nowTime = now.getHours()*60 + now.getMinutes();
   let nextId = null;
   for (const s of sorted) {
-    const t = effectiveSlot(s).time;
+    const t = s.lessonTime || effectiveSlot(s).time;
     if (t) {
       const [h,m] = t.split(':').map(Number);
       if ((h*60+m) >= nowTime) { nextId = s.id; break; }
@@ -1358,13 +1386,20 @@ function renderToday() {
   sub.textContent = sorted.length + ' lesson' + (sorted.length!==1?'s':'') + ' today';
 
   document.getElementById('today-list').innerHTML = sorted.map(s => {
-    const slot = effectiveSlot(s);
+    const slot = { time: s.lessonTime || effectiveSlot(s).time, day: s.lessonDay || effectiveSlot(s).day };
     const isNext = s.id === nextId;
     const lastLog = (s.log||[]).slice(-1)[0];
     const pieces = (s.pieces||[]).filter(Boolean);
     const tech = (s.techFocus||[]).slice(0,3);
     const plan = s.nextLesson || '';
     const thisWeek = (s.goals||{}).thisWeek || '';
+    // Upcoming absences within 4 weeks
+    const todayMs = new Date().setHours(0,0,0,0);
+    const soonAbsences = (s.absences||[]).filter(a => {
+      const d = new Date(a.date); d.setHours(0,0,0,0);
+      const diff = Math.round((d - todayMs) / (1000*60*60*24));
+      return diff >= 0 && diff <= 28;
+    }).sort((a,b) => a.date.localeCompare(b.date));
 
     return `<div class="lesson-summary ${s.instrument}-card${isNext?' next-up':''}" id="lsc-${s.id}">
       <div class="lesson-summary-header" onclick="toggleSummary('${s.id}')">
@@ -1376,6 +1411,17 @@ function renderToday() {
         <div class="ls-chevron">›</div>
       </div>
       <div class="lesson-summary-body">
+        ${soonAbsences.length ? `<div class="summary-row">
+          <div class="summary-icon">📅</div>
+          <div class="summary-content">
+            <div class="summary-label" style="color:#e67e22">Upcoming absence${soonAbsences.length>1?'s':''}</div>
+            <div class="summary-text">${soonAbsences.map(a => {
+              const d = new Date(a.date);
+              const label = d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+              return esc(label) + (a.note ? ' — ' + esc(a.note) : '');
+            }).join('<br>')}</div>
+          </div>
+        </div>` : ''}
         ${plan ? `<div class="summary-row">
           <div class="summary-icon">📌</div>
           <div class="summary-content">
@@ -1755,6 +1801,24 @@ function renderDetail(s) {
           oninput="updateField('${s.id}','pupilNotes',this.value)"
           style="background:transparent;border-color:rgba(0,0,0,0.1)">${esc(s.pupilNotes||'')}</textarea>
       </div>
+      <div class="section-card">
+        <div class="section-label">📅 Requested absences</div>
+        ${absencesHTML(s)}
+        <div style="display:flex;gap:8px;margin-top:10px;align-items:flex-end">
+          <div style="flex:1">
+            <label style="font-size:0.68rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Date</label>
+            <input type="date" id="absence-date-${s.id}"
+              style="width:100%;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink)">
+          </div>
+          <div style="flex:2">
+            <label style="font-size:0.68rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Note (optional)</label>
+            <input type="text" id="absence-note-${s.id}" placeholder="e.g. school trip, holiday…"
+              onkeydown="if(event.key==='Enter')addAbsence('${s.id}')">
+          </div>
+          <button onclick="addAbsence('${s.id}')"
+            style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap">Add</button>
+        </div>
+      </div>
     </div>
 
     <!-- DURING -->
@@ -1962,7 +2026,105 @@ function renderDetail(s) {
     </div>`;
 }
 
-// ── UPDATE HELPERS ────────────────────────────────────────────────────────
+// ── REQUESTED ABSENCES ────────────────────────────────────────────────────
+function absencesHTML(s) {
+  const absences = (s.absences || []).slice().sort((a,b) => a.date.localeCompare(b.date));
+  if (absences.length === 0) {
+    return `<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No absences noted.</p>`;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  return absences.map((ab, i) => {
+    const d = new Date(ab.date);
+    const isPast = d < today;
+    const daysAway = Math.round((d - today) / (1000*60*60*24));
+    const isSoon = daysAway >= 0 && daysAway <= 14;
+    const label = d.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+    const soonTag = isSoon ? `<span style="font-size:0.65rem;font-weight:700;background:#e67e22;color:#fff;padding:1px 6px;border-radius:999px;margin-left:6px">${daysAway===0?'today':daysAway===1?'tomorrow':'in '+daysAway+' days'}</span>` : '';
+    const dayName = d.toLocaleDateString('en-GB', {weekday:'long'});
+    const fillBtn = !isPast ? `<button onclick="openFillSlotModal('${s.id}',${i},'${ab.date}','${(s.lessonTime||'').replace(/'/g,'\\'')}','${dayName}')"
+        style="background:var(--string);color:#05270B;border:none;border-radius:6px;padding:4px 9px;font-family:'Special Elite',cursive;font-size:0.72rem;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap">Fill slot</button>` : '';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--warm);${isPast?'opacity:0.45':''}">
+      <span style="font-size:0.88rem;flex:1;${isPast?'text-decoration:line-through;color:var(--muted)':''}">
+        ${label}${soonTag}${ab.note ? `<span style="color:var(--muted);font-size:0.82rem"> — ${esc(ab.note)}</span>` : ''}
+      </span>
+      ${fillBtn}
+      <button onclick="removeAbsence('${s.id}',${i})"
+        style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1;flex-shrink:0">×</button>
+    </div>`;
+  }).join('');
+}
+
+function addAbsence(id) {
+  const s = getStudent(id); if (!s) return;
+  const dateEl = document.getElementById('absence-date-' + id);
+  const noteEl = document.getElementById('absence-note-' + id);
+  const date = dateEl.value; if (!date) { dateEl.focus(); return; }
+  if (!s.absences) s.absences = [];
+  // Don't add duplicate dates
+  if (s.absences.some(a => a.date === date)) { dateEl.value = ''; noteEl.value = ''; return; }
+  s.absences.push({ date, note: noteEl.value.trim() });
+  dateEl.value = ''; noteEl.value = '';
+  save(); renderDetail(s);
+  document.querySelectorAll('.moment-tab')[0].click();
+}
+
+function removeAbsence(id, idx) {
+  const s = getStudent(id); if (!s || !s.absences) return;
+  s.absences.splice(idx, 1);
+  save(); renderDetail(s);
+  document.querySelectorAll('.moment-tab')[0].click();
+}
+
+// ── FILL SLOT ─────────────────────────────────────────────────────────────
+function openFillSlotModal(absentStudentId, absenceIdx, date, time, dayName) {
+  const absentStudent = getStudent(absentStudentId);
+  if (!absentStudent) return;
+
+  // Populate description
+  const d = new Date(date);
+  const dateLabel = d.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
+  document.getElementById('fill-slot-desc').textContent =
+    absentStudent.name + ' is absent — ' + dateLabel + (time ? ' at ' + time : '');
+
+  // Store values for confirmFillSlot
+  document.getElementById('fill-slot-date').value = date;
+  document.getElementById('fill-slot-time').value = time;
+  document.getElementById('fill-slot-day').value  = dayName;
+  document.getElementById('fill-slot-time-input').value = time;
+
+  // Populate pupil picker — everyone except the absent pupil, sorted by name
+  const select = document.getElementById('fill-slot-pupil');
+  select.innerHTML = students
+    .filter(s => s.id !== absentStudentId)
+    .sort((a,b) => a.name.localeCompare(b.name))
+    .map(s => `<option value="${s.id}">${s.name} (${s.instrument} · ${s.level})</option>`)
+    .join('');
+
+  document.getElementById('fill-slot-modal').classList.add('open');
+}
+
+function closeFillSlotModal() {
+  document.getElementById('fill-slot-modal').classList.remove('open');
+}
+
+function confirmFillSlot() {
+  const studentId = document.getElementById('fill-slot-pupil').value;
+  const day  = document.getElementById('fill-slot-day').value;
+  const time = document.getElementById('fill-slot-time-input').value;
+  if (!studentId) return;
+  if (!extraLessons[currentWeek]) extraLessons[currentWeek] = [];
+  // Don't add exact duplicate (same pupil, day AND time)
+  const alreadyExists = extraLessons[currentWeek].some(e => e.studentId === studentId && e.day === day && e.time === time);
+  if (!alreadyExists) {
+    extraLessons[currentWeek].push({ studentId, day, time });
+    save();
+  }
+  closeFillSlotModal();
+  // Go to week view so they can see the slot
+  showView('week');
+}
+
+
 function updateField(id, field, val) { const s=getStudent(id); if(s){s[field]=val;save();} }
 function updateGoal(id, key, val)    { const s=getStudent(id); if(s){if(!s.goals)s.goals={};s.goals[key]=val;save();} }
 function updatePiece(id, i, val)     { const s=getStudent(id); if(s){if(!s.pieces)s.pieces=[];s.pieces[i]=val;save();} }
@@ -3756,8 +3918,48 @@ function buildPupilHTML(s, term) {
     </div>`;
 }
 
+function buildPupilPlainText(s, term) {
+  const slot = effectiveSlot(s);
+  const pieces = (s.pieces||[]).filter(Boolean);
+  const goals = s.goals || {};
+  const log = s.log || [];
+  let txt = s.name + '\n';
+  txt += [s.instrument, s.level, (s.pupilType||'child')==='adult'?'Adult':'School age',
+    s.schoolYear, slot.day?(slot.day+(slot.time?' '+slot.time:'')):''].filter(Boolean).join(' · ') + '\n\n';
+  if (pieces.length) txt += 'CURRENT PIECES\n' + pieces.join(', ') + '\n\n';
+  if ((s.techFocus||[]).length) txt += 'TECHNICAL FOCUS\n' + s.techFocus.join(', ') + '\n\n';
+  if (goals.longTerm||goals.medium||goals.shortTerm||goals.thisWeek) {
+    txt += 'GOALS\n';
+    if (goals.longTerm)  txt += 'Long-term: '  + goals.longTerm  + '\n';
+    if (goals.medium)    txt += 'Medium-term: ' + goals.medium    + '\n';
+    if (goals.shortTerm) txt += 'Short-term: '  + goals.shortTerm + '\n';
+    if (goals.thisWeek)  txt += 'This week: '   + goals.thisWeek  + '\n';
+    txt += '\n';
+  }
+  if (log.length) {
+    txt += 'LESSON NOTES\n';
+    [...log].reverse().forEach(e => { txt += e.date + '  ' + e.text + '\n\n'; });
+  } else {
+    txt += 'No lesson notes recorded.\n';
+  }
+  return txt;
+}
+
 function exportHTML(pupils, term) {
   const termLabel = term || new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  const isSingle = pupils.length === 1;
+  const singlePupil = isSingle ? pupils[0] : null;
+  const emailTo = isSingle && singlePupil.email ? singlePupil.email : '';
+  const emailSubject = isSingle ? encodeURIComponent('Lesson notes — ' + singlePupil.name + ' — ' + termLabel) : '';
+  const rawBody = isSingle ? buildPupilPlainText(singlePupil, term) : '';
+  // Trim body if it would make the mailto URL too long for iOS Mail (cap ~1800 chars of body)
+  const trimmedBody = rawBody.length > 1800 ? rawBody.slice(0, 1800) + '\n\n[truncated — see full report]' : rawBody;
+  const emailBody = isSingle ? encodeURIComponent(trimmedBody) : '';
+  const mailtoHref = isSingle ? `mailto:${emailTo}?subject=${emailSubject}&body=${emailBody}` : '';
+  const mailBtn = isSingle
+    ? `<a href="${mailtoHref}" style="display:inline-block;background:#2F5C1A;color:white;text-decoration:none;padding:10px 20px;border-radius:8px;font-size:0.9rem;margin-bottom:32px;margin-left:10px">✉️&nbsp; Send to ${emailTo||'pupil'}</a>`
+    : '';
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -3773,7 +3975,7 @@ function exportHTML(pupils, term) {
   h2 { font-size: 1.3rem; margin-bottom: 4px; color: #05270B; }
   .pupil-meta { color: #6b8a6b; font-size: 0.85rem; margin-bottom: 14px; }
   .section { margin-bottom: 14px; }
-  .section-title { font-size: 0.7rem; font-weight: bold;   color: #6b8a6b; margin-bottom: 6px; }
+  .section-title { font-size: 0.7rem; font-weight: bold; color: #6b8a6b; margin-bottom: 6px; }
   .piece { background: #dff0d8; color: #2F5C1A; padding: 2px 8px; border-radius: 999px; font-size: 0.88rem; margin-right: 4px; display: inline-block; margin-bottom: 4px; }
   .goal-item { font-size: 0.9rem; margin-bottom: 4px; line-height: 1.5; }
   .goal-label { font-weight: bold; color: #2F5C1A; }
@@ -3783,12 +3985,13 @@ function exportHTML(pupils, term) {
   @media print {
     body { margin: 20px; }
     .print-btn { display: none; }
+    a[href^="mailto"] { display: none; }
     .pupil-section { page-break-inside: avoid; }
   }
 </style>
 </head>
 <body>
-<button class="print-btn" onclick="window.print()">🖨️&nbsp; Save as PDF / Print</button>
+<button class="print-btn" onclick="window.print()">🖨️&nbsp; Save as PDF / Print</button>${mailBtn}
 <button onclick="window.close()" style="background:none;border:1.5px solid #2F5C1A;color:#2F5C1A;padding:10px 20px;border-radius:8px;font-size:0.9rem;cursor:pointer;margin-bottom:32px;margin-left:10px">← Close report</button>
 <h1>Studio Notebook</h1>
 <div class="report-meta">${termLabel} · ${pupils.length} pupil${pupils.length!==1?'s':''} · Generated ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
@@ -3987,6 +4190,9 @@ if (window.location.search.includes('reset=1')) {
   localStorage.removeItem('studio_one_off_moves');
   localStorage.removeItem('studio_custom_pieces');
   localStorage.removeItem('studio_waiting_list');
+  localStorage.removeItem('studio_extra_lessons');
+  localStorage.removeItem('studio_skipped_weeks');
+  localStorage.removeItem('studio_daily_notes');
   window.history.replaceState({}, '', window.location.pathname);
   students = [];
   loadDefaultPupils();
