@@ -1448,7 +1448,8 @@ function renderRosterList(filtered) {
     list.innerHTML = `<div class="empty-state"><div class="big">🔍</div><p>No pupils match this filter.</p></div>`;
     return;
   }
-  list.innerHTML = filtered.map(s => {
+  const sorted = [...filtered].sort((a,b) => a.name.localeCompare(b.name));
+  list.innerHTML = sorted.map(s => {
     const lastNote = (s.log||[]).slice(-1)[0];
     const snippet = lastNote ? lastNote.text.slice(0,60)+(lastNote.text.length>60?'…':'')
                              : ((s.goals||{}).thisWeek||'');
