@@ -615,6 +615,7 @@
     <button id="add-btn" style="margin-bottom:0;flex:1" onclick="openAddModal()">＋ Add Pupil</button>
     <button onclick="toggleSearch()" style="background:var(--violin);color:#fff;border:none;border-radius:var(--radius);padding:15px 14px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer;flex-shrink:0">🔍</button>
     <button onclick="openExportModal()" style="background:var(--sage);color:#fff;border:none;border-radius:var(--radius);padding:15px 14px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer;flex-shrink:0">↓</button>
+    <button onclick="openBackupModal()" style="background:#8a7a3a;color:#fff;border:none;border-radius:var(--radius);padding:15px 14px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer;flex-shrink:0" title="Back up / restore data">🗄</button>
   </div>
   <!-- TERM DATES -->
   <details style="margin-bottom:14px">
@@ -706,8 +707,8 @@
       </select>
     </div>
     <div class="field-group">
-      <label class="field-label">Lesson time (e.g. 14:30)</label>
-      <input type="text" id="new-time" placeholder="HH:MM" maxlength="5">
+      <label class="field-label">Lesson time</label>
+      <input type="time" id="new-time">
     </div>
     <div class="field-group">
       <label class="field-label">Frequency</label>
@@ -766,7 +767,7 @@
     </div>
     <div class="field-group">
       <label class="field-label">New time</label>
-      <input type="text" id="move-time" placeholder="HH:MM" maxlength="5">
+      <input type="time" id="move-time">
     </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeMoveModal()">Cancel</button>
@@ -819,7 +820,23 @@
   </div>
 </div>
 
-<!-- EDIT PUPIL MODAL -->
+<!-- BACKUP / RESTORE MODAL -->
+<div class="modal-overlay" id="backup-modal">
+  <div class="modal">
+    <h2>Back up &amp; restore</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px;line-height:1.5">
+      Back up saves a JSON file to your Downloads (or Files on iPad). Restore loads it back. Keep backups in iCloud Drive or Google Drive for safety.
+    </p>
+    <div class="modal-actions" style="flex-direction:column;gap:10px">
+      <button class="btn-primary" onclick="backupData()">💾&nbsp; Back up all data</button>
+      <button class="btn-primary" style="background:var(--violin)" onclick="document.getElementById('restore-file-input').click()">📂&nbsp; Restore from backup</button>
+      <input type="file" id="restore-file-input" accept=".json" style="display:none" onchange="restoreData(event)">
+      <button class="btn-ghost" onclick="closeBackupModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
 <div class="modal-overlay" id="edit-modal">
   <div class="modal">
     <h2>Edit Pupil</h2>
@@ -858,8 +875,8 @@
       </select>
     </div>
     <div class="field-group">
-      <label class="field-label">Lesson time (e.g. 14:30)</label>
-      <input type="text" id="edit-time" placeholder="HH:MM" maxlength="5">
+      <label class="field-label">Lesson time</label>
+      <input type="time" id="edit-time">
     </div>
     <div class="field-group">
       <label class="field-label">Frequency</label>
@@ -1279,7 +1296,7 @@ function renderToday() {
   document.getElementById('today-heading').textContent =
     now.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
 
-  const todayStudents = students.filter(s => effectiveSlot(s).day === dayName);
+  const todayStudents = students.filter(s => effectiveSlot(s).day === dayName && !isSkipped(s.id));
   const sorted = sortByTime(todayStudents);
 
   // Work out who's "next" (first lesson whose time is >= now)
@@ -3572,7 +3589,7 @@ function renderPieceDB(items) {
     <div style="margin-bottom:14px">
       <div style="font-size:0.68rem;font-weight:800;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${cat.replace(' - ',' — ')}</div>
       ${pieces.map(p => `
-        <div onclick="selectPiece('${esc(p.title)} — ${esc(p.composer)}')"
+        <div onclick="selectPiece('${esc(p.title)}')"
           style="padding:10px 12px;border-radius:9px;cursor:pointer;margin-bottom:4px;transition:background 0.12s"
           onmouseover="this.style.background='var(--warm)'" onmouseout="this.style.background='transparent'">
           <div style="font-size:0.9rem;font-weight:600">${esc(p.title)}</div>
@@ -3705,7 +3722,14 @@ function exportIndividual() {
   if (!name) return;
   const match = sorted.filter(s => s.name.toLowerCase().includes(name.toLowerCase()));
   if (match.length === 0) { alert('No pupil found matching that name.'); return; }
-  exportHTML(match.length === 1 ? match : match, term);
+  if (match.length > 1) {
+    const chosen = prompt('Multiple matches:\n' + match.map((s,i) => `${i+1}. ${s.name}`).join('\n') + '\n\nEnter number to export one, or leave blank to export all:');
+    if (chosen === null) return;
+    const idx = parseInt(chosen) - 1;
+    exportHTML((idx >= 0 && idx < match.length) ? [match[idx]] : match, term);
+  } else {
+    exportHTML(match, term);
+  }
 }
 
 
@@ -3759,7 +3783,80 @@ function loadDefaultPupils() {
   renderRoster();
 }
 
-// ── ID REPAIR ─────────────────────────────────────────────────────────────
+// ── BACKUP / RESTORE ──────────────────────────────────────────────────────
+function openBackupModal() {
+  document.getElementById('backup-modal').classList.add('open');
+}
+function closeBackupModal() {
+  document.getElementById('backup-modal').classList.remove('open');
+}
+
+function backupData() {
+  const payload = {
+    _version: 1,
+    _exported: new Date().toISOString(),
+    studio_students:      localStorage.getItem('studio_students')      || '[]',
+    studio_custom_chips:  localStorage.getItem('studio_custom_chips')  || '[]',
+    studio_custom_pieces: localStorage.getItem('studio_custom_pieces') || '[]',
+    studio_one_off_moves: localStorage.getItem('studio_one_off_moves') || '{}',
+    studio_waiting_list:  localStorage.getItem('studio_waiting_list')  || '[]',
+    studio_daily_notes:   localStorage.getItem('studio_daily_notes')   || '{}',
+    studio_term:          localStorage.getItem('studio_term')          || '{}',
+    studio_eod:           localStorage.getItem('studio_eod')           || '{}',
+    studio_skipped_weeks: localStorage.getItem('studio_skipped_weeks') || '{}',
+    studio_cal_url:       localStorage.getItem('studio_cal_url')       || '',
+    studio_dark_mode:     localStorage.getItem('studio_dark_mode')     || '0',
+  };
+  const date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `studio-notebook-backup-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  closeBackupModal();
+}
+
+function restoreData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const payload = JSON.parse(e.target.result);
+      if (!payload.studio_students) {
+        alert('This doesn\'t look like a Studio Notebook backup file.');
+        return;
+      }
+      if (!confirm(`Restore backup from ${payload._exported ? new Date(payload._exported).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : 'unknown date'}?\n\nThis will replace all current data.`)) return;
+
+      const keys = ['studio_students','studio_custom_chips','studio_custom_pieces',
+        'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
+        'studio_term','studio_eod','studio_skipped_weeks','studio_cal_url','studio_dark_mode'];
+      keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
+
+      // Reload state
+      students     = JSON.parse(localStorage.getItem('studio_students')      || '[]');
+      customChips  = JSON.parse(localStorage.getItem('studio_custom_chips')  || '[]');
+      customPieces = JSON.parse(localStorage.getItem('studio_custom_pieces') || '[]');
+      oneOffMoves  = JSON.parse(localStorage.getItem('studio_one_off_moves') || '{}');
+      waitingList  = JSON.parse(localStorage.getItem('studio_waiting_list')  || '[]');
+      skippedWeeks = JSON.parse(localStorage.getItem('studio_skipped_weeks') || '{}');
+      repairStudentIDs();
+      initDarkMode();
+      closeBackupModal();
+      renderToday();
+      renderRoster();
+      alert('✓ Data restored successfully.');
+    } catch(err) {
+      alert('Could not read the backup file. Make sure it\'s a valid Studio Notebook JSON backup.');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // reset so same file can be re-selected
+}
+
+
 // Runs on every load — fixes any duplicate or missing IDs without losing data
 function repairStudentIDs() {
   const seen = new Set();
