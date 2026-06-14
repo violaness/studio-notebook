@@ -1497,10 +1497,13 @@ function renderDetail(s) {
     ? `<p style="color:var(--muted);font-size:0.88rem;">No lesson notes yet.</p>`
     : [...(s.log||[])].reverse().map((e, i) => {
         const realIdx = (s.log.length - 1) - i;
-        return `<div class="log-entry" style="position:relative">
-          <div class="log-date">${e.date}${e.attendance ? ` · <span style="font-size:0.75rem;color:var(--muted)">${{present:'✅ Present','absent-late':'❌ Late cancel','absent-notice':'🔔 Good notice',cancelled:'🚫 Cancelled'}[e.attendance]||''}</span>` : ''}</div>
-          <div class="log-text">${esc(e.text)}</div>
-          <button onclick="deleteLogEntry('${s.id}',${realIdx})" style="position:absolute;top:6px;right:6px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;opacity:0.6" title="Delete this entry">×</button>
+        const attLabels = {present:'✅ Present','absent-late':'❌ Late cancel','absent-notice':'🔔 Good notice',cancelled:'🚫 Cancelled'};
+        return `<div class="log-entry" style="position:relative;padding-right:36px">
+          <div class="log-date">${e.date}${e.attendance ? ` · <span style="font-size:0.75rem;color:var(--muted)">${attLabels[e.attendance]||''}</span>` : ''}</div>
+          ${e.text ? `<div class="log-text">${esc(e.text)}</div>` : `<div style="font-size:0.8rem;color:var(--muted);font-style:italic">No notes</div>`}
+          <button onclick="deleteLogEntry('${s.id}',${realIdx})"
+            style="position:absolute;top:8px;right:8px;background:#e8ddd8;border:none;border-radius:6px;color:var(--muted);cursor:pointer;font-size:0.78rem;padding:3px 8px;font-family:'Lexend',sans-serif"
+            title="Delete this entry">Delete</button>
         </div>`;
       }).join('');
 
