@@ -1898,13 +1898,6 @@ function insertIntoScratch(id, text) {
   const el = document.getElementById('during-scratch-' + id);
   if (!el) return;
   const cur = el.value;
-  // Add a space or newline separator if there's already content
-  const sep = cur.length > 0 && !cur.endsWith(' ') && !cur.endsWith('\n') ? ' · ' : '';
-  el.value = cur + sep + text;
-function insertIntoScratch(id, text) {
-  const el = document.getElementById('during-scratch-' + id);
-  if (!el) return;
-  const cur = el.value;
   const sep = cur.length > 0 && !cur.endsWith(' ') && !cur.endsWith('\n') ? ' · ' : '';
   el.value = cur + sep + text;
   // Update the stored value
@@ -3669,8 +3662,6 @@ function loadDefaultPupils() {
   renderToday();
   renderRoster();
 }
-
-} // close renderDetail
 
 // ── ID REPAIR ─────────────────────────────────────────────────────────────
 // Runs on every load — fixes any duplicate or missing IDs without losing data
