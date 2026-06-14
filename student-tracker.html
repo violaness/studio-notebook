@@ -1358,14 +1358,18 @@ function renderToday() {
     .filter(Boolean);
   // Merge: don't double-show pupils already in their normal slot today
   const extraOnly = todayExtras.filter(ex => !todayStudents.find(s => s.id === ex.id));
-  const allToday = sortByTime([...todayStudents, ...extraOnly.map(s => ({...s, lessonTime: s._extraTime}))].map(s => s._extraTime ? {...s, lessonTime: s._extraTime} : s));
+  const allToday = [...todayStudents, ...extraOnly].sort((a,b) => {
+    const ta = a._extraTime || effectiveSlot(a).time || '99:99';
+    const tb = b._extraTime || effectiveSlot(b).time || '99:99';
+    return ta.localeCompare(tb);
+  });
   const sorted = allToday;
 
   // Work out who's "next" (first lesson whose time is >= now)
   const nowTime = now.getHours()*60 + now.getMinutes();
   let nextId = null;
   for (const s of sorted) {
-    const t = s.lessonTime || effectiveSlot(s).time;
+    const t = s._extraTime || effectiveSlot(s).time;
     if (t) {
       const [h,m] = t.split(':').map(Number);
       if ((h*60+m) >= nowTime) { nextId = s.id; break; }
@@ -1386,7 +1390,8 @@ function renderToday() {
   sub.textContent = sorted.length + ' lesson' + (sorted.length!==1?'s':'') + ' today';
 
   document.getElementById('today-list').innerHTML = sorted.map(s => {
-    const slot = { time: s.lessonTime || effectiveSlot(s).time, day: s.lessonDay || effectiveSlot(s).day };
+    const _slot = effectiveSlot(s);
+    const slot = { time: s._extraTime || _slot.time, day: _slot.day };
     const isNext = s.id === nextId;
     const lastLog = (s.log||[]).slice(-1)[0];
     const pieces = (s.pieces||[]).filter(Boolean);
@@ -2028,32 +2033,52 @@ function renderDetail(s) {
 
 // ── REQUESTED ABSENCES ────────────────────────────────────────────────────
 function absencesHTML(s) {
-  const absences = (s.absences || []).slice().sort((a,b) => a.date.localeCompare(b.date));
+  const absences = (s.absences || []).slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
   if (absences.length === 0) {
-    return `<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No absences noted.</p>`;
+    return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No absences noted.</p>';
   }
   const today = new Date(); today.setHours(0,0,0,0);
-  return absences.map((ab, i) => {
-    const d = new Date(ab.date);
-    const isPast = d < today;
-    const daysAway = Math.round((d - today) / (1000*60*60*24));
-    const isSoon = daysAway >= 0 && daysAway <= 14;
-    const label = d.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
-    const soonTag = isSoon ? `<span style="font-size:0.65rem;font-weight:700;background:#e67e22;color:#fff;padding:1px 6px;border-radius:999px;margin-left:6px">${daysAway===0?'today':daysAway===1?'tomorrow':'in '+daysAway+' days'}</span>` : '';
-    const dayName = d.toLocaleDateString('en-GB', {weekday:'long'});
-    const fillBtn = !isPast ? `<button onclick="openFillSlotModal('${s.id}',${i},'${ab.date}','${(s.lessonTime||'').replace(/'/g,'\\'')}','${dayName}')"
-        style="background:var(--string);color:#05270B;border:none;border-radius:6px;padding:4px 9px;font-family:'Special Elite',cursive;font-size:0.72rem;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap">Fill slot</button>` : '';
-    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--warm);${isPast?'opacity:0.45':''}">
-      <span style="font-size:0.88rem;flex:1;${isPast?'text-decoration:line-through;color:var(--muted)':''}">
-        ${label}${soonTag}${ab.note ? `<span style="color:var(--muted);font-size:0.82rem"> — ${esc(ab.note)}</span>` : ''}
-      </span>
-      ${fillBtn}
-      <button onclick="removeAbsence('${s.id}',${i})"
-        style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1;flex-shrink:0">×</button>
-    </div>`;
+  return absences.map(function(ab, i) {
+    var d = new Date(ab.date);
+    var isPast = d < today;
+    var daysAway = Math.round((d - today) / (1000*60*60*24));
+    var isSoon = daysAway >= 0 && daysAway <= 14;
+    var label = d.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+    var dayLabel = isSoon ? (daysAway===0?'today':daysAway===1?'tomorrow':'in '+daysAway+' days') : '';
+    var soonTag = isSoon ? '<span style="font-size:0.65rem;font-weight:700;background:#e67e22;color:#fff;padding:1px 6px;border-radius:999px;margin-left:6px">' + dayLabel + '</span>' : '';
+    var dayName = d.toLocaleDateString('en-GB', {weekday:'long'});
+    var noteSpan = ab.note ? '<span style="color:var(--muted);font-size:0.82rem"> \u2014 ' + esc(ab.note) + '</span>' : '';
+    var fillBtn = '';
+    if (!isPast) {
+      var btnEl = document.createElement('button');
+      btnEl.textContent = 'Fill slot';
+      btnEl.style.cssText = 'background:var(--string);color:#05270B;border:none;border-radius:6px;padding:4px 9px;font-family:\'Special Elite\',cursive;font-size:0.72rem;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap';
+      btnEl.dataset.sid = s.id;
+      btnEl.dataset.idx = i;
+      btnEl.dataset.date = ab.date;
+      btnEl.dataset.time = s.lessonTime || '';
+      btnEl.dataset.day = dayName;
+      btnEl.onclick = function() {
+        openFillSlotModal(this.dataset.sid, parseInt(this.dataset.idx), this.dataset.date, this.dataset.time, this.dataset.day);
+      };
+      fillBtn = btnEl.outerHTML;
+    }
+    var removeBtn = document.createElement('button');
+    removeBtn.textContent = '\u00d7';
+    removeBtn.style.cssText = 'background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1;flex-shrink:0';
+    removeBtn.dataset.sid = s.id;
+    removeBtn.dataset.idx = i;
+    removeBtn.onclick = function() { removeAbsence(this.dataset.sid, parseInt(this.dataset.idx)); };
+    var row = '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--warm);' + (isPast ? 'opacity:0.45' : '') + '">'
+      + '<span style="font-size:0.88rem;flex:1;' + (isPast ? 'text-decoration:line-through;color:var(--muted)' : '') + '">'
+      + label + soonTag + noteSpan
+      + '</span>'
+      + fillBtn
+      + removeBtn.outerHTML
+      + '</div>';
+    return row;
   }).join('');
 }
-
 function addAbsence(id) {
   const s = getStudent(id); if (!s) return;
   const dateEl = document.getElementById('absence-date-' + id);
