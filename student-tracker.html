@@ -1658,10 +1658,10 @@ function renderDetail(s) {
     <div class="moment-panel" id="panel-during">
       ${refSummary(s)}
       <div class="section-card">
-        <div class="section-label">✏️ Quick notes — right now</div>
+        <div class="section-label">Quick notes — right now</div>
         <textarea class="quick-note" rows="5"
-          placeholder="Jot anything — key words, reminders, 'try this'… Tidy up later."
-          id="during-scratch-${s.id}">${esc(s.duringScratch || (s.nextLesson ? '📌 Plan: ' + s.nextLesson + '\n\n' : ''))}</textarea>
+          placeholder="Jot anything — key words, reminders, 'try this'…"
+          id="during-scratch-${s.id}">${esc(s.duringScratch || (s.nextLesson ? '📌 Plan:\n' + s.nextLesson + '\n\n' : ''))}</textarea>
         <div style="margin-top:10px">
           <div class="section-label" style="margin-bottom:8px">Tap to add to notes</div>
           <div class="tech-chips" style="margin-bottom:8px">
@@ -1672,33 +1672,38 @@ function renderDetail(s) {
         <div class="save-toast" id="toast-during-${s.id}">✓ Saved</div>
       </div>
 
-      <div class="section-card">
-        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
-          <span>✏️ Sketch — bowings, fingerings, notation</span>
-          <div style="display:flex;gap:6px">
-            <button onclick="clearCanvas('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;color:var(--muted)">Clear</button>
-            <button onclick="saveCanvas('${s.id}')" style="background:var(--viola);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;font-weight:600">Save</button>
+      <details style="margin-bottom:10px">
+        <summary style="font-size:0.88rem;color:var(--viola);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
+          <span>Sketch — bowings, fingerings, notation</span>
+          <span style="font-size:0.7rem;color:var(--muted)">tap to expand</span>
+        </summary>
+        <div class="section-card" style="margin-top:6px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="display:flex;gap:6px">
+              <button onclick="clearCanvas('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;color:var(--muted)">Clear</button>
+              <button onclick="saveCanvas('${s.id}')" style="background:var(--viola);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;font-weight:600">Save sketch</button>
+            </div>
           </div>
+          <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap">
+            <label style="font-size:0.75rem;color:var(--muted)">Colour:</label>
+            ${['#05270B','#2F5C1A','#29789E','#c0392b','#e67e22','#8e44ad'].map(col =>
+              `<button onclick="setDrawColour('${s.id}','${col}')" style="width:22px;height:22px;border-radius:50%;background:${col};border:2px solid transparent;cursor:pointer" class="colour-btn-${s.id}" data-col="${col}"></button>`
+            ).join('')}
+            <label style="font-size:0.75rem;color:var(--muted);margin-left:8px">Size:</label>
+            <input type="range" min="1" max="12" value="3" oninput="setDrawSize('${s.id}',this.value)" style="width:80px">
+            <button onclick="setDrawEraser('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:3px 8px;font-size:0.75rem;cursor:pointer;color:var(--muted)">Eraser</button>
+            <label style="font-size:0.75rem;color:var(--muted);margin-left:4px">
+              <input type="checkbox" id="stave-${s.id}" onchange="toggleStave('${s.id}')"> Stave
+            </label>
+          </div>
+          <canvas id="canvas-${s.id}"
+            style="width:100%;border-radius:8px;border:1.5px solid #e0ddd8;background:#fff;touch-action:none;display:block;cursor:crosshair"
+            height="220">
+          </canvas>
+          <div id="canvas-saves-${s.id}" style="margin-top:8px"></div>
+          <div class="save-toast" id="toast-canvas-${s.id}">✓ Sketch saved</div>
         </div>
-        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap">
-          <label style="font-size:0.75rem;color:var(--muted)">Colour:</label>
-          ${['#05270B','#2F5C1A','#29789E','#c0392b','#e67e22','#8e44ad'].map(col =>
-            `<button onclick="setDrawColour('${s.id}','${col}')" style="width:22px;height:22px;border-radius:50%;background:${col};border:2px solid transparent;cursor:pointer" class="colour-btn-${s.id}" data-col="${col}"></button>`
-          ).join('')}
-          <label style="font-size:0.75rem;color:var(--muted);margin-left:8px">Size:</label>
-          <input type="range" min="1" max="12" value="3" oninput="setDrawSize('${s.id}',this.value)" style="width:80px">
-          <button onclick="setDrawEraser('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:3px 8px;font-size:0.75rem;cursor:pointer;color:var(--muted)">Eraser</button>
-          <label style="font-size:0.75rem;color:var(--muted);margin-left:4px">
-            <input type="checkbox" id="stave-${s.id}" onchange="toggleStave('${s.id}')"> Stave
-          </label>
-        </div>
-        <canvas id="canvas-${s.id}"
-          style="width:100%;border-radius:8px;border:1.5px solid #e0ddd8;background:#fff;touch-action:none;display:block;cursor:crosshair"
-          height="220">
-        </canvas>
-        <div id="canvas-saves-${s.id}" style="margin-top:8px"></div>
-        <div class="save-toast" id="toast-canvas-${s.id}">✓ Sketch saved</div>
-      </div>
+      </details>
     </div>
 
     <!-- AFTER -->
@@ -1706,9 +1711,10 @@ function renderDetail(s) {
       ${refSummary(s)}
       <div class="section-card">
         <div class="section-label">Lesson notes</div>
-        <textarea rows="4" placeholder="What went well, what to remember for next time…"
-          id="after-note-${s.id}"></textarea>
-        <button class="save-btn" onclick="saveLog('${s.id}')">Add to lesson log</button>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">Built from your plan and during-lesson notes — edit freely before saving to the log.</div>
+        <textarea rows="7" placeholder="What went well, what to remember for next time…"
+          id="after-note-${s.id}">${buildCumulativeNote(s)}</textarea>
+        <button class="save-btn" onclick="saveLog('${s.id}')">Save to lesson log</button>
         <div class="save-toast" id="toast-after-${s.id}">✓ Added to log</div>
       </div>
       <div class="section-card">
@@ -2381,6 +2387,22 @@ const PIECE_DB = [
   { title:'Violin Star 2', composer:'Edward Huws Jones', grade:'Grade 1', cat:'Beginner Repertoire - Violin' },
   { title:'Violin Star 3', composer:'Edward Huws Jones', grade:'Grade 1-2', cat:'Beginner Repertoire - Violin' },
 ];
+
+function buildCumulativeNote(s) {
+  const parts = [];
+  if (s.nextLesson && s.nextLesson.trim()) {
+    parts.push('📌 Plan:\n' + s.nextLesson.trim());
+  }
+  if (s.duringScratch && s.duringScratch.trim()) {
+    let scratch = s.duringScratch.trim();
+    const planPrefix = '📌 Plan:\n' + (s.nextLesson||'').trim();
+    if (scratch.startsWith(planPrefix)) {
+      scratch = scratch.slice(planPrefix.length).trim();
+    }
+    if (scratch) parts.push('📝 During lesson:\n' + scratch);
+  }
+  return parts.join('\n\n');
+}
 
 function refSummary(s) {
   const pieces = (s.pieces||[]).filter(Boolean);
