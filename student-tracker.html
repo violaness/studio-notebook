@@ -820,6 +820,30 @@
   </div>
 </div>
 
+<!-- EXTRA LESSON MODAL -->
+<div class="modal-overlay" id="extra-lesson-modal">
+  <div class="modal">
+    <h2>Add extra lesson</h2>
+    <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px;line-height:1.5">Adds a one-off extra slot for <strong id="extra-lesson-name"></strong> this week only.</p>
+    <input type="hidden" id="extra-lesson-student-id">
+    <div class="field-group">
+      <label class="field-label">Day</label>
+      <select id="extra-lesson-day">
+        <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+        <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Time</label>
+      <input type="time" id="extra-lesson-time">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeExtraLessonModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmExtraLesson()">Add to week</button>
+    </div>
+  </div>
+</div>
+
 <!-- BACKUP / RESTORE MODAL -->
 <div class="modal-overlay" id="backup-modal">
   <div class="modal">
@@ -1200,6 +1224,7 @@ let customChips  = JSON.parse(localStorage.getItem('studio_custom_chips')  || '[
 let customPieces = JSON.parse(localStorage.getItem('studio_custom_pieces') || '[]');
 let oneOffMoves  = JSON.parse(localStorage.getItem('studio_one_off_moves') || '{}');
 let waitingList  = JSON.parse(localStorage.getItem('studio_waiting_list')  || '[]');
+let extraLessons = JSON.parse(localStorage.getItem('studio_extra_lessons') || '{}');
 
 let currentFilter  = 'all';
 let prevView       = 'roster';
@@ -1212,6 +1237,7 @@ function save() {
   localStorage.setItem('studio_custom_pieces',  JSON.stringify(customPieces));
   localStorage.setItem('studio_one_off_moves',  JSON.stringify(oneOffMoves));
   localStorage.setItem('studio_waiting_list',   JSON.stringify(waitingList));
+  localStorage.setItem('studio_extra_lessons',  JSON.stringify(extraLessons));
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
@@ -1297,7 +1323,15 @@ function renderToday() {
     now.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
 
   const todayStudents = students.filter(s => effectiveSlot(s).day === dayName && !isSkipped(s.id));
-  const sorted = sortByTime(todayStudents);
+  // Also include pupils with an extra lesson today
+  const todayExtras = (extraLessons[currentWeek] || [])
+    .filter(e => e.day === dayName)
+    .map(e => { const s = getStudent(e.studentId); return s ? {...s, _extraTime: e.time} : null; })
+    .filter(Boolean);
+  // Merge: don't double-show pupils already in their normal slot today
+  const extraOnly = todayExtras.filter(ex => !todayStudents.find(s => s.id === ex.id));
+  const allToday = sortByTime([...todayStudents, ...extraOnly.map(s => ({...s, lessonTime: s._extraTime}))].map(s => s._extraTime ? {...s, lessonTime: s._extraTime} : s));
+  const sorted = allToday;
 
   // Work out who's "next" (first lesson whose time is >= now)
   const nowTime = now.getHours()*60 + now.getMinutes();
@@ -1404,16 +1438,22 @@ function renderWeek() {
   let html = '';
   for (const day of DAYS) {
     const isToday = day === todayName;
-    const dayStudents = sortByTime(students.filter(s => effectiveSlot(s).day === day && !isSkipped(s.id)));
+    const dayStudents = sortByTime(students.filter(s => effectiveSlot(s).day === day));
+    const activeStudents = dayStudents.filter(s => !isSkipped(s.id));
+    const skippedStudents = dayStudents.filter(s => isSkipped(s.id));
+    // Extra lessons for this day this week
+    const dayExtras = (extraLessons[currentWeek] || []).filter(e => e.day === day);
+    const totalActive = activeStudents.length + dayExtras.length;
 
     html += `<div class="week-day">
       <div class="week-day-header ${isToday?'today-header':''}">
         ${isToday?'<div class="today-dot"></div>':''}
         ${day}${isToday?' — Today':''}
-        <span style="margin-left:auto;font-weight:400;letter-spacing:0">${dayStudents.length?dayStudents.length+' lesson'+(dayStudents.length!==1?'s':''):'no lessons'}</span>
+        <span style="margin-left:auto;font-weight:400;letter-spacing:0">${totalActive?totalActive+' lesson'+(totalActive!==1?'s':''):'no lessons'}${skippedStudents.length?' · '+skippedStudents.length+' skipped':''}</span>
       </div>`;
 
-    for (const s of dayStudents) {
+    // Active slots
+    for (const s of activeStudents) {
       const slot = effectiveSlot(s);
       const moved = oneOffMoves[s.id] && oneOffMoves[s.id].week === currentWeek;
       html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer">
@@ -1427,6 +1467,39 @@ function renderWeek() {
         <div class="slot-actions">
           <button class="slot-btn move-btn" onclick="event.stopPropagation();openMoveModal('${s.id}')">Move</button>
           ${s.frequency==='fortnightly' ? `<button class="slot-btn" onclick="event.stopPropagation();skipWeek('${s.id}')" style="background:#e8f0e4;color:var(--muted);border:1.5px solid #ccc">Not this week</button>` : ''}
+        </div>
+      </div>`;
+    }
+
+    // Extra lessons for this day
+    for (const ex of sortByTime(dayExtras.map(e => ({...e, lessonDay: e.day, lessonTime: e.time})))) {
+      const s = getStudent(ex.studentId);
+      if (!s) continue;
+      const exIdx = (extraLessons[currentWeek] || []).findIndex(e => e.studentId === ex.studentId && e.day === ex.day && e.time === ex.time);
+      html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer;border-style:dashed;">
+        <div class="slot-time">${ex.time||'—'}</div>
+        <div class="slot-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
+        <div class="slot-info">
+          <div class="slot-name">${s.name} <span style="font-size:0.68rem;color:var(--string);font-weight:700;background:#dff0d8;padding:1px 6px;border-radius:999px">extra</span></div>
+          <div class="slot-meta">${instrDot(s.instrument)}${s.instrument} · ${s.level}</div>
+        </div>
+        <div class="slot-actions">
+          <button class="slot-btn" onclick="event.stopPropagation();removeExtraLesson(${exIdx})" style="border-color:#c0392b;color:#c0392b">Remove</button>
+        </div>
+      </div>`;
+    }
+
+    // Skipped pupils — collapsed greyed slots
+    for (const s of skippedStudents) {
+      const slot = effectiveSlot(s);
+      html += `<div class="week-slot ${s.instrument}-slot" style="opacity:0.45;min-height:38px;padding:8px 14px;border-style:dashed;cursor:default">
+        <div class="slot-time" style="font-size:0.72rem">${slot.time||'—'}</div>
+        <div class="slot-avatar avatar-${s.instrument}" style="width:28px;height:28px;font-size:0.75rem">${getInitials(s.name)}</div>
+        <div class="slot-info">
+          <div class="slot-name" style="font-size:0.85rem">${s.name} <span style="font-size:0.65rem;color:var(--muted);background:#e8e4de;padding:1px 6px;border-radius:999px;font-weight:700">skipped</span></div>
+        </div>
+        <div class="slot-actions">
+          <button class="slot-btn" onclick="skipWeek('${s.id}')" style="font-size:0.72rem;padding:4px 8px">Restore</button>
         </div>
       </div>`;
     }
@@ -1642,6 +1715,7 @@ function renderDetail(s) {
       <button onclick="deletePupil('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer;flex-shrink:0;align-self:flex-start" title="Remove pupil">🗑️ Remove</button>
       <button onclick="openEditModal('${s.id}')" style="background:none;border:1.5px solid var(--viola);border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--viola);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Edit pupil">✏️ Edit</button>
       <button onclick="openTimerModal('${s.name}','${s.duration||60}')" style="background:var(--violin);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Lesson timer">⏱ Timer</button>
+      <button onclick="openExtraLessonModal('${s.id}')" style="background:var(--string);color:#05270B;border:none;border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Add extra lesson this week">＋ Extra</button>
     </div>
     ${nextPupilHTML(s)}
 
@@ -3140,6 +3214,36 @@ function isSkipped(id) {
   return skippedWeeks[currentWeek] && skippedWeeks[currentWeek].includes(id);
 }
 
+// ── EXTRA LESSONS ─────────────────────────────────────────────────────────
+function openExtraLessonModal(studentId) {
+  const s = getStudent(studentId); if (!s) return;
+  document.getElementById('extra-lesson-student-id').value = studentId;
+  document.getElementById('extra-lesson-name').textContent = s.name;
+  // Default day/time to the pupil's usual slot
+  document.getElementById('extra-lesson-day').value  = s.lessonDay  || 'Monday';
+  document.getElementById('extra-lesson-time').value = s.lessonTime || '';
+  document.getElementById('extra-lesson-modal').classList.add('open');
+}
+function closeExtraLessonModal() {
+  document.getElementById('extra-lesson-modal').classList.remove('open');
+}
+function confirmExtraLesson() {
+  const studentId = document.getElementById('extra-lesson-student-id').value;
+  const day  = document.getElementById('extra-lesson-day').value;
+  const time = document.getElementById('extra-lesson-time').value;
+  if (!extraLessons[currentWeek]) extraLessons[currentWeek] = [];
+  extraLessons[currentWeek].push({ studentId, day, time });
+  save();
+  closeExtraLessonModal();
+  renderWeek();
+}
+function removeExtraLesson(idx) {
+  if (!extraLessons[currentWeek]) return;
+  extraLessons[currentWeek].splice(idx, 1);
+  save();
+  renderWeek();
+}
+
 
 function nextPupilHTML(s) {
   const todayName = todayDayName();
@@ -3804,6 +3908,7 @@ function backupData() {
     studio_term:          localStorage.getItem('studio_term')          || '{}',
     studio_eod:           localStorage.getItem('studio_eod')           || '{}',
     studio_skipped_weeks: localStorage.getItem('studio_skipped_weeks') || '{}',
+    studio_extra_lessons: localStorage.getItem('studio_extra_lessons') || '{}',
     studio_cal_url:       localStorage.getItem('studio_cal_url')       || '',
     studio_dark_mode:     localStorage.getItem('studio_dark_mode')     || '0',
   };
@@ -3832,7 +3937,7 @@ function restoreData(event) {
 
       const keys = ['studio_students','studio_custom_chips','studio_custom_pieces',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
-        'studio_term','studio_eod','studio_skipped_weeks','studio_cal_url','studio_dark_mode'];
+        'studio_term','studio_eod','studio_skipped_weeks','studio_extra_lessons','studio_cal_url','studio_dark_mode'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
 
       // Reload state
@@ -3842,6 +3947,7 @@ function restoreData(event) {
       oneOffMoves  = JSON.parse(localStorage.getItem('studio_one_off_moves') || '{}');
       waitingList  = JSON.parse(localStorage.getItem('studio_waiting_list')  || '[]');
       skippedWeeks = JSON.parse(localStorage.getItem('studio_skipped_weeks') || '{}');
+      extraLessons = JSON.parse(localStorage.getItem('studio_extra_lessons') || '{}');
       repairStudentIDs();
       initDarkMode();
       closeBackupModal();
