@@ -970,11 +970,12 @@
     <div class="field-group">
       <label class="field-label">Type</label>
       <select id="scale-type">
-        <option>Major</option>
-        <option>Natural minor</option>
-        <option>Harmonic minor</option>
-        <option>Melodic minor</option>
-        <option>Arpeggio</option>
+        <option>Major scale</option>
+        <option>Natural minor scale</option>
+        <option>Harmonic minor scale</option>
+        <option>Melodic minor scale</option>
+        <option>Major arpeggio</option>
+        <option>Minor arpeggio</option>
         <option>Dominant 7th</option>
         <option>Diminished 7th</option>
         <option>Chromatic</option>
@@ -1655,6 +1656,7 @@ function renderDetail(s) {
 
     <!-- DURING -->
     <div class="moment-panel" id="panel-during">
+      ${refSummary(s)}
       <div class="section-card">
         <div class="section-label">✏️ Quick notes — right now</div>
         <textarea class="quick-note" rows="5"
@@ -1701,6 +1703,7 @@ function renderDetail(s) {
 
     <!-- AFTER -->
     <div class="moment-panel" id="panel-after">
+      ${refSummary(s)}
       <div class="section-card">
         <div class="section-label">Lesson notes</div>
         <textarea rows="4" placeholder="What went well, what to remember for next time…"
@@ -2379,7 +2382,30 @@ const PIECE_DB = [
   { title:'Violin Star 3', composer:'Edward Huws Jones', grade:'Grade 1-2', cat:'Beginner Repertoire - Violin' },
 ];
 
-// ── DAILY NOTES ───────────────────────────────────────────────────────────
+function refSummary(s) {
+  const pieces = (s.pieces||[]).filter(Boolean);
+  const scales = (s.scales||[]);
+  if (!pieces.length && !scales.length) return '';
+
+  const piecesHTML = pieces.map(p =>
+    `<span style="display:inline-block;background:var(--warm);border-radius:6px;padding:3px 8px;font-size:0.78rem;margin:2px">${esc(p)}</span>`
+  ).join('');
+
+  const scalesHTML = scales.map(sc => {
+    const col = {
+      'Working on it':'#29789E','Getting there':'#e67e22',
+      'Secure':'#2F5C1A','Needs review':'#c0392b'
+    }[sc.progress] || 'var(--muted)';
+    return `<span style="display:inline-block;background:var(--warm);border-radius:6px;padding:3px 8px;font-size:0.78rem;margin:2px;border-left:3px solid ${col}">${esc(sc.key||'')} ${esc(sc.type||'')} · ${esc(sc.octaves||'')} · ${esc(sc.bowing||'')}</span>`;
+  }).join('');
+
+  return `<div style="background:var(--warm);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+    ${pieces.length ? `<div style="font-size:0.7rem;font-weight:700;color:var(--muted);margin-bottom:5px">Pieces &amp; exercises</div><div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:${scales.length?'8px':'0'}">${piecesHTML}</div>` : ''}
+    ${scales.length ? `<div style="font-size:0.7rem;font-weight:700;color:var(--muted);margin-bottom:5px">Scales</div><div style="display:flex;flex-wrap:wrap;gap:2px">${scalesHTML}</div>` : ''}
+  </div>`;
+}
+
+
 function saveDailyNotes() {
   const text = document.getElementById('daily-notes') ?
     document.getElementById('daily-notes').value :
