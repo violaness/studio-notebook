@@ -950,7 +950,7 @@
     <input type="hidden" id="scale-edit-idx">
 
     <div class="field-group">
-      <label class="field-label">Key</label>
+      <label class="field-label">Key <span style="font-weight:400;color:var(--muted);font-size:0.78rem">— tap multiple to add several at once</span></label>
       <div style="display:flex;flex-wrap:wrap;gap:6px" id="scale-key-picker">
         <button type="button" class="key-btn" data-key="C"  onclick="selectScaleKey('C')"  style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Lexend',sans-serif;font-size:0.85rem;cursor:pointer">C</button>
         <button type="button" class="key-btn" data-key="D♭" onclick="selectScaleKey('D♭')" style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Lexend',sans-serif;font-size:0.85rem;cursor:pointer">D♭</button>
@@ -2474,14 +2474,21 @@ const PROGRESS_DOTS = {
   'Needs review':  '🔴'
 };
 
-let scaleSelectedKey = '';
+let scaleSelectedKeys = [];
 
 function selectScaleKey(key) {
-  scaleSelectedKey = key;
+  const idx = scaleSelectedKeys.indexOf(key);
+  if (idx >= 0) {
+    scaleSelectedKeys.splice(idx, 1); // deselect
+  } else {
+    scaleSelectedKeys.push(key); // select
+  }
+  // Update button styles
   document.querySelectorAll('.key-btn').forEach(btn => {
-    btn.style.background = btn.dataset.key === key ? 'var(--viola)' : 'transparent';
-    btn.style.color      = btn.dataset.key === key ? '#fff' : 'var(--ink)';
-    btn.style.borderColor = btn.dataset.key === key ? 'var(--viola)' : '#e0ddd8';
+    const selected = scaleSelectedKeys.includes(btn.dataset.key);
+    btn.style.background   = selected ? 'var(--viola)' : 'transparent';
+    btn.style.color        = selected ? '#fff' : 'var(--ink)';
+    btn.style.borderColor  = selected ? 'var(--viola)' : '#e0ddd8';
   });
 }
 
@@ -2516,10 +2523,10 @@ function scalesHTML(s) {
 }
 
 function openAddScaleModal(studentId, editIdx) {
-  scaleSelectedKey = '';
+  scaleSelectedKeys = [];
   document.getElementById('scale-student-id').value = studentId;
   document.getElementById('scale-edit-idx').value   = editIdx !== undefined ? editIdx : '';
-  document.getElementById('scale-type').value = 'Major';
+  document.getElementById('scale-type').value = 'Major scale';
   document.getElementById('scale-notes').value = '';
   document.querySelector('input[name="scale-octaves"][value="2 octaves"]').checked = true;
   document.querySelector('input[name="scale-bowing"][value="Separate"]').checked   = true;
@@ -2530,13 +2537,22 @@ function openAddScaleModal(studentId, editIdx) {
     btn.style.color       = 'var(--ink)';
     btn.style.borderColor = '#e0ddd8';
   });
-  // If editing, pre-fill
+  // If editing, pre-fill single key
   if (editIdx !== undefined) {
     const s = getStudent(studentId);
     const sc = s && s.scales && s.scales[editIdx];
     if (sc) {
+      scaleSelectedKeys = [sc.key || ''];
       selectScaleKey(sc.key || '');
-      document.getElementById('scale-type').value = sc.type || 'Major';
+      // re-select just that one
+      scaleSelectedKeys = [sc.key || ''];
+      document.querySelectorAll('.key-btn').forEach(btn => {
+        const selected = btn.dataset.key === sc.key;
+        btn.style.background  = selected ? 'var(--viola)' : 'transparent';
+        btn.style.color       = selected ? '#fff' : 'var(--ink)';
+        btn.style.borderColor = selected ? 'var(--viola)' : '#e0ddd8';
+      });
+      document.getElementById('scale-type').value = sc.type || 'Major scale';
       document.getElementById('scale-notes').value = sc.notes || '';
       const octBtn = document.querySelector(`input[name="scale-octaves"][value="${sc.octaves}"]`);
       if (octBtn) octBtn.checked = true;
@@ -2559,25 +2575,29 @@ function saveScale() {
   const s = getStudent(studentId); if (!s) return;
   if (!s.scales) s.scales = [];
 
-  const scale = {
-    key:      scaleSelectedKey,
-    type:     document.getElementById('scale-type').value,
-    octaves:  document.querySelector('input[name="scale-octaves"]:checked').value,
-    bowing:   document.querySelector('input[name="scale-bowing"]:checked').value,
-    progress: document.querySelector('input[name="scale-progress"]:checked').value,
-    notes:    document.getElementById('scale-notes').value.trim(),
-  };
+  const type     = document.getElementById('scale-type').value;
+  const octaves  = document.querySelector('input[name="scale-octaves"]:checked').value;
+  const bowing   = document.querySelector('input[name="scale-bowing"]:checked').value;
+  const progress = document.querySelector('input[name="scale-progress"]:checked').value;
+  const notes    = document.getElementById('scale-notes').value.trim();
 
   if (editIdx !== '') {
-    s.scales[parseInt(editIdx)] = scale;
+    // Editing — update single entry with first selected key
+    s.scales[parseInt(editIdx)] = {
+      key: scaleSelectedKeys[0] || '', type, octaves, bowing, progress, notes
+    };
   } else {
-    s.scales.push(scale);
+    // Adding — create one entry per selected key
+    const keys = scaleSelectedKeys.length > 0 ? scaleSelectedKeys : [''];
+    keys.forEach(key => {
+      s.scales.push({ key, type, octaves, bowing, progress, notes });
+    });
   }
 
   save();
   closeAddScaleModal();
   renderDetail(s);
-  document.querySelectorAll('.moment-tab').forEach((t,i) => { if(t.textContent==='Scales') t.click(); });
+  document.querySelectorAll('.moment-tab').forEach(t => { if(t.textContent==='Scales') t.click(); });
 }
 
 function editScale(studentId, idx) {
