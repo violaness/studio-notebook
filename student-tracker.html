@@ -383,6 +383,7 @@
   .field-group { margin-bottom: 14px; }
   .field-label { display: block; font-size: 0.75rem; font-weight: 700;   color: var(--muted); margin-bottom: 5px; }
   .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .radio-group.progress-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .radio-opt { flex: 1; min-width: 75px; }
   .radio-opt input { display: none; }
   .radio-opt label {
@@ -1003,11 +1004,11 @@
 
     <div class="field-group">
       <label class="field-label">Progress</label>
-      <div class="radio-group">
-        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-working" value="Working on it" checked><label for="prog-working" style="min-width:110px;text-align:center">🔵 Working on it</label></div>
-        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-getting" value="Getting there"><label for="prog-getting" style="min-width:110px;text-align:center">🟡 Getting there</label></div>
-        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-secure" value="Secure"><label for="prog-secure" style="min-width:110px;text-align:center">🟢 Secure</label></div>
-        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-review" value="Needs review"><label for="prog-review" style="min-width:110px;text-align:center">🔴 Needs review</label></div>
+      <div class="radio-group progress-group">
+        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-working" value="Working on it" checked><label for="prog-working">Working on it</label></div>
+        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-getting" value="Getting there"><label for="prog-getting">Getting there</label></div>
+        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-secure" value="Secure"><label for="prog-secure">Secure</label></div>
+        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-review" value="Needs review"><label for="prog-review">Needs review</label></div>
       </div>
     </div>
 
