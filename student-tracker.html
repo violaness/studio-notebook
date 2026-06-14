@@ -941,6 +941,80 @@
   </div>
 </div>
 
+<!-- ADD SCALE MODAL -->
+<div class="modal-overlay" id="add-scale-modal">
+  <div class="modal" style="max-height:90vh;overflow-y:auto">
+    <h2>Assign a scale</h2>
+    <input type="hidden" id="scale-student-id">
+    <input type="hidden" id="scale-edit-idx">
+
+    <div class="field-group">
+      <label class="field-label">Key</label>
+      <div style="display:flex;flex-wrap:wrap;gap:6px" id="scale-key-picker">
+        ${['C','D♭','D','E♭','E','F','F♯','G','A♭','A','B♭','B'].map(k =>
+          `<button type="button" class="key-btn" data-key="${k}" onclick="selectScaleKey('${k}')"
+            style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Lexend',sans-serif;font-size:0.85rem;cursor:pointer">${k}</button>`
+        ).join('')}
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Type</label>
+      <select id="scale-type">
+        <option>Major</option>
+        <option>Natural minor</option>
+        <option>Harmonic minor</option>
+        <option>Melodic minor</option>
+        <option>Arpeggio</option>
+        <option>Dominant 7th</option>
+        <option>Diminished 7th</option>
+        <option>Chromatic</option>
+        <option>Double stops — 3rds</option>
+        <option>Double stops — 6ths</option>
+        <option>Double stops — octaves</option>
+      </select>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Octaves</label>
+      <div class="radio-group">
+        <div class="radio-opt"><input type="radio" name="scale-octaves" id="oct-1" value="1 octave"><label for="oct-1">1 octave</label></div>
+        <div class="radio-opt"><input type="radio" name="scale-octaves" id="oct-2" value="2 octaves" checked><label for="oct-2">2 octaves</label></div>
+        <div class="radio-opt"><input type="radio" name="scale-octaves" id="oct-3" value="3 octaves"><label for="oct-3">3 octaves</label></div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Bowing</label>
+      <div class="radio-group">
+        <div class="radio-opt"><input type="radio" name="scale-bowing" id="bow-sep" value="Separate" checked><label for="bow-sep">Separate</label></div>
+        <div class="radio-opt"><input type="radio" name="scale-bowing" id="bow-slur" value="Slurred"><label for="bow-slur">Slurred</label></div>
+        <div class="radio-opt"><input type="radio" name="scale-bowing" id="bow-both" value="Both"><label for="bow-both">Both</label></div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Progress</label>
+      <div class="radio-group">
+        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-working" value="Working on it" checked><label for="prog-working">🔵 Working on it</label></div>
+        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-getting" value="Getting there"><label for="prog-getting">🟡 Getting there</label></div>
+        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-secure" value="Secure"><label for="prog-secure">🟢 Secure</label></div>
+        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-review" value="Needs review"><label for="prog-review">🔴 Needs review</label></div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Notes (optional)</label>
+      <input type="text" id="scale-notes" placeholder="e.g. watch thumb position, aim for ♩=80">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeAddScaleModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveScale()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- EDIT LIBRARY PIECE MODAL -->
 <div class="modal-overlay" id="edit-lib-piece-modal">
   <div class="modal">
@@ -1303,7 +1377,7 @@ function renderWeek() {
   let html = '';
   for (const day of DAYS) {
     const isToday = day === todayName;
-    const dayStudents = sortByTime(students.filter(s => effectiveSlot(s).day === day));
+    const dayStudents = sortByTime(students.filter(s => effectiveSlot(s).day === day && !isSkipped(s.id)));
 
     html += `<div class="week-day">
       <div class="week-day-header ${isToday?'today-header':''}">
@@ -1325,6 +1399,7 @@ function renderWeek() {
         </div>
         <div class="slot-actions">
           <button class="slot-btn move-btn" onclick="event.stopPropagation();openMoveModal('${s.id}')">Move</button>
+          ${s.frequency==='fortnightly' ? `<button class="slot-btn" onclick="event.stopPropagation();skipWeek('${s.id}')" style="background:#e8f0e4;color:var(--muted);border:1.5px solid #ccc">Not this week</button>` : ''}
         </div>
       </div>`;
     }
@@ -1536,6 +1611,7 @@ function renderDetail(s) {
       <button class="moment-tab" onclick="switchMoment(this,'panel-during')">During</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-after')">After</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-goals')">Goals</button>
+      <button class="moment-tab" onclick="switchMoment(this,'panel-scales')">Scales</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-contacts')">Contacts</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-history')">History</button>
     </div>
@@ -1648,6 +1724,18 @@ function renderDetail(s) {
       <div class="section-card">
         <div class="section-label">Lesson history</div>
         ${logHTML}
+      </div>
+    </div>
+
+    <!-- SCALES -->
+    <div class="moment-panel" id="panel-scales">
+      <div class="section-card">
+        <div class="section-label">Assigned scales</div>
+        <div id="scales-list-${s.id}">${scalesHTML(s)}</div>
+        <button onclick="openAddScaleModal('${s.id}')"
+          style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:10px;padding:10px;font-family:'Lexend',sans-serif;font-size:0.88rem;cursor:pointer;font-weight:500">
+          ＋ Assign a scale
+        </button>
       </div>
     </div>
 
@@ -1831,11 +1919,12 @@ function deleteLogEntry(id, idx) {
   const s = getStudent(id); if (!s || !s.log) return;
   s.log.splice(idx, 1);
   save();
+  const afterTab = document.querySelectorAll('.moment-tab')[2];
   renderDetail(s);
-  document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===2) t.click(); });
+  if (afterTab) afterTab.click();
 }
 
-
+function saveDuring(id) {
   const s=getStudent(id); if(!s)return;
   save(); showToast(`toast-during-${id}`);
 }
@@ -2288,7 +2377,201 @@ const PIECE_DB = [
   { title:'Violin Star 3', composer:'Edward Huws Jones', grade:'Grade 1-2', cat:'Beginner Repertoire - Violin' },
 ];
 
-// ── DRAWING CANVAS ────────────────────────────────────────────────────────
+// ── DAILY NOTES ───────────────────────────────────────────────────────────
+function saveDailyNotes() {
+  const text = document.getElementById('daily-notes') ?
+    document.getElementById('daily-notes').value :
+    (document.getElementById('daily-notes-bar') ? document.getElementById('daily-notes-bar').value : '');
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
+  if (text.trim()) allNotes[today] = text;
+  else delete allNotes[today];
+  localStorage.setItem('studio_daily_notes', JSON.stringify(allNotes));
+  renderPrevNotes();
+}
+
+function loadDailyNotes() {
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
+  const barEl   = document.getElementById('daily-notes-bar');
+  const barDate = document.getElementById('notes-bar-date');
+  if (barEl)   barEl.value        = allNotes[today] || '';
+  if (barDate) barDate.textContent = today;
+  const el     = document.getElementById('daily-notes');
+  const dateEl = document.getElementById('daily-notes-date');
+  if (el)     el.value          = allNotes[today] || '';
+  if (dateEl) dateEl.textContent = today;
+  renderPrevNotes();
+}
+
+function renderPrevNotes() {
+  const list = document.getElementById('prev-notes-list'); if (!list) return;
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
+  const past = Object.entries(allNotes)
+    .filter(([date]) => date !== today)
+    .sort((a,b) => new Date(b[0].split(' ').reverse().join('-')) - new Date(a[0].split(' ').reverse().join('-')))
+    .slice(0, 30);
+  if (past.length === 0) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;padding:8px 0">No previous notes yet.</p>';
+    return;
+  }
+  list.innerHTML = past.map(([date, text]) => `
+    <div style="background:#fffef0;border:1px solid #e8d870;border-radius:10px;padding:12px 14px;margin-bottom:10px;position:relative">
+      <div style="font-size:0.72rem;font-weight:700;color:#8a7a3a;margin-bottom:6px">${date}
+        <button onclick="deletePastNote('${date}')" style="background:none;border:none;color:#c9a84c;font-size:0.8rem;cursor:pointer;margin-left:6px;opacity:0.6">×</button>
+      </div>
+      <div style="font-size:0.88rem;line-height:1.6;color:#3a3000;white-space:pre-wrap">${esc(text)}</div>
+    </div>`).join('');
+}
+
+function deletePastNote(date) {
+  const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
+  delete allNotes[date];
+  localStorage.setItem('studio_daily_notes', JSON.stringify(allNotes));
+  renderPrevNotes();
+}
+
+
+const PROGRESS_COLOURS = {
+  'Working on it': '#29789E',
+  'Getting there': '#e67e22',
+  'Secure':        '#2F5C1A',
+  'Needs review':  '#c0392b'
+};
+const PROGRESS_DOTS = {
+  'Working on it': '🔵',
+  'Getting there': '🟡',
+  'Secure':        '🟢',
+  'Needs review':  '🔴'
+};
+
+let scaleSelectedKey = '';
+
+function selectScaleKey(key) {
+  scaleSelectedKey = key;
+  document.querySelectorAll('.key-btn').forEach(btn => {
+    btn.style.background = btn.dataset.key === key ? 'var(--viola)' : 'transparent';
+    btn.style.color      = btn.dataset.key === key ? '#fff' : 'var(--ink)';
+    btn.style.borderColor = btn.dataset.key === key ? 'var(--viola)' : '#e0ddd8';
+  });
+}
+
+function scalesHTML(s) {
+  const scales = s.scales || [];
+  if (scales.length === 0) return '<p style="color:var(--muted);font-size:0.88rem">No scales assigned yet.</p>';
+
+  // Group by progress
+  const groups = {};
+  scales.forEach((sc, i) => {
+    const p = sc.progress || 'Working on it';
+    if (!groups[p]) groups[p] = [];
+    groups[p].push({ sc, i });
+  });
+
+  const order = ['Needs review', 'Working on it', 'Getting there', 'Secure'];
+  return order.filter(p => groups[p]).map(p => `
+    <div style="margin-bottom:12px">
+      <div style="font-size:0.75rem;font-weight:700;color:${PROGRESS_COLOURS[p]};margin-bottom:6px">${PROGRESS_DOTS[p]} ${p}</div>
+      ${groups[p].map(({sc, i}) => `
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--warm)">
+          <div style="flex:1">
+            <div style="font-size:0.92rem;font-weight:600">${esc(sc.key||'')} ${esc(sc.type||'')}</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:2px">${esc(sc.octaves||'')} · ${esc(sc.bowing||'')}${sc.notes ? ' · ' + esc(sc.notes) : ''}</div>
+          </div>
+          <div style="display:flex;gap:4px;flex-shrink:0">
+            <button onclick="editScale('${s.id}',${i})" style="background:none;border:1.5px solid var(--viola);border-radius:6px;padding:3px 8px;color:var(--viola);cursor:pointer;font-size:0.75rem;font-family:'Lexend',sans-serif">Edit</button>
+            <button onclick="deleteScale('${s.id}',${i})" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:3px 8px;color:var(--muted);cursor:pointer;font-size:0.75rem;font-family:'Lexend',sans-serif">×</button>
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+function openAddScaleModal(studentId, editIdx) {
+  scaleSelectedKey = '';
+  document.getElementById('scale-student-id').value = studentId;
+  document.getElementById('scale-edit-idx').value   = editIdx !== undefined ? editIdx : '';
+  document.getElementById('scale-type').value = 'Major';
+  document.getElementById('scale-notes').value = '';
+  document.querySelector('input[name="scale-octaves"][value="2 octaves"]').checked = true;
+  document.querySelector('input[name="scale-bowing"][value="Separate"]').checked   = true;
+  document.querySelector('input[name="scale-progress"][value="Working on it"]').checked = true;
+  // Reset key buttons
+  document.querySelectorAll('.key-btn').forEach(btn => {
+    btn.style.background  = 'transparent';
+    btn.style.color       = 'var(--ink)';
+    btn.style.borderColor = '#e0ddd8';
+  });
+  // If editing, pre-fill
+  if (editIdx !== undefined) {
+    const s = getStudent(studentId);
+    const sc = s && s.scales && s.scales[editIdx];
+    if (sc) {
+      selectScaleKey(sc.key || '');
+      document.getElementById('scale-type').value = sc.type || 'Major';
+      document.getElementById('scale-notes').value = sc.notes || '';
+      const octBtn = document.querySelector(`input[name="scale-octaves"][value="${sc.octaves}"]`);
+      if (octBtn) octBtn.checked = true;
+      const bowBtn = document.querySelector(`input[name="scale-bowing"][value="${sc.bowing}"]`);
+      if (bowBtn) bowBtn.checked = true;
+      const progBtn = document.querySelector(`input[name="scale-progress"][value="${sc.progress}"]`);
+      if (progBtn) progBtn.checked = true;
+    }
+  }
+  document.getElementById('add-scale-modal').classList.add('open');
+}
+
+function closeAddScaleModal() {
+  document.getElementById('add-scale-modal').classList.remove('open');
+}
+
+function saveScale() {
+  const studentId = document.getElementById('scale-student-id').value;
+  const editIdx   = document.getElementById('scale-edit-idx').value;
+  const s = getStudent(studentId); if (!s) return;
+  if (!s.scales) s.scales = [];
+
+  const scale = {
+    key:      scaleSelectedKey,
+    type:     document.getElementById('scale-type').value,
+    octaves:  document.querySelector('input[name="scale-octaves"]:checked').value,
+    bowing:   document.querySelector('input[name="scale-bowing"]:checked').value,
+    progress: document.querySelector('input[name="scale-progress"]:checked').value,
+    notes:    document.getElementById('scale-notes').value.trim(),
+  };
+
+  if (editIdx !== '') {
+    s.scales[parseInt(editIdx)] = scale;
+  } else {
+    s.scales.push(scale);
+  }
+
+  save();
+  closeAddScaleModal();
+  renderDetail(s);
+  document.querySelectorAll('.moment-tab').forEach((t,i) => { if(t.textContent==='Scales') t.click(); });
+}
+
+function editScale(studentId, idx) {
+  openAddScaleModal(studentId, idx);
+}
+
+function deleteScale(studentId, idx) {
+  const s = getStudent(studentId); if (!s || !s.scales) return;
+  s.scales.splice(idx, 1);
+  save();
+  renderDetail(s);
+  document.querySelectorAll('.moment-tab').forEach(t => { if(t.textContent==='Scales') t.click(); });
+}
+
+function updateScaleProgress(studentId, idx, progress) {
+  const s = getStudent(studentId); if (!s || !s.scales) return;
+  s.scales[idx].progress = progress;
+  save();
+  document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
+}
+
+
 const canvasState = {}; // per pupil: { colour, size, drawing, eraser }
 
 function initCanvas(id) {
@@ -2733,7 +3016,25 @@ function saveDailyNotesBar() {
 }
 
 
-// ── NEXT PUPIL ────────────────────────────────────────────────────────────
+let skippedWeeks = JSON.parse(localStorage.getItem('studio_skipped_weeks') || '{}');
+
+function skipWeek(id) {
+  if (!skippedWeeks[currentWeek]) skippedWeeks[currentWeek] = [];
+  const idx = skippedWeeks[currentWeek].indexOf(id);
+  if (idx >= 0) {
+    skippedWeeks[currentWeek].splice(idx, 1); // un-skip if already skipped
+  } else {
+    skippedWeeks[currentWeek].push(id);
+  }
+  localStorage.setItem('studio_skipped_weeks', JSON.stringify(skippedWeeks));
+  renderWeek();
+}
+
+function isSkipped(id) {
+  return skippedWeeks[currentWeek] && skippedWeeks[currentWeek].includes(id);
+}
+
+
 function nextPupilHTML(s) {
   const todayName = todayDayName();
   const todaySlots = students
@@ -2979,54 +3280,6 @@ function lessonCount(s) {
   return termTotal > 0 ? `This term: ${termPresent} attended of ${termTotal} lessons` : '';
 }
 
-function saveDailyNotes() {
-  const text = document.getElementById('daily-notes').value;
-  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-  const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
-  if (text.trim()) allNotes[today] = text;
-  else delete allNotes[today];
-  localStorage.setItem('studio_daily_notes', JSON.stringify(allNotes));
-  renderPrevNotes();
-}
-
-function loadDailyNotes() {
-  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-  const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
-  const el = document.getElementById('daily-notes');
-  const dateEl = document.getElementById('daily-notes-date');
-  if (el) el.value = allNotes[today] || '';
-  if (dateEl) dateEl.textContent = today;
-  renderPrevNotes();
-}
-
-function renderPrevNotes() {
-  const list = document.getElementById('prev-notes-list'); if (!list) return;
-  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-  const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
-  const past = Object.entries(allNotes)
-    .filter(([date]) => date !== today)
-    .sort((a,b) => new Date(b[0].split(' ').reverse().join('-')) - new Date(a[0].split(' ').reverse().join('-')))
-    .slice(0, 30); // show last 30 entries
-
-  if (past.length === 0) {
-    list.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;padding:8px 0">No previous notes yet.</p>';
-    return;
-  }
-  list.innerHTML = past.map(([date, text]) => `
-    <div style="background:#fffef0;border:1px solid #e8d870;border-radius:10px;padding:12px 14px;margin-bottom:10px;position:relative">
-      <div style="font-size:0.72rem;font-weight:700;color:#8a7a3a;margin-bottom:6px;letter-spacing:0.05em">${date}</div>
-      <div style="font-size:0.88rem;line-height:1.6;color:#3a3000;white-space:pre-wrap">${esc(text)}</div>
-      <button onclick="deletePastNote('${date}')"
-        style="position:absolute;top:8px;right:8px;background:none;border:none;color:#c9a84c;font-size:0.8rem;cursor:pointer;opacity:0.6" title="Delete this note">×</button>
-    </div>`).join('');
-}
-
-function deletePastNote(date) {
-  const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
-  delete allNotes[date];
-  localStorage.setItem('studio_daily_notes', JSON.stringify(allNotes));
-  renderPrevNotes();
-}
 
 
 function setAttendance(id, status) {
@@ -3416,6 +3669,8 @@ function loadDefaultPupils() {
   renderToday();
   renderRoster();
 }
+
+} // close renderDetail
 
 // ── ID REPAIR ─────────────────────────────────────────────────────────────
 // Runs on every load — fixes any duplicate or missing IDs without losing data
