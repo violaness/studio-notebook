@@ -1556,6 +1556,17 @@ function switchMoment(tab, panel) {
       setTimeout(() => { initCanvas(id); renderCanvasSaves(id); }, 50);
     });
   }
+  // Rebuild cumulative note every time After tab is opened
+  if (panel === 'panel-after') {
+    const afterTextareas = document.querySelectorAll('[id^="after-note-"]');
+    afterTextareas.forEach(el => {
+      const id = el.id.replace('after-note-', '');
+      const s = getStudent(id);
+      if (s && !el.dataset.edited) {
+        el.value = buildCumulativeNote(s);
+      }
+    });
+  }
 }
 
 function renderDetail(s) {
@@ -1713,7 +1724,8 @@ function renderDetail(s) {
         <div class="section-label">Lesson notes</div>
         <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">Built from your plan and during-lesson notes — edit freely before saving to the log.</div>
         <textarea rows="7" placeholder="What went well, what to remember for next time…"
-          id="after-note-${s.id}">${buildCumulativeNote(s)}</textarea>
+          id="after-note-${s.id}"
+          oninput="this.dataset.edited='1'">${buildCumulativeNote(s)}</textarea>
         <button class="save-btn" onclick="saveLog('${s.id}')">Save to lesson log</button>
         <div class="save-toast" id="toast-after-${s.id}">✓ Added to log</div>
       </div>
@@ -1936,8 +1948,14 @@ function deleteLogEntry(id, idx) {
 }
 
 function saveDuring(id) {
-  const s=getStudent(id); if(!s)return;
-  save(); showToast(`toast-during-${id}`);
+  const s = getStudent(id); if (!s) return;
+  const el = document.getElementById('during-scratch-' + id);
+  if (el) s.duringScratch = el.value;
+  save();
+  showToast('toast-during-' + id);
+  // Clear the edited flag on after note so it refreshes next time
+  const afterEl = document.getElementById('after-note-' + id);
+  if (afterEl) delete afterEl.dataset.edited;
 }
 function saveLog(id) {
   const s=getStudent(id); if(!s)return;
