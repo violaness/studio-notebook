@@ -503,6 +503,7 @@
     </div>
   </details>
   <input type="file" id="ics-file-input" accept=".ics" style="display:none" onchange="handleIcsUpload(event)">
+  <div id="week-hours-summary" style="font-size:0.82rem;color:var(--muted);text-align:right;margin-bottom:12px;font-family:'Special Elite',cursive"></div>
   <div id="week-grid"></div>
 </div>
 
@@ -977,6 +978,27 @@
   </div>
 </div>
 
+<!-- EDIT LOG ENTRY MODAL -->
+<div class="modal-overlay" id="edit-log-modal">
+  <div class="modal">
+    <h2>Edit lesson note</h2>
+    <input type="hidden" id="edit-log-student-id">
+    <input type="hidden" id="edit-log-entry-idx">
+    <div class="field-group">
+      <label class="field-label">Date</label>
+      <input type="text" id="edit-log-date" placeholder="e.g. 14 Jun 2026" style="font-family:'Special Elite',cursive">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Notes</label>
+      <textarea id="edit-log-text" rows="6" placeholder="Lesson notes…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeEditLogModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveEditLogModal()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- DELETE CONFIRMATION MODAL -->
 <div class="modal-overlay" id="delete-modal">
   <div class="modal">
@@ -1388,12 +1410,21 @@ function renderToday() {
     return;
   }
   sub.textContent = sorted.length + ' lesson' + (sorted.length!==1?'s':'') + ' today';
+  // Calculate teaching hours for today
+  const todayMins = sorted.reduce((sum, s) => sum + parseInt(s.duration||60), 0);
+  const todayHrs = Math.floor(todayMins/60);
+  const todayRemMins = todayMins % 60;
+  const todayHrsLabel = todayHrs > 0 ? todayHrs + 'h' + (todayRemMins>0?' '+todayRemMins+'m':'') : todayRemMins+'m';
+  sub.textContent = sorted.length + ' lesson' + (sorted.length!==1?'s':'') + ' · ' + todayHrsLabel + ' teaching';
 
   document.getElementById('today-list').innerHTML = sorted.map(s => {
     const _slot = effectiveSlot(s);
     const slot = { time: s._extraTime || _slot.time, day: _slot.day };
     const isNext = s.id === nextId;
     const lastLog = (s.log||[]).slice(-1)[0];
+    const todayStr = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    const todayLog = (s.log||[]).find(e => e.date === todayStr);
+    const markedAbsentToday = todayLog && todayLog.attendance && todayLog.attendance !== 'present';
     const pieces = (s.pieces||[]).filter(Boolean);
     const tech = (s.techFocus||[]).slice(0,3);
     const plan = s.nextLesson || '';
@@ -1406,11 +1437,11 @@ function renderToday() {
       return diff >= 0 && diff <= 28;
     }).sort((a,b) => a.date.localeCompare(b.date));
 
-    return `<div class="lesson-summary ${s.instrument}-card${isNext?' next-up':''}" id="lsc-${s.id}">
+    return `<div class="lesson-summary ${s.instrument}-card${isNext?' next-up':''}${markedAbsentToday?' absent-card':''}" id="lsc-${s.id}">
       <div class="lesson-summary-header" onclick="toggleSummary('${s.id}')">
-        <div class="ls-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
+        <div class="ls-avatar avatar-${s.instrument}" style="${markedAbsentToday?'opacity:0.4;':''}">${getInitials(s.name)}</div>
         <div class="ls-info">
-          <div class="ls-name">${s.name}${isNext?'<span class="next-badge">Next</span>':''}</div>
+          <div class="ls-name" style="${markedAbsentToday?'color:var(--muted);text-decoration:line-through;':''}">${s.name}${isNext?'<span class="next-badge">Next</span>':''}${markedAbsentToday?'<span style="font-size:0.68rem;color:#c0392b;font-weight:700;margin-left:6px;text-decoration:none;display:inline-block">absent</span>':''}</div>
           <div class="ls-time">${slot.time || 'time not set'} · ${instrDot(s.instrument)}${s.instrument} · ${s.level}</div>
         </div>
         <div class="ls-chevron">›</div>
@@ -1487,20 +1518,26 @@ function toggleSummary(id) {
 function renderWeek() {
   const todayName = todayDayName();
   let html = '';
+  let weekTotalMins = 0;
   for (const day of DAYS) {
     const isToday = day === todayName;
     const dayStudents = sortByTime(students.filter(s => effectiveSlot(s).day === day));
     const activeStudents = dayStudents.filter(s => !isSkipped(s.id));
     const skippedStudents = dayStudents.filter(s => isSkipped(s.id));
-    // Extra lessons for this day this week
     const dayExtras = (extraLessons[currentWeek] || []).filter(e => e.day === day);
     const totalActive = activeStudents.length + dayExtras.length;
+    // Hours for this day
+    const dayMins = activeStudents.reduce((sum, s) => sum + parseInt(s.duration||60), 0)
+                  + dayExtras.reduce((sum, e) => { const st = getStudent(e.studentId); return sum + parseInt((st&&st.duration)||60); }, 0);
+    weekTotalMins += dayMins;
+    const dayHrs = Math.floor(dayMins/60), dayRem = dayMins%60;
+    const dayHrsLabel = dayMins > 0 ? (dayHrs>0?dayHrs+'h':'') + (dayRem>0?(dayHrs>0?' ':'')+dayRem+'m':'') : '';
 
     html += `<div class="week-day">
       <div class="week-day-header ${isToday?'today-header':''}">
         ${isToday?'<div class="today-dot"></div>':''}
         ${day}${isToday?' — Today':''}
-        <span style="margin-left:auto;font-weight:400;letter-spacing:0">${totalActive?totalActive+' lesson'+(totalActive!==1?'s':''):'no lessons'}${skippedStudents.length?' · '+skippedStudents.length+' skipped':''}</span>
+        <span style="margin-left:auto;font-weight:400;letter-spacing:0">${totalActive?totalActive+' lesson'+(totalActive!==1?'s':'')+(dayHrsLabel?' · '+dayHrsLabel:''):'no lessons'}${skippedStudents.length?' · '+skippedStudents.length+' skipped':''}</span>
       </div>`;
 
     // Active slots
@@ -1559,6 +1596,11 @@ function renderWeek() {
     </div>`;
   }
   document.getElementById('week-grid').innerHTML = html;
+  // Week total
+  const wkHrs = Math.floor(weekTotalMins/60), wkRem = weekTotalMins%60;
+  const wkLabel = weekTotalMins > 0 ? (wkHrs>0?wkHrs+'h ':''+(wkRem>0?wkRem+'m':'')) : '0h';
+  const summary = document.getElementById('week-hours-summary');
+  if (summary) summary.textContent = 'Week total: ' + wkLabel.trim() + ' teaching';
 }
 
 // ── ROSTER ────────────────────────────────────────────────────────────────
@@ -1736,12 +1778,18 @@ function renderDetail(s) {
     : [...(s.log||[])].reverse().map((e, i) => {
         const realIdx = (s.log.length - 1) - i;
         const attLabels = {present:'✅ Present','absent-late':'❌ Late cancel','absent-notice':'🔔 Good notice',cancelled:'🚫 Cancelled'};
-        return `<div class="log-entry" style="position:relative;padding-right:36px">
-          <div class="log-date">${e.date}${e.attendance ? ` · <span style="font-size:0.75rem;color:var(--muted)">${attLabels[e.attendance]||''}</span>` : ''}</div>
-          ${e.text ? `<div class="log-text">${esc(e.text)}</div>` : `<div style="font-size:0.8rem;color:var(--muted);font-style:italic">No notes</div>`}
-          <button onclick="deleteLogEntry('${s.id}',${realIdx})"
-            style="position:absolute;top:8px;right:8px;background:#e8ddd8;border:none;border-radius:6px;color:var(--muted);cursor:pointer;font-size:0.78rem;padding:3px 8px;font-family:'Special Elite',cursive"
-            title="Delete this entry">Delete</button>
+        const isAbsent = e.attendance && e.attendance !== 'present' && e.attendance !== '';
+        return `<div class="log-entry" style="position:relative;padding-right:80px;${isAbsent?'opacity:0.55;background:#f8f0f0;':''}">
+          <div class="log-date" style="${isAbsent?'text-decoration:line-through;color:var(--muted);':''}">${e.date}${e.attendance ? ` · <span style="font-size:0.75rem;color:var(--muted)">${attLabels[e.attendance]||''}</span>` : ''}</div>
+          ${e.text ? `<div class="log-text" style="${isAbsent?'color:var(--muted);':''}">${esc(e.text)}</div>` : `<div style="font-size:0.8rem;color:var(--muted);font-style:italic">No notes</div>`}
+          <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px">
+            <button onclick="openEditLogModal('${s.id}',${realIdx})"
+              style="background:var(--warm);border:none;border-radius:6px;color:var(--viola);cursor:pointer;font-size:0.78rem;padding:3px 8px;font-family:'Special Elite',cursive"
+              title="Edit this entry">Edit</button>
+            <button onclick="deleteLogEntry('${s.id}',${realIdx})"
+              style="background:#e8ddd8;border:none;border-radius:6px;color:var(--muted);cursor:pointer;font-size:0.78rem;padding:3px 8px;font-family:'Special Elite',cursive"
+              title="Delete this entry">Del</button>
+          </div>
         </div>`;
       }).join('');
 
@@ -2224,6 +2272,31 @@ function deleteLogEntry(id, idx) {
   const afterTab = document.querySelectorAll('.moment-tab')[2];
   renderDetail(s);
   if (afterTab) afterTab.click();
+}
+
+function openEditLogModal(id, idx) {
+  const s = getStudent(id); if (!s || !s.log[idx]) return;
+  const e = s.log[idx];
+  document.getElementById('edit-log-student-id').value = id;
+  document.getElementById('edit-log-entry-idx').value = idx;
+  document.getElementById('edit-log-date').value = e.date || '';
+  document.getElementById('edit-log-text').value = e.text || '';
+  document.getElementById('edit-log-modal').classList.add('open');
+  setTimeout(() => document.getElementById('edit-log-text').focus(), 100);
+}
+function closeEditLogModal() {
+  document.getElementById('edit-log-modal').classList.remove('open');
+}
+function saveEditLogModal() {
+  const id  = document.getElementById('edit-log-student-id').value;
+  const idx = parseInt(document.getElementById('edit-log-entry-idx').value);
+  const s   = getStudent(id); if (!s || !s.log[idx]) return;
+  s.log[idx].date = document.getElementById('edit-log-date').value.trim() || s.log[idx].date;
+  s.log[idx].text = document.getElementById('edit-log-text').value.trim();
+  save();
+  closeEditLogModal();
+  renderDetail(s);
+  document.querySelectorAll('.moment-tab')[2].click();
 }
 
 function saveDuring(id) {
