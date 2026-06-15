@@ -1061,7 +1061,7 @@
 <div class="modal-overlay" id="add-key-modal">
   <div class="modal">
     <h2>Add key</h2>
-    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:12px">Tap one or more keys to add to this pupil's scale checklist.</p>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:12px">Tap one or more keys, then select which octaves apply.</p>
     <input type="hidden" id="key-modal-student-id">
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
       <button type="button" class="key-btn" data-key="C"  onclick="selectScaleKey('C')"  style="padding:8px 14px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer">C</button>
@@ -1076,6 +1076,20 @@
       <button type="button" class="key-btn" data-key="A"  onclick="selectScaleKey('A')"  style="padding:8px 14px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer">A</button>
       <button type="button" class="key-btn" data-key="B♭" onclick="selectScaleKey('B♭')" style="padding:8px 14px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer">B♭</button>
       <button type="button" class="key-btn" data-key="B"  onclick="selectScaleKey('B')"  style="padding:8px 14px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer">B</button>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:8px">Octaves</div>
+      <div style="display:flex;gap:16px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.9rem;cursor:pointer">
+          <input type="checkbox" id="oct-modal-1" value="1" style="width:18px;height:18px"> 1 octave
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.9rem;cursor:pointer">
+          <input type="checkbox" id="oct-modal-2" value="2" checked style="width:18px;height:18px"> 2 octaves
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.9rem;cursor:pointer">
+          <input type="checkbox" id="oct-modal-3" value="3" style="width:18px;height:18px"> 3 octaves
+        </label>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeAddKeyModal()">Cancel</button>
@@ -1773,9 +1787,9 @@ function renderDetail(s) {
       </div>
       <button onclick="deletePupil('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer;flex-shrink:0;align-self:flex-start" title="Remove pupil">🗑️ Remove</button>
       <button onclick="openEditModal('${s.id}')" style="background:none;border:1.5px solid var(--viola);border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--viola);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Edit pupil">✏️ Edit</button>
-      <button onclick="openTimerModal('${s.name}','${s.duration||60}')" style="background:var(--violin);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Lesson timer">⏱ Timer</button>
-      <button onclick="openExtraLessonModal('${s.id}')" style="background:var(--string);color:#05270B;border:none;border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Add extra lesson this week">+ Extra</button>
-      <button onclick="exportSinglePupil('${s.id}')" style="background:#29789E;color:#fff;border:none;border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Download &amp; email practice plan">✉ Practice Plan</button>
+      <button onclick="openTimerModal('${s.name}','${s.duration||60}')" style="background:var(--violin);color:#fff;border:none;border-radius:10px;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Lesson timer">⏱ Timer</button>
+      <button onclick="openExtraLessonModal('${s.id}')" style="background:var(--string);color:#05270B;border:none;border-radius:10px;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Add extra lesson this week">+ Extra</button>
+      <button onclick="exportSinglePupil('${s.id}')" style="background:#29789E;color:#fff;border:none;border-radius:10px;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Download &amp; email practice plan">✉ Practice Plan</button>
     </div>
     ${nextPupilHTML(s)}
 
@@ -3257,67 +3271,84 @@ function scalesHTML(s) {
   const keys = s.scaleKeys || [];
   if (keys.length === 0) return '<p style="color:var(--muted);font-size:0.88rem">No keys added yet — tap \u201c+ Add key\u201d below.</p>';
   const cl = s.scaleChecklist || {};
+  const keyOctaves = s.scaleKeyOctaves || {};
 
   return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">' +
     keys.map(function(key) {
       var ticks = cl[key] || {};
-      var rows = SCALE_TYPES.map(function(type) {
-        var cells = SCALE_OCTAVES.map(function(oct) {
-          var done = ticks[type] && ticks[type][oct];
-          return '<td style="text-align:center;padding:3px 4px">'
-            + '<button onclick="scaleCheckKey(\'' + s.id + '\',\'' + key + '\',\'' + type.replace(/'/g,"'") + '\',\'' + oct + '\')" '
-            + 'style="width:28px;height:28px;border-radius:6px;border:1.5px solid ' + (done ? 'var(--viola)' : '#e0ddd8') + ';'
-            + 'background:' + (done ? 'var(--viola)' : 'transparent') + ';'
-            + 'color:' + (done ? '#fff' : 'var(--muted)') + ';'
-            + 'cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;margin:auto">'
-            + (done ? '\u2713' : '') + '</button></td>';
-        }).join('');
-        return '<tr><td style="font-size:0.72rem;color:var(--muted);padding:3px 6px 3px 0;white-space:nowrap">' + esc(type) + '</td>' + rows + '</tr>';
+      // Use stored octaves for this key, defaulting to ['2'] for old keys with no setting
+      var octs = keyOctaves[key] || ['1','2','3'];
+
+      var total = SCALE_TYPES.length * octs.length;
+      var done = 0;
+      SCALE_TYPES.forEach(function(t) { octs.forEach(function(o) { if(ticks[t]&&ticks[t][o]) done++; }); });
+
+      var headerCells = octs.map(function(o) {
+        return '<th style="font-size:0.65rem;color:var(--muted);text-align:center;padding:2px 4px;font-weight:600">' + o + '</th>';
       }).join('');
 
-      // count completed
-      var total = SCALE_TYPES.length * 3;
-      var done = 0;
-      SCALE_TYPES.forEach(function(t) { SCALE_OCTAVES.forEach(function(o) { if(ticks[t]&&ticks[t][o]) done++; }); });
+      var rows = SCALE_TYPES.map(function(type) {
+        var cells = octs.map(function(oct) {
+          var isDone = ticks[type] && ticks[type][oct];
+          return '<td style="text-align:center;padding:3px 2px">'
+            + '<button onclick="scaleCheckKey(\'' + s.id + '\',\'' + key + '\',\'' + type + '\',\'' + oct + '\')" '
+            + 'style="width:26px;height:26px;border-radius:6px;border:1.5px solid ' + (isDone ? 'var(--viola)' : '#e0ddd8') + ';'
+            + 'background:' + (isDone ? 'var(--viola)' : 'transparent') + ';'
+            + 'color:' + (isDone ? '#fff' : '#ccc') + ';'
+            + 'cursor:pointer;font-size:0.8rem;font-weight:700;margin:auto;display:block">'
+            + (isDone ? '\u2713' : '') + '</button></td>';
+        }).join('');
+        return '<tr><td style="font-size:0.68rem;color:var(--muted);padding:3px 4px 3px 0;line-height:1.3">' + esc(type) + '</td>' + cells + '</tr>';
+      }).join('');
 
       return '<div style="background:var(--warm);border-radius:10px;padding:10px 12px">'
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
         + '<span style="font-size:1.05rem;font-weight:700">' + esc(key) + '</span>'
         + '<span style="font-size:0.7rem;color:var(--muted)">' + done + '/' + total + '</span>'
-        + '<button onclick="removeScaleKey(\'' + s.id + '\',\'' + key + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem;padding:0 0 0 8px">\u00d7</button>'
+        + '<button onclick="editKeyOctaves(\'' + s.id + '\',\'' + key + '\')" style="background:none;border:none;color:var(--viola);cursor:pointer;font-size:0.72rem;padding:0 6px" title="Edit octaves">oct</button>'
+        + '<button onclick="removeScaleKey(\'' + s.id + '\',\'' + key + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem;padding:0 0 0 4px">\u00d7</button>'
         + '</div>'
         + '<table style="width:100%;border-collapse:collapse">'
-        + '<thead><tr>'
-        + '<th style="font-size:0.65rem;color:var(--muted);text-align:left;padding:2px 0;font-weight:600"></th>'
-        + '<th style="font-size:0.65rem;color:var(--muted);text-align:center;padding:2px 4px;font-weight:600">1</th>'
-        + '<th style="font-size:0.65rem;color:var(--muted);text-align:center;padding:2px 4px;font-weight:600">2</th>'
-        + '<th style="font-size:0.65rem;color:var(--muted);text-align:center;padding:2px 4px;font-weight:600">3</th>'
-        + '</tr></thead><tbody>'
-        + SCALE_TYPES.map(function(type) {
-            var cells = SCALE_OCTAVES.map(function(oct) {
-              var isDone = ticks[type] && ticks[type][oct];
-              return '<td style="text-align:center;padding:3px 2px">'
-                + '<button onclick="scaleCheckKey(\'' + s.id + '\',\'' + key + '\',\'' + type + '\',\'' + oct + '\')" '
-                + 'style="width:26px;height:26px;border-radius:6px;border:1.5px solid ' + (isDone ? 'var(--viola)' : '#e0ddd8') + ';'
-                + 'background:' + (isDone ? 'var(--viola)' : 'transparent') + ';'
-                + 'color:' + (isDone ? '#fff' : '#ccc') + ';'
-                + 'cursor:pointer;font-size:0.8rem;font-weight:700;margin:auto;display:block">'
-                + (isDone ? '\u2713' : '') + '</button></td>';
-            }).join('');
-            return '<tr><td style="font-size:0.68rem;color:var(--muted);padding:3px 4px 3px 0;line-height:1.3">' + esc(type) + '</td>' + cells + '</tr>';
-          }).join('')
-        + '</tbody></table></div>';
+        + '<thead><tr><th style="font-size:0.65rem;color:var(--muted);text-align:left;padding:2px 0;font-weight:600"></th>' + headerCells + '</tr></thead>'
+        + '<tbody>' + rows + '</tbody></table></div>';
     }).join('') + '</div>';
 }
+
+function editKeyOctaves(studentId, key) {
+  // Pre-select the current octaves for this key, then re-use the add key modal
+  _keyModalMode = 'editOctaves';
+  _editOctavesKey = key;
+  scaleSelectedKeys = [key];
+  document.getElementById('key-modal-student-id').value = studentId;
+  // Pre-check current octaves
+  const s = getStudent(studentId);
+  const current = (s && s.scaleKeyOctaves && s.scaleKeyOctaves[key]) || ['2'];
+  ['1','2','3'].forEach(function(o) {
+    const el = document.getElementById('oct-modal-' + o);
+    if (el) el.checked = current.includes(o);
+  });
+  // Highlight the key button
+  document.querySelectorAll('.key-btn').forEach(function(btn) {
+    const sel = btn.dataset.key === key;
+    btn.style.background  = sel ? 'var(--viola)' : 'transparent';
+    btn.style.color       = sel ? '#fff' : 'var(--ink)';
+    btn.style.borderColor = sel ? 'var(--viola)' : '#e0ddd8';
+  });
+  document.getElementById('add-key-modal').querySelector('h2').textContent = 'Edit octaves: ' + key;
+  document.getElementById('add-key-modal').classList.add('open');
+}
+let _editOctavesKey = null;
 
 function naturalMinorHTML(s) {
   var keys = s.naturalMinorKeys || [];
   if (keys.length === 0) return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No natural minor keys added.</p>';
   var cl = s.naturalMinorChecklist || {};
+  var keyOcts = s.naturalMinorKeyOctaves || {};
   return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
     keys.map(function(key) {
       var ticks = cl[key] || {};
-      var cells = SCALE_OCTAVES.map(function(oct) {
+      var octs = keyOcts[key] || ['2'];
+      var cells = octs.map(function(oct) {
         var isDone = ticks[oct];
         return '<td style="text-align:center;padding:3px 2px">'
           + '<button onclick="naturalMinorCheckKey(\'' + s.id + '\',\'' + key + '\',\'' + oct + '\')" '
@@ -3326,13 +3357,16 @@ function naturalMinorHTML(s) {
           + 'color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.8rem;font-weight:700;margin:auto;display:block">'
           + (isDone ? '\u2713' : '') + '</button></td>';
       }).join('');
+      var headerCells = octs.map(function(o) {
+        return '<th style="font-size:0.65rem;color:var(--muted);text-align:center;font-weight:600">' + o + '</th>';
+      }).join('');
       return '<div style="background:var(--warm);border-radius:10px;padding:10px 12px">'
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
         + '<span style="font-size:1rem;font-weight:700">' + esc(key) + '</span>'
         + '<button onclick="removeNaturalMinorKey(\'' + s.id + '\',\'' + key + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem">\u00d7</button>'
         + '</div>'
         + '<table style="width:100%;border-collapse:collapse">'
-        + '<thead><tr><th></th><th style="font-size:0.65rem;color:var(--muted);text-align:center;font-weight:600">1</th><th style="font-size:0.65rem;color:var(--muted);text-align:center;font-weight:600">2</th><th style="font-size:0.65rem;color:var(--muted);text-align:center;font-weight:600">3</th></tr></thead>'
+        + '<thead><tr><th></th>' + headerCells + '</tr></thead>'
         + '<tbody><tr><td style="font-size:0.68rem;color:var(--muted);padding:3px 4px 3px 0">Natural minor</td>' + cells + '</tr></tbody></table>'
         + '</div>';
     }).join('') + '</div>';
@@ -3411,14 +3445,36 @@ function closeAddKeyModal() {
 function confirmAddKeys() {
   var studentId = document.getElementById('key-modal-student-id').value;
   var s = getStudent(studentId); if (!s || scaleSelectedKeys.length === 0) { closeAddKeyModal(); return; }
-  if (_keyModalMode === 'main') {
+
+  // Read selected octaves (for main mode only)
+  var selectedOctaves = ['1','2','3'].filter(function(o) {
+    var el = document.getElementById('oct-modal-' + o);
+    return el && el.checked;
+  });
+  if (selectedOctaves.length === 0) selectedOctaves = ['2']; // default fallback
+
+  if (_keyModalMode === 'editOctaves') {
+    if (!s.scaleKeyOctaves) s.scaleKeyOctaves = {};
+    s.scaleKeyOctaves[_editOctavesKey] = selectedOctaves;
+    save(); closeAddKeyModal();
+    document.getElementById('add-key-modal').querySelector('h2').textContent = 'Add key';
+    document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
+  } else if (_keyModalMode === 'main') {
     if (!s.scaleKeys) s.scaleKeys = [];
-    scaleSelectedKeys.forEach(function(k) { if (!s.scaleKeys.includes(k)) s.scaleKeys.push(k); });
+    if (!s.scaleKeyOctaves) s.scaleKeyOctaves = {};
+    scaleSelectedKeys.forEach(function(k) {
+      if (!s.scaleKeys.includes(k)) s.scaleKeys.push(k);
+      s.scaleKeyOctaves[k] = selectedOctaves;
+    });
     save(); closeAddKeyModal();
     document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
   } else if (_keyModalMode === 'naturalMinor') {
     if (!s.naturalMinorKeys) s.naturalMinorKeys = [];
-    scaleSelectedKeys.forEach(function(k) { if (!s.naturalMinorKeys.includes(k)) s.naturalMinorKeys.push(k); });
+    if (!s.naturalMinorKeyOctaves) s.naturalMinorKeyOctaves = {};
+    scaleSelectedKeys.forEach(function(k) {
+      if (!s.naturalMinorKeys.includes(k)) s.naturalMinorKeys.push(k);
+      s.naturalMinorKeyOctaves[k] = selectedOctaves;
+    });
     save(); closeAddKeyModal();
     document.getElementById('natural-minor-list-' + studentId).innerHTML = naturalMinorHTML(s);
   } else {
@@ -4577,8 +4633,9 @@ function exportHTML(pupils, term, includeScales) {
 <head>
 <meta charset="UTF-8">
 <title>Studio Notebook — ${termLabel}</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
 <style>
-  body { font-family: Georgia, serif; max-width: 800px; margin: 40px auto; padding: 0 24px; color: #05270B; }
+  body { font-family: 'Special Elite', cursive; max-width: 800px; margin: 40px auto; padding: 0 24px; color: #05270B; }
   h1 { font-size: 1.8rem; color: #2F5C1A; margin-bottom: 4px; }
   .report-meta { color: #6b8a6b; font-size: 0.9rem; margin-bottom: 40px; }
   .print-btn { background: #29789E; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; cursor: pointer; margin-bottom: 32px; display: block; }
@@ -4606,7 +4663,7 @@ function exportHTML(pupils, term, includeScales) {
 <button class="print-btn" onclick="window.print()">🖨️&nbsp; Save as PDF / Print</button>${mailBtn}
 <button onclick="window.close()" style="background:none;border:1.5px solid #2F5C1A;color:#2F5C1A;padding:10px 20px;border-radius:8px;font-size:0.9rem;cursor:pointer;margin-bottom:32px;margin-left:10px">← Close report</button>
 <h1>Studio Notebook</h1>
-<div class="report-meta">${termLabel} · ${pupils.length} pupil${pupils.length!==1?'s':''} · Generated ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
+<div class="report-meta">Generated ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
 ${pupils.map(s => buildPupilHTML(s, term, includeScales)).join('')}
 </body></html>`;
 
