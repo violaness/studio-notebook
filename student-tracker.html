@@ -1864,7 +1864,7 @@ function renderDetail(s) {
       <div class="section-card">
         <div class="section-label">📅 Requested absences</div>
         ${absencesHTML(s)}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
           <div>
             <label style="font-size:0.68rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Date</label>
             <input type="date" id="absence-date-${s.id}"
@@ -1876,9 +1876,9 @@ function renderDetail(s) {
               style="width:100%;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);box-sizing:border-box"
               onkeydown="if(event.key==='Enter')addAbsence('${s.id}')">
           </div>
+          <button onclick="addAbsence('${s.id}')"
+            style="width:100%;background:var(--viola);color:#fff;border:none;border-radius:8px;padding:10px 14px;font-family:'Special Elite',cursive;font-size:0.88rem;font-weight:600;cursor:pointer">Add absence</button>
         </div>
-        <button onclick="addAbsence('${s.id}')"
-          style="margin-top:8px;width:100%;background:var(--viola);color:#fff;border:none;border-radius:8px;padding:10px 14px;font-family:'Special Elite',cursive;font-size:0.88rem;font-weight:600;cursor:pointer">Add absence</button>
       </div>
     </div>
 
