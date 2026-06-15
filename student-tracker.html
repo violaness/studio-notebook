@@ -2250,14 +2250,23 @@ function removeCustomChip(chip, studentId) {
 function insertIntoScratch(id, text) {
   const el = document.getElementById('during-scratch-' + id);
   if (!el) return;
+  const start = el.selectionStart;
+  const end = el.selectionEnd;
   const cur = el.value;
-  const sep = cur.length > 0 && !cur.endsWith(' ') && !cur.endsWith('\n') ? ' · ' : '';
-  el.value = cur + sep + text;
-  // Update the stored value
+  // Insert on a new line if cursor is mid-text, or append with newline
+  const before = cur.slice(0, start);
+  const after = cur.slice(end);
+  const prefix = before.length > 0 && !before.endsWith('\n') ? '\n' : '';
+  const suffix = after.length > 0 && !after.startsWith('\n') ? '\n' : '';
+  const inserted = prefix + text + ':' + suffix;
+  el.value = before + inserted + after;
+  // Place cursor after the inserted text
+  const newPos = start + inserted.length;
+  el.selectionStart = newPos;
+  el.selectionEnd = newPos;
   const s = getStudent(id);
   if (s) { s.duringScratch = el.value; save(); }
   el.focus();
-  el.scrollTop = el.scrollHeight;
 }
 
 
@@ -3070,7 +3079,9 @@ function refSummary(s) {
   if (!pieces.length && !scales.length && !scalesWeek.length && !tech.length && !plan && !thisWeek && !pupilNote) return '';
 
   var piecesHTML = pieces.map(function(p) {
-    return '<span style="display:inline-block;background:var(--card-bg);border-radius:6px;padding:3px 8px;font-size:0.78rem;margin:2px">' + esc(p) + '</span>';
+    return '<span onclick="insertIntoScratch(\'' + s.id + '\',\'' + esc(p).replace(/'/g,'\\\'') + '\')" '
+      + 'style="display:inline-block;background:var(--card-bg);border-radius:6px;padding:3px 8px;font-size:0.78rem;margin:2px;cursor:pointer;border:1px solid transparent" '
+      + 'title="Tap to insert into notes">' + esc(p) + '</span>';
   }).join('');
 
   var scaleTagsHTML = scales.map(function(sc) {
