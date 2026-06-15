@@ -4395,7 +4395,7 @@ function buildPupilHTML(s, term) {
     <div class="pupil-section">
       <h2>${s.name}</h2>
       <div class="pupil-meta">
-        ${s.instrument} · ${s.level} · ${(s.pupilType||'child')==='adult'?'Adult':'School age'}
+        ${s.instrument}
         ${s.schoolYear ? ` · ${s.schoolYear}` : ''}
         ${slot.day ? ` · ${slot.day}${slot.time?' '+slot.time:''}` : ''}
         ${s.frequency==='fortnightly'?' · Fortnightly':''}
