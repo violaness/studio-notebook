@@ -1748,6 +1748,7 @@ function renderDetail(s) {
       <button onclick="openEditModal('${s.id}')" style="background:none;border:1.5px solid var(--viola);border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--viola);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Edit pupil">✏️ Edit</button>
       <button onclick="openTimerModal('${s.name}','${s.duration||60}')" style="background:var(--violin);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Lesson timer">⏱ Timer</button>
       <button onclick="openExtraLessonModal('${s.id}')" style="background:var(--string);color:#05270B;border:none;border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Add extra lesson this week">＋ Extra</button>
+      <button onclick="exportSinglePupil('${s.id}')" style="background:#29789E;color:#fff;border:none;border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Download &amp; email lesson report">✉ Report</button>
     </div>
     ${nextPupilHTML(s)}
 
@@ -1788,6 +1789,18 @@ function renderDetail(s) {
           oninput="updateField('${s.id}','pupilNotes',this.value)"
           style="background:transparent;border-color:rgba(0,0,0,0.1)">${esc(s.pupilNotes||'')}</textarea>
       </div>
+      <details>
+        <summary style="cursor:pointer;padding:10px 14px;background:#f5f0fb;border:1.5px solid var(--viola);border-radius:10px;list-style:none;display:flex;align-items:center;justify-content:space-between;font-size:0.82rem;font-weight:600;color:var(--viola)">
+          <span>🔒 Teacher notes — private</span>
+          <span style="font-size:0.7rem;font-weight:400;opacity:0.7">tap to expand</span>
+        </summary>
+        <div class="section-card" style="background:#f5f0fb;border:1.5px solid var(--viola);border-top:none;border-radius:0 0 10px 10px;margin-top:0">
+          <div style="font-size:0.72rem;color:var(--viola);opacity:0.7;margin-bottom:6px">Not included in reports or emails</div>
+          <textarea rows="5" placeholder="Sensitive or confidential notes — these never leave the app…"
+            oninput="updateField('${s.id}','teacherNotes',this.value)"
+            style="background:transparent;border-color:rgba(100,60,160,0.2)">${esc(s.teacherNotes||'')}</textarea>
+        </div>
+      </details>
       <details style="margin-bottom:4px">
         <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
           <span>📅 Requested absences${(s.absences&&s.absences.filter(a=>new Date(a.date)>=new Date()).length)?` <span style="background:#e67e22;color:#fff;font-size:0.65rem;padding:1px 6px;border-radius:999px;margin-left:6px">${s.absences.filter(a=>new Date(a.date)>=new Date()).length}</span>`:''}</span>
@@ -2271,6 +2284,7 @@ function saveLog(id) {
   s.log.push({date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),text});
   s.duringScratch=''; save(); el.value='';
   showToast(`toast-after-${id}`); renderDetail(s);
+  document.querySelectorAll('.moment-tab').forEach(t => { if(t.textContent==='After') t.click(); });
 }
 function buildPiecesHTML(s) {
   const pieces = s.pieces && s.pieces.length ? s.pieces : [''];
@@ -4442,6 +4456,13 @@ function buildPupilPlainText(s, term) {
     txt += '\nSKETCHES\n' + s.canvasSaves.length + ' sketch' + (s.canvasSaves.length!==1?'es':'') + ' saved — see the full report for images.\n';
   }
   return txt;
+}
+
+function exportSinglePupil(id) {
+  const s = getStudent(id); if (!s) return;
+  const term = JSON.parse(localStorage.getItem('studio_term') || '{}');
+  const termLabel = term.name || new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  exportHTML([s], termLabel);
 }
 
 function exportHTML(pupils, term) {
