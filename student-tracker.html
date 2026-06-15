@@ -1774,6 +1774,10 @@ function renderDetail(s) {
         <textarea rows="28" placeholder="What you want to cover today…"
           oninput="updateField('${s.id}','nextLesson',this.value)">${esc(s.nextLesson||'')}</textarea>
         ${(s.log||[]).filter(e=>e.text).length > 0 ? '<button onclick="copyLastLesson(\'' + s.id + '\')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-size:0.8rem;cursor:pointer;width:100%">\u2191 Copy last lesson notes as plan</button>' : ''}
+        <div style="margin-top:14px">
+          <div class="section-label" style="margin-bottom:8px">🎼 Scales for this week</div>
+          ${scalesForWeekHTML(s)}
+        </div>
       </div>
       <div style="font-size:0.78rem;color:var(--muted);text-align:right;margin-bottom:8px">
         ${lessonCount(s)}
@@ -2455,6 +2459,42 @@ function completedPiecesHTML(s) {
   return out;
 }
 
+function scalesForWeekHTML(s) {
+  var allKeys = (s.scaleKeys || []);
+  if (allKeys.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No scales assigned yet — add keys in the Scales tab.</p>';
+  var selected = s.scalesThisWeek || [];
+  return '<div style="display:flex;flex-wrap:wrap;gap:8px">'
+    + allKeys.map(function(k) {
+        var on = selected.includes(k);
+        return '<button onclick="toggleScaleForWeek(\'' + s.id + '\',\'' + k + '\')" '
+          + 'style="padding:6px 14px;border-radius:999px;border:1.5px solid ' + (on ? 'var(--viola)' : '#e0ddd8') + ';'
+          + 'background:' + (on ? 'var(--viola)' : 'transparent') + ';'
+          + 'color:' + (on ? '#fff' : 'var(--ink)') + ';'
+          + 'font-size:0.88rem;cursor:pointer;font-weight:' + (on ? '700' : '400') + '">'
+          + esc(k) + '</button>';
+      }).join('')
+    + '</div>';
+}
+
+function toggleScaleForWeek(id, key) {
+  const s = getStudent(id); if (!s) return;
+  if (!s.scalesThisWeek) s.scalesThisWeek = [];
+  const idx = s.scalesThisWeek.indexOf(key);
+  if (idx >= 0) s.scalesThisWeek.splice(idx, 1);
+  else s.scalesThisWeek.push(key);
+  save();
+  // Re-render just the scales-for-week section without full re-render
+  const el = document.getElementById('scales-week-' + id);
+  if (el) el.innerHTML = scalesForWeekHTML(s);
+  renderDetail(s);
+  document.querySelectorAll('.moment-tab')[0].click();
+}
+
+function scalesThisWeekText(s) {
+  const keys = s.scalesThisWeek || [];
+  return keys.length ? '\ud83c\udfbc Scales this week: ' + keys.join(', ') : '';
+}
+
 // ── COMPLETED SCALES ───────────────────────────────────────────────────────
 function completeScaleKey(id, key) {
   const s = getStudent(id); if (!s) return;
@@ -2955,6 +2995,9 @@ function buildCumulativeNote(s) {
   if (s.nextLesson && s.nextLesson.trim()) {
     parts.push('📌 Plan:\n' + s.nextLesson.trim());
   }
+  if ((s.scalesThisWeek||[]).length > 0) {
+    parts.push('\ud83c\udfbc Scales this week: ' + s.scalesThisWeek.join(', '));
+  }
   if (s.duringScratch && s.duringScratch.trim()) {
     let scratch = s.duringScratch.trim();
     const planPrefix = '📌 Plan:\n' + (s.nextLesson||'').trim();
@@ -2967,14 +3010,15 @@ function buildCumulativeNote(s) {
 }
 
 function refSummary(s) {
-  var pieces    = piecesDisplay(s);
-  var scales    = (s.scales||[]);
-  var tech      = (s.techFocus||[]).filter(Boolean);
-  var plan      = (s.nextLesson||'').trim();
-  var thisWeek  = ((s.goals||{}).thisWeek||'').trim();
-  var pupilNote = (s.pupilNotes||'').trim();
+  var pieces        = piecesDisplay(s);
+  var scales        = (s.scales||[]);
+  var scalesWeek    = (s.scalesThisWeek||[]);
+  var tech          = (s.techFocus||[]).filter(Boolean);
+  var plan          = (s.nextLesson||'').trim();
+  var thisWeek      = ((s.goals||{}).thisWeek||'').trim();
+  var pupilNote     = (s.pupilNotes||'').trim();
 
-  if (!pieces.length && !scales.length && !tech.length && !plan && !thisWeek && !pupilNote) return '';
+  if (!pieces.length && !scales.length && !scalesWeek.length && !tech.length && !plan && !thisWeek && !pupilNote) return '';
 
   var piecesHTML = pieces.map(function(p) {
     return '<span style="display:inline-block;background:var(--card-bg);border-radius:6px;padding:3px 8px;font-size:0.78rem;margin:2px">' + esc(p) + '</span>';
@@ -2993,9 +3037,10 @@ function refSummary(s) {
   if (plan)        inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83d\udccc PLAN FOR TODAY</div><div style="font-size:0.88rem;line-height:1.5;color:var(--ink)">' + esc(plan) + '</div></div>';
   if (thisWeek)    inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\u26a1 THIS WEEK\u2019S GOAL</div><div style="font-size:0.88rem;line-height:1.5;color:var(--ink)">' + esc(thisWeek) + '</div></div>';
   if (pieces.length) inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83c\udfb5 PIECES &amp; EXERCISES</div><div>' + piecesHTML + '</div></div>';
-  if (tech.length)   inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83d\udd27 TECHNICAL FOCUS</div><div>' + techHTML + '</div></div>';
-  if (scales.length) inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83c\udfbc SCALES</div><div>' + scaleTagsHTML + '</div></div>';
-  if (pupilNote)     inner += '<div><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83d\udcd3 PUPIL NOTES</div><div style="font-size:0.82rem;line-height:1.5;color:var(--muted);font-style:italic">' + esc(pupilNote) + '</div></div>';
+  if (tech.length)       inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83d\udd27 TECHNICAL FOCUS</div><div>' + techHTML + '</div></div>';
+  if (scalesWeek.length) inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--viola);margin-bottom:4px">\ud83c\udfbc SCALES THIS WEEK</div><div style="display:flex;flex-wrap:wrap;gap:6px">' + scalesWeek.map(function(k){ return '<span style="background:var(--card-bg);border:1.5px solid var(--viola);border-radius:999px;padding:3px 10px;font-size:0.82rem;font-weight:700;color:var(--viola)">' + esc(k) + '</span>'; }).join('') + '</div></div>';
+  if (scales.length)     inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83c\udfbc SCALES</div><div>' + scaleTagsHTML + '</div></div>';
+  if (pupilNote)         inner += '<div><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83d\udcd3 PUPIL NOTES</div><div style="font-size:0.82rem;line-height:1.5;color:var(--muted);font-style:italic">' + esc(pupilNote) + '</div></div>';
 
   return '<details open style="margin-bottom:10px">'
     + '<summary style="font-size:0.75rem;font-weight:700;color:var(--muted);cursor:pointer;padding:8px 12px;background:var(--warm);border-radius:10px;list-style:none;display:flex;align-items:center;justify-content:space-between">'
