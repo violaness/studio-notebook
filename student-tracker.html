@@ -1987,7 +1987,7 @@ function renderDetail(s) {
     <div class="moment-panel" id="panel-scales">
       <div class="section-card">
         <div class="section-label">Assigned scales</div>
-        <div id="scales-list-${s.id}">${scalesHTML(s)}</div>
+        <div id="scales-list-${s.id}" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">${scalesHTML(s)}</div>
         <button onclick="openAddScaleModal('${s.id}')"
           style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
           ＋ Assign a scale
@@ -2912,13 +2912,13 @@ function scalesHTML(s) {
 
   const order = ['Needs review', 'Working on it', 'Getting there', 'Secure'];
   return order.filter(p => groups[p]).map(p => `
-    <div style="margin-bottom:12px">
-      <div style="font-size:0.75rem;font-weight:700;color:${PROGRESS_COLOURS[p]};margin-bottom:6px">${PROGRESS_DOTS[p]} ${p}</div>
+    <div style="background:var(--warm);border-radius:10px;padding:10px 12px">
+      <div style="font-size:0.75rem;font-weight:700;color:${PROGRESS_COLOURS[p]};margin-bottom:8px">${PROGRESS_DOTS[p]} ${p}</div>
       ${groups[p].map(({sc, i}) => `
-        <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--warm)">
-          <div style="flex:1">
+        <div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(0,0,0,0.06)">
+          <div style="flex:1;min-width:0">
             <div style="font-size:0.92rem;font-weight:600">${esc(sc.key||'')} ${esc(sc.type||'')}</div>
-            <div style="font-size:0.78rem;color:var(--muted);margin-top:2px">${esc(sc.octaves||'')} · ${esc(sc.bowing||'')}${sc.notes ? ' · ' + esc(sc.notes) : ''}</div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;word-break:break-word">${esc(sc.octaves||'')} · ${esc(sc.bowing||'')}${sc.notes ? ' · ' + esc(sc.notes) : ''}</div>
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0">
             <button onclick="editScale('${s.id}',${i})" style="background:none;border:1.5px solid var(--viola);border-radius:6px;padding:3px 8px;color:var(--viola);cursor:pointer;font-size:0.75rem;font-family:'Special Elite',cursive">Edit</button>
