@@ -2011,7 +2011,7 @@ function renderDetail(s) {
 
       <div class="section-card">
         <div class="section-label">Attendance</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:12px;align-items:end">
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
           <div>
             <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">From</label>
             <input type="date" id="att-from-${s.id}" onchange="renderAttendanceChart('${s.id}')"
@@ -2022,7 +2022,7 @@ function renderDetail(s) {
             <input type="date" id="att-to-${s.id}" onchange="renderAttendanceChart('${s.id}')"
               style="width:100%;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box">
           </div>
-          <button onclick="clearAttDates('${s.id}')" style="background:none;border:1.5px solid var(--warm);border-radius:8px;padding:6px 10px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer;white-space:nowrap">All time</button>
+          <button onclick="clearAttDates('${s.id}')" style="background:none;border:1.5px solid var(--warm);border-radius:8px;padding:8px 10px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer">All time</button>
         </div>
         <div id="att-chart-${s.id}">${attendanceChart(s, null, null)}</div>
       </div>
