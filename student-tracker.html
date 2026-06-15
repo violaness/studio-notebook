@@ -1057,85 +1057,29 @@
   </div>
 </div>
 
-<!-- ADD SCALE MODAL -->
-<div class="modal-overlay" id="add-scale-modal">
-  <div class="modal" style="max-height:90vh;overflow-y:auto">
-    <h2>Assign a scale</h2>
-    <input type="hidden" id="scale-student-id">
-    <input type="hidden" id="scale-edit-idx">
-
-    <div class="field-group">
-      <label class="field-label">Key <span style="font-weight:400;color:var(--muted);font-size:0.78rem">— tap multiple to add several at once</span></label>
-      <div style="display:flex;flex-wrap:wrap;gap:6px" id="scale-key-picker">
-        <button type="button" class="key-btn" data-key="C"  onclick="selectScaleKey('C')"  style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">C</button>
-        <button type="button" class="key-btn" data-key="D♭" onclick="selectScaleKey('D♭')" style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">D♭</button>
-        <button type="button" class="key-btn" data-key="D"  onclick="selectScaleKey('D')"  style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">D</button>
-        <button type="button" class="key-btn" data-key="E♭" onclick="selectScaleKey('E♭')" style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">E♭</button>
-        <button type="button" class="key-btn" data-key="E"  onclick="selectScaleKey('E')"  style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">E</button>
-        <button type="button" class="key-btn" data-key="F"  onclick="selectScaleKey('F')"  style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">F</button>
-        <button type="button" class="key-btn" data-key="F♯" onclick="selectScaleKey('F♯')" style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">F♯</button>
-        <button type="button" class="key-btn" data-key="G"  onclick="selectScaleKey('G')"  style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">G</button>
-        <button type="button" class="key-btn" data-key="A♭" onclick="selectScaleKey('A♭')" style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">A♭</button>
-        <button type="button" class="key-btn" data-key="A"  onclick="selectScaleKey('A')"  style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">A</button>
-        <button type="button" class="key-btn" data-key="B♭" onclick="selectScaleKey('B♭')" style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">B♭</button>
-        <button type="button" class="key-btn" data-key="B"  onclick="selectScaleKey('B')"  style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">B</button>
-      </div>
+<!-- ADD KEY MODAL -->
+<div class="modal-overlay" id="add-key-modal">
+  <div class="modal">
+    <h2>Add key</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:12px">Tap one or more keys to add to this pupil's scale checklist.</p>
+    <input type="hidden" id="key-modal-student-id">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+      <button type="button" class="key-btn" data-key="C"  onclick="selectScaleKey('C')"  style="padding:8px 14px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer">C</button>
+      <button type="button" class="key-btn" data-key="D♭" onclick="selectScaleKey('D♭')" style="padding:8px 14px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer">D♭</button>
+      <button type="button" class="key-btn" data-key="D"  onclick="selectScaleKey('D')"  style="padding:8px 14px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer">D</button>
+      <button type="button" class="key-btn" data-key="E♭" onclick="selectScaleKey('E♭')" style="padding:8px 14px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer">E♭</button>
+      <button type="button" class="key-btn" data-key="E"  onclick="selectScaleKey('E')"  style="padding:8px 14px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer">E</button>
+      <button type="button" class="key-btn" data-key="F"  onclick="selectScaleKey('F')"  style="padding:8px 14px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer">F</button>
+      <button type="button" class="key-btn" data-key="F♯" onclick="selectScaleKey('F♯')" style="padding:8px 14px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer">F♯</button>
+      <button type="button" class="key-btn" data-key="G"  onclick="selectScaleKey('G')"  style="padding:8px 14px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer">G</button>
+      <button type="button" class="key-btn" data-key="A♭" onclick="selectScaleKey('A♭')" style="padding:8px 14px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer">A♭</button>
+      <button type="button" class="key-btn" data-key="A"  onclick="selectScaleKey('A')"  style="padding:8px 14px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer">A</button>
+      <button type="button" class="key-btn" data-key="B♭" onclick="selectScaleKey('B♭')" style="padding:8px 14px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer">B♭</button>
+      <button type="button" class="key-btn" data-key="B"  onclick="selectScaleKey('B')"  style="padding:8px 14px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer">B</button>
     </div>
-
-    <div class="field-group">
-      <label class="field-label">Type</label>
-      <select id="scale-type">
-        <option>Major scale</option>
-        <option>Natural minor scale</option>
-        <option>Harmonic minor scale</option>
-        <option>Melodic minor scale</option>
-        <option>Major arpeggio</option>
-        <option>Minor arpeggio</option>
-        <option>Dominant 7th</option>
-        <option>Diminished 7th</option>
-        <option>Chromatic</option>
-        <option>Double stops — 3rds</option>
-        <option>Double stops — 6ths</option>
-        <option>Double stops — octaves</option>
-      </select>
-    </div>
-
-    <div class="field-group">
-      <label class="field-label">Octaves</label>
-      <div class="radio-group">
-        <div class="radio-opt"><input type="radio" name="scale-octaves" id="oct-1" value="1 octave"><label for="oct-1">1 octave</label></div>
-        <div class="radio-opt"><input type="radio" name="scale-octaves" id="oct-2" value="2 octaves" checked><label for="oct-2">2 octaves</label></div>
-        <div class="radio-opt"><input type="radio" name="scale-octaves" id="oct-3" value="3 octaves"><label for="oct-3">3 octaves</label></div>
-      </div>
-    </div>
-
-    <div class="field-group">
-      <label class="field-label">Bowing</label>
-      <div class="radio-group">
-        <div class="radio-opt"><input type="radio" name="scale-bowing" id="bow-sep" value="Separate" checked><label for="bow-sep">Separate</label></div>
-        <div class="radio-opt"><input type="radio" name="scale-bowing" id="bow-slur" value="Slurred"><label for="bow-slur">Slurred</label></div>
-        <div class="radio-opt"><input type="radio" name="scale-bowing" id="bow-both" value="Both"><label for="bow-both">Both</label></div>
-      </div>
-    </div>
-
-    <div class="field-group">
-      <label class="field-label">Progress</label>
-      <div class="radio-group progress-group">
-        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-working" value="Working on it" checked><label for="prog-working">Working on it</label></div>
-        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-getting" value="Getting there"><label for="prog-getting">Getting there</label></div>
-        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-secure" value="Secure"><label for="prog-secure">Secure</label></div>
-        <div class="radio-opt"><input type="radio" name="scale-progress" id="prog-review" value="Needs review"><label for="prog-review">Needs review</label></div>
-      </div>
-    </div>
-
-    <div class="field-group">
-      <label class="field-label">Notes (optional)</label>
-      <input type="text" id="scale-notes" placeholder="e.g. watch thumb position, aim for ♩=80">
-    </div>
-
     <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeAddScaleModal()">Cancel</button>
-      <button class="btn-primary" onclick="saveScale()">Save</button>
+      <button class="btn-ghost" onclick="closeAddKeyModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmAddKeys()">Add key(s)</button>
     </div>
   </div>
 </div>
