@@ -4413,11 +4413,73 @@ function closeExportModal() {
   document.getElementById('export-modal').classList.remove('open');
 }
 
-function buildPupilHTML(s, term) {
+function buildPupilHTML(s, term, includeScales) {
   const slot = effectiveSlot(s);
   const pieces = piecesDisplay(s);
   const goals = s.goals || {};
   const log = s.log || [];
+
+  // Build scale checklist HTML if requested
+  var scaleChecklistSection = '';
+  if (includeScales) {
+    var clHtml = '';
+    var STYPES = ['Major scale','Major arpeggio','Harmonic minor scale','Melodic minor scale','Minor arpeggio','Dominant 7th','Diminished 7th','Chromatic scale'];
+    var OCTS = ['1','2','3'];
+    var keys = s.scaleKeys || [];
+    if (keys.length > 0) {
+      var cl = s.scaleChecklist || {};
+      clHtml += '<div style="margin-bottom:12px"><strong>Scale checklist</strong></div>';
+      clHtml += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;margin-bottom:12px">';
+      clHtml += '<thead><tr><th style="text-align:left;padding:4px 8px;border-bottom:1px solid #d0e8c8">Key</th>';
+      STYPES.forEach(function(t) { clHtml += '<th style="text-align:center;padding:4px 4px;border-bottom:1px solid #d0e8c8;font-size:0.7rem">' + t.replace(' scale','').replace(' arpeggio','<br>arp.') + '</th>'; });
+      clHtml += '</tr></thead><tbody>';
+      keys.forEach(function(key) {
+        var ticks = cl[key] || {};
+        clHtml += '<tr><td style="padding:4px 8px;font-weight:700;border-bottom:1px solid #f0f0f0">' + key + '</td>';
+        STYPES.forEach(function(type) {
+          var allDone = OCTS.every(function(o) { return ticks[type] && ticks[type][o]; });
+          var someDone = OCTS.some(function(o) { return ticks[type] && ticks[type][o]; });
+          var cell = OCTS.map(function(o) {
+            var done = ticks[type] && ticks[type][o];
+            return '<span style="display:inline-block;width:16px;height:16px;border:1px solid #ccc;border-radius:3px;background:' + (done?'#2F5C1A':'#fff') + ';color:#fff;font-size:9px;text-align:center;line-height:16px;margin:1px">' + (done?'✓':'') + '</span>';
+          }).join('');
+          clHtml += '<td style="text-align:center;padding:4px 2px;border-bottom:1px solid #f0f0f0">' + cell + '</td>';
+        });
+        clHtml += '</tr>';
+      });
+      clHtml += '</tbody></table>';
+      clHtml += '<div style="font-size:0.7rem;color:#6b8a6b;margin-bottom:8px">Each key shows 3 boxes: 1 octave · 2 octaves · 3 octaves</div>';
+    }
+    var nmKeys = s.naturalMinorKeys || [];
+    if (nmKeys.length > 0) {
+      var nmCl = s.naturalMinorChecklist || {};
+      clHtml += '<div style="margin-bottom:6px"><strong>Natural minor</strong></div>';
+      clHtml += nmKeys.map(function(k) {
+        var ticks = nmCl[k] || {};
+        var cells = OCTS.map(function(o) {
+          var done = ticks[o];
+          return '<span style="display:inline-block;width:16px;height:16px;border:1px solid #ccc;border-radius:3px;background:' + (done?'#2F5C1A':'#fff') + ';color:#fff;font-size:9px;text-align:center;line-height:16px;margin:1px">' + (done?'✓':'') + '</span>';
+        }).join('');
+        return '<span style="display:inline-block;margin-right:16px;font-size:0.82rem"><strong>' + k + '</strong> ' + cells + '</span>';
+      }).join('');
+      clHtml += '<br><br>';
+    }
+    var dsKeys = s.doubleStopKeys || [];
+    if (dsKeys.length > 0) {
+      var dsCl = s.doubleStopsChecklist || {};
+      clHtml += '<div style="margin-bottom:6px"><strong>Double stops</strong></div>';
+      clHtml += dsKeys.map(function(k) {
+        var ticks = dsCl[k] || {};
+        var cells = ['3rds','6ths','Octaves'].map(function(t) {
+          var done = ticks[t];
+          return '<span style="display:inline-block;margin-right:6px;font-size:0.78rem">' + t + ' <span style="display:inline-block;width:14px;height:14px;border:1px solid #ccc;border-radius:3px;background:' + (done?'#2F5C1A':'#fff') + ';color:#fff;font-size:9px;text-align:center;line-height:14px">' + (done?'✓':'') + '</span></span>';
+        }).join('');
+        return '<div style="margin-bottom:4px;font-size:0.82rem"><strong>' + k + '</strong> ' + cells + '</div>';
+      }).join('');
+    }
+    if (clHtml) scaleChecklistSection = '<div class="section" style="page-break-inside:avoid"><div class="section-title">Scale checklist</div>' + clHtml + '</div>';
+  }
+
   return `
     <div class="pupil-section">
       <h2>${s.name}</h2>
@@ -4436,6 +4498,7 @@ function buildPupilHTML(s, term) {
         ${goals.shortTerm ? `<div class="goal-item"><span class="goal-label">Short-term:</span> ${goals.shortTerm}</div>` : ''}
         ${goals.thisWeek  ? `<div class="goal-item"><span class="goal-label">This week:</span> ${goals.thisWeek}</div>`   : ''}
       </div>` : ''}
+      ${scaleChecklistSection}
       ${log.length ? `
       <div class="section"><div class="section-title">Lesson notes (${log.length})</div>
         ${[...log].reverse().map(e=>`
@@ -4487,12 +4550,14 @@ function buildPupilPlainText(s, term) {
 
 function exportSinglePupil(id) {
   const s = getStudent(id); if (!s) return;
+  const hasScales = (s.scaleKeys||[]).length > 0 || (s.naturalMinorKeys||[]).length > 0 || (s.doubleStopKeys||[]).length > 0;
+  const includeScales = hasScales && confirm('Include scale checklist in the practice plan?');
   const term = JSON.parse(localStorage.getItem('studio_term') || '{}');
   const termLabel = term.name || new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'});
-  exportHTML([s], termLabel);
+  exportHTML([s], termLabel, includeScales);
 }
 
-function exportHTML(pupils, term) {
+function exportHTML(pupils, term, includeScales) {
   const termLabel = term || new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'});
   const isSingle = pupils.length === 1;
   const singlePupil = isSingle ? pupils[0] : null;
@@ -4542,7 +4607,7 @@ function exportHTML(pupils, term) {
 <button onclick="window.close()" style="background:none;border:1.5px solid #2F5C1A;color:#2F5C1A;padding:10px 20px;border-radius:8px;font-size:0.9rem;cursor:pointer;margin-bottom:32px;margin-left:10px">← Close report</button>
 <h1>Studio Notebook</h1>
 <div class="report-meta">${termLabel} · ${pupils.length} pupil${pupils.length!==1?'s':''} · Generated ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
-${pupils.map(s => buildPupilHTML(s, term)).join('')}
+${pupils.map(s => buildPupilHTML(s, term, includeScales)).join('')}
 </body></html>`;
 
   const win = window.open('', '_blank');
