@@ -485,6 +485,12 @@
 <div id="view-today" class="view active">
   <div class="today-date" id="today-heading"></div>
   <div class="today-sub" id="today-sub"></div>
+  <div id="wednesday-reminder" style="display:none;background:#fffbe6;border:1.5px solid #c9a84c;border-radius:12px;padding:12px 16px;margin-bottom:14px;align-items:center;gap:12px;flex-wrap:wrap">
+    <span style="font-size:1.1rem">💾</span>
+    <span style="flex:1;font-size:0.88rem;color:#7a5c00">Wednesday — time for your weekly backup!</span>
+    <button onclick="backupData();document.getElementById('wednesday-reminder').style.display='none'" style="background:#c9a84c;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:'Special Elite',cursive;font-size:0.82rem;cursor:pointer;white-space:nowrap">Back up now</button>
+    <button onclick="localStorage.setItem('backup_reminder_dismissed',new Date().toDateString());document.getElementById('wednesday-reminder').style.display='none'" style="background:none;border:none;color:#c9a84c;cursor:pointer;font-size:1.1rem;padding:0 4px">×</button>
+  </div>
   <div id="today-list"></div>
 </div>
 
@@ -1354,8 +1360,15 @@ function renderToday() {
   document.getElementById('today-heading').textContent =
     now.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
 
-  const todayStudents = students.filter(s => effectiveSlot(s).day === dayName && !isSkipped(s.id));
+  // Show Wednesday backup reminder after 5pm
+  const wedReminder = document.getElementById('wednesday-reminder');
+  if (wedReminder) {
+    const isWedEvening = now.getDay() === 3 && now.getHours() >= 17;
+    const dismissedToday = localStorage.getItem('backup_reminder_dismissed') === new Date().toDateString();
+    wedReminder.style.display = (isWedEvening && !dismissedToday) ? 'flex' : 'none';
+  }
   // Also include pupils with an extra lesson today
+  const todayStudents = students.filter(s => effectiveSlot(s).day === dayName && !isSkipped(s.id));
   const todayExtras = (extraLessons[currentWeek] || [])
     .filter(e => e.day === dayName)
     .map(e => { const s = getStudent(e.studentId); return s ? {...s, _extraTime: e.time} : null; })
