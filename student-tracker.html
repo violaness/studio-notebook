@@ -1779,9 +1779,17 @@ function renderDetail(s) {
         const realIdx = (s.log.length - 1) - i;
         const attLabels = {present:'✅ Present','absent-late':'❌ Late cancel','absent-notice':'🔔 Good notice',cancelled:'🚫 Cancelled'};
         const isAbsent = e.attendance && e.attendance !== 'present' && e.attendance !== '';
+        const sketchesHTML = (e.sketches||[]).map((img, si) =>
+          `<div style="margin-top:8px">
+            <img src="${img}" style="width:100%;border-radius:6px;border:1px solid #e0ddd8;display:block">
+            <button onclick="deleteLogSketch('${s.id}',${realIdx},${si})"
+              style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 0;margin-top:2px">× Remove sketch</button>
+          </div>`
+        ).join('');
         return `<div class="log-entry" style="position:relative;padding-right:80px;${isAbsent?'opacity:0.55;background:#f8f0f0;':''}">
           <div class="log-date" style="${isAbsent?'text-decoration:line-through;color:var(--muted);':''}">${e.date}${e.attendance ? ` · <span style="font-size:0.75rem;color:var(--muted)">${attLabels[e.attendance]||''}</span>` : ''}</div>
           ${e.text ? `<div class="log-text" style="${isAbsent?'color:var(--muted);':''}">${esc(e.text)}</div>` : `<div style="font-size:0.8rem;color:var(--muted);font-style:italic">No notes</div>`}
+          ${sketchesHTML}
           <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px">
             <button onclick="openEditLogModal('${s.id}',${realIdx})"
               style="background:var(--warm);border:none;border-radius:6px;color:var(--viola);cursor:pointer;font-size:0.78rem;padding:3px 8px;font-family:'Special Elite',cursive"
@@ -1824,7 +1832,6 @@ function renderDetail(s) {
       <button class="moment-tab" onclick="switchMoment(this,'panel-after')">After</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-goals')">Goals</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-scales')">Scales</button>
-      <button class="moment-tab" onclick="switchMoment(this,'panel-contacts')">Contacts</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-history')">History</button>
     </div>
 
@@ -1857,20 +1864,21 @@ function renderDetail(s) {
       <div class="section-card">
         <div class="section-label">📅 Requested absences</div>
         ${absencesHTML(s)}
-        <div style="display:flex;gap:8px;margin-top:10px;align-items:flex-end">
-          <div style="flex:1">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+          <div>
             <label style="font-size:0.68rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Date</label>
             <input type="date" id="absence-date-${s.id}"
-              style="width:100%;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink)">
+              style="width:100%;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);box-sizing:border-box">
           </div>
-          <div style="flex:2">
+          <div>
             <label style="font-size:0.68rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Note (optional)</label>
             <input type="text" id="absence-note-${s.id}" placeholder="e.g. school trip, holiday…"
+              style="width:100%;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);box-sizing:border-box"
               onkeydown="if(event.key==='Enter')addAbsence('${s.id}')">
           </div>
-          <button onclick="addAbsence('${s.id}')"
-            style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap">Add</button>
         </div>
+        <button onclick="addAbsence('${s.id}')"
+          style="margin-top:8px;width:100%;background:var(--viola);color:#fff;border:none;border-radius:8px;padding:10px 14px;font-family:'Special Elite',cursive;font-size:0.88rem;font-weight:600;cursor:pointer">Add absence</button>
       </div>
     </div>
 
@@ -1881,15 +1889,15 @@ function renderDetail(s) {
         <div class="section-label">Quick notes — right now</div>
         <textarea class="quick-note" rows="5"
           placeholder="Jot anything — key words, reminders, 'try this'…"
-          id="during-scratch-${s.id}">${esc(s.duringScratch || (s.nextLesson ? '📌 Plan:\n' + s.nextLesson + '\n\n' : ''))}</textarea>
+          id="during-scratch-${s.id}"
+          oninput="saveDuring('${s.id}')">${esc(s.duringScratch || (s.nextLesson ? '📌 Plan:\n' + s.nextLesson + '\n\n' : ''))}</textarea>
+        <div class="save-toast" id="toast-during-${s.id}" style="opacity:0">✓ Saved</div>
         <div style="margin-top:10px">
           <div class="section-label" style="margin-bottom:8px">Tap to add to notes</div>
           <div class="tech-chips" style="margin-bottom:8px">
             ${allTech.map(t => `<button class="tech-chip" onclick="insertIntoScratch('${s.id}','${esc(t)}')">${esc(t)}</button>`).join('')}
           </div>
         </div>
-        <button class="save-btn" onclick="saveDuring('${s.id}')">Save scratchpad</button>
-        <div class="save-toast" id="toast-during-${s.id}">✓ Saved</div>
       </div>
 
       <details style="margin-bottom:10px">
@@ -1979,36 +1987,6 @@ function renderDetail(s) {
     </div>
 
     <!-- CONTACTS -->
-    <div class="moment-panel" id="panel-contacts">
-      <div class="section-card">
-        <div class="section-label">Parent / contact log</div>
-        <div style="display:flex;gap:8px;margin-bottom:10px">
-          <select id="contact-type-${s.id}" style="flex:1">
-            <option value="Email sent">Email sent</option>
-            <option value="Email received">Email received</option>
-            <option value="Phone call">Phone call</option>
-            <option value="Message sent">Message sent</option>
-            <option value="Message received">Message received</option>
-            <option value="Invoice sent">Invoice sent</option>
-            <option value="Payment received">Payment received</option>
-            <option value="In person">In person</option>
-          </select>
-        </div>
-        <textarea rows="3" placeholder="Note about the contact…" id="contact-note-${s.id}"></textarea>
-        <button class="save-btn" onclick="saveContact('${s.id}')">Log contact</button>
-        <div class="save-toast" id="toast-contact-${s.id}">✓ Contact logged</div>
-      </div>
-      ${(s.contacts||[]).length ? `
-      <div class="section-card">
-        <div class="section-label">Contact history</div>
-        ${[...(s.contacts||[])].reverse().map(c=>`
-          <div class="log-entry">
-            <div class="log-date">${c.date} · ${c.type}</div>
-            <div class="log-text">${esc(c.note)}</div>
-          </div>`).join('')}
-      </div>` : ''}
-    </div>
-
     <!-- HISTORY -->
     <div class="moment-panel" id="panel-history">
       <div class="section-card">
@@ -2033,18 +2011,18 @@ function renderDetail(s) {
 
       <div class="section-card">
         <div class="section-label">Attendance</div>
-        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:flex-end">
-          <div style="flex:1;min-width:120px">
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:12px;align-items:end">
+          <div>
             <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">From</label>
             <input type="date" id="att-from-${s.id}" onchange="renderAttendanceChart('${s.id}')"
-              style="width:100%;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink)">
+              style="width:100%;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box">
           </div>
-          <div style="flex:1;min-width:120px">
+          <div>
             <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">To</label>
             <input type="date" id="att-to-${s.id}" onchange="renderAttendanceChart('${s.id}')"
-              style="width:100%;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink)">
+              style="width:100%;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box">
           </div>
-          <button onclick="clearAttDates('${s.id}')" style="background:none;border:1.5px solid var(--warm);border-radius:8px;padding:6px 10px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer;flex-shrink:0">All time</button>
+          <button onclick="clearAttDates('${s.id}')" style="background:none;border:1.5px solid var(--warm);border-radius:8px;padding:6px 10px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer;white-space:nowrap">All time</button>
         </div>
         <div id="att-chart-${s.id}">${attendanceChart(s, null, null)}</div>
       </div>
@@ -2274,6 +2252,13 @@ function deleteLogEntry(id, idx) {
   if (afterTab) afterTab.click();
 }
 
+function deleteLogSketch(id, logIdx, sketchIdx) {
+  const s = getStudent(id); if (!s || !s.log[logIdx]) return;
+  s.log[logIdx].sketches.splice(sketchIdx, 1);
+  save(); renderDetail(s);
+  document.querySelectorAll('.moment-tab')[6].click(); // History tab
+}
+
 function openEditLogModal(id, idx) {
   const s = getStudent(id); if (!s || !s.log[idx]) return;
   const e = s.log[idx];
@@ -2299,15 +2284,18 @@ function saveEditLogModal() {
   document.querySelectorAll('.moment-tab')[2].click();
 }
 
+let _saveDuringTimer = null;
 function saveDuring(id) {
-  const s = getStudent(id); if (!s) return;
-  const el = document.getElementById('during-scratch-' + id);
-  if (el) s.duringScratch = el.value;
-  save();
-  showToast('toast-during-' + id);
-  // Clear the edited flag on after note so it refreshes next time
-  const afterEl = document.getElementById('after-note-' + id);
-  if (afterEl) delete afterEl.dataset.edited;
+  clearTimeout(_saveDuringTimer);
+  _saveDuringTimer = setTimeout(function() {
+    const s = getStudent(id); if (!s) return;
+    const el = document.getElementById('during-scratch-' + id);
+    if (el) s.duringScratch = el.value;
+    save();
+    showToast('toast-during-' + id);
+    const afterEl = document.getElementById('after-note-' + id);
+    if (afterEl) delete afterEl.dataset.edited;
+  }, 800);
 }
 function saveLog(id) {
   const s=getStudent(id); if(!s)return;
@@ -2775,28 +2763,45 @@ function buildCumulativeNote(s) {
 }
 
 function refSummary(s) {
-  const pieces = (s.pieces||[]).filter(Boolean);
-  const scales = (s.scales||[]);
-  if (!pieces.length && !scales.length) return '';
+  var pieces    = (s.pieces||[]).filter(Boolean);
+  var scales    = (s.scales||[]);
+  var tech      = (s.techFocus||[]).filter(Boolean);
+  var plan      = (s.nextLesson||'').trim();
+  var thisWeek  = ((s.goals||{}).thisWeek||'').trim();
+  var pupilNote = (s.pupilNotes||'').trim();
 
-  const piecesHTML = pieces.map(p =>
-    `<span style="display:inline-block;background:var(--warm);border-radius:6px;padding:3px 8px;font-size:0.78rem;margin:2px">${esc(p)}</span>`
-  ).join('');
+  if (!pieces.length && !scales.length && !tech.length && !plan && !thisWeek && !pupilNote) return '';
 
-  const scalesHTML = scales.map(sc => {
-    const col = {
-      'Working on it':'#29789E','Getting there':'#e67e22',
-      'Secure':'#2F5C1A','Needs review':'#c0392b'
-    }[sc.progress] || 'var(--muted)';
-    return `<span style="display:inline-block;background:var(--warm);border-radius:6px;padding:3px 8px;font-size:0.78rem;margin:2px;border-left:3px solid ${col}">${esc(sc.key||'')} ${esc(sc.type||'')} · ${esc(sc.octaves||'')} · ${esc(sc.bowing||'')}</span>`;
+  var piecesHTML = pieces.map(function(p) {
+    return '<span style="display:inline-block;background:var(--card-bg);border-radius:6px;padding:3px 8px;font-size:0.78rem;margin:2px">' + esc(p) + '</span>';
   }).join('');
 
-  return `<div style="background:var(--warm);border-radius:10px;padding:10px 12px;margin-bottom:10px">
-    ${pieces.length ? `<div style="font-size:0.7rem;font-weight:700;color:var(--muted);margin-bottom:5px">Pieces &amp; exercises</div><div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:${scales.length?'8px':'0'}">${piecesHTML}</div>` : ''}
-    ${scales.length ? `<div style="font-size:0.7rem;font-weight:700;color:var(--muted);margin-bottom:5px">Scales</div><div style="display:flex;flex-wrap:wrap;gap:2px">${scalesHTML}</div>` : ''}
-  </div>`;
-}
+  var scaleTagsHTML = scales.map(function(sc) {
+    var col = {'Working on it':'#29789E','Getting there':'#e67e22','Secure':'#2F5C1A','Needs review':'#c0392b'}[sc.progress] || 'var(--muted)';
+    return '<span style="display:inline-block;background:var(--card-bg);border-radius:6px;padding:3px 8px;font-size:0.78rem;margin:2px;border-left:3px solid ' + col + '">' + esc(sc.key||'') + ' ' + esc(sc.type||'') + ' \u00b7 ' + esc(sc.octaves||'') + ' \u00b7 ' + esc(sc.bowing||'') + '</span>';
+  }).join('');
 
+  var techHTML = tech.map(function(t) {
+    return '<span style="display:inline-block;background:var(--card-bg);border-radius:6px;padding:3px 8px;font-size:0.78rem;margin:2px;border-left:3px solid var(--viola)">' + esc(t) + '</span>';
+  }).join('');
+
+  var inner = '';
+  if (plan)        inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83d\udccc PLAN FOR TODAY</div><div style="font-size:0.88rem;line-height:1.5;color:var(--ink)">' + esc(plan) + '</div></div>';
+  if (thisWeek)    inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\u26a1 THIS WEEK\u2019S GOAL</div><div style="font-size:0.88rem;line-height:1.5;color:var(--ink)">' + esc(thisWeek) + '</div></div>';
+  if (pieces.length) inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83c\udfb5 PIECES &amp; EXERCISES</div><div>' + piecesHTML + '</div></div>';
+  if (tech.length)   inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83d\udd27 TECHNICAL FOCUS</div><div>' + techHTML + '</div></div>';
+  if (scales.length) inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83c\udfbc SCALES</div><div>' + scaleTagsHTML + '</div></div>';
+  if (pupilNote)     inner += '<div><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83d\udcd3 PUPIL NOTES</div><div style="font-size:0.82rem;line-height:1.5;color:var(--muted);font-style:italic">' + esc(pupilNote) + '</div></div>';
+
+  return '<details open style="margin-bottom:10px">'
+    + '<summary style="font-size:0.75rem;font-weight:700;color:var(--muted);cursor:pointer;padding:8px 12px;background:var(--warm);border-radius:10px;list-style:none;display:flex;align-items:center;justify-content:space-between">'
+    + '<span>\ud83d\udccb Before \u2014 your plan &amp; notes</span>'
+    + '<span style="font-size:0.7rem;font-weight:400">tap to collapse</span>'
+    + '</summary>'
+    + '<div style="background:var(--warm);border-radius:0 0 10px 10px;padding:10px 12px;margin-top:2px">'
+    + inner
+    + '</div></details>';
+}
 
 function saveDailyNotes() {
   const text = document.getElementById('daily-notes') ?
@@ -3161,10 +3166,24 @@ function saveCanvas(id) {
   const canvas = document.getElementById('canvas-' + id); if (!canvas) return;
   const dataUrl = canvas.toDataURL();
   const s = getStudent(id); if (!s) return;
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+
+  // Attach to today's log entry — create one if none exists for today
+  if (!s.log) s.log = [];
+  let entry = s.log.find(e => e.date === today);
+  if (!entry) {
+    entry = { date: today, text: '' };
+    s.log.push(entry);
+  }
+  if (!entry.sketches) entry.sketches = [];
+  entry.sketches.push(dataUrl);
+
+  // Also keep in canvasSaves for backwards compatibility / During tab display
   if (!s.canvasSaves) s.canvasSaves = [];
-  s.canvasSaves.push({ date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}), img: dataUrl });
+  s.canvasSaves.push({ date: today, img: dataUrl });
   s.canvasCurrent = '';
   save();
+
   // Clear canvas
   const ctx = canvas.getContext('2d');
   const rect = canvas.getBoundingClientRect();
@@ -3845,18 +3864,6 @@ function clearAttDates(id) {
 
 
 // ── CONTACT LOG ───────────────────────────────────────────────────────────
-function saveContact(id) {
-  const s = getStudent(id); if (!s) return;
-  const note = document.getElementById('contact-note-' + id).value.trim();
-  if (!note) return;
-  const type = document.getElementById('contact-type-' + id).value;
-  if (!s.contacts) s.contacts = [];
-  s.contacts.push({ date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}), type, note });
-  document.getElementById('contact-note-' + id).value = '';
-  save(); showToast('toast-contact-' + id); renderDetail(s);
-  document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===4) t.click(); });
-}
-
 // ── COMPLETED PIECES ──────────────────────────────────────────────────────
 function completePiece(id, title) {
   const s = getStudent(id); if (!s) return;
@@ -4011,8 +4018,20 @@ function buildPupilHTML(s, term) {
       </div>` : ''}
       ${log.length ? `
       <div class="section"><div class="section-title">Lesson notes (${log.length})</div>
-        ${[...log].reverse().map(e=>`<div class="log-entry"><span class="log-date">${e.date}</span> ${e.text}</div>`).join('')}
+        ${[...log].reverse().map(e=>`
+          <div class="log-entry">
+            <span class="log-date">${e.date}</span> ${e.text||''}
+            ${(e.sketches||[]).map(img=>`<div style="margin-top:8px"><img src="${img}" style="max-width:100%;border-radius:6px;border:1px solid #d0e8c8"></div>`).join('')}
+          </div>`).join('')}
       </div>` : '<div class="section no-notes">No lesson notes recorded.</div>'}
+      ${(s.canvasSaves||[]).filter(sv => !log.some(e => (e.sketches||[]).includes(sv.img))).length ? `
+      <div class="section"><div class="section-title">Other sketches</div>
+        ${s.canvasSaves.filter(sv => !log.some(e => (e.sketches||[]).includes(sv.img))).map(sv=>`
+          <div style="margin-bottom:12px">
+            <div style="font-size:0.75rem;color:#6b8a6b;margin-bottom:4px">${sv.date}</div>
+            <img src="${sv.img}" style="max-width:100%;border-radius:6px;border:1px solid #d0e8c8">
+          </div>`).join('')}
+      </div>` : ''}
     </div>`;
 }
 
@@ -4039,6 +4058,9 @@ function buildPupilPlainText(s, term) {
     [...log].reverse().forEach(e => { txt += e.date + '  ' + e.text + '\n\n'; });
   } else {
     txt += 'No lesson notes recorded.\n';
+  }
+  if ((s.canvasSaves||[]).length) {
+    txt += '\nSKETCHES\n' + s.canvasSaves.length + ' sketch' + (s.canvasSaves.length!==1?'es':'') + ' saved — see the full report for images.\n';
   }
   return txt;
 }
