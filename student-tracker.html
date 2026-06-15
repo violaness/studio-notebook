@@ -1817,7 +1817,7 @@ function renderDetail(s) {
         ${(s.log||[]).filter(e=>e.text).length > 0 ? '<button onclick="copyLastLesson(\'' + s.id + '\')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-size:0.8rem;cursor:pointer;width:100%">\u2191 Copy last lesson notes as plan</button>' : ''}
         <div style="margin-top:14px">
           <div class="section-label" style="margin-bottom:8px">🎻 Scales for this week</div>
-          ${scalesForWeekHTML(s)}
+          <div id="scales-week-${s.id}">${scalesForWeekHTML(s)}</div>
         </div>
       </div>
       <div style="font-size:0.78rem;color:var(--muted);text-align:right;margin-bottom:8px">
@@ -3252,8 +3252,11 @@ function removeScaleKey(studentId, key) {
   if (s.scaleChecklist) delete s.scaleChecklist[key];
   if (!s.scaleKeys) s.scaleKeys = [];
   s.scaleKeys = s.scaleKeys.filter(k => k !== key);
+  // Also remove from this week if selected
+  if (s.scalesThisWeek) s.scalesThisWeek = s.scalesThisWeek.filter(k => k !== key);
   save();
   document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
+  var swEl = document.getElementById('scales-week-' + studentId); if (swEl) swEl.innerHTML = scalesForWeekHTML(s);
 }
 
 function removeNaturalMinorKey(studentId, key) {
@@ -3473,6 +3476,7 @@ function confirmAddKeys() {
     });
     save(); closeAddKeyModal();
     document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
+    var swEl = document.getElementById('scales-week-' + studentId); if (swEl) swEl.innerHTML = scalesForWeekHTML(s);
   } else if (_keyModalMode === 'naturalMinor') {
     if (!s.naturalMinorKeys) s.naturalMinorKeys = [];
     if (!s.naturalMinorKeyOctaves) s.naturalMinorKeyOctaves = {};
