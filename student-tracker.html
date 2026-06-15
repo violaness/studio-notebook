@@ -1708,6 +1708,33 @@ function switchMoment(tab, panel) {
       setTimeout(() => { initCanvas(id); renderCanvasSaves(id); }, 50);
     });
   }
+  // Refresh refSummary on During and After tabs so piece refs are always current
+  if (panel === 'panel-during' || panel === 'panel-after') {
+    const duringEl = document.getElementById('panel-during');
+    const afterEl  = document.getElementById('panel-after');
+    // Find student id from a known element
+    const scratchEl = document.querySelector('[id^="during-scratch-"]');
+    if (scratchEl) {
+      const id = scratchEl.id.replace('during-scratch-', '');
+      const s = getStudent(id);
+      if (s) {
+        const summary = refSummary(s);
+        // Replace the first child div that is the refSummary (details element)
+        if (duringEl) {
+          const firstChild = duringEl.firstElementChild;
+          if (firstChild && (firstChild.tagName === 'DETAILS' || firstChild.classList.contains('ref-summary'))) {
+            firstChild.outerHTML = summary || '';
+          }
+        }
+        if (afterEl) {
+          const firstChild = afterEl.firstElementChild;
+          if (firstChild && (firstChild.tagName === 'DETAILS' || firstChild.classList.contains('ref-summary'))) {
+            firstChild.outerHTML = summary || '';
+          }
+        }
+      }
+    }
+  }
   // Rebuild cumulative note every time After tab is opened
   if (panel === 'panel-after') {
     const afterTextareas = document.querySelectorAll('[id^="after-note-"]');
