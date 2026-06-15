@@ -877,6 +877,26 @@
   </div>
 </div>
 
+<!-- NUMBER PICKER MODAL -->
+<div class="modal-overlay" id="number-picker-modal">
+  <div class="modal">
+    <h2 id="number-picker-title">Mark as completed</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;line-height:1.5">Add a number or reference if this is part of a collection — or leave blank for a standalone piece.</p>
+    <input type="hidden" id="number-picker-student-id">
+    <input type="hidden" id="number-picker-book-title">
+    <input type="hidden" id="number-picker-mode"> <!-- 'piece' or 'study' -->
+    <div class="field-group">
+      <label class="field-label">Number / reference (optional)</label>
+      <input type="text" id="number-picker-value" placeholder="e.g. No.12, Nos.3–7, p.24…"
+        onkeydown="if(event.key==='Enter')confirmNumberPicker()">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeNumberPicker()">Cancel</button>
+      <button class="btn-primary" onclick="confirmNumberPicker()">Mark done</button>
+    </div>
+  </div>
+</div>
+
 <!-- BACKUP / RESTORE MODAL -->
 <div class="modal-overlay" id="backup-modal">
   <div class="modal">
@@ -1429,7 +1449,7 @@ function renderToday() {
     const todayStr = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
     const todayLog = (s.log||[]).find(e => e.date === todayStr);
     const markedAbsentToday = todayLog && todayLog.attendance && todayLog.attendance !== 'present';
-    const pieces = (s.pieces||[]).filter(Boolean);
+    const pieces = piecesDisplay(s);
     const tech = (s.techFocus||[]).slice(0,3);
     const plan = s.nextLesson || '';
     const thisWeek = (s.goals||{}).thisWeek || '';
@@ -1761,49 +1781,10 @@ function renderDetail(s) {
   const el = document.getElementById('detail-content');
   const slot = effectiveSlot(s);
 
-  const piecesHTML = (s.pieces&&s.pieces.length?s.pieces:['']).map((p,i)=>
-    `<div class="piece-item">
-      <input type="text" placeholder="Piece or exercise…" value="${esc(p)}"
-        oninput="updatePiece('${s.id}',${i},this.value)"
-        onblur="offerSavePieceToLibrary('${s.id}',${i},this.value)">
-      <button class="remove-piece-btn" onclick="removePiece('${s.id}',${i})" title="Remove">×</button>
-    </div>`).join('');
-
+  const piecesHTML = buildPiecesHTML(s);
   const allTech = [...TECH_OPTIONS,...customChips];
-  const techHTML = allTech.map((t,i)=>{
-    const isCustom = i >= TECH_OPTIONS.length;
-    return `<button class="tech-chip ${isCustom?'custom-chip':''} ${(s.techFocus||[]).includes(t)?'selected':''}"
-      onclick="toggleTech('${s.id}','${esc(t)}',this)">${esc(t)}${isCustom?` <span onclick="event.stopPropagation();removeCustomChip('${esc(t)}','${s.id}')" style="margin-left:4px;opacity:0.6;font-size:0.8em" title="Remove">×</span>`:''}
-    </button>`;
-  }).join('');
-
-  const logHTML = (s.log||[]).length===0
-    ? `<p style="color:var(--muted);font-size:0.88rem;">No lesson notes yet.</p>`
-    : [...(s.log||[])].reverse().map((e, i) => {
-        const realIdx = (s.log.length - 1) - i;
-        const attLabels = {present:'✅ Present','absent-late':'❌ Late cancel','absent-notice':'🔔 Good notice',cancelled:'🚫 Cancelled'};
-        const isAbsent = e.attendance && e.attendance !== 'present' && e.attendance !== '';
-        const sketchesHTML = (e.sketches||[]).map((img, si) =>
-          `<div style="margin-top:8px">
-            <img src="${img}" style="width:100%;border-radius:6px;border:1px solid #e0ddd8;display:block">
-            <button onclick="deleteLogSketch('${s.id}',${realIdx},${si})"
-              style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 0;margin-top:2px">× Remove sketch</button>
-          </div>`
-        ).join('');
-        return `<div class="log-entry" style="position:relative;padding-right:80px;${isAbsent?'opacity:0.55;background:#f8f0f0;':''}">
-          <div class="log-date" style="${isAbsent?'text-decoration:line-through;color:var(--muted);':''}">${e.date}${e.attendance ? ` · <span style="font-size:0.75rem;color:var(--muted)">${attLabels[e.attendance]||''}</span>` : ''}</div>
-          ${e.text ? `<div class="log-text" style="${isAbsent?'color:var(--muted);':''}">${esc(e.text)}</div>` : `<div style="font-size:0.8rem;color:var(--muted);font-style:italic">No notes</div>`}
-          ${sketchesHTML}
-          <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px">
-            <button onclick="openEditLogModal('${s.id}',${realIdx})"
-              style="background:var(--warm);border:none;border-radius:6px;color:var(--viola);cursor:pointer;font-size:0.78rem;padding:3px 8px;font-family:'Special Elite',cursive"
-              title="Edit this entry">Edit</button>
-            <button onclick="deleteLogEntry('${s.id}',${realIdx})"
-              style="background:#e8ddd8;border:none;border-radius:6px;color:var(--muted);cursor:pointer;font-size:0.78rem;padding:3px 8px;font-family:'Special Elite',cursive"
-              title="Delete this entry">Del</button>
-          </div>
-        </div>`;
-      }).join('');
+  const techHTML = buildTechHTML(s, allTech);
+  const logHTML = buildLogHTML(s);
 
   el.innerHTML = `
     <div class="detail-header">
@@ -1817,11 +1798,7 @@ function renderDetail(s) {
           ${s.rate ? `<span class="badge" style="background:#dff0d8;color:#2F5C1A">£${s.rate} per lesson</span>` : ''}
           ${slot.day?`<span class="badge" style="background:var(--warm);color:var(--muted)">${slot.day}${slot.time?' '+slot.time:''}${s.duration?' · '+s.duration+'min':''}</span>`:''}
         </div>
-        ${s.dob || s.email || s.schoolYear ? `<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;font-size:0.8rem;color:var(--muted)">
-          ${s.dob ? `<span>${birthdayDisplay(s.dob)}</span>` : ''}
-          ${s.schoolYear ? `<span>📚 ${esc(s.schoolYear)}</span>` : ''}
-          ${s.email ? `<span>✉ <a href="mailto:${esc(s.email)}" style="color:var(--viola)">${esc(s.email)}</a></span>` : ''}
-        </div>` : ''}
+        ${pupilMetaHTML(s)}
       </div>
       <button onclick="deletePupil('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer;flex-shrink:0;align-self:flex-start" title="Remove pupil">🗑️ Remove</button>
       <button onclick="openEditModal('${s.id}')" style="background:none;border:1.5px solid var(--viola);border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--viola);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Edit pupil">✏️ Edit</button>
@@ -1834,7 +1811,6 @@ function renderDetail(s) {
       <button class="moment-tab active" onclick="switchMoment(this,'panel-before')">Before</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-during')">During</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-after')">After</button>
-      <button class="moment-tab" onclick="switchMoment(this,'panel-goals')">Goals</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-scales')">Scales</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-history')">History</button>
     </div>
@@ -1853,8 +1829,7 @@ function renderDetail(s) {
         <div class="section-label">📌 Plan for today's lesson</div>
         <textarea rows="28" placeholder="What you want to cover today…"
           oninput="updateField('${s.id}','nextLesson',this.value)">${esc(s.nextLesson||'')}</textarea>
-        ${(s.log||[]).filter(e=>e.text).length > 0 ? `
-        <button onclick="copyLastLesson('${s.id}')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;width:100%">↑ Copy last lesson notes as plan</button>` : ''}
+        ${(s.log||[]).filter(e=>e.text).length > 0 ? '<button onclick="copyLastLesson(\'' + s.id + '\')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-size:0.8rem;cursor:pointer;width:100%">\u2191 Copy last lesson notes as plan</button>' : ''}
       </div>
       <div style="font-size:0.78rem;color:var(--muted);text-align:right;margin-bottom:8px">
         ${lessonCount(s)}
@@ -1958,21 +1933,7 @@ function renderDetail(s) {
       <div class="section-card">
         <div class="section-label">Attendance — today's lesson</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">
-          ${['present','absent-late','absent-notice','cancelled'].map(status => {
-            const labels = {
-              'present':       '✅ Present',
-              'absent-late':   '❌ Absent — last minute (charges apply)',
-              'absent-notice': '🔔 Absent — good notice (no charge)',
-              'cancelled':     '🚫 Cancelled by me'
-            };
-            const last = (s.log||[]).slice(-1)[0];
-            const cur = last && last.attendance ? last.attendance : '';
-            return `<button onclick="setAttendance('${s.id}','${status}')"
-              style="padding:8px 12px;border-radius:9px;border:1.5px solid ${cur===status?'var(--viola)':'#e0ddd8'};
-              background:${cur===status?'var(--viola)':'transparent'};color:${cur===status?'#fff':'var(--muted)'};
-              font-family:\'Special Elite\',cursive;font-size:0.8rem;cursor:pointer;font-weight:${cur===status?'600':'400'};
-              text-align:left;line-height:1.4">${labels[status]}</button>`;
-          }).join('')}
+          ${attendanceButtonsHTML(s)}
         </div>
         <div class="save-toast" id="toast-attendance-${s.id}">✓ Attendance saved</div>
         ${(()=>{ const last=(s.log||[]).slice(-1)[0]; return last&&last.attendance?`<button onclick="clearAttendance('${s.id}')" style="background:none;border:none;font-size:0.78rem;color:var(--muted);cursor:pointer;margin-top:4px;padding:0">Clear attendance</button>`:''; })()}
@@ -1986,38 +1947,92 @@ function renderDetail(s) {
     <!-- SCALES -->
     <div class="moment-panel" id="panel-scales">
       <div class="section-card">
-        <div class="section-label">Assigned scales</div>
-        <div id="scales-list-${s.id}" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">${scalesHTML(s)}</div>
-        <button onclick="openAddScaleModal('${s.id}')"
-          style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
-          ＋ Assign a scale
-        </button>
+        <div class="section-label">Scale checklist</div>
+        <div id="scales-list-${s.id}">${scalesHTML(s)}</div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button onclick="openAddKeyModal('${s.id}')"
+            style="flex:1;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
+            ＋ Add key
+          </button>
+        </div>
       </div>
+      <details style="margin-top:10px">
+        <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
+          <span>Natural minor</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+        </summary>
+        <div class="section-card" style="margin-top:6px">
+          <div id="natural-minor-list-${s.id}">${naturalMinorHTML(s)}</div>
+          <button onclick="openAddNaturalMinorModal('${s.id}')"
+            style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--muted);color:var(--muted);border-radius:10px;padding:8px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">
+            ＋ Add natural minor key
+          </button>
+        </div>
+      </details>
+      <details style="margin-top:10px">
+        <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
+          <span>Double stops</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+        </summary>
+        <div class="section-card" style="margin-top:6px">
+          <div id="double-stops-list-${s.id}">${doubleStopsHTML(s)}</div>
+          <button onclick="openAddDoubleStopModal('${s.id}')"
+            style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--muted);color:var(--muted);border-radius:10px;padding:8px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">
+            ＋ Add double stop key
+          </button>
+        </div>
+      </details>
     </div>
 
     <!-- CONTACTS -->
     <!-- HISTORY -->
     <div class="moment-panel" id="panel-history">
+
+      <!-- GOALS (moved here) -->
       <div class="section-card">
-        <div class="section-label">Completed pieces</div>
-        ${(s.completedPieces||[]).length === 0
-          ? `<p style="color:var(--muted);font-size:0.88rem">No completed pieces yet. Move a current piece here when it\'s finished.</p>`
-          : (s.completedPieces||[]).map((p,i)=>`
-            <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--warm)">
-              <span style="flex:1;font-size:0.9rem">✓ ${esc(p.title)}</span>
-              <span style="font-size:0.75rem;color:var(--muted)">${p.date||''}</span>
-              <button onclick="restorePiece('${s.id}',${i})" style="background:none;border:none;color:var(--muted);font-size:0.8rem;cursor:pointer" title="Move back to current">↩</button>
-            </div>`).join('')}
-        <div style="margin-top:12px">
-          <div class="section-label" style="margin-bottom:6px">Move current piece to completed</div>
-          ${(s.pieces||[]).filter(Boolean).map((p,i)=>`
-            <button onclick="completePiece('${s.id}','${esc(p)}')"
-              style="display:block;width:100%;text-align:left;padding:8px 12px;margin-bottom:6px;border-radius:9px;
-              border:1.5px solid #e0ddd8;background:transparent;font-family:\'Special Elite\',cursive;
-              font-size:0.85rem;cursor:pointer;color:var(--ink)">✓ Mark done: ${esc(p)}</button>`).join('')}
+        <div class="section-label">🎯 Goals</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <div class="goal-label long-term" style="font-size:0.72rem;font-weight:700;margin-bottom:4px">Long-term</div>
+            <textarea rows="3" placeholder="Where are they heading overall?"
+              oninput="updateGoal('${s.id}','longTerm',this.value)">${esc((s.goals||{}).longTerm||'')}</textarea>
+          </div>
+          <div>
+            <div class="goal-label medium" style="font-size:0.72rem;font-weight:700;margin-bottom:4px">Medium-term</div>
+            <textarea rows="3" placeholder="Next few months…"
+              oninput="updateGoal('${s.id}','medium',this.value)">${esc((s.goals||{}).medium||'')}</textarea>
+          </div>
+          <div>
+            <div class="goal-label short" style="font-size:0.72rem;font-weight:700;margin-bottom:4px">Short-term</div>
+            <textarea rows="3" placeholder="Next few weeks…"
+              oninput="updateGoal('${s.id}','shortTerm',this.value)">${esc((s.goals||{}).shortTerm||'')}</textarea>
+          </div>
+          <div>
+            <div class="goal-label this-week" style="font-size:0.72rem;font-weight:700;margin-bottom:4px">This week</div>
+            <textarea rows="3" placeholder="Homework / focus for this week"
+              oninput="updateGoal('${s.id}','thisWeek',this.value)">${esc((s.goals||{}).thisWeek||'')}</textarea>
+          </div>
         </div>
+        <div class="save-toast" id="toast-goals-${s.id}">✓ Saved</div>
       </div>
 
+      <!-- COMPLETED PIECES -->
+      <div class="section-card">
+        <div class="section-label">✓ Completed pieces</div>
+        ${completedPiecesHTML(s)}
+      </div>
+
+      <!-- COMPLETED STUDIES -->
+      <div class="section-card">
+        <div class="section-label">📖 Completed studies</div>
+        ${completedStudiesHTML(s)}
+      </div>
+
+      <!-- COMPLETED SCALES -->
+      <div class="section-card">
+        <div class="section-label">🎼 Completed scales</div>
+        ${completedScalesHTML(s)}
+      </div>
+
+      <!-- ATTENDANCE -->
       <div class="section-card">
         <div class="section-label">Attendance</div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
@@ -2036,34 +2051,7 @@ function renderDetail(s) {
         <div id="att-chart-${s.id}">${attendanceChart(s, null, null)}</div>
       </div>
     </div>
-
-    <!-- GOALS -->
-    <div class="moment-panel" id="panel-goals">
-      <div class="section-card">
-        <div class="goal-row"><div class="goal-emoji"></div><div class="goal-block">
-          <div class="goal-label long-term">Long-term goal</div>
-          <textarea rows="2" placeholder="Where are they heading overall?"
-            oninput="updateGoal('${s.id}','longTerm',this.value)">${esc((s.goals||{}).longTerm||'')}</textarea>
-        </div></div>
-        <div class="goal-row"><div class="goal-emoji"></div><div class="goal-block">
-          <div class="goal-label medium">Medium-term goal</div>
-          <textarea rows="2" placeholder="Next few months…"
-            oninput="updateGoal('${s.id}','medium',this.value)">${esc((s.goals||{}).medium||'')}</textarea>
-        </div></div>
-        <div class="goal-row"><div class="goal-emoji"></div><div class="goal-block">
-          <div class="goal-label short">Short-term goal</div>
-          <textarea rows="2" placeholder="Next few weeks…"
-            oninput="updateGoal('${s.id}','shortTerm',this.value)">${esc((s.goals||{}).shortTerm||'')}</textarea>
-        </div></div>
-        <div class="goal-row"><div class="goal-emoji"></div><div class="goal-block">
-          <div class="goal-label this-week">This week</div>
-          <textarea rows="2" placeholder="Homework / focus for this week"
-            oninput="updateGoal('${s.id}','thisWeek',this.value)">${esc((s.goals||{}).thisWeek||'')}</textarea>
-        </div></div>
-        <button class="save-btn" onclick="saveGoals('${s.id}')">Save goals</button>
-        <div class="save-toast" id="toast-goals-${s.id}">✓ Goals saved</div>
-      </div>
-    </div>`;
+  `;
 }
 
 // ── REQUESTED ABSENCES ────────────────────────────────────────────────────
@@ -2186,8 +2174,27 @@ function confirmFillSlot() {
 
 
 function updateField(id, field, val) { const s=getStudent(id); if(s){s[field]=val;save();} }
-function updateGoal(id, key, val)    { const s=getStudent(id); if(s){if(!s.goals)s.goals={};s.goals[key]=val;save();} }
-function updatePiece(id, i, val)     { const s=getStudent(id); if(s){if(!s.pieces)s.pieces=[];s.pieces[i]=val;save();} }
+function updateGoal(id, key, val) {
+  const s = getStudent(id); if (!s) return;
+  if (!s.goals) s.goals = {};
+  s.goals[key] = val;
+  save();
+  showToast('toast-goals-' + id);
+}
+function updatePiece(id, i, val)    { const s=getStudent(id); if(s){if(!s.pieces)s.pieces=[];s.pieces[i]=val;save();} }
+function updatePieceRef(id, i, val) { const s=getStudent(id); if(s){if(!s.pieceRefs)s.pieceRefs=[];s.pieceRefs[i]=val;save();} }
+
+function pieceDisplayTitle(s, i) {
+  const title = (s.pieces||[])[i] || '';
+  const ref   = (s.pieceRefs||[])[i] || '';
+  return ref ? title + ' \u2014 ' + ref : title;
+}
+
+function piecesDisplay(s) {
+  return (s.pieces||[]).filter(Boolean).map(function(p, i) {
+    return pieceDisplayTitle(s, i);
+  }).filter(Boolean);
+}
 
 function addPiece(id) {
   const s=getStudent(id); if(!s)return;
@@ -2202,6 +2209,7 @@ function addPiece(id) {
 function removePiece(id, i) {
   const s=getStudent(id); if(!s)return;
   s.pieces.splice(i,1);
+  if(s.pieceRefs) s.pieceRefs.splice(i,1);
   if(s.pieces.length===0)s.pieces=[''];
   save(); renderDetail(s);
 }
@@ -2315,7 +2323,249 @@ function saveLog(id) {
   s.duringScratch=''; save(); el.value='';
   showToast(`toast-after-${id}`); renderDetail(s);
 }
-function saveGoals(id) { save(); showToast(`toast-goals-${id}`); }
+function buildPiecesHTML(s) {
+  const pieces = s.pieces && s.pieces.length ? s.pieces : [''];
+  const refs   = s.pieceRefs || [];
+  return pieces.map(function(p, i) {
+    const ref = refs[i] || '';
+    return '<div class="piece-item" style="flex-wrap:wrap;gap:6px;align-items:center">'
+      + '<input type="text" placeholder="Piece or exercise\u2026" value="' + esc(p) + '" style="flex:2;min-width:120px"'
+      + ' oninput="updatePiece(\'' + s.id + '\',' + i + ',this.value)"'
+      + ' onblur="offerSavePieceToLibrary(\'' + s.id + '\',' + i + ',this.value)">'
+      + '<input type="text" placeholder="No. / mvt. (optional)" value="' + esc(ref) + '" style="flex:1;min-width:80px;font-size:0.82rem"'
+      + ' oninput="updatePieceRef(\'' + s.id + '\',' + i + ',this.value)">'
+      + '<button class="remove-piece-btn" onclick="removePiece(\'' + s.id + '\',' + i + ')" title="Remove">\u00d7</button>'
+      + '</div>';
+  }).join('');
+}
+
+function buildTechHTML(s, allTech) {
+  return allTech.map(function(t, i) {
+    const isCustom = i >= TECH_OPTIONS.length;
+    const selected = (s.techFocus||[]).includes(t);
+    var btn = '<button class="tech-chip' + (isCustom?' custom-chip':'') + (selected?' selected':'') + '"'
+      + ' onclick="toggleTech(\'' + s.id + '\',\'' + esc(t) + '\',this)">' + esc(t);
+    if (isCustom) {
+      btn += ' <span onclick="event.stopPropagation();removeCustomChip(\'' + esc(t) + '\',\'' + s.id + '\')" style="margin-left:4px;opacity:0.6;font-size:0.8em" title="Remove">\u00d7</span>';
+    }
+    btn += '</button>';
+    return btn;
+  }).join('');
+}
+
+function buildLogHTML(s) {
+  const log = s.log || [];
+  if (log.length === 0) return '<p style="color:var(--muted);font-size:0.88rem;">No lesson notes yet.</p>';
+  const attLabels = {present:'\u2705 Present','absent-late':'\u274c Late cancel','absent-notice':'\ud83d\udd14 Good notice',cancelled:'\ud83d\udeab Cancelled'};
+  return [...log].reverse().map(function(e, i) {
+    const realIdx = log.length - 1 - i;
+    const isAbsent = e.attendance && e.attendance !== 'present';
+    var sketches = (e.sketches||[]).map(function(img, si) {
+      return '<div style="margin-top:8px">'
+        + '<img src="' + img + '" style="width:100%;border-radius:6px;border:1px solid #e0ddd8;display:block">'
+        + '<button onclick="deleteLogSketch(\'' + s.id + '\',' + realIdx + ',' + si + ')" '
+        + 'style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 0;margin-top:2px">\u00d7 Remove sketch</button>'
+        + '</div>';
+    }).join('');
+    var attBadge = e.attendance ? ' \u00b7 <span style="font-size:0.75rem;color:var(--muted)">' + (attLabels[e.attendance]||'') + '</span>' : '';
+    var textHTML = e.text
+      ? '<div class="log-text"' + (isAbsent?' style="color:var(--muted);"':'') + '>' + esc(e.text) + '</div>'
+      : '<div style="font-size:0.8rem;color:var(--muted);font-style:italic">No notes</div>';
+    return '<div class="log-entry" style="position:relative;padding-right:80px;' + (isAbsent?'opacity:0.55;background:#f8f0f0;':'') + '">'
+      + '<div class="log-date"' + (isAbsent?' style="text-decoration:line-through;color:var(--muted);"':'') + '>' + esc(e.date) + attBadge + '</div>'
+      + textHTML + sketches
+      + '<div style="position:absolute;top:8px;right:8px;display:flex;gap:4px">'
+      + '<button onclick="openEditLogModal(\'' + s.id + '\',' + realIdx + ')" style="background:var(--warm);border:none;border-radius:6px;color:var(--viola);cursor:pointer;font-size:0.78rem;padding:3px 8px" title="Edit">Edit</button>'
+      + '<button onclick="deleteLogEntry(\'' + s.id + '\',' + realIdx + ')" style="background:#e8ddd8;border:none;border-radius:6px;color:var(--muted);cursor:pointer;font-size:0.78rem;padding:3px 8px" title="Delete">Del</button>'
+      + '</div></div>';
+  }).join('');
+}
+
+function pupilMetaHTML(s) {
+  if (!s.dob && !s.email && !s.schoolYear) return '';
+  var out = '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;font-size:0.8rem;color:var(--muted)">';
+  if (s.dob) out += '<span>' + birthdayDisplay(s.dob) + '</span>';
+  if (s.schoolYear) out += '<span>\ud83d\udcda ' + esc(s.schoolYear) + '</span>';
+  if (s.email) out += '<span>\u2709 <a href="mailto:' + esc(s.email) + '" style="color:var(--viola)">' + esc(s.email) + '</a></span>';
+  out += '</div>';
+  return out;
+}
+
+function attendanceButtonsHTML(s) {
+  var labels = {
+    'present':        '\u2705 Present',
+    'absent-late':    '\u274c Absent \u2014 last minute (charges apply)',
+    'absent-notice':  '\ud83d\udd14 Absent \u2014 good notice (no charge)',
+    'cancelled':      '\ud83d\udeab Cancelled by me'
+  };
+  var last = (s.log||[]).slice(-1)[0];
+  var cur = last && last.attendance ? last.attendance : '';
+  return ['present','absent-late','absent-notice','cancelled'].map(function(status) {
+    var active = cur === status;
+    return '<button onclick="setAttendance(\'' + s.id + '\',\'' + status + '\')" '
+      + 'style="padding:8px 12px;border-radius:9px;border:1.5px solid ' + (active?'var(--viola)':'#e0ddd8') + ';'
+      + 'background:' + (active?'var(--viola)':'transparent') + ';color:' + (active?'#fff':'var(--muted)') + ';'
+      + 'font-size:0.8rem;cursor:pointer;font-weight:' + (active?'600':'400') + ';text-align:left;line-height:1.4">'
+      + labels[status] + '</button>';
+  }).join('');
+}
+
+// ── NUMBER PICKER ─────────────────────────────────────────────────────────
+function openNumberPicker(studentId, title, mode) {
+  document.getElementById('number-picker-student-id').value = studentId;
+  document.getElementById('number-picker-book-title').value = title;
+  document.getElementById('number-picker-mode').value = mode;
+  document.getElementById('number-picker-title').textContent = 'Mark as completed: ' + title;
+  document.getElementById('number-picker-value').value = '';
+  document.getElementById('number-picker-modal').classList.add('open');
+  setTimeout(() => document.getElementById('number-picker-value').focus(), 100);
+}
+
+function closeNumberPicker() {
+  document.getElementById('number-picker-modal').classList.remove('open');
+}
+
+function confirmNumberPicker() {
+  const id    = document.getElementById('number-picker-student-id').value;
+  const title = document.getElementById('number-picker-book-title').value;
+  const mode  = document.getElementById('number-picker-mode').value;
+  const num   = document.getElementById('number-picker-value').value.trim();
+  const fullTitle = num ? title + ' \u2014 ' + num : title;
+  closeNumberPicker();
+  if (mode === 'piece') completePiece(id, title, fullTitle);
+  else completeStudy(id, title, fullTitle);
+}
+
+function completedStudiesHTML(s) {
+  var completed = s.completedStudies || [];
+  var current = piecesDisplay(s);
+  var out = '';
+
+  if (completed.length === 0) {
+    out += '<p style="color:var(--muted);font-size:0.88rem">No completed studies yet.</p>';
+  } else {
+    completed.forEach(function(st, i) {
+      out += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--warm)">'
+        + '<span style="flex:1;font-size:0.9rem">\u2713 ' + esc(st.title) + '</span>'
+        + '<span style="font-size:0.75rem;color:var(--muted)">' + (st.date||'') + '</span>'
+        + '<button onclick="restoreStudy(\'' + s.id + '\',' + i + ')" style="background:none;border:none;color:var(--muted);font-size:0.8rem;cursor:pointer" title="Move back to current">\u21a9</button>'
+        + '</div>';
+    });
+  }
+
+  if (current.length > 0) {
+    out += '<div style="margin-top:12px"><div class="section-label" style="margin-bottom:6px">Mark current piece/study as completed study</div>';
+    current.forEach(function(p) {
+      out += '<button onclick="openNumberPicker(\'' + s.id + '\',\'' + esc(p) + '\',\'study\')" '
+        + 'style="display:block;width:100%;text-align:left;padding:8px 12px;margin-bottom:6px;border-radius:9px;border:1.5px solid #e0ddd8;background:transparent;font-size:0.85rem;cursor:pointer;color:var(--ink)">'
+        + '\u2713 Mark done: ' + esc(p) + '</button>';
+    });
+    out += '</div>';
+  }
+  return out;
+}
+
+function completeStudy(id, title, fullTitle) {
+  const s = getStudent(id); if (!s) return;
+  if (!s.completedStudies) s.completedStudies = [];
+  const displayTitle = fullTitle || title;
+  s.completedStudies.push({ title: displayTitle, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) });
+  save();
+  renderDetail(s);
+  document.querySelectorAll('.moment-tab').forEach(t => { if (t.textContent === 'History') t.click(); });
+}
+
+function restoreStudy(id, idx) {
+  const s = getStudent(id); if (!s || !s.completedStudies) return;
+  s.completedStudies.splice(idx, 1);
+  save();
+  renderDetail(s);
+  document.querySelectorAll('.moment-tab').forEach(t => { if (t.textContent === 'History') t.click(); });
+}
+
+function completedPiecesHTML(s) {
+  var out = '';
+  var completed = s.completedPieces || [];
+  var current = piecesDisplay(s);
+  if (completed.length === 0) {
+    out += '<p style="color:var(--muted);font-size:0.88rem">No completed pieces yet. Move a current piece here when it\'s finished.</p>';
+  } else {
+    completed.forEach(function(p, i) {
+      out += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--warm)">'
+        + '<span style="flex:1;font-size:0.9rem">\u2713 ' + esc(p.title) + '</span>'
+        + '<span style="font-size:0.75rem;color:var(--muted)">' + (p.date||'') + '</span>'
+        + '<button onclick="restorePiece(\'' + s.id + '\',' + i + ')" style="background:none;border:none;color:var(--muted);font-size:0.8rem;cursor:pointer" title="Move back to current">\u21a9</button>'
+        + '</div>';
+    });
+  }
+  if (current.length > 0) {
+    out += '<div style="margin-top:12px"><div class="section-label" style="margin-bottom:6px">Move current piece to completed</div>';
+    current.forEach(function(p) {
+      out += '<button onclick="openNumberPicker(\'' + s.id + '\',\'' + esc(p) + '\',\'piece\')" '
+        + 'style="display:block;width:100%;text-align:left;padding:8px 12px;margin-bottom:6px;border-radius:9px;border:1.5px solid #e0ddd8;background:transparent;font-size:0.85rem;cursor:pointer;color:var(--ink)">'
+        + '\u2713 Mark done: ' + esc(p) + '</button>';
+    });
+    out += '</div>';
+  }
+  return out;
+}
+
+// ── COMPLETED SCALES ───────────────────────────────────────────────────────
+function completeScaleKey(id, key) {
+  const s = getStudent(id); if (!s) return;
+  if (!s.completedScales) s.completedScales = [];
+  if (s.completedScales.some(cs => cs.key === key)) return;
+  s.completedScales.push({ key, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) });
+  if (s.scaleKeys) s.scaleKeys = s.scaleKeys.filter(k => k !== key);
+  if (s.scaleChecklist) delete s.scaleChecklist[key];
+  save();
+  renderDetail(s);
+  document.querySelectorAll('.moment-tab').forEach(t => { if (t.textContent === 'History') t.click(); });
+}
+
+function restoreScale(id, idx) {
+  const s = getStudent(id); if (!s || !s.completedScales) return;
+  const cs = s.completedScales[idx]; if (!cs) return;
+  s.completedScales.splice(idx, 1);
+  if (!s.scaleKeys) s.scaleKeys = [];
+  if (!s.scaleKeys.includes(cs.key)) s.scaleKeys.push(cs.key);
+  save();
+  renderDetail(s);
+  document.querySelectorAll('.moment-tab').forEach(t => { if (t.textContent === 'History') t.click(); });
+}
+
+function completedScalesHTML(s) {
+  var completed = s.completedScales || [];
+  var activeKeys = s.scaleKeys || [];
+  var out = '';
+
+  if (completed.length === 0) {
+    out += '<p style="color:var(--muted);font-size:0.88rem">No completed scale keys yet.</p>';
+  } else {
+    out += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
+    completed.forEach(function(cs, i) {
+      out += '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--warm);border-radius:8px">'
+        + '<span style="flex:1;font-size:0.9rem;font-weight:600">\u2713 ' + esc(cs.key) + '</span>'
+        + '<span style="font-size:0.72rem;color:var(--muted)">' + (cs.date||'') + '</span>'
+        + '<button onclick="restoreScale(\'' + s.id + '\',' + i + ')" style="background:none;border:none;color:var(--muted);font-size:0.8rem;cursor:pointer" title="Restore">\u21a9</button>'
+        + '</div>';
+    });
+    out += '</div>';
+  }
+
+  if (activeKeys.length > 0) {
+    out += '<div style="margin-top:8px"><div class="section-label" style="margin-bottom:6px">Mark key as fully completed</div>';
+    out += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+    activeKeys.forEach(function(k) {
+      out += '<button onclick="completeScaleKey(\'' + s.id + '\',\'' + k + '\')" '
+        + 'style="padding:6px 14px;border-radius:999px;border:1.5px solid #e0ddd8;background:transparent;font-size:0.85rem;cursor:pointer;color:var(--ink)">'
+        + '\u2713 ' + esc(k) + '</button>';
+    });
+    out += '</div></div>';
+  }
+
+  return out;
+}
 
 function birthdayDisplay(dob) {
   if (!dob) return '';
@@ -2772,7 +3022,7 @@ function buildCumulativeNote(s) {
 }
 
 function refSummary(s) {
-  var pieces    = (s.pieces||[]).filter(Boolean);
+  var pieces    = piecesDisplay(s);
   var scales    = (s.scales||[]);
   var tech      = (s.techFocus||[]).filter(Boolean);
   var plan      = (s.nextLesson||'').trim();
@@ -2898,131 +3148,254 @@ function selectScaleKey(key) {
   });
 }
 
-function scalesHTML(s) {
-  const scales = s.scales || [];
-  if (scales.length === 0) return '<p style="color:var(--muted);font-size:0.88rem">No scales assigned yet.</p>';
+// ── SCALE CHECKLIST ───────────────────────────────────────────────────────
+const SCALE_TYPES = [
+  'Major scale',
+  'Major arpeggio',
+  'Harmonic minor scale',
+  'Melodic minor scale',
+  'Minor arpeggio',
+  'Dominant 7th',
+  'Diminished 7th',
+  'Chromatic scale'
+];
+const SCALE_OCTAVES = ['1', '2', '3'];
+const DS_TYPES = ['3rds', '6ths', 'Octaves'];
 
-  // Group by progress
-  const groups = {};
-  scales.forEach((sc, i) => {
-    const p = sc.progress || 'Working on it';
-    if (!groups[p]) groups[p] = [];
-    groups[p].push({ sc, i });
-  });
-
-  const order = ['Needs review', 'Working on it', 'Getting there', 'Secure'];
-  return order.filter(p => groups[p]).map(p => `
-    <div style="background:var(--warm);border-radius:10px;padding:10px 12px">
-      <div style="font-size:0.75rem;font-weight:700;color:${PROGRESS_COLOURS[p]};margin-bottom:8px">${PROGRESS_DOTS[p]} ${p}</div>
-      ${groups[p].map(({sc, i}) => `
-        <div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(0,0,0,0.06)">
-          <div style="flex:1;min-width:0">
-            <div style="font-size:0.92rem;font-weight:600">${esc(sc.key||'')} ${esc(sc.type||'')}</div>
-            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;word-break:break-word">${esc(sc.octaves||'')} · ${esc(sc.bowing||'')}${sc.notes ? ' · ' + esc(sc.notes) : ''}</div>
-          </div>
-          <div style="display:flex;gap:4px;flex-shrink:0">
-            <button onclick="editScale('${s.id}',${i})" style="background:none;border:1.5px solid var(--viola);border-radius:6px;padding:3px 8px;color:var(--viola);cursor:pointer;font-size:0.75rem;font-family:'Special Elite',cursive">Edit</button>
-            <button onclick="deleteScale('${s.id}',${i})" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:3px 8px;color:var(--muted);cursor:pointer;font-size:0.75rem;font-family:'Special Elite',cursive">×</button>
-          </div>
-        </div>`).join('')}
-    </div>`).join('');
+function getScaleChecklist(s) {
+  return s.scaleChecklist || {};
 }
 
-function openAddScaleModal(studentId, editIdx) {
-  scaleSelectedKeys = [];
-  document.getElementById('scale-student-id').value = studentId;
-  document.getElementById('scale-edit-idx').value   = editIdx !== undefined ? editIdx : '';
-  document.getElementById('scale-type').value = 'Major scale';
-  document.getElementById('scale-notes').value = '';
-  document.querySelector('input[name="scale-octaves"][value="2 octaves"]').checked = true;
-  document.querySelector('input[name="scale-bowing"][value="Separate"]').checked   = true;
-  document.querySelector('input[name="scale-progress"][value="Working on it"]').checked = true;
-  // Reset key buttons
-  document.querySelectorAll('.key-btn').forEach(btn => {
-    btn.style.background  = 'transparent';
-    btn.style.color       = 'var(--ink)';
-    btn.style.borderColor = '#e0ddd8';
-  });
-  // If editing, pre-fill single key
-  if (editIdx !== undefined) {
-    const s = getStudent(studentId);
-    const sc = s && s.scales && s.scales[editIdx];
-    if (sc) {
-      scaleSelectedKeys = [sc.key || ''];
-      selectScaleKey(sc.key || '');
-      // re-select just that one
-      scaleSelectedKeys = [sc.key || ''];
-      document.querySelectorAll('.key-btn').forEach(btn => {
-        const selected = btn.dataset.key === sc.key;
-        btn.style.background  = selected ? 'var(--viola)' : 'transparent';
-        btn.style.color       = selected ? '#fff' : 'var(--ink)';
-        btn.style.borderColor = selected ? 'var(--viola)' : '#e0ddd8';
-      });
-      document.getElementById('scale-type').value = sc.type || 'Major scale';
-      document.getElementById('scale-notes').value = sc.notes || '';
-      const octBtn = document.querySelector(`input[name="scale-octaves"][value="${sc.octaves}"]`);
-      if (octBtn) octBtn.checked = true;
-      const bowBtn = document.querySelector(`input[name="scale-bowing"][value="${sc.bowing}"]`);
-      if (bowBtn) bowBtn.checked = true;
-      const progBtn = document.querySelector(`input[name="scale-progress"][value="${sc.progress}"]`);
-      if (progBtn) progBtn.checked = true;
-    }
-  }
-  document.getElementById('add-scale-modal').classList.add('open');
-}
-
-function closeAddScaleModal() {
-  document.getElementById('add-scale-modal').classList.remove('open');
-}
-
-function saveScale() {
-  const studentId = document.getElementById('scale-student-id').value;
-  const editIdx   = document.getElementById('scale-edit-idx').value;
+function scaleCheckKey(studentId, key, type, octave) {
+  // key like "C", type like "Major scale", octave "1"/"2"/"3"
   const s = getStudent(studentId); if (!s) return;
-  if (!s.scales) s.scales = [];
-
-  const type     = document.getElementById('scale-type').value;
-  const octaves  = document.querySelector('input[name="scale-octaves"]:checked').value;
-  const bowing   = document.querySelector('input[name="scale-bowing"]:checked').value;
-  const progress = document.querySelector('input[name="scale-progress"]:checked').value;
-  const notes    = document.getElementById('scale-notes').value.trim();
-
-  if (editIdx !== '') {
-    // Editing — update single entry with first selected key
-    s.scales[parseInt(editIdx)] = {
-      key: scaleSelectedKeys[0] || '', type, octaves, bowing, progress, notes
-    };
-  } else {
-    // Adding — create one entry per selected key
-    const keys = scaleSelectedKeys.length > 0 ? scaleSelectedKeys : [''];
-    keys.forEach(key => {
-      s.scales.push({ key, type, octaves, bowing, progress, notes });
-    });
-  }
-
-  save();
-  closeAddScaleModal();
-  renderDetail(s);
-  document.querySelectorAll('.moment-tab').forEach(t => { if(t.textContent==='Scales') t.click(); });
-}
-
-function editScale(studentId, idx) {
-  openAddScaleModal(studentId, idx);
-}
-
-function deleteScale(studentId, idx) {
-  const s = getStudent(studentId); if (!s || !s.scales) return;
-  s.scales.splice(idx, 1);
-  save();
-  renderDetail(s);
-  document.querySelectorAll('.moment-tab').forEach(t => { if(t.textContent==='Scales') t.click(); });
-}
-
-function updateScaleProgress(studentId, idx, progress) {
-  const s = getStudent(studentId); if (!s || !s.scales) return;
-  s.scales[idx].progress = progress;
+  if (!s.scaleChecklist) s.scaleChecklist = {};
+  if (!s.scaleChecklist[key]) s.scaleChecklist[key] = {};
+  if (!s.scaleChecklist[key][type]) s.scaleChecklist[key][type] = {};
+  const cur = s.scaleChecklist[key][type][octave];
+  s.scaleChecklist[key][type][octave] = !cur;
   save();
   document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
+}
+
+function naturalMinorCheckKey(studentId, key, octave) {
+  const s = getStudent(studentId); if (!s) return;
+  if (!s.naturalMinorChecklist) s.naturalMinorChecklist = {};
+  if (!s.naturalMinorChecklist[key]) s.naturalMinorChecklist[key] = {};
+  s.naturalMinorChecklist[key][octave] = !s.naturalMinorChecklist[key][octave];
+  save();
+  document.getElementById('natural-minor-list-' + studentId).innerHTML = naturalMinorHTML(s);
+}
+
+function doubleStopCheck(studentId, key, type) {
+  const s = getStudent(studentId); if (!s) return;
+  if (!s.doubleStopsChecklist) s.doubleStopsChecklist = {};
+  if (!s.doubleStopsChecklist[key]) s.doubleStopsChecklist[key] = {};
+  s.doubleStopsChecklist[key][type] = !s.doubleStopsChecklist[key][type];
+  save();
+  document.getElementById('double-stops-list-' + studentId).innerHTML = doubleStopsHTML(s);
+}
+
+function removeScaleKey(studentId, key) {
+  const s = getStudent(studentId); if (!s) return;
+  if (!confirm('Remove ' + key + ' from scale checklist?')) return;
+  if (s.scaleChecklist) delete s.scaleChecklist[key];
+  if (!s.scaleKeys) s.scaleKeys = [];
+  s.scaleKeys = s.scaleKeys.filter(k => k !== key);
+  save();
+  document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
+}
+
+function removeNaturalMinorKey(studentId, key) {
+  const s = getStudent(studentId); if (!s) return;
+  if (s.naturalMinorChecklist) delete s.naturalMinorChecklist[key];
+  if (s.naturalMinorKeys) s.naturalMinorKeys = s.naturalMinorKeys.filter(k => k !== key);
+  save();
+  document.getElementById('natural-minor-list-' + studentId).innerHTML = naturalMinorHTML(s);
+}
+
+function removeDoubleStopKey(studentId, key) {
+  const s = getStudent(studentId); if (!s) return;
+  if (s.doubleStopsChecklist) delete s.doubleStopsChecklist[key];
+  if (s.doubleStopKeys) s.doubleStopKeys = s.doubleStopKeys.filter(k => k !== key);
+  save();
+  document.getElementById('double-stops-list-' + studentId).innerHTML = doubleStopsHTML(s);
+}
+
+function scalesHTML(s) {
+  const keys = s.scaleKeys || [];
+  if (keys.length === 0) return '<p style="color:var(--muted);font-size:0.88rem">No keys added yet — tap \u201c+ Add key\u201d below.</p>';
+  const cl = s.scaleChecklist || {};
+
+  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">' +
+    keys.map(function(key) {
+      var ticks = cl[key] || {};
+      var rows = SCALE_TYPES.map(function(type) {
+        var cells = SCALE_OCTAVES.map(function(oct) {
+          var done = ticks[type] && ticks[type][oct];
+          return '<td style="text-align:center;padding:3px 4px">'
+            + '<button onclick="scaleCheckKey(\'' + s.id + '\',\'' + key + '\',\'' + type.replace(/'/g,"'") + '\',\'' + oct + '\')" '
+            + 'style="width:28px;height:28px;border-radius:6px;border:1.5px solid ' + (done ? 'var(--viola)' : '#e0ddd8') + ';'
+            + 'background:' + (done ? 'var(--viola)' : 'transparent') + ';'
+            + 'color:' + (done ? '#fff' : 'var(--muted)') + ';'
+            + 'cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;margin:auto">'
+            + (done ? '\u2713' : '') + '</button></td>';
+        }).join('');
+        return '<tr><td style="font-size:0.72rem;color:var(--muted);padding:3px 6px 3px 0;white-space:nowrap">' + esc(type) + '</td>' + rows + '</tr>';
+      }).join('');
+
+      // count completed
+      var total = SCALE_TYPES.length * 3;
+      var done = 0;
+      SCALE_TYPES.forEach(function(t) { SCALE_OCTAVES.forEach(function(o) { if(ticks[t]&&ticks[t][o]) done++; }); });
+
+      return '<div style="background:var(--warm);border-radius:10px;padding:10px 12px">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+        + '<span style="font-size:1.05rem;font-weight:700">' + esc(key) + '</span>'
+        + '<span style="font-size:0.7rem;color:var(--muted)">' + done + '/' + total + '</span>'
+        + '<button onclick="removeScaleKey(\'' + s.id + '\',\'' + key + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem;padding:0 0 0 8px">\u00d7</button>'
+        + '</div>'
+        + '<table style="width:100%;border-collapse:collapse">'
+        + '<thead><tr>'
+        + '<th style="font-size:0.65rem;color:var(--muted);text-align:left;padding:2px 0;font-weight:600"></th>'
+        + '<th style="font-size:0.65rem;color:var(--muted);text-align:center;padding:2px 4px;font-weight:600">1</th>'
+        + '<th style="font-size:0.65rem;color:var(--muted);text-align:center;padding:2px 4px;font-weight:600">2</th>'
+        + '<th style="font-size:0.65rem;color:var(--muted);text-align:center;padding:2px 4px;font-weight:600">3</th>'
+        + '</tr></thead><tbody>'
+        + SCALE_TYPES.map(function(type) {
+            var cells = SCALE_OCTAVES.map(function(oct) {
+              var isDone = ticks[type] && ticks[type][oct];
+              return '<td style="text-align:center;padding:3px 2px">'
+                + '<button onclick="scaleCheckKey(\'' + s.id + '\',\'' + key + '\',\'' + type + '\',\'' + oct + '\')" '
+                + 'style="width:26px;height:26px;border-radius:6px;border:1.5px solid ' + (isDone ? 'var(--viola)' : '#e0ddd8') + ';'
+                + 'background:' + (isDone ? 'var(--viola)' : 'transparent') + ';'
+                + 'color:' + (isDone ? '#fff' : '#ccc') + ';'
+                + 'cursor:pointer;font-size:0.8rem;font-weight:700;margin:auto;display:block">'
+                + (isDone ? '\u2713' : '') + '</button></td>';
+            }).join('');
+            return '<tr><td style="font-size:0.68rem;color:var(--muted);padding:3px 4px 3px 0;line-height:1.3">' + esc(type) + '</td>' + cells + '</tr>';
+          }).join('')
+        + '</tbody></table></div>';
+    }).join('') + '</div>';
+}
+
+function naturalMinorHTML(s) {
+  var keys = s.naturalMinorKeys || [];
+  if (keys.length === 0) return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No natural minor keys added.</p>';
+  var cl = s.naturalMinorChecklist || {};
+  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+    keys.map(function(key) {
+      var ticks = cl[key] || {};
+      var cells = SCALE_OCTAVES.map(function(oct) {
+        var isDone = ticks[oct];
+        return '<td style="text-align:center;padding:3px 2px">'
+          + '<button onclick="naturalMinorCheckKey(\'' + s.id + '\',\'' + key + '\',\'' + oct + '\')" '
+          + 'style="width:26px;height:26px;border-radius:6px;border:1.5px solid ' + (isDone ? 'var(--viola)' : '#e0ddd8') + ';'
+          + 'background:' + (isDone ? 'var(--viola)' : 'transparent') + ';'
+          + 'color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.8rem;font-weight:700;margin:auto;display:block">'
+          + (isDone ? '\u2713' : '') + '</button></td>';
+      }).join('');
+      return '<div style="background:var(--warm);border-radius:10px;padding:10px 12px">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+        + '<span style="font-size:1rem;font-weight:700">' + esc(key) + '</span>'
+        + '<button onclick="removeNaturalMinorKey(\'' + s.id + '\',\'' + key + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem">\u00d7</button>'
+        + '</div>'
+        + '<table style="width:100%;border-collapse:collapse">'
+        + '<thead><tr><th></th><th style="font-size:0.65rem;color:var(--muted);text-align:center;font-weight:600">1</th><th style="font-size:0.65rem;color:var(--muted);text-align:center;font-weight:600">2</th><th style="font-size:0.65rem;color:var(--muted);text-align:center;font-weight:600">3</th></tr></thead>'
+        + '<tbody><tr><td style="font-size:0.68rem;color:var(--muted);padding:3px 4px 3px 0">Natural minor</td>' + cells + '</tr></tbody></table>'
+        + '</div>';
+    }).join('') + '</div>';
+}
+
+function doubleStopsHTML(s) {
+  var keys = s.doubleStopKeys || [];
+  if (keys.length === 0) return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No double stop keys added.</p>';
+  var cl = s.doubleStopsChecklist || {};
+  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+    keys.map(function(key) {
+      var ticks = cl[key] || {};
+      var rows = DS_TYPES.map(function(type) {
+        var isDone = ticks[type];
+        return '<tr><td style="font-size:0.68rem;color:var(--muted);padding:3px 4px 3px 0">' + esc(type) + '</td>'
+          + '<td style="text-align:center;padding:3px 2px">'
+          + '<button onclick="doubleStopCheck(\'' + s.id + '\',\'' + key + '\',\'' + type + '\')" '
+          + 'style="width:26px;height:26px;border-radius:6px;border:1.5px solid ' + (isDone ? 'var(--viola)' : '#e0ddd8') + ';'
+          + 'background:' + (isDone ? 'var(--viola)' : 'transparent') + ';'
+          + 'color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.8rem;font-weight:700;margin:auto;display:block">'
+          + (isDone ? '\u2713' : '') + '</button></td></tr>';
+      }).join('');
+      return '<div style="background:var(--warm);border-radius:10px;padding:10px 12px">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+        + '<span style="font-size:1rem;font-weight:700">' + esc(key) + '</span>'
+        + '<button onclick="removeDoubleStopKey(\'' + s.id + '\',\'' + key + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem">\u00d7</button>'
+        + '</div>'
+        + '<table style="width:100%;border-collapse:collapse"><tbody>' + rows + '</tbody></table>'
+        + '</div>';
+    }).join('') + '</div>';
+}
+
+// ── KEY MODAL (shared for main / natural minor / double stops) ──────────────
+let _keyModalMode = 'main'; // 'main' | 'naturalMinor' | 'doubleStop'
+
+function openAddKeyModal(studentId) {
+  _keyModalMode = 'main';
+  scaleSelectedKeys = [];
+  document.getElementById('key-modal-student-id').value = studentId;
+  document.querySelectorAll('.key-btn').forEach(function(btn) {
+    btn.style.background = 'transparent';
+    btn.style.color = 'var(--ink)';
+    btn.style.borderColor = '#e0ddd8';
+  });
+  document.getElementById('add-key-modal').classList.add('open');
+}
+
+function openAddNaturalMinorModal(studentId) {
+  _keyModalMode = 'naturalMinor';
+  scaleSelectedKeys = [];
+  document.getElementById('key-modal-student-id').value = studentId;
+  document.querySelectorAll('.key-btn').forEach(function(btn) {
+    btn.style.background = 'transparent';
+    btn.style.color = 'var(--ink)';
+    btn.style.borderColor = '#e0ddd8';
+  });
+  document.getElementById('add-key-modal').classList.add('open');
+}
+
+function openAddDoubleStopModal(studentId) {
+  _keyModalMode = 'doubleStop';
+  scaleSelectedKeys = [];
+  document.getElementById('key-modal-student-id').value = studentId;
+  document.querySelectorAll('.key-btn').forEach(function(btn) {
+    btn.style.background = 'transparent';
+    btn.style.color = 'var(--ink)';
+    btn.style.borderColor = '#e0ddd8';
+  });
+  document.getElementById('add-key-modal').classList.add('open');
+}
+
+function closeAddKeyModal() {
+  document.getElementById('add-key-modal').classList.remove('open');
+}
+
+function confirmAddKeys() {
+  var studentId = document.getElementById('key-modal-student-id').value;
+  var s = getStudent(studentId); if (!s || scaleSelectedKeys.length === 0) { closeAddKeyModal(); return; }
+  if (_keyModalMode === 'main') {
+    if (!s.scaleKeys) s.scaleKeys = [];
+    scaleSelectedKeys.forEach(function(k) { if (!s.scaleKeys.includes(k)) s.scaleKeys.push(k); });
+    save(); closeAddKeyModal();
+    document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
+  } else if (_keyModalMode === 'naturalMinor') {
+    if (!s.naturalMinorKeys) s.naturalMinorKeys = [];
+    scaleSelectedKeys.forEach(function(k) { if (!s.naturalMinorKeys.includes(k)) s.naturalMinorKeys.push(k); });
+    save(); closeAddKeyModal();
+    document.getElementById('natural-minor-list-' + studentId).innerHTML = naturalMinorHTML(s);
+  } else {
+    if (!s.doubleStopKeys) s.doubleStopKeys = [];
+    scaleSelectedKeys.forEach(function(k) { if (!s.doubleStopKeys.includes(k)) s.doubleStopKeys.push(k); });
+    save(); closeAddKeyModal();
+    document.getElementById('double-stops-list-' + studentId).innerHTML = doubleStopsHTML(s);
+  }
 }
 
 
@@ -3874,14 +4247,21 @@ function clearAttDates(id) {
 
 // ── CONTACT LOG ───────────────────────────────────────────────────────────
 // ── COMPLETED PIECES ──────────────────────────────────────────────────────
-function completePiece(id, title) {
+function completePiece(id, title, fullTitle) {
   const s = getStudent(id); if (!s) return;
   if (!s.completedPieces) s.completedPieces = [];
-  s.completedPieces.push({ title, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) });
-  s.pieces = (s.pieces||[]).filter(p => p !== title);
-  if (s.pieces.length === 0) s.pieces = [''];
+  const displayTitle = fullTitle || title;
+  s.completedPieces.push({ title: displayTitle, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) });
+  // Remove the matching piece by base title (strip ref if present)
+  const baseTitle = title.split(' \u2014 ')[0];
+  const idx = (s.pieces||[]).findIndex(p => p === baseTitle);
+  if (idx >= 0) {
+    s.pieces.splice(idx, 1);
+    if (s.pieceRefs) s.pieceRefs.splice(idx, 1);
+  }
+  if (!s.pieces || s.pieces.length === 0) s.pieces = [''];
   save(); renderDetail(s);
-  document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===5) t.click(); });
+  document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===4) t.click(); });
 }
 function restorePiece(id, idx) {
   const s = getStudent(id); if (!s) return;
@@ -4004,7 +4384,7 @@ function closeExportModal() {
 
 function buildPupilHTML(s, term) {
   const slot = effectiveSlot(s);
-  const pieces = (s.pieces||[]).filter(Boolean);
+  const pieces = piecesDisplay(s);
   const goals = s.goals || {};
   const log = s.log || [];
   return `
@@ -4046,7 +4426,7 @@ function buildPupilHTML(s, term) {
 
 function buildPupilPlainText(s, term) {
   const slot = effectiveSlot(s);
-  const pieces = (s.pieces||[]).filter(Boolean);
+  const pieces = piecesDisplay(s);
   const goals = s.goals || {};
   const log = s.log || [];
   let txt = s.name + '\n';
