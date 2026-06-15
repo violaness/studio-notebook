@@ -1861,25 +1861,30 @@ function renderDetail(s) {
           oninput="updateField('${s.id}','pupilNotes',this.value)"
           style="background:transparent;border-color:rgba(0,0,0,0.1)">${esc(s.pupilNotes||'')}</textarea>
       </div>
-      <div class="section-card">
-        <div class="section-label">📅 Requested absences</div>
-        ${absencesHTML(s)}
-        <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
-          <div>
-            <label style="font-size:0.68rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Date</label>
-            <input type="date" id="absence-date-${s.id}"
-              style="width:100%;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);box-sizing:border-box">
+      <details style="margin-bottom:4px">
+        <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
+          <span>📅 Requested absences${(s.absences&&s.absences.filter(a=>new Date(a.date)>=new Date()).length)?` <span style="background:#e67e22;color:#fff;font-size:0.65rem;padding:1px 6px;border-radius:999px;margin-left:6px">${s.absences.filter(a=>new Date(a.date)>=new Date()).length}</span>`:''}</span>
+          <span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+        </summary>
+        <div class="section-card" style="margin-top:6px">
+          ${absencesHTML(s)}
+          <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+            <div>
+              <label style="font-size:0.68rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Date</label>
+              <input type="date" id="absence-date-${s.id}"
+                style="width:100%;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);box-sizing:border-box">
+            </div>
+            <div>
+              <label style="font-size:0.68rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Note (optional)</label>
+              <input type="text" id="absence-note-${s.id}" placeholder="e.g. school trip, holiday…"
+                style="width:100%;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);box-sizing:border-box"
+                onkeydown="if(event.key==='Enter')addAbsence('${s.id}')">
+            </div>
+            <button onclick="addAbsence('${s.id}')"
+              style="width:100%;background:var(--viola);color:#fff;border:none;border-radius:8px;padding:10px 14px;font-family:'Special Elite',cursive;font-size:0.88rem;font-weight:600;cursor:pointer">Add absence</button>
           </div>
-          <div>
-            <label style="font-size:0.68rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Note (optional)</label>
-            <input type="text" id="absence-note-${s.id}" placeholder="e.g. school trip, holiday…"
-              style="width:100%;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);box-sizing:border-box"
-              onkeydown="if(event.key==='Enter')addAbsence('${s.id}')">
-          </div>
-          <button onclick="addAbsence('${s.id}')"
-            style="width:100%;background:var(--viola);color:#fff;border:none;border-radius:8px;padding:10px 14px;font-family:'Special Elite',cursive;font-size:0.88rem;font-weight:600;cursor:pointer">Add absence</button>
         </div>
-      </div>
+      </details>
     </div>
 
     <!-- DURING -->
