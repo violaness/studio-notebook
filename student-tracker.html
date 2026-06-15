@@ -78,9 +78,7 @@
   .view.active { display: block; }
 
   @media (min-width: 700px) {
-    #today-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
     #week-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
-    #roster-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
   }
 
   /* ── TIMETABLE ── */
@@ -1853,7 +1851,7 @@ function renderDetail(s) {
       </div>
       <div class="section-card">
         <div class="section-label">📌 Plan for today's lesson</div>
-        <textarea rows="3" placeholder="What you want to cover today…"
+        <textarea rows="8" placeholder="What you want to cover today…"
           oninput="updateField('${s.id}','nextLesson',this.value)">${esc(s.nextLesson||'')}</textarea>
         ${(s.log||[]).filter(e=>e.text).length > 0 ? `
         <button onclick="copyLastLesson('${s.id}')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;width:100%">↑ Copy last lesson notes as plan</button>` : ''}
@@ -1863,7 +1861,7 @@ function renderDetail(s) {
       </div>
       <div class="section-card" style="background:var(--warm)">
         <div class="section-label">Pupil notes</div>
-        <textarea rows="2" placeholder="Long-term notes about this pupil — learning style, what works, exam plans…"
+        <textarea rows="5" placeholder="Long-term notes about this pupil — learning style, what works, exam plans…"
           oninput="updateField('${s.id}','pupilNotes',this.value)"
           style="background:transparent;border-color:rgba(0,0,0,0.1)">${esc(s.pupilNotes||'')}</textarea>
       </div>
@@ -1898,7 +1896,7 @@ function renderDetail(s) {
       ${refSummary(s)}
       <div class="section-card">
         <div class="section-label">Quick notes — right now</div>
-        <textarea class="quick-note" rows="5"
+        <textarea class="quick-note" rows="14"
           placeholder="Jot anything — key words, reminders, 'try this'…"
           id="during-scratch-${s.id}"
           oninput="saveDuring('${s.id}')">${esc(s.duringScratch || (s.nextLesson ? '📌 Plan:\n' + s.nextLesson + '\n\n' : ''))}</textarea>
@@ -1951,7 +1949,7 @@ function renderDetail(s) {
       <div class="section-card">
         <div class="section-label">Lesson notes</div>
         <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">Built from your plan and during-lesson notes — edit freely before saving to the log.</div>
-        <textarea rows="7" placeholder="What went well, what to remember for next time…"
+        <textarea rows="14" placeholder="What went well, what to remember for next time…"
           id="after-note-${s.id}"
           oninput="this.dataset.edited='1'">${buildCumulativeNote(s)}</textarea>
         <button class="save-btn" onclick="saveLog('${s.id}')">Save to lesson log</button>
