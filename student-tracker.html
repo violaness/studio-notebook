@@ -1748,7 +1748,7 @@ function renderDetail(s) {
       <button onclick="openEditModal('${s.id}')" style="background:none;border:1.5px solid var(--viola);border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--viola);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Edit pupil">✏️ Edit</button>
       <button onclick="openTimerModal('${s.name}','${s.duration||60}')" style="background:var(--violin);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Lesson timer">⏱ Timer</button>
       <button onclick="openExtraLessonModal('${s.id}')" style="background:var(--string);color:#05270B;border:none;border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Add extra lesson this week">＋ Extra</button>
-      <button onclick="exportSinglePupil('${s.id}')" style="background:#29789E;color:#fff;border:none;border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Download &amp; email lesson report">✉ Report</button>
+      <button onclick="exportSinglePupil('${s.id}')" style="background:#29789E;color:#fff;border:none;border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Download &amp; email practice plan">✉ Practice Plan</button>
     </div>
     ${nextPupilHTML(s)}
 
@@ -4470,7 +4470,7 @@ function exportHTML(pupils, term) {
   const isSingle = pupils.length === 1;
   const singlePupil = isSingle ? pupils[0] : null;
   const emailTo = isSingle && singlePupil.email ? singlePupil.email : '';
-  const emailSubject = isSingle ? encodeURIComponent('Lesson notes — ' + singlePupil.name + ' — ' + termLabel) : '';
+  const emailSubject = isSingle ? encodeURIComponent('Practice Plan — ' + singlePupil.name + ' — ' + termLabel) : '';
   const rawBody = isSingle ? buildPupilPlainText(singlePupil, term) : '';
   // Trim body if it would make the mailto URL too long for iOS Mail (cap ~1800 chars of body)
   const trimmedBody = rawBody.length > 1800 ? rawBody.slice(0, 1800) + '\n\n[truncated — see full report]' : rawBody;
