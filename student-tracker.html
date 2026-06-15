@@ -2131,11 +2131,12 @@ function updatePieceRef(id, i, val) { const s=getStudent(id); if(s){if(!s.pieceR
 function pieceDisplayTitle(s, i) {
   const title = (s.pieces||[])[i] || '';
   const ref   = (s.pieceRefs||[])[i] || '';
-  return ref ? title + ' \u2014 ' + ref : title;
+  return ref ? title + ' - ' + ref : title;
 }
 
 function piecesDisplay(s) {
-  return (s.pieces||[]).filter(Boolean).map(function(p, i) {
+  return (s.pieces||[]).map(function(p, i) {
+    if (!p) return null;
     return pieceDisplayTitle(s, i);
   }).filter(Boolean);
 }
