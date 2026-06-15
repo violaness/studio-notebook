@@ -74,8 +74,14 @@
   .nav-tab.active { color: var(--string); border-bottom-color: var(--string); font-weight: 700; }
 
   /* ── VIEWS ── */
-  .view { display: none; padding: 16px; max-width: 700px; margin: 0 auto; }
+  .view { display: none; padding: 20px 24px; width: 100%; box-sizing: border-box; }
   .view.active { display: block; }
+
+  @media (min-width: 700px) {
+    #today-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+    #week-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+    #roster-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+  }
 
   /* ── TIMETABLE ── */
   .today-date {
@@ -591,7 +597,7 @@
 </div>
 
 <!-- PERSISTENT TEACHING NOTES BAR -->
-<div id="teaching-notes-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:#fffef0;border-top:1.5px dashed #c9a84c;padding:10px 16px;max-width:700px;margin:0 auto">
+<div id="teaching-notes-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:#fffef0;border-top:1.5px dashed #c9a84c;padding:10px 16px">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
     <div style="font-size:0.7rem;font-weight:700;color:#8a7a3a">📝 Teaching day notes</div>
     <div style="display:flex;gap:8px;align-items:center">
@@ -1180,7 +1186,7 @@
 </div>
 
 <!-- FLOATING TIMER BAR -->
-<div id="floating-timer" style="display:none;position:fixed;top:0;left:0;right:0;z-index:200;max-width:700px;margin:0 auto">
+<div id="floating-timer" style="display:none;position:fixed;top:0;left:0;right:0;z-index:200">
   <div style="background:var(--viola);color:#fff;padding:8px 16px;display:flex;align-items:center;gap:10px">
     <span id="ft-name" style="font-size:0.82rem;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></span>
     <span id="ft-display" style="font-size:1.1rem;font-weight:700;font-family:'Special Elite',cursive;flex-shrink:0"></span>
@@ -1872,7 +1878,7 @@ function renderDetail(s) {
             <div>
               <label style="font-size:0.68rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Date</label>
               <input type="date" id="absence-date-${s.id}"
-                style="width:100%;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);box-sizing:border-box">
+                style="display:block;width:100%;min-height:44px;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none">
             </div>
             <div>
               <label style="font-size:0.68rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Note (optional)</label>
@@ -2020,12 +2026,12 @@ function renderDetail(s) {
           <div>
             <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">From</label>
             <input type="date" id="att-from-${s.id}" onchange="renderAttendanceChart('${s.id}')"
-              style="width:100%;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box">
+              style="display:block;width:100%;min-height:44px;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none">
           </div>
           <div>
             <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">To</label>
             <input type="date" id="att-to-${s.id}" onchange="renderAttendanceChart('${s.id}')"
-              style="width:100%;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box">
+              style="display:block;width:100%;min-height:44px;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none">
           </div>
           <button onclick="clearAttDates('${s.id}')" style="background:none;border:1.5px solid var(--warm);border-radius:8px;padding:8px 10px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer">All time</button>
         </div>
