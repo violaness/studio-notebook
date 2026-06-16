@@ -1203,8 +1203,8 @@
 <div style="position:fixed;bottom:80px;right:16px;z-index:148;display:flex;flex-direction:column;gap:8px" id="floating-btns">
   <button onclick="openQuickCapture()" title="Quick note" style="background:#29789E;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">✏️</button>
   <button onclick="openEodModal()" title="End of day checklist" style="background:#8AB640;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">☑️</button>
-  <button onclick="openCalcModal()" title="Calculator" style="background:#2F5C1A;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">🧮</button>
-  <button onclick="openSpellModal()" title="Check spelling" style="background:#46C6E5;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">🔤</button>
+  <button onclick="openCalcModal()" title="Calculator" style="background:#29789E;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">🧮</button>
+  <button onclick="openSpellModal()" title="Check spelling" style="background:#8AB640;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">🔤</button>
 </div>
 
 <!-- SPELL CHECK MODAL -->
@@ -1235,22 +1235,22 @@
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
       <button onclick="calcInput('C')"    style="grid-column:span 2;background:#e8ddd8;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer;color:#c0392b;font-weight:700">C</button>
       <button onclick="calcInput('⌫')"   style="background:#e8ddd8;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">⌫</button>
-      <button onclick="calcInput('÷')"   style="background:#2F5C1A;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">÷</button>
+      <button onclick="calcInput('÷')"   style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">÷</button>
       <button onclick="calcInput('7')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">7</button>
       <button onclick="calcInput('8')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">8</button>
       <button onclick="calcInput('9')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">9</button>
-      <button onclick="calcInput('×')"   style="background:#2F5C1A;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">×</button>
+      <button onclick="calcInput('×')"   style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">×</button>
       <button onclick="calcInput('4')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">4</button>
       <button onclick="calcInput('5')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">5</button>
       <button onclick="calcInput('6')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">6</button>
-      <button onclick="calcInput('−')"   style="background:#2F5C1A;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">−</button>
+      <button onclick="calcInput('−')"   style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">−</button>
       <button onclick="calcInput('1')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">1</button>
       <button onclick="calcInput('2')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">2</button>
       <button onclick="calcInput('3')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">3</button>
-      <button onclick="calcInput('+')"   style="background:#2F5C1A;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">+</button>
+      <button onclick="calcInput('+')"   style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">+</button>
       <button onclick="calcInput('0')"   style="grid-column:span 2;background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">0</button>
       <button onclick="calcInput('.')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">.</button>
-      <button onclick="calcInput('=')"   style="background:#2F5C1A;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer;font-weight:700">=</button>
+      <button onclick="calcInput('=')"   style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer;font-weight:700">=</button>
     </div>
   </div>
 </div>
