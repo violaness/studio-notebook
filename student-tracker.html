@@ -918,7 +918,7 @@
     <div class="modal-actions" style="flex-direction:column;gap:10px">
       <button class="btn-primary" onclick="backupData()">💾&nbsp; Back up all data</button>
       <button class="btn-primary" style="background:var(--violin)" onclick="document.getElementById('restore-file-input').click()">📂&nbsp; Restore from backup</button>
-      <input type="file" id="restore-file-input" accept=".json" style="display:none" onchange="restoreData(event)">
+      <input type="file" id="restore-file-input" accept=".json" style="display:none;opacity:0;position:absolute;width:1px;height:1px" onchange="restoreData(event)">
       <button class="btn-ghost" onclick="closeBackupModal()">Cancel</button>
     </div>
   </div>
