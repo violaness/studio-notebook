@@ -1200,6 +1200,16 @@
 </div>
 
 <!-- QUICK CAPTURE + EOD FLOATING BUTTONS -->
+<!-- PENCIL KEYBOARD TOOLBAR -->
+<div id="pencil-kb" style="position:fixed;bottom:360px;right:10px;z-index:148;display:flex;flex-direction:column;gap:6px">
+  <button onclick="pencilKey('Return')" title="Return"
+    style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">↵<br>Return</button>
+  <button onclick="pencilKey('Space')" title="Space"
+    style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">⎵<br>Space</button>
+  <button onclick="pencilKey('Backspace')" title="Backspace"
+    style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">⌫<br>Delete</button>
+</div>
+
 <div style="position:fixed;bottom:80px;right:16px;z-index:148;display:flex;flex-direction:column;gap:8px" id="floating-btns">
   <button onclick="openQuickCapture()" title="Quick note" style="background:#29789E;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">✏️</button>
   <button onclick="openEodModal()" title="End of day checklist" style="background:#8AB640;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">☑️</button>
@@ -4253,6 +4263,29 @@ function saveQuickCapture() {
 }
 
 // ── END OF DAY CHECKLIST ──────────────────────────────────────────────────
+// ── PENCIL KEYBOARD ────────────────────────────────────────────────────────
+function pencilKey(key) {
+  const el = document.activeElement;
+  if (!el || (el.tagName !== 'TEXTAREA' && el.tagName !== 'INPUT')) return;
+  const start = el.selectionStart;
+  const end = el.selectionEnd;
+  const val = el.value;
+  if (key === 'Backspace') {
+    if (start === end && start > 0) {
+      el.value = val.slice(0, start - 1) + val.slice(end);
+      el.selectionStart = el.selectionEnd = start - 1;
+    } else if (start !== end) {
+      el.value = val.slice(0, start) + val.slice(end);
+      el.selectionStart = el.selectionEnd = start;
+    }
+  } else {
+    const insert = key === 'Space' ? ' ' : '\n';
+    el.value = val.slice(0, start) + insert + val.slice(end);
+    el.selectionStart = el.selectionEnd = start + insert.length;
+  }
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
 // ── SPELL CHECK ───────────────────────────────────────────────────────────
 function openSpellModal() {
   document.getElementById('spell-input').value = '';
