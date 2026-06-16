@@ -1836,17 +1836,17 @@ function renderDetail(s) {
       <div style="font-size:0.78rem;color:var(--muted);text-align:right;margin-bottom:8px">
         ${lessonCount(s)}
       </div>
-      <div class="section-card" style="background:var(--warm)">
-        <div class="section-label">Pupil notes</div>
-        <textarea rows="5" placeholder="Long-term notes about this pupil — learning style, what works, exam plans…"
-          oninput="updateField('${s.id}','pupilNotes',this.value)"
-          style="background:transparent;border-color:rgba(0,0,0,0.1)">${esc(s.pupilNotes||'')}</textarea>
-      </div>
       <div class="section-card" style="background:#eef6ff;border:1.5px solid #a8c8e8">
         <div class="section-label" style="color:#1a4a6b">📋 Note for next week</div>
         <textarea rows="3" placeholder="Anything to prepare or remember for next lesson…"
           oninput="updateField('${s.id}','nextWeekNote',this.value)"
           style="background:transparent;border-color:rgba(0,80,140,0.15)">${esc(s.nextWeekNote||'')}</textarea>
+      </div>
+      <div class="section-card" style="background:var(--warm)">
+        <div class="section-label">Pupil notes</div>
+        <textarea rows="5" placeholder="Long-term notes about this pupil — learning style, what works, exam plans…"
+          oninput="updateField('${s.id}','pupilNotes',this.value)"
+          style="background:transparent;border-color:rgba(0,0,0,0.1)">${esc(s.pupilNotes||'')}</textarea>
       </div>
       <details>
         <summary style="cursor:pointer;padding:10px 14px;background:#f5f0fb;border:1.5px solid var(--viola);border-radius:10px;list-style:none;display:flex;align-items:center;justify-content:space-between;font-size:0.82rem;font-weight:600;color:var(--viola)">
