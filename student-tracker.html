@@ -367,10 +367,11 @@
 
   /* ── BUTTONS ── */
   .save-btn {
-    width: 100%; background: var(--sage); color: #fff; border: none;
-    border-radius: var(--radius); padding: 14px;
-    font-family: 'Special Elite', cursive; font-size: 0.95rem; font-weight: 600;
-    cursor: pointer; margin-top: 8px; 
+    display: block; width: auto; margin: 10px auto 0;
+    background: var(--sage); color: #fff; border: none;
+    border-radius: var(--radius); padding: 9px 28px;
+    font-family: 'Special Elite', cursive; font-size: 0.85rem; font-weight: 600;
+    cursor: pointer;
   }
   .save-btn:hover { background: #2F5C1A; }
   .save-toast { text-align: center; color: var(--sage); font-weight: 600; font-size: 0.88rem; margin-top: 7px; opacity: 0; transition: opacity 0.3s; }
@@ -1991,6 +1992,7 @@ function renderDetail(s) {
         <div class="section-card" style="margin-top:6px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <div style="display:flex;gap:6px">
+              <button onclick="undoCanvas('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;color:var(--muted)" title="Undo last stroke">↩ Undo</button>
               <button onclick="clearCanvas('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;color:var(--muted)">Clear</button>
               <button onclick="saveCanvas('${s.id}')" style="background:var(--viola);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;font-weight:600">Save sketch</button>
             </div>
@@ -3603,6 +3605,7 @@ function confirmAddKeys() {
 
 
 const canvasState = {}; // per pupil: { colour, size, drawing, eraser }
+const canvasHistory = {}; // per pupil: array of image data snapshots for undo
 
 function initCanvas(id) {
   const canvas = document.getElementById('canvas-' + id);
@@ -3672,6 +3675,10 @@ function initCanvas(id) {
 
   function endDraw() {
     if (canvasState[id]) canvasState[id].drawing = false;
+    // Save snapshot for undo
+    if (!canvasHistory[id]) canvasHistory[id] = [];
+    canvasHistory[id].push(canvas.toDataURL());
+    if (canvasHistory[id].length > 30) canvasHistory[id].shift(); // limit history
     const s = getStudent(id);
     if (s) { s.canvasCurrent = canvas.toDataURL(); save(); }
   }
@@ -3685,6 +3692,24 @@ function initCanvas(id) {
   canvas.addEventListener('touchend',   endDraw);
 
   highlightColourBtn(id, '#05270B');
+}
+
+function undoCanvas(id) {
+  const canvas = document.getElementById('canvas-' + id); if (!canvas) return;
+  const history = canvasHistory[id];
+  if (!history || history.length === 0) return;
+  // Remove current state and restore previous
+  history.pop();
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.getBoundingClientRect();
+  ctx.clearRect(0, 0, rect.width, 220);
+  if (history.length > 0) {
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0, rect.width, 220);
+    img.src = history[history.length - 1];
+  }
+  const s = getStudent(id);
+  if (s) { s.canvasCurrent = history.length > 0 ? history[history.length-1] : ''; save(); }
 }
 
 function highlightColourBtn(id, col) {
