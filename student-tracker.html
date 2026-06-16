@@ -1544,10 +1544,22 @@ function renderWeek() {
     for (const s of activeStudents) {
       const slot = effectiveSlot(s);
       const moved = oneOffMoves[s.id] && oneOffMoves[s.id].week === currentWeek;
-      // Check today's attendance from log
-      const todayStr = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-      const todayLog = (s.log||[]).find(e => e.date === todayStr);
-      const att = todayLog ? todayLog.attendance : null;
+      // Check attendance for this pupil's lesson day this week
+      const DAYS_ORDER = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      const weekStart = new Date(); // find the Saturday that started this week
+      const todayDow = weekStart.getDay(); // 0=Sun,6=Sat
+      // Week runs Sat–Wed, so find the most recent Saturday
+      const daysSinceSat = (todayDow + 1) % 7;
+      weekStart.setDate(weekStart.getDate() - daysSinceSat);
+      // Find the date of this pupil's lesson day in the current week
+      const lessonDayIdx = DAYS_ORDER.indexOf(slot.day);
+      const lessonDate = new Date(weekStart);
+      let dayOffset = lessonDayIdx - 6; // 6 = Saturday
+      if (dayOffset < 0) dayOffset += 7;
+      lessonDate.setDate(weekStart.getDate() + dayOffset);
+      const lessonDateStr = lessonDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+      const lessonLog = (s.log||[]).find(e => e.date === lessonDateStr);
+      const att = lessonLog ? lessonLog.attendance : null;
       const attBadge = att === 'present'
         ? `<span style="font-size:1rem;margin-left:6px" title="Present">✅</span>`
         : att === 'absent-late' || att === 'absent-notice'
