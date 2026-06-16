@@ -2026,6 +2026,15 @@ function renderDetail(s) {
         <textarea rows="28" placeholder="What went well, what to remember for next time…"
           id="after-note-${s.id}"
           oninput="this.dataset.edited='1'">${buildCumulativeNote(s)}</textarea>
+        ${(()=>{
+          const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+          const todayEntry = (s.log||[]).find(e => e.date === today);
+          const sketches = todayEntry && todayEntry.sketches || s.canvasSaves && s.canvasSaves.filter(sv => sv.date === today).map(sv => sv.img) || [];
+          if (!sketches.length) return '';
+          return '<div style="margin-top:12px"><div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">📎 Sketches from this lesson</div>'
+            + sketches.map((img,i) => '<div style="margin-bottom:8px"><img src="' + img + '" style="width:100%;border-radius:8px;border:1px solid #e0ddd8;display:block"></div>').join('')
+            + '</div>';
+        })()}
         <button class="save-btn" onclick="saveLog('${s.id}')">Save to lesson log</button>
         <div class="save-toast" id="toast-after-${s.id}">✓ Added to log</div>
       </div>
