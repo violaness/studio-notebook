@@ -1213,13 +1213,13 @@
       <h2 style="margin:0">Check spelling</h2>
       <button onclick="closeSpellModal()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted)">×</button>
     </div>
-    <p style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;line-height:1.5">Type the word below — if it's misspelled it will be underlined in red. Tap the word then tap <strong>Replace...</strong> to see suggestions.</p>
-    <input type="text" id="spell-input" placeholder="Type a word…"
-      spellcheck="true"
-      autocorrect="on"
-      autocapitalize="none"
-      style="font-size:1.2rem;width:100%;box-sizing:border-box">
-    <button onclick="closeSpellModal()" class="btn-ghost" style="width:100%;margin-top:14px">Done</button>
+    <div class="field-group">
+      <input type="text" id="spell-input" placeholder="Type a word…"
+        style="font-size:1.1rem"
+        onkeydown="if(event.key==='Enter')checkSpelling()">
+    </div>
+    <button onclick="checkSpelling()" class="btn-primary" style="width:100%;margin-bottom:14px">Check</button>
+    <div id="spell-result" style="min-height:40px;font-size:0.95rem;line-height:1.6"></div>
   </div>
 </div>
 
@@ -4222,9 +4222,37 @@ function saveQuickCapture() {
 // ── SPELL CHECK ───────────────────────────────────────────────────────────
 function openSpellModal() {
   document.getElementById('spell-input').value = '';
+  document.getElementById('spell-result').innerHTML = '';
   document.getElementById('spell-modal').classList.add('open');
 }
 function closeSpellModal() { document.getElementById('spell-modal').classList.remove('open'); }
+
+async function checkSpelling() {
+  const word = document.getElementById('spell-input').value.trim();
+  if (!word) return;
+  const result = document.getElementById('spell-result');
+  result.innerHTML = '<span style="color:var(--muted);font-style:italic">Looking up…</span>';
+  try {
+    const res = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word));
+    if (res.ok) {
+      const data = await res.json();
+      const entry = data[0];
+      const correctWord = entry.word;
+      const meaning = entry.meanings && entry.meanings[0];
+      const def = meaning && meaning.definitions && meaning.definitions[0].definition;
+      result.innerHTML = '<div style="background:#dff0d8;border-radius:8px;padding:10px 12px;margin-bottom:8px">'
+        + '<div style="font-size:1.1rem;font-weight:700;color:#2F5C1A">' + correctWord + '</div>'
+        + (meaning ? '<div style="font-size:0.78rem;color:#6b8a6b;margin-top:2px;font-style:italic">' + meaning.partOfSpeech + '</div>' : '')
+        + '</div>'
+        + (def ? '<div style="font-size:0.88rem;color:var(--muted);line-height:1.5">' + def + '</div>' : '');
+    } else {
+      result.innerHTML = '<div style="background:#f8e8e8;border-radius:8px;padding:10px 12px;color:#c0392b;font-size:0.9rem">'
+        + '❌ Word not found. Try a different spelling?</div>';
+    }
+  } catch(e) {
+    result.innerHTML = '<div style="color:var(--muted);font-size:0.88rem;font-style:italic">Could not connect — check your internet connection.</div>';
+  }
+}
 
 // ── CALCULATOR ────────────────────────────────────────────────────────────
 let calcValue = '0', calcPrev = '', calcOp = '', calcReset = false;
