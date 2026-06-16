@@ -1202,6 +1202,56 @@
 <div style="position:fixed;bottom:80px;right:16px;z-index:148;display:flex;flex-direction:column;gap:8px" id="floating-btns">
   <button onclick="openQuickCapture()" title="Quick note" style="background:#29789E;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">✏️</button>
   <button onclick="openEodModal()" title="End of day checklist" style="background:#8AB640;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">☑️</button>
+  <button onclick="openCalcModal()" title="Calculator" style="background:#7a5c9a;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">🧮</button>
+  <button onclick="openSpellModal()" title="Check spelling" style="background:#29789E;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">🔤</button>
+</div>
+
+<!-- SPELL CHECK MODAL -->
+<div class="modal-overlay" id="spell-modal">
+  <div class="modal" style="max-width:340px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h2 style="margin:0">Check spelling</h2>
+      <button onclick="closeSpellModal()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted)">×</button>
+    </div>
+    <div class="field-group">
+      <input type="text" id="spell-input" placeholder="Type a word…"
+        style="font-size:1.1rem"
+        onkeydown="if(event.key==='Enter')checkSpelling()">
+    </div>
+    <button onclick="checkSpelling()" class="btn-primary" style="width:100%;margin-bottom:14px">Check</button>
+    <div id="spell-result" style="min-height:40px;font-size:0.95rem;line-height:1.6"></div>
+  </div>
+</div>
+
+<!-- CALCULATOR MODAL -->
+<div class="modal-overlay" id="calc-modal">
+  <div class="modal" style="max-width:280px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h2 style="margin:0">Calculator</h2>
+      <button onclick="closeCalcModal()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted)">×</button>
+    </div>
+    <div id="calc-display" style="background:#f0f0e8;border-radius:8px;padding:12px 16px;text-align:right;font-size:1.6rem;font-family:'Special Elite',cursive;color:#05270B;min-height:52px;margin-bottom:10px;word-break:break-all">0</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+      <button onclick="calcInput('C')"    style="grid-column:span 2;background:#e8ddd8;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer;color:#c0392b;font-weight:700">C</button>
+      <button onclick="calcInput('⌫')"   style="background:#e8ddd8;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">⌫</button>
+      <button onclick="calcInput('÷')"   style="background:#7a5c9a;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">÷</button>
+      <button onclick="calcInput('7')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">7</button>
+      <button onclick="calcInput('8')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">8</button>
+      <button onclick="calcInput('9')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">9</button>
+      <button onclick="calcInput('×')"   style="background:#7a5c9a;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">×</button>
+      <button onclick="calcInput('4')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">4</button>
+      <button onclick="calcInput('5')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">5</button>
+      <button onclick="calcInput('6')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">6</button>
+      <button onclick="calcInput('−')"   style="background:#7a5c9a;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">−</button>
+      <button onclick="calcInput('1')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">1</button>
+      <button onclick="calcInput('2')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">2</button>
+      <button onclick="calcInput('3')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">3</button>
+      <button onclick="calcInput('+')"   style="background:#7a5c9a;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">+</button>
+      <button onclick="calcInput('0')"   style="grid-column:span 2;background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">0</button>
+      <button onclick="calcInput('.')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">.</button>
+      <button onclick="calcInput('=')"   style="background:#2F5C1A;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer;font-weight:700">=</button>
+    </div>
+  </div>
 </div>
 
 <!-- SYNC URL MODAL -->
@@ -4167,6 +4217,83 @@ function saveQuickCapture() {
 }
 
 // ── END OF DAY CHECKLIST ──────────────────────────────────────────────────
+// ── SPELL CHECK ───────────────────────────────────────────────────────────
+function openSpellModal() {
+  document.getElementById('spell-input').value = '';
+  document.getElementById('spell-result').innerHTML = '';
+  document.getElementById('spell-modal').classList.add('open');
+}
+function closeSpellModal() { document.getElementById('spell-modal').classList.remove('open'); }
+
+async function checkSpelling() {
+  const word = document.getElementById('spell-input').value.trim();
+  if (!word) return;
+  const result = document.getElementById('spell-result');
+  result.innerHTML = '<span style="color:var(--muted);font-style:italic">Looking up…</span>';
+  try {
+    const res = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word));
+    if (res.ok) {
+      const data = await res.json();
+      const entry = data[0];
+      const correctWord = entry.word;
+      const meaning = entry.meanings && entry.meanings[0];
+      const def = meaning && meaning.definitions && meaning.definitions[0].definition;
+      result.innerHTML = '<div style="background:#dff0d8;border-radius:8px;padding:10px 12px;margin-bottom:8px">'
+        + '<div style="font-size:1.1rem;font-weight:700;color:#2F5C1A">' + correctWord + '</div>'
+        + (meaning ? '<div style="font-size:0.78rem;color:#6b8a6b;margin-top:2px;font-style:italic">' + meaning.partOfSpeech + '</div>' : '')
+        + '</div>'
+        + (def ? '<div style="font-size:0.88rem;color:var(--muted);line-height:1.5">' + def + '</div>' : '');
+    } else {
+      result.innerHTML = '<div style="background:#f8e8e8;border-radius:8px;padding:10px 12px;color:#c0392b;font-size:0.9rem">'
+        + '❌ Word not found. Try a different spelling?</div>';
+    }
+  } catch(e) {
+    result.innerHTML = '<div style="color:var(--muted);font-size:0.88rem;font-style:italic">Could not connect — check your internet connection.</div>';
+  }
+}
+
+// ── CALCULATOR ────────────────────────────────────────────────────────────
+let calcValue = '0', calcPrev = '', calcOp = '', calcReset = false;
+
+function openCalcModal() {
+  calcValue = '0'; calcPrev = ''; calcOp = ''; calcReset = false;
+  updateCalcDisplay();
+  document.getElementById('calc-modal').classList.add('open');
+}
+function closeCalcModal() { document.getElementById('calc-modal').classList.remove('open'); }
+
+function updateCalcDisplay() {
+  document.getElementById('calc-display').textContent = calcValue;
+}
+
+function calcInput(key) {
+  if (key === 'C') {
+    calcValue = '0'; calcPrev = ''; calcOp = ''; calcReset = false;
+  } else if (key === '⌫') {
+    calcValue = calcValue.length > 1 ? calcValue.slice(0,-1) : '0';
+  } else if ('0123456789'.includes(key)) {
+    if (calcReset) { calcValue = key; calcReset = false; }
+    else calcValue = calcValue === '0' ? key : calcValue + key;
+  } else if (key === '.') {
+    if (calcReset) { calcValue = '0.'; calcReset = false; }
+    else if (!calcValue.includes('.')) calcValue += '.';
+  } else if (['+','−','×','÷'].includes(key)) {
+    if (calcOp && !calcReset) calcInput('=');
+    calcPrev = calcValue; calcOp = key; calcReset = true;
+  } else if (key === '=') {
+    if (!calcOp) return;
+    const a = parseFloat(calcPrev), b = parseFloat(calcValue);
+    let result;
+    if (calcOp === '+') result = a + b;
+    else if (calcOp === '−') result = a - b;
+    else if (calcOp === '×') result = a * b;
+    else if (calcOp === '÷') result = b !== 0 ? a / b : 'Error';
+    calcValue = result === 'Error' ? 'Error' : String(parseFloat(result.toFixed(10)));
+    calcOp = ''; calcPrev = ''; calcReset = true;
+  }
+  updateCalcDisplay();
+}
+
 function openEodModal() { renderEodList(); document.getElementById('eod-modal').classList.add('open'); }
 function closeEodModal() { document.getElementById('eod-modal').classList.remove('open'); }
 function getEodData() {
