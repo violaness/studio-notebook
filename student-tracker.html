@@ -1544,11 +1544,22 @@ function renderWeek() {
     for (const s of activeStudents) {
       const slot = effectiveSlot(s);
       const moved = oneOffMoves[s.id] && oneOffMoves[s.id].week === currentWeek;
+      // Check today's attendance from log
+      const todayStr = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+      const todayLog = (s.log||[]).find(e => e.date === todayStr);
+      const att = todayLog ? todayLog.attendance : null;
+      const attBadge = att === 'present'
+        ? `<span style="font-size:1rem;margin-left:6px" title="Present">✅</span>`
+        : att === 'absent-late' || att === 'absent-notice'
+        ? `<span style="font-size:1rem;margin-left:6px" title="Absent">❌</span>`
+        : att === 'cancelled'
+        ? `<span style="font-size:1rem;margin-left:6px" title="Cancelled">🚫</span>`
+        : '';
       html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer">
         <div class="slot-time">${slot.time||'—'}</div>
         <div class="slot-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
         <div class="slot-info">
-          <div class="slot-name">${s.name}${moved?` <span style="font-size:0.68rem;color:var(--inter);font-weight:700">MOVED</span>`:''}${s.frequency==='fortnightly'?' <span style="font-size:0.68rem;color:var(--muted);font-weight:600">fortnightly</span>':''}
+          <div class="slot-name">${s.name}${attBadge}${moved?` <span style="font-size:0.68rem;color:var(--inter);font-weight:700">MOVED</span>`:''}${s.frequency==='fortnightly'?' <span style="font-size:0.68rem;color:var(--muted);font-weight:600">fortnightly</span>':''}
           </div>
           <div class="slot-meta">${instrDot(s.instrument)}${s.instrument} · ${s.level}</div>
         </div>
