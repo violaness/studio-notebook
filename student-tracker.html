@@ -1203,12 +1203,14 @@
 <!-- QUICK CAPTURE + EOD FLOATING BUTTONS -->
 <!-- PENCIL KEYBOARD TOOLBAR -->
 <div id="pencil-kb" style="position:fixed;bottom:360px;right:10px;z-index:148;display:flex;flex-direction:column;gap:6px">
-  <button onpointerdown="event.preventDefault();pencilKey('Return')" title="Return"
-    style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">↵<br>Return</button>
-  <button onpointerdown="event.preventDefault();pencilKey('Space')" title="Space"
-    style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">⎵<br>Space</button>
+  <button onpointerdown="event.preventDefault();pencilKey('Capitalise')" title="Capitalise selection"
+    style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">⇧<br>Cap</button>
   <button onpointerdown="event.preventDefault();pencilKey('Backspace')" title="Backspace"
     style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">⌫<br>Delete</button>
+  <button onpointerdown="event.preventDefault();pencilKey('Space')" title="Space"
+    style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">⎵<br>Space</button>
+  <button onpointerdown="event.preventDefault();pencilKey('Return')" title="Return"
+    style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">↵<br>Return</button>
 </div>
 
 <div style="position:fixed;bottom:80px;right:16px;z-index:148;display:flex;flex-direction:column;gap:8px" id="floating-btns">
@@ -4285,6 +4287,17 @@ function pencilKey(key) {
       el.selectionStart = el.selectionEnd = start - 1;
     } else if (start !== end) {
       el.value = val.slice(0, start) + val.slice(end);
+      el.selectionStart = el.selectionEnd = start;
+    }
+  } else if (key === 'Capitalise') {
+    if (start !== end) {
+      const selected = val.slice(start, end).toUpperCase();
+      el.value = val.slice(0, start) + selected + val.slice(end);
+      el.selectionStart = start;
+      el.selectionEnd = end;
+    } else if (start > 0) {
+      // No selection — capitalise the letter just before cursor
+      el.value = val.slice(0, start - 1) + val[start - 1].toUpperCase() + val.slice(start);
       el.selectionStart = el.selectionEnd = start;
     }
   } else {
