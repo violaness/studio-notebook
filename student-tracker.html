@@ -1202,11 +1202,11 @@
 <!-- QUICK CAPTURE + EOD FLOATING BUTTONS -->
 <!-- PENCIL KEYBOARD TOOLBAR -->
 <div id="pencil-kb" style="position:fixed;bottom:360px;right:10px;z-index:148;display:flex;flex-direction:column;gap:6px">
-  <button onclick="pencilKey('Return')" title="Return"
+  <button onpointerdown="event.preventDefault();pencilKey('Return')" title="Return"
     style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">↵<br>Return</button>
-  <button onclick="pencilKey('Space')" title="Space"
+  <button onpointerdown="event.preventDefault();pencilKey('Space')" title="Space"
     style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">⎵<br>Space</button>
-  <button onclick="pencilKey('Backspace')" title="Backspace"
+  <button onpointerdown="event.preventDefault();pencilKey('Backspace')" title="Backspace"
     style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">⌫<br>Delete</button>
 </div>
 
@@ -4264,9 +4264,17 @@ function saveQuickCapture() {
 
 // ── END OF DAY CHECKLIST ──────────────────────────────────────────────────
 // ── PENCIL KEYBOARD ────────────────────────────────────────────────────────
+let _lastFocusedEl = null;
+document.addEventListener('focusin', function(e) {
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+    _lastFocusedEl = e.target;
+  }
+});
+
 function pencilKey(key) {
-  const el = document.activeElement;
+  const el = _lastFocusedEl;
   if (!el || (el.tagName !== 'TEXTAREA' && el.tagName !== 'INPUT')) return;
+  el.focus();
   const start = el.selectionStart;
   const end = el.selectionEnd;
   const val = el.value;
