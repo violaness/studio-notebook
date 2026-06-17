@@ -601,7 +601,7 @@
           <option value="Studies - Violin">Studies — Violin</option>
           <option value="Technique">Technique</option>
         </select>
-        <button onclick="addLibPiece()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:11px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer">Add to library</button>
+        <button onclick="addLibPiece()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto">Add to library</button>
       </div>
     </div>
   </div>
@@ -1203,6 +1203,8 @@
 <!-- QUICK CAPTURE + EOD FLOATING BUTTONS -->
 <!-- PENCIL KEYBOARD TOOLBAR -->
 <div id="pencil-kb" style="position:fixed;bottom:360px;right:10px;z-index:148;display:flex;flex-direction:column;gap:6px">
+  <button onpointerdown="event.preventDefault();pencilKey('Undo')" title="Undo"
+    style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">↩<br>Undo</button>
   <button onpointerdown="event.preventDefault();pencilKey('Capitalise')" title="Capitalise selection"
     style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">⇧<br>Cap</button>
   <button onpointerdown="event.preventDefault();pencilKey('Backspace')" title="Backspace"
@@ -3172,19 +3174,36 @@ const PIECE_DB = [
 
 function buildCumulativeNote(s) {
   const parts = [];
-  if (s.nextLesson && s.nextLesson.trim()) {
-    parts.push('📌 Plan:\n' + s.nextLesson.trim());
+  const plan = (s.nextLesson||'').trim();
+  if (plan) {
+    parts.push('📌 Plan:\n' + plan);
   }
   if ((s.scalesThisWeek||[]).length > 0) {
     parts.push('\ud83c\udfbb Scales this week: ' + s.scalesThisWeek.join(', '));
   }
   if (s.duringScratch && s.duringScratch.trim()) {
     let scratch = s.duringScratch.trim();
-    const planPrefix = '📌 Plan:\n' + (s.nextLesson||'').trim();
-    if (scratch.startsWith(planPrefix)) {
-      scratch = scratch.slice(planPrefix.length).trim();
+    // Strip any plan prefix variations
+    const prefixes = [
+      '📌 Plan:\n' + plan,
+      '📌 Plan:\n',
+      '\ud83d\udccc Plan:\n' + plan,
+      '\ud83d\udccc Plan:\n'
+    ];
+    for (const prefix of prefixes) {
+      if (prefix && scratch.startsWith(prefix)) {
+        scratch = scratch.slice(prefix.length).trim();
+        break;
+      }
     }
-    if (scratch) parts.push('📝 During lesson:\n' + scratch);
+    // Strip scales line if present
+    scratch = scratch.replace(/^\ud83c\udfbb Scales this week:.*(\n|$)/m, '').trim();
+    // Strip "📝 During lesson:" label if already there
+    scratch = scratch.replace(/^📝 During lesson:\n?/m, '').trim();
+    // Only add if there's something left that isn't just the plan repeated
+    if (scratch && scratch !== plan) {
+      parts.push('📝 During lesson:\n' + scratch);
+    }
   }
   return parts.join('\n\n');
 }
@@ -4268,11 +4287,21 @@ function saveQuickCapture() {
 // ── END OF DAY CHECKLIST ──────────────────────────────────────────────────
 // ── PENCIL KEYBOARD ────────────────────────────────────────────────────────
 let _lastFocusedEl = null;
+const _textHistory = new WeakMap(); // per element undo stack
+
 document.addEventListener('focusin', function(e) {
   if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
     _lastFocusedEl = e.target;
+    if (!_textHistory.has(e.target)) _textHistory.set(e.target, []);
   }
 });
+
+function _saveTextHistory(el) {
+  const stack = _textHistory.get(el) || [];
+  stack.push({ value: el.value, start: el.selectionStart, end: el.selectionEnd });
+  if (stack.length > 50) stack.shift();
+  _textHistory.set(el, stack);
+}
 
 function pencilKey(key) {
   const el = _lastFocusedEl;
@@ -4281,6 +4310,21 @@ function pencilKey(key) {
   const start = el.selectionStart;
   const end = el.selectionEnd;
   const val = el.value;
+
+  if (key === 'Undo') {
+    const stack = _textHistory.get(el);
+    if (!stack || stack.length === 0) return;
+    const prev = stack.pop();
+    el.value = prev.value;
+    el.selectionStart = prev.start;
+    el.selectionEnd = prev.end;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    return;
+  }
+
+  // Save state before making a change
+  _saveTextHistory(el);
+
   if (key === 'Backspace') {
     if (start === end && start > 0) {
       el.value = val.slice(0, start - 1) + val.slice(end);
@@ -4296,7 +4340,6 @@ function pencilKey(key) {
       el.selectionStart = start;
       el.selectionEnd = end;
     } else if (start > 0) {
-      // No selection — capitalise the letter just before cursor
       el.value = val.slice(0, start - 1) + val[start - 1].toUpperCase() + val.slice(start);
       el.selectionStart = el.selectionEnd = start;
     }
