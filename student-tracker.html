@@ -2001,7 +2001,7 @@ function renderDetail(s) {
                 onkeydown="if(event.key==='Enter')addAbsence('${s.id}')">
             </div>
             <button onclick="addAbsence('${s.id}')"
-              style="background:var(--viola);color:#fff;border:none;border-radius:6px;padding:3px 10px;font-family:'Special Elite',cursive;font-size:0.7rem;font-weight:600;cursor:pointer;display:block;margin-top:2px">+ Add absence</button>
+              style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin-top:2px">+ Add absence</button>
           </div>
         </div>
       </details>
@@ -4020,7 +4020,7 @@ function renderStudioAttendance() {
                 ? `<span style="display:inline-block;width:26px;height:20px;line-height:20px;border-radius:4px;background:${colMap[reg]};color:#fff;font-size:0.68rem;font-weight:700" title="${fullLabel[reg]||reg}">${labelMap[reg]}</span>`
                 : '';
               const extraBadge = extra > 0
-                ? `<span style="display:inline-block;width:20px;height:16px;line-height:16px;border-radius:4px;background:#29789E;color:#fff;font-size:0.6rem;font-weight:700;margin-top:2px" title="${extra} extra lesson${extra>1?'s':''} this week">+${extra}</span>`
+                ? `<span onclick="removeExtraFromOverview('${s.id}','${wk}')" style="display:inline-block;width:20px;height:16px;line-height:16px;border-radius:4px;background:#29789E;color:#fff;font-size:0.6rem;font-weight:700;margin-top:2px;cursor:pointer" title="Tap to remove one extra lesson">+${extra}</span>`
                 : '';
               return `<td style="text-align:center;padding:4px 2px;border-bottom:1px solid var(--warm);vertical-align:middle">
                 <div style="display:flex;flex-direction:column;align-items:center;gap:1px">${regBadge}${extraBadge}</div>
@@ -4258,6 +4258,38 @@ function removeExtraLesson(idx) {
   extraLessons[currentWeek].splice(idx, 1);
   save();
   renderWeek();
+}
+
+// Remove one extra lesson for a pupil from the attendance overview.
+// satKey is a "YYYY-MM-DD" Sat-based display key; we find the matching ISO week bucket.
+function removeExtraFromOverview(studentId, satKey) {
+  if (!confirm('Remove one extra lesson for this pupil from this week?')) return;
+  // Find the ISO week key(s) whose Sat-based key matches satKey
+  let removed = false;
+  for (const isoWk of Object.keys(extraLessons)) {
+    const entries = extraLessons[isoWk];
+    if (!entries || !entries.length) continue;
+    // Derive the sat key for this ISO week
+    const [yr, wPart] = isoWk.split('-W');
+    const jan4 = new Date(parseInt(yr), 0, 4);
+    const mon = new Date(jan4);
+    mon.setDate(jan4.getDate() - (jan4.getDay()+6)%7 + (parseInt(wPart)-1)*7);
+    const daysSinceSat = (mon.getDay() + 1) % 7;
+    const sat = new Date(mon); sat.setDate(mon.getDate() - daysSinceSat);
+    const mm = String(sat.getMonth()+1).padStart(2,'0');
+    const dd = String(sat.getDate()).padStart(2,'0');
+    const thisSatKey = `${sat.getFullYear()}-${mm}-${dd}`;
+    if (thisSatKey !== satKey) continue;
+    // Find first entry for this student in this bucket and remove it
+    const idx = entries.findIndex(e => e.studentId === studentId);
+    if (idx !== -1) {
+      entries.splice(idx, 1);
+      if (entries.length === 0) delete extraLessons[isoWk];
+      removed = true;
+      break;
+    }
+  }
+  if (removed) { save(); renderLibrary(); }
 }
 
 
