@@ -1400,7 +1400,26 @@ function isoWeek(date) {
   const wn = 1 + Math.round(((d - week1)/86400000 - 3 + (week1.getDay()+6)%7)/7);
   return `${d.getFullYear()}-W${String(wn).padStart(2,'0')}`;
 }
-const currentWeek = isoWeek(new Date());
+
+// Teaching week runs Sat–Wed. Reset happens Friday so Thu/Fri look back at the
+// week just gone. We do this by shifting the date back 1 day before computing
+// the Sat-based week key — so Friday reads as "next week's Saturday" key.
+// getDay(): 0=Sun 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat
+// Days since the previous Saturday, shifted so Friday triggers the new week:
+// Shift: add 1 day so Fri (5) becomes Sat (6) in the shifted date, starting new week.
+function teachingWeekKey(date) {
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  // Shift forward by 2 days so Thursday becomes Saturday in the calculation
+  d.setDate(d.getDate() + 2);
+  // Now roll back to the Saturday that starts this (shifted) week
+  const daysSinceSat = (d.getDay() + 1) % 7; // 0=Sat, 1=Sun ... 6=Fri
+  d.setDate(d.getDate() - daysSinceSat);
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+const currentWeek = teachingWeekKey(new Date());
 
 // Get effective day/time for a student this week (respects one-off moves)
 function effectiveSlot(s) {
