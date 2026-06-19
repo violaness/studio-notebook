@@ -2446,13 +2446,13 @@ function removeRequestedMove(id, idx) {
       const [ty, tm, td] = mv.toDate.split('-').map(Number);
       if (ty && tm && td) {
         const toDateObj = new Date(ty, tm - 1, td);
-        const isoWk = isoWeek(toDateObj);
+        const toWeekKey = teachingWeekKey(toDateObj);
         const dayName = DAY_NAMES[toDateObj.getDay()];
-        if (extraLessons[isoWk]) {
-          const exIdx = extraLessons[isoWk].findIndex(e => e.studentId === s.id && e.day === dayName && e.time === (mv.toTime || s.lessonTime || ''));
+        if (extraLessons[toWeekKey]) {
+          const exIdx = extraLessons[toWeekKey].findIndex(e => e.studentId === s.id && e.day === dayName && e.time === (mv.toTime || s.lessonTime || ''));
           if (exIdx !== -1) {
-            extraLessons[isoWk].splice(exIdx, 1);
-            if (extraLessons[isoWk].length === 0) delete extraLessons[isoWk];
+            extraLessons[toWeekKey].splice(exIdx, 1);
+            if (extraLessons[toWeekKey].length === 0) delete extraLessons[toWeekKey];
           }
         }
       }
@@ -4333,18 +4333,29 @@ function renderStudioAttendance() {
     });
   });
 
-  // Build per-pupil, per-week extra-lesson map from extraLessons store
-  // extraLessons structure: { "YYYY-Www": [ { studentId, day, time }, ... ] }
-  // Convert ISO week keys from extraLessons store into Sat-based keys
+  // Build per-pupil, per-week extra-lesson map from extraLessons store.
+  // extraLessons can be keyed two ways depending on when the entry was added:
+  //   - Sat-based "YYYY-MM-DD" (current format, matches currentWeek/teachingWeekKey)
+  //   - legacy ISO "YYYY-Www" (older entries from before the teaching-week-key switch)
+  // We normalise both into the Sat-based weekKey used by this table.
   const extraMap = {}; // studentId → weekKey → count of extra attendances in range
-  Object.entries(extraLessons||{}).forEach(([isoWk, entries]) => {
-    // Derive Monday of the ISO week, then find its Saturday (day before that Mon's week)
-    const [yr, wPart] = isoWk.split('-W');
-    const jan4 = new Date(parseInt(yr), 0, 4);
-    const mon = new Date(jan4);
-    mon.setDate(jan4.getDate() - (jan4.getDay()+6)%7 + (parseInt(wPart)-1)*7);
-    // Convert Monday to Sat-based key (Mon is day 1, so Sat before = Mon - 2 days)
-    const wk = weekKey(mon);
+  Object.entries(extraLessons||{}).forEach(([rawKey, entries]) => {
+    let wk;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rawKey)) {
+      // Already a Sat-based "YYYY-MM-DD" key — just re-derive its own week start
+      // in case it wasn't exactly a Saturday (defensive, should normally match).
+      const [yy, mm, dd] = rawKey.split('-').map(Number);
+      wk = weekKey(new Date(yy, mm - 1, dd));
+    } else if (/^\d{4}-W\d{1,2}$/.test(rawKey)) {
+      // Legacy ISO "YYYY-Www" key — convert via that week's Monday
+      const [yr, wPart] = rawKey.split('-W');
+      const jan4 = new Date(parseInt(yr), 0, 4);
+      const mon = new Date(jan4);
+      mon.setDate(jan4.getDate() - (jan4.getDay()+6)%7 + (parseInt(wPart)-1)*7);
+      wk = weekKey(mon);
+    } else {
+      return; // unrecognised key format — skip rather than show NaN
+    }
     const sat = weekKeyToSat(wk);
     const fri = new Date(sat); fri.setDate(sat.getDate()+6);
     if (fromDate && fri < fromDate) return;
@@ -5998,15 +6009,14 @@ function syncRequestedMovesToWeek() {
         const [ty, tm, td] = mv.toDate.split('-').map(Number);
         if (ty && tm && td) {
           const toDateObj = new Date(ty, tm - 1, td);
+          // extraLessons is keyed by the Sat-based teaching week key, matching
+          // the format used everywhere else extras are added (Fill slot, +Extra).
           const toWeekKey = teachingWeekKey(toDateObj);
-          // extraLessons is keyed by ISO week (Mon-based), matching the existing
-          // store's format used elsewhere in the app for extras.
-          const isoWk = isoWeek(toDateObj);
-          if (!extraLessons[isoWk]) extraLessons[isoWk] = [];
+          if (!extraLessons[toWeekKey]) extraLessons[toWeekKey] = [];
           const dayName = DAY_NAMES[toDateObj.getDay()];
-          const already = extraLessons[isoWk].some(e => e.studentId === s.id && e.day === dayName && e.time === (mv.toTime || s.lessonTime || ''));
+          const already = extraLessons[toWeekKey].some(e => e.studentId === s.id && e.day === dayName && e.time === (mv.toTime || s.lessonTime || ''));
           if (!already) {
-            extraLessons[isoWk].push({ studentId: s.id, day: dayName, time: mv.toTime || s.lessonTime || '' });
+            extraLessons[toWeekKey].push({ studentId: s.id, day: dayName, time: mv.toTime || s.lessonTime || '' });
           }
         }
       }
