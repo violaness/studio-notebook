@@ -1430,6 +1430,9 @@ function teachingWeekKey(date) {
 }
 const currentWeek = teachingWeekKey(new Date());
 
+// Day-of-week names indexed by Date.getDay() (0=Sunday ... 6=Saturday)
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
 // Get effective day/time for a student this week (respects one-off moves)
 function effectiveSlot(s) {
   const move = oneOffMoves[s.id];
@@ -2411,7 +2414,35 @@ function addRequestedMove(id) {
 
 function removeRequestedMove(id, idx) {
   const s = getStudent(id); if (!s || !s.requestedMoves) return;
+  const mv = s.requestedMoves[idx];
   s.requestedMoves.splice(idx, 1);
+  // If this move was already activated (its week arrived), undo what it set up:
+  // clear the auto-applied absence mark on the original date, and remove the
+  // matching extra-lesson entry on the new date.
+  if (mv && mv.activated) {
+    const [fy, fm, fd] = (mv.fromDate || '').split('-').map(Number);
+    if (fy && fm && fd && s.log) {
+      const fromDateObj = new Date(fy, fm - 1, fd);
+      const fromLogStr = fromDateObj.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+      const entry = s.log.find(e => e.date === fromLogStr);
+      if (entry && entry.attendance === 'absent-notice') entry.attendance = '';
+    }
+    if (mv.toDate) {
+      const [ty, tm, td] = mv.toDate.split('-').map(Number);
+      if (ty && tm && td) {
+        const toDateObj = new Date(ty, tm - 1, td);
+        const isoWk = isoWeek(toDateObj);
+        const dayName = DAY_NAMES[toDateObj.getDay()];
+        if (extraLessons[isoWk]) {
+          const exIdx = extraLessons[isoWk].findIndex(e => e.studentId === s.id && e.day === dayName && e.time === (mv.toTime || s.lessonTime || ''));
+          if (exIdx !== -1) {
+            extraLessons[isoWk].splice(exIdx, 1);
+            if (extraLessons[isoWk].length === 0) delete extraLessons[isoWk];
+          }
+        }
+      }
+    }
+  }
   save(); renderDetail(s);
   document.querySelectorAll('.moment-tab')[0].click();
 }
@@ -2425,6 +2456,19 @@ function addAbsence(id) {
   // Don't add duplicate dates
   if (s.absences.some(a => a.date === date)) { dateEl.value = ''; noteEl.value = ''; return; }
   s.absences.push({ date, note: noteEl.value.trim() });
+  // Also mark attendance as "absent — notice given" on the lesson log for that
+  // date, so it shows up correctly on the Week view without a separate step.
+  // Only touch today-or-future dates — never overwrite past attendance history.
+  const today = new Date(); today.setHours(0,0,0,0);
+  const [yy, mm, dd] = date.split('-').map(Number);
+  const absDate = new Date(yy, mm - 1, dd); absDate.setHours(0,0,0,0);
+  if (absDate >= today) {
+    const logDateStr = absDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    if (!s.log) s.log = [];
+    let entry = s.log.find(e => e.date === logDateStr);
+    if (!entry) { entry = { date: logDateStr, text: '', attendance: 'absent-notice' }; s.log.push(entry); }
+    else { entry.attendance = 'absent-notice'; }
+  }
   dateEl.value = ''; noteEl.value = '';
   save(); renderDetail(s);
   document.querySelectorAll('.moment-tab')[0].click();
@@ -2432,7 +2476,17 @@ function addAbsence(id) {
 
 function removeAbsence(id, idx) {
   const s = getStudent(id); if (!s || !s.absences) return;
+  const ab = s.absences[idx];
   s.absences.splice(idx, 1);
+  // Also clear the matching attendance mark, but only if it's still set to the
+  // auto-applied "absent-notice" status — don't clobber a manually-set status.
+  if (ab && s.log) {
+    const [yy, mm, dd] = ab.date.split('-').map(Number);
+    const absDate = new Date(yy, mm - 1, dd); absDate.setHours(0,0,0,0);
+    const logDateStr = absDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    const entry = s.log.find(e => e.date === logDateStr);
+    if (entry && entry.attendance === 'absent-notice') entry.attendance = '';
+  }
   save(); renderDetail(s);
   document.querySelectorAll('.moment-tab')[0].click();
 }
@@ -5820,6 +5874,91 @@ function repairStudentIDs() {
   if (repaired) save();
 }
 
+// One-time catch-up: sync any already-saved future-dated "Requested absences"
+// that predate this feature, so they show correctly on the Week view without
+// the person having to re-enter them.
+function syncRequestedAbsencesToLog() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  let changed = false;
+  students.forEach(s => {
+    (s.absences || []).forEach(ab => {
+      const [yy, mm, dd] = (ab.date || '').split('-').map(Number);
+      if (!yy || !mm || !dd) return;
+      const absDate = new Date(yy, mm - 1, dd); absDate.setHours(0,0,0,0);
+      if (absDate < today) return; // never touch past dates
+      const logDateStr = absDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+      if (!s.log) s.log = [];
+      let entry = s.log.find(e => e.date === logDateStr);
+      if (!entry) {
+        s.log.push({ date: logDateStr, text: '', attendance: 'absent-notice' });
+        changed = true;
+      } else if (!entry.attendance) {
+        entry.attendance = 'absent-notice';
+        changed = true;
+      }
+    });
+  });
+  if (changed) save();
+}
+
+// "Requested lesson moves" (s.requestedMoves) can be booked any number of
+// weeks ahead, but the Week view's oneOffMoves/extraLessons stores only ever
+// understand "the current teaching week" — they have no concept of a future
+// week. So each time the app loads, we check whether a requested move's
+// fromDate has now arrived within the CURRENT teaching week, and if so we
+// activate it using the existing, already-working mechanisms:
+//   - oneOffMoves[studentId] = {week, day, time}  → moves the original slot
+//   - extraLessons[currentWeek] gets a new entry  → adds the new slot
+// Once activated, the request is marked so it isn't re-applied every load.
+function syncRequestedMovesToWeek() {
+  let changed = false;
+  students.forEach(s => {
+    (s.requestedMoves || []).forEach(mv => {
+      if (mv.activated) return; // already applied — don't redo it
+      const [fy, fm, fd] = (mv.fromDate || '').split('-').map(Number);
+      if (!fy || !fm || !fd) return;
+      const fromDateObj = new Date(fy, fm - 1, fd);
+      if (teachingWeekKey(fromDateObj) !== currentWeek) return; // not this week yet
+
+      // 1) Free up the original slot this week by recording a one-off move
+      //    that points nowhere meaningful — simplest correct option is to
+      //    mark that day's lesson as moved by giving it an empty day, which
+      //    effectiveSlot() doesn't directly support, so instead we mark the
+      //    original lesson date as "absent-notice" in the log (consistent
+      //    with how a requested absence is shown) rather than altering the
+      //    weekly slot itself.
+      const fromLogStr = fromDateObj.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+      if (!s.log) s.log = [];
+      let fromEntry = s.log.find(e => e.date === fromLogStr);
+      if (!fromEntry) { s.log.push({ date: fromLogStr, text: '', attendance: 'absent-notice' }); }
+      else if (!fromEntry.attendance) { fromEntry.attendance = 'absent-notice'; }
+
+      // 2) Add the new date as an extra lesson on its own week, so it shows
+      //    up with a +1 badge wherever that week falls (this week or later).
+      if (mv.toDate) {
+        const [ty, tm, td] = mv.toDate.split('-').map(Number);
+        if (ty && tm && td) {
+          const toDateObj = new Date(ty, tm - 1, td);
+          const toWeekKey = teachingWeekKey(toDateObj);
+          // extraLessons is keyed by ISO week (Mon-based), matching the existing
+          // store's format used elsewhere in the app for extras.
+          const isoWk = isoWeek(toDateObj);
+          if (!extraLessons[isoWk]) extraLessons[isoWk] = [];
+          const dayName = DAY_NAMES[toDateObj.getDay()];
+          const already = extraLessons[isoWk].some(e => e.studentId === s.id && e.day === dayName && e.time === (mv.toTime || s.lessonTime || ''));
+          if (!already) {
+            extraLessons[isoWk].push({ studentId: s.id, day: dayName, time: mv.toTime || s.lessonTime || '' });
+          }
+        }
+      }
+
+      mv.activated = true;
+      changed = true;
+    });
+  });
+  if (changed) save();
+}
+
 
 if (window.location.search.includes('reset=1')) {
   localStorage.removeItem('studio_students');
@@ -5836,6 +5975,8 @@ if (window.location.search.includes('reset=1')) {
 }
 
 repairStudentIDs();
+syncRequestedAbsencesToLog();
+syncRequestedMovesToWeek();
 renderToday();
 renderRoster();
 // Show the notes toggle button
