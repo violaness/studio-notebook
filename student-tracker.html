@@ -1967,6 +1967,13 @@ function renderDetail(s) {
       </div>
       <div class="section-card">
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
+          <span>🔧 Technical focus</span>
+          ${(s.techFocus||[]).length ? `<button onclick="clearAllTechFocus('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear all</button>` : ''}
+        </div>
+        <div class="tech-chips">${techHTML}</div>
+      </div>
+      <div class="section-card">
+        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span>📌 Plan for today's lesson</span>
           ${s.nextLesson ? `<button onclick="clearNextLessonPlan('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>` : ''}
         </div>
@@ -2045,6 +2052,10 @@ function renderDetail(s) {
       </div>` : ''}
       <div class="section-card">
         <div class="section-label">Quick notes — right now</div>
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <button type="button" onclick="insertLinePrefix('during-scratch-${s.id}','•');saveDuring('${s.id}')" title="Bullet point" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:5px 12px;font-size:0.85rem;cursor:pointer;color:var(--ink)">• Bullet</button>
+          <button type="button" onclick="insertLinePrefix('during-scratch-${s.id}','☐');saveDuring('${s.id}')" title="Tick box" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:5px 12px;font-size:0.85rem;cursor:pointer;color:var(--ink)">☐ Tick box</button>
+        </div>
         <textarea class="quick-note" rows="28"
           placeholder="Jot anything — key words, reminders, 'try this'…"
           id="during-scratch-${s.id}"
@@ -2099,6 +2110,10 @@ function renderDetail(s) {
       <div class="section-card">
         <div class="section-label">Lesson notes</div>
         <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">Built from your plan and during-lesson notes — edit freely before saving to the log.</div>
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <button type="button" onclick="insertLinePrefix('after-note-${s.id}','•')" title="Bullet point" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:5px 12px;font-size:0.85rem;cursor:pointer;color:var(--ink)">• Bullet</button>
+          <button type="button" onclick="insertLinePrefix('after-note-${s.id}','☐')" title="Tick box" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:5px 12px;font-size:0.85rem;cursor:pointer;color:var(--ink)">☐ Tick box</button>
+        </div>
         <textarea rows="28" placeholder="What went well, what to remember for next time…"
           id="after-note-${s.id}"
           oninput="this.dataset.edited='1'">${buildCumulativeNote(s)}</textarea>
@@ -2421,6 +2436,15 @@ function toggleTech(id, tech, btn) {
   save();
 }
 
+function clearAllTechFocus(id) {
+  const s = getStudent(id); if (!s) return;
+  if (!confirm('Clear all technical focus selections for this pupil?')) return;
+  s.techFocus = [];
+  save();
+  renderDetail(s);
+  document.querySelectorAll('.moment-tab').forEach(t => { if (t.textContent === 'Before') t.click(); });
+}
+
 function showCustomChipInput(id) {
   document.getElementById(`custom-chip-row-${id}`).style.display='flex';
 }
@@ -2464,6 +2488,63 @@ function insertIntoScratch(id, text) {
   const s = getStudent(id);
   if (s) { s.duringScratch = el.value; save(); }
   el.focus();
+}
+
+// Insert a bullet (•) or checkbox (☐) at the START of the current line in any
+// textarea — used by the small formatting toolbar above Lesson notes / Quick notes.
+// If the line already starts with that exact marker, tapping again removes it
+// (acts as a toggle), so repeated taps don't stack up duplicate bullets.
+function insertLinePrefix(elId, marker) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.focus();
+  const val = el.value;
+  const start = el.selectionStart;
+  const end = el.selectionEnd;
+  // Find the start of the line containing the cursor/selection start
+  const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+  const lineEndIdx = (() => { const i = val.indexOf('\n', start); return i === -1 ? val.length : i; })();
+  const line = val.slice(lineStart, lineEndIdx);
+  let newLine, deltaLen;
+  if (line.startsWith(marker + ' ')) {
+    // Already has this marker — remove it (toggle off)
+    newLine = line.slice(marker.length + 1);
+    deltaLen = -(marker.length + 1);
+  } else if (line.startsWith('• ') || line.startsWith('☐ ') || line.startsWith('☑ ')) {
+    // Has a different marker — swap it for the new one
+    const oldLen = 2;
+    newLine = marker + ' ' + line.slice(oldLen);
+    deltaLen = marker.length + 1 - oldLen;
+  } else {
+    newLine = marker + ' ' + line;
+    deltaLen = marker.length + 1;
+  }
+  el.value = val.slice(0, lineStart) + newLine + val.slice(lineEndIdx);
+  const newStart = Math.max(lineStart, start + deltaLen);
+  const newEnd = Math.max(lineStart, end + deltaLen);
+  el.selectionStart = newStart;
+  el.selectionEnd = newEnd;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+// Toggle a ☐ checkbox at the start of the tapped line to ☑ (and back).
+// Used when the person taps directly on an existing checkbox character.
+function toggleCheckboxAtCursor(elId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const val = el.value;
+  const start = el.selectionStart;
+  const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+  if (val.slice(lineStart, lineStart + 2) === '☐ ') {
+    el.value = val.slice(0, lineStart) + '☑' + val.slice(lineStart + 1);
+  } else if (val.slice(lineStart, lineStart + 2) === '☑ ') {
+    el.value = val.slice(0, lineStart) + '☐' + val.slice(lineStart + 1);
+  } else {
+    return;
+  }
+  el.selectionStart = start;
+  el.selectionEnd = start;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 
