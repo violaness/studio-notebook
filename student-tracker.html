@@ -1684,7 +1684,8 @@ function renderWeek() {
         : att === 'cancelled'
         ? `<span style="font-size:1rem;margin-left:6px" title="Cancelled">🚫</span>`
         : '';
-      html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer">
+      const isAbsent = att === 'absent-late' || att === 'absent-notice';
+      html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer${isAbsent ? ';border-style:dashed;opacity:0.6' : ''}">
         <div class="slot-time">${slot.time||'—'}</div>
         <div class="slot-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
         <div class="slot-info">
