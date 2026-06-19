@@ -1545,7 +1545,6 @@ function renderToday() {
     const pieces = piecesDisplay(s);
     const tech = (s.techFocus||[]).slice(0,3);
     const plan = s.nextLesson || '';
-    const thisWeek = (s.goals||{}).thisWeek || '';
     // Upcoming absences within 4 weeks
     const todayMs = new Date().setHours(0,0,0,0);
     const soonAbsences = (s.absences||[]).filter(a => {
@@ -1596,13 +1595,6 @@ function renderToday() {
             <div class="summary-text">${tech.map(t=>esc(t)).join(' · ')}</div>
           </div>
         </div>` : ''}
-        ${thisWeek ? `<div class="summary-row">
-          <div class="summary-icon">⚡</div>
-          <div class="summary-content">
-            <div class="summary-label">This week's goal</div>
-            <div class="summary-text">${esc(thisWeek)}</div>
-          </div>
-        </div>` : ''}
         ${lastLog ? `<div class="summary-row">
           <div class="summary-icon">📝</div>
           <div class="summary-content">
@@ -1616,7 +1608,7 @@ function renderToday() {
             <div class="summary-text muted">No notes yet</div>
           </div>
         </div>`}
-        ${!plan && !pieces.length && !tech.length && !thisWeek && !lastLog ? `
+        ${!plan && !pieces.length && !tech.length && !lastLog ? `
           <p style="color:var(--muted);font-size:0.85rem;margin-top:10px">No notes yet — open full notes to add some.</p>
         ` : ''}
         <button class="open-notes-btn ${s.instrument}-btn" onclick="openStudentFrom('${s.id}','today')">Open full notes →</button>
@@ -1775,8 +1767,7 @@ function renderRosterList(filtered) {
   const sorted = [...filtered].sort((a,b) => a.name.localeCompare(b.name));
   list.innerHTML = sorted.map(s => {
     const lastNote = (s.log||[]).slice(-1)[0];
-    const snippet = lastNote ? lastNote.text.slice(0,60)+(lastNote.text.length>60?'…':'')
-                             : ((s.goals||{}).thisWeek||'');
+    const snippet = lastNote ? lastNote.text.slice(0,60)+(lastNote.text.length>60?'…':'') : '';
     const slot = effectiveSlot(s);
     const dayLabel = slot.day ? `<span style="font-size:0.72rem;color:var(--muted);background:var(--warm);padding:2px 8px;border-radius:999px">${slot.day}${slot.time?' '+slot.time:''}</span>` : '';
     return `<div class="student-card ${s.instrument}-card" onclick="openStudentFrom('${s.id}','roster')">
@@ -1828,7 +1819,7 @@ function addStudent() {
     id: Date.now().toString(),
     name, instrument, level, pupilType, lessonDay, lessonTime, frequency, duration, dob, schoolYear, email,
     pieces: [''], techFocus: [],
-    goals: {longTerm:'',medium:'',shortTerm:'',thisWeek:''},
+    goals: {longTerm:'',medium:'',shortTerm:''},
     nextLesson: '', duringScratch: '', log: []
   });
   save(); closeAddModal(); renderRoster();
@@ -2235,7 +2226,7 @@ function renderDetail(s) {
       <!-- GOALS (moved here) -->
       <div class="section-card">
         <div class="section-label">🎯 Goals</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
           <div>
             <div class="goal-label long-term" style="font-size:0.72rem;font-weight:700;margin-bottom:4px">Long-term</div>
             <textarea rows="3" placeholder="Where are they heading overall?"
@@ -2250,11 +2241,6 @@ function renderDetail(s) {
             <div class="goal-label short" style="font-size:0.72rem;font-weight:700;margin-bottom:4px">Short-term</div>
             <textarea rows="3" placeholder="Next few weeks…"
               oninput="updateGoal('${s.id}','shortTerm',this.value)">${esc((s.goals||{}).shortTerm||'')}</textarea>
-          </div>
-          <div>
-            <div class="goal-label this-week" style="font-size:0.72rem;font-weight:700;margin-bottom:4px">This week</div>
-            <textarea rows="3" placeholder="Homework / focus for this week"
-              oninput="updateGoal('${s.id}','thisWeek',this.value)">${esc((s.goals||{}).thisWeek||'')}</textarea>
           </div>
         </div>
         <div class="save-toast" id="toast-goals-${s.id}">✓ Saved</div>
@@ -3652,10 +3638,9 @@ function refSummary(s) {
   var scalesWeek    = (s.scalesThisWeek||[]);
   var tech          = (s.techFocus||[]).filter(Boolean);
   var plan          = (s.nextLesson||'').trim();
-  var thisWeek      = ((s.goals||{}).thisWeek||'').trim();
   var pupilNote     = (s.pupilNotes||'').trim();
 
-  if (!pieces.length && !scales.length && !scalesWeek.length && !tech.length && !plan && !thisWeek && !pupilNote) return '';
+  if (!pieces.length && !scales.length && !scalesWeek.length && !tech.length && !plan && !pupilNote) return '';
 
   var piecesHTML = pieces.map(function(p) {
     return '<span onclick="insertIntoScratch(\'' + s.id + '\',\'' + esc(p).replace(/'/g,'\\\'') + '\')" '
@@ -3674,10 +3659,9 @@ function refSummary(s) {
 
   var inner = '';
   if (plan)        inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83d\udccc PLAN FOR TODAY</div><div style="font-size:0.88rem;line-height:1.5;color:var(--ink)">' + esc(plan) + '</div></div>';
-  if (thisWeek)    inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\u26a1 THIS WEEK\u2019S GOAL</div><div style="font-size:0.88rem;line-height:1.5;color:var(--ink)">' + esc(thisWeek) + '</div></div>';
   if (pieces.length) inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83c\udfb5 PIECES &amp; EXERCISES</div><div>' + piecesHTML + '</div></div>';
   if (tech.length)       inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83d\udd27 TECHNICAL FOCUS</div><div>' + techHTML + '</div></div>';
-  if (scalesWeek.length) inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--viola);margin-bottom:4px">\ud83c\udfbc 🎻 SCALES THIS WEEK</div><div style="display:flex;flex-wrap:wrap;gap:6px">' + scalesWeek.map(function(k){ return '<span style="background:var(--card-bg);border:1.5px solid var(--viola);border-radius:999px;padding:3px 10px;font-size:0.82rem;font-weight:700;color:var(--viola)">' + esc(k) + '</span>'; }).join('') + '</div></div>';
+  if (scalesWeek.length) inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--viola);margin-bottom:4px">🎻 SCALES THIS WEEK</div><div style="display:flex;flex-wrap:wrap;gap:6px">' + scalesWeek.map(function(k){ return '<span style="background:var(--card-bg);border:1.5px solid var(--viola);border-radius:999px;padding:3px 10px;font-size:0.82rem;font-weight:700;color:var(--viola)">' + esc(k) + '</span>'; }).join('') + '</div></div>';
   if (scales.length)     inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83c\udfbc SCALES</div><div>' + scaleTagsHTML + '</div></div>';
   if (pupilNote)         inner += '<div><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83d\udcd3 PUPIL NOTES</div><div style="font-size:0.82rem;line-height:1.5;color:var(--muted);font-style:italic">' + esc(pupilNote) + '</div></div>';
 
@@ -5466,12 +5450,11 @@ function buildPupilHTML(s, term, includeScales) {
       </div>
       ${pieces.length ? `<div class="section"><div class="section-title">Current pieces</div><p>${pieces.map(p=>`<span class="piece">${p}</span>`).join(' ')}</p></div>` : ''}
       ${(s.techFocus||[]).length ? `<div class="section"><div class="section-title">Technical focus</div><p>${s.techFocus.join(' · ')}</p></div>` : ''}
-      ${goals.longTerm||goals.medium||goals.shortTerm||goals.thisWeek ? `
+      ${goals.longTerm||goals.medium||goals.shortTerm ? `
       <div class="section"><div class="section-title">Goals</div>
         ${goals.longTerm  ? `<div class="goal-item"><span class="goal-label">Long-term:</span> ${goals.longTerm}</div>`  : ''}
         ${goals.medium    ? `<div class="goal-item"><span class="goal-label">Medium-term:</span> ${goals.medium}</div>`  : ''}
         ${goals.shortTerm ? `<div class="goal-item"><span class="goal-label">Short-term:</span> ${goals.shortTerm}</div>` : ''}
-        ${goals.thisWeek  ? `<div class="goal-item"><span class="goal-label">This week:</span> ${goals.thisWeek}</div>`   : ''}
       </div>` : ''}
       ${scaleChecklistSection}
       ${log.length ? `
@@ -5503,12 +5486,11 @@ function buildPupilPlainText(s, term) {
     s.schoolYear, slot.day?(slot.day+(slot.time?' '+slot.time:'')):''].filter(Boolean).join(' · ') + '\n\n';
   if (pieces.length) txt += 'CURRENT PIECES\n' + pieces.join(', ') + '\n\n';
   if ((s.techFocus||[]).length) txt += 'TECHNICAL FOCUS\n' + s.techFocus.join(', ') + '\n\n';
-  if (goals.longTerm||goals.medium||goals.shortTerm||goals.thisWeek) {
+  if (goals.longTerm||goals.medium||goals.shortTerm) {
     txt += 'GOALS\n';
     if (goals.longTerm)  txt += 'Long-term: '  + goals.longTerm  + '\n';
     if (goals.medium)    txt += 'Medium-term: ' + goals.medium    + '\n';
     if (goals.shortTerm) txt += 'Short-term: '  + goals.shortTerm + '\n';
-    if (goals.thisWeek)  txt += 'This week: '   + goals.thisWeek  + '\n';
     txt += '\n';
   }
   if (log.length) {
@@ -5545,7 +5527,6 @@ function exportHTML(pupils, term, includeScales) {
     const scalesWeek = s.scalesThisWeek || [];
     const plan = (s.nextLesson||'').trim();
     const goals = s.goals || {};
-    const thisWeek = (goals.thisWeek||'').trim();
 
     // Practice tick boxes - 7 days
     const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -5624,7 +5605,7 @@ function exportHTML(pupils, term, includeScales) {
       .filter(function(l) { return l.length > 1 && !l.startsWith('\ud83d\udccc') && !l.startsWith('\ud83d\udcdd'); });
 
     var focusSection = '';
-    if (plan || thisWeek || bulletLines.length > 0) {
+    if (plan || bulletLines.length > 0) {
       var bullets = bulletLines.length > 0
         ? '<ul style="margin:8px 0 0 0;padding-left:18px;list-style:none">'
           + bulletLines.map(function(line) {
@@ -5638,7 +5619,6 @@ function exportHTML(pupils, term, includeScales) {
       focusSection = '<div style="background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:14px 16px;margin-bottom:20px">'
         + '<div style="font-size:0.65rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">\ud83d\udccc This week\'s focus</div>'
         + (plan ? '<div style="font-size:0.92rem;color:#1a3a0a;line-height:1.6;font-weight:600">' + plan + '</div>' : '')
-        + (thisWeek && thisWeek !== plan ? '<div style="font-size:0.88rem;color:#4a6a3a;margin-top:4px;line-height:1.5">' + thisWeek + '</div>' : '')
         + bullets
         + '</div>';
     }
@@ -5850,7 +5830,7 @@ function loadDefaultPupils() {
     lessonDay: p.lessonDay || '', lessonTime: p.lessonTime || '',
     frequency: p.frequency || 'weekly',
     pieces: [''], techFocus: [],
-    goals: { longTerm: '', medium: '', shortTerm: '', thisWeek: '' },
+    goals: { longTerm: '', medium: '', shortTerm: '' },
     nextLesson: '', duringScratch: '', log: []
   }));
   save();
