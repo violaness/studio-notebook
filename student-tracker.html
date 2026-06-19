@@ -5616,9 +5616,13 @@ function exportHTML(pupils, term, includeScales) {
           + '</ul>'
         : '';
 
+      var planHTML = plan
+        ? plan.split('\n').map(function(l) { return esc(l.trim()); }).filter(function(l){ return l.length > 0; }).join('<br>')
+        : '';
+
       focusSection = '<div style="background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:14px 16px;margin-bottom:20px">'
         + '<div style="font-size:0.65rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">\ud83d\udccc This week\'s focus</div>'
-        + (plan ? '<div style="font-size:0.92rem;color:#1a3a0a;line-height:1.6;font-weight:600">' + plan + '</div>' : '')
+        + (planHTML ? '<div style="font-size:0.92rem;color:#1a3a0a;line-height:1.6;font-weight:600">' + planHTML + '</div>' : '')
         + bullets
         + '</div>';
     }
