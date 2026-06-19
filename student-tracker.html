@@ -1971,6 +1971,12 @@ function renderDetail(s) {
           ${(s.techFocus||[]).length ? `<button onclick="clearAllTechFocus('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear all</button>` : ''}
         </div>
         <div class="tech-chips">${techHTML}</div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <input type="text" id="new-tech-chip-${s.id}" placeholder="Add a new focus word…" maxlength="40"
+            onkeydown="if(event.key==='Enter')addTechChipForPupil('${s.id}')"
+            style="flex:1;padding:8px 12px;border-radius:999px;font-size:0.88rem">
+          <button onclick="addTechChipForPupil('${s.id}')" style="background:var(--viola);color:#fff;border:none;border-radius:999px;padding:8px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">Add</button>
+        </div>
       </div>
       <div class="section-card">
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
@@ -2440,6 +2446,25 @@ function clearAllTechFocus(id) {
   const s = getStudent(id); if (!s) return;
   if (!confirm('Clear all technical focus selections for this pupil?')) return;
   s.techFocus = [];
+  save();
+  renderDetail(s);
+  document.querySelectorAll('.moment-tab').forEach(t => { if (t.textContent === 'Before') t.click(); });
+}
+
+// Add a brand new custom focus word (pill) from the pupil's Before tab.
+// Adds it to the shared customChips list (so it appears for all pupils,
+// same as adding from the Library page) and auto-selects it for this pupil.
+function addTechChipForPupil(id) {
+  const input = document.getElementById('new-tech-chip-' + id);
+  if (!input) return;
+  const val = input.value.trim();
+  if (!val) return;
+  if (!customChips.includes(val)) {
+    customChips.push(val);
+  }
+  const s = getStudent(id); if (!s) return;
+  if (!s.techFocus) s.techFocus = [];
+  if (!s.techFocus.includes(val)) s.techFocus.push(val);
   save();
   renderDetail(s);
   document.querySelectorAll('.moment-tab').forEach(t => { if (t.textContent === 'Before') t.click(); });
