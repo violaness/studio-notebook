@@ -613,15 +613,17 @@
         <input type="text" id="lib-new-piece-title" placeholder="Title" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <input type="text" id="lib-new-piece-composer" placeholder="Composer (optional)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <input type="text" id="lib-new-piece-grade" placeholder="Grade (optional)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
-        <select id="lib-new-piece-cat" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
+        <select id="lib-new-piece-cat" onchange="toggleNewCatInput(this.value)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
           <option value="My Library">My Library</option>
           <option value="Repertoire - Viola">Repertoire — Viola</option>
           <option value="Repertoire - Violin">Repertoire — Violin</option>
           <option value="Studies - Viola">Studies — Viola</option>
           <option value="Studies - Violin">Studies — Violin</option>
           <option value="Technique">Technique</option>
+          <option value="__new__">+ New category…</option>
         </select>
-        <button onclick="addLibPiece()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">Add to library</button>
+        <input type="text" id="lib-new-piece-cat-custom" placeholder="New category name" style="display:none;padding:8px 12px;border-radius:8px;font-size:0.88rem">
+        <button onclick="addLibPiece()" style="background:#2F5C1A;color:#fff;border:none;border-radius:8px;padding:11px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:700;cursor:pointer;display:block;width:100%">Add to library</button>
       </div>
     </div>
   </div>
@@ -1225,6 +1227,8 @@
 <div id="pencil-kb" style="position:fixed;bottom:360px;right:10px;z-index:148;display:flex;flex-direction:column;gap:6px">
   <button onpointerdown="event.preventDefault();pencilKey('Undo')" title="Undo"
     style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">↩<br>Undo</button>
+  <button onpointerdown="event.preventDefault();pencilKey('Redo')" title="Redo"
+    style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">↪<br>Redo</button>
   <button onpointerdown="event.preventDefault();pencilKey('Capitalise')" title="Capitalise selection"
     style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">⇧<br>Cap</button>
   <button onpointerdown="event.preventDefault();pencilKey('Backspace')" title="Backspace"
@@ -2022,7 +2026,7 @@ function renderDetail(s) {
                 onkeydown="if(event.key==='Enter')addAbsence('${s.id}')">
             </div>
             <button onclick="addAbsence('${s.id}')"
-              style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin-top:2px;min-width:160px">+ Add absence</button>
+              style="background:#2F5C1A;color:#fff;border:none;border-radius:8px;padding:11px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:700;cursor:pointer;display:block;margin-top:2px;width:100%">+ Add absence</button>
           </div>
         </div>
       </details>
@@ -4074,9 +4078,31 @@ function renderStudioAttendance() {
 }
 
 function renderLibrary() {
+  populateCatFilters();
   renderLibChips();
   renderLibPieces();
   renderStudioAttendance();
+}
+
+// Built-in categories present in both filter dropdowns by default
+const BUILTIN_CATS = ['My Library','Scalability','Technique','Studies - Viola','Studies - Violin','Repertoire - Viola','Repertoire - Violin','Beginner Repertoire - Viola','Beginner Repertoire - Violin'];
+
+// Add any custom categories (created via "+ New category…") to both filter
+// dropdowns, so pieces filed under them can still be found/filtered.
+function populateCatFilters() {
+  const customCats = [...new Set(customPieces.map(p => p.cat).filter(c => c && !BUILTIN_CATS.includes(c)))].sort();
+  ['lib-cat-filter','piece-cat-filter'].forEach(id => {
+    const sel = document.getElementById(id); if (!sel) return;
+    const current = sel.value;
+    // Remove any previously-added custom options (marked with data-custom-cat)
+    [...sel.querySelectorAll('option[data-custom-cat]')].forEach(o => o.remove());
+    customCats.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat; opt.textContent = cat; opt.setAttribute('data-custom-cat','1');
+      sel.appendChild(opt);
+    });
+    if ([...sel.options].some(o => o.value === current)) sel.value = current;
+  });
 }
 
 function renderLibChips() {
@@ -4128,7 +4154,7 @@ function renderLibPieces() {
   const cat = document.getElementById('lib-cat-filter').value;
   const allPieces = [...customPieces, ...PIECE_DB];
   const filtered = allPieces.filter(p => {
-    const matchSearch = !search || p.title.toLowerCase().includes(search) || (p.composer||'').toLowerCase().includes(search);
+    const matchSearch = !search || p.title.toLowerCase().includes(search) || (p.composer||'').toLowerCase().includes(search) || (p.grade||'').toLowerCase().includes(search);
     const matchCat = !cat || p.cat === cat;
     return matchSearch && matchCat;
   });
@@ -4155,18 +4181,34 @@ function renderLibPieces() {
     </div>`).join('');
 }
 
+function toggleNewCatInput(val) {
+  const customInput = document.getElementById('lib-new-piece-cat-custom');
+  if (!customInput) return;
+  customInput.style.display = val === '__new__' ? 'block' : 'none';
+  if (val === '__new__') customInput.focus();
+}
+
 function addLibPiece() {
   const title = document.getElementById('lib-new-piece-title').value.trim();
   if (!title) return;
   const composer = document.getElementById('lib-new-piece-composer').value.trim();
   const grade    = document.getElementById('lib-new-piece-grade').value.trim();
-  const cat      = document.getElementById('lib-new-piece-cat').value;
+  let cat        = document.getElementById('lib-new-piece-cat').value;
+  if (cat === '__new__') {
+    const customCat = document.getElementById('lib-new-piece-cat-custom').value.trim();
+    if (!customCat) { document.getElementById('lib-new-piece-cat-custom').focus(); return; }
+    cat = customCat;
+  }
   if (customPieces.some(p => p.title.toLowerCase() === title.toLowerCase())) return;
   customPieces.push({ title, composer, grade, cat });
   save();
   document.getElementById('lib-new-piece-title').value = '';
   document.getElementById('lib-new-piece-composer').value = '';
   document.getElementById('lib-new-piece-grade').value = '';
+  document.getElementById('lib-new-piece-cat').value = 'My Library';
+  document.getElementById('lib-new-piece-cat-custom').value = '';
+  document.getElementById('lib-new-piece-cat-custom').style.display = 'none';
+  populateCatFilters();
   renderLibPieces();
 }
 
@@ -4442,11 +4484,13 @@ function saveQuickCapture() {
 // ── PENCIL KEYBOARD ────────────────────────────────────────────────────────
 let _lastFocusedEl = null;
 const _textHistory = new WeakMap(); // per element undo stack
+const _redoHistory = new WeakMap(); // per element redo stack
 
 document.addEventListener('focusin', function(e) {
   if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
     _lastFocusedEl = e.target;
     if (!_textHistory.has(e.target)) _textHistory.set(e.target, []);
+    if (!_redoHistory.has(e.target)) _redoHistory.set(e.target, []);
   }
 });
 
@@ -4455,6 +4499,8 @@ function _saveTextHistory(el) {
   stack.push({ value: el.value, start: el.selectionStart, end: el.selectionEnd });
   if (stack.length > 50) stack.shift();
   _textHistory.set(el, stack);
+  // Any new edit invalidates the redo stack
+  _redoHistory.set(el, []);
 }
 
 function pencilKey(key) {
@@ -4469,9 +4515,28 @@ function pencilKey(key) {
     const stack = _textHistory.get(el);
     if (!stack || stack.length === 0) return;
     const prev = stack.pop();
+    // Push current state onto redo stack so it can be restored
+    const redoStack = _redoHistory.get(el) || [];
+    redoStack.push({ value: el.value, start: el.selectionStart, end: el.selectionEnd });
+    _redoHistory.set(el, redoStack);
     el.value = prev.value;
     el.selectionStart = prev.start;
     el.selectionEnd = prev.end;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    return;
+  }
+
+  if (key === 'Redo') {
+    const redoStack = _redoHistory.get(el);
+    if (!redoStack || redoStack.length === 0) return;
+    const next = redoStack.pop();
+    // Push current state back onto undo stack
+    const stack = _textHistory.get(el) || [];
+    stack.push({ value: el.value, start: el.selectionStart, end: el.selectionEnd });
+    _textHistory.set(el, stack);
+    el.value = next.value;
+    el.selectionStart = next.start;
+    el.selectionEnd = next.end;
     el.dispatchEvent(new Event('input', { bubbles: true }));
     return;
   }
@@ -4877,6 +4942,7 @@ let pieceDBStudentId = null;
 
 function openPieceDB(studentId) {
   pieceDBStudentId = studentId;
+  populateCatFilters();
   document.getElementById('piece-search').value = '';
   document.getElementById('piece-cat-filter').value = '';
   renderPieceDB([...customPieces, ...PIECE_DB]);
@@ -4891,7 +4957,7 @@ function filterPieceDB() {
   const cat = document.getElementById('piece-cat-filter').value;
   const allPieces = [...customPieces, ...PIECE_DB];
   const filtered = allPieces.filter(p => {
-    const matchSearch = !search || p.title.toLowerCase().includes(search) || (p.composer||'').toLowerCase().includes(search);
+    const matchSearch = !search || p.title.toLowerCase().includes(search) || (p.composer||'').toLowerCase().includes(search) || (p.grade||'').toLowerCase().includes(search);
     const matchCat = !cat || p.cat === cat;
     return matchSearch && matchCat;
   });
