@@ -2021,6 +2021,41 @@ function renderDetail(s) {
       </details>
       <details style="margin-bottom:4px">
         <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
+          <span>🔁 Requested lesson moves${(s.requestedMoves&&s.requestedMoves.filter(m=>new Date(m.fromDate)>=new Date()).length)?` <span style="background:#29789E;color:#fff;font-size:0.65rem;padding:1px 6px;border-radius:999px;margin-left:6px">${s.requestedMoves.filter(m=>new Date(m.fromDate)>=new Date()).length}</span>`:''}</span>
+          <span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+        </summary>
+        <div class="section-card" style="margin-top:6px">
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px">For a one-off lesson change on a future date — e.g. moving a lesson in 3 weeks' time. This doesn't change the pupil's regular weekly slot.</div>
+          ${requestedMovesHTML(s)}
+          <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+            <div>
+              <label style="font-size:0.68rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Original lesson date</label>
+              <input type="date" id="move-from-date-${s.id}"
+                style="display:block;width:100%;min-height:44px;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none">
+            </div>
+            <div>
+              <label style="font-size:0.68rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">New date</label>
+              <input type="date" id="move-to-date-${s.id}"
+                style="display:block;width:100%;min-height:44px;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none">
+            </div>
+            <div>
+              <label style="font-size:0.68rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">New time (optional)</label>
+              <input type="time" id="move-to-time-${s.id}"
+                style="display:block;width:100%;min-height:44px;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none">
+            </div>
+            <div>
+              <label style="font-size:0.68rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Note (optional)</label>
+              <input type="text" id="move-note-${s.id}" placeholder="e.g. swapping with another pupil…"
+                style="width:100%;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);box-sizing:border-box"
+                onkeydown="if(event.key==='Enter')addRequestedMove('${s.id}')">
+            </div>
+            <button onclick="addRequestedMove('${s.id}')"
+              style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">+ Add requested move</button>
+          </div>
+        </div>
+      </details>
+      <details style="margin-bottom:4px">
+        <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
           <span>📅 Requested absences${(s.absences&&s.absences.filter(a=>new Date(a.date)>=new Date()).length)?` <span style="background:#e67e22;color:#fff;font-size:0.65rem;padding:1px 6px;border-radius:999px;margin-left:6px">${s.absences.filter(a=>new Date(a.date)>=new Date()).length}</span>`:''}</span>
           <span style="font-size:0.7rem;font-weight:400">tap to expand</span>
         </summary>
@@ -2065,7 +2100,8 @@ function renderDetail(s) {
         <textarea class="quick-note" rows="28"
           placeholder="Jot anything — key words, reminders, 'try this'…"
           id="during-scratch-${s.id}"
-          oninput="saveDuring('${s.id}')">${esc(s.duringScratch || '')}</textarea>
+          oninput="saveDuring('${s.id}')"
+          onkeydown="if(event.key==='Enter')handleListEnter(event)">${esc(s.duringScratch || '')}</textarea>
         <div class="save-toast" id="toast-during-${s.id}" style="opacity:0">✓ Saved</div>
         <div style="margin-top:10px">
           <div class="section-label" style="margin-bottom:8px">Tap to add to notes</div>
@@ -2122,7 +2158,8 @@ function renderDetail(s) {
         </div>
         <textarea rows="28" placeholder="What went well, what to remember for next time…"
           id="after-note-${s.id}"
-          oninput="this.dataset.edited='1'">${buildCumulativeNote(s)}</textarea>
+          oninput="this.dataset.edited='1'"
+          onkeydown="if(event.key==='Enter')handleListEnter(event)">${buildCumulativeNote(s)}</textarea>
         ${(()=>{
           const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
           const todayEntry = (s.log||[]).find(e => e.date === today);
@@ -2307,6 +2344,78 @@ function absencesHTML(s) {
     return row;
   }).join('');
 }
+
+// ── REQUESTED LESSON MOVES ────────────────────────────────────────────────
+// Distinct from oneOffMoves (which only ever applies to the CURRENT week via
+// the Week view's "Move" button). This is for moving a specific future-dated
+// lesson — e.g. "the lesson on 10 July moves to 12 July" — booked ahead of time.
+function requestedMovesHTML(s) {
+  const moves = (s.requestedMoves || []).slice().sort(function(a,b){ return a.fromDate.localeCompare(b.fromDate); });
+  if (moves.length === 0) {
+    return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No requested moves noted.</p>';
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  return moves.map(function(mv, i) {
+    var fromD = new Date(mv.fromDate);
+    var isPast = fromD < today;
+    var daysAway = Math.round((fromD - today) / (1000*60*60*24));
+    var isSoon = daysAway >= 0 && daysAway <= 14;
+    var fromLabel = fromD.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+    var dayLabel = isSoon ? (daysAway===0?'today':daysAway===1?'tomorrow':'in '+daysAway+' days') : '';
+    var soonTag = isSoon ? '<span style="font-size:0.65rem;font-weight:700;background:#e67e22;color:#fff;padding:1px 6px;border-radius:999px;margin-left:6px">' + dayLabel + '</span>' : '';
+    var toLabel = '';
+    if (mv.toDate) {
+      var toD = new Date(mv.toDate);
+      toLabel = toD.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+      if (mv.toTime) toLabel += ' \u00b7 ' + mv.toTime;
+    }
+    var noteSpan = mv.note ? '<span style="color:var(--muted);font-size:0.82rem"> \u2014 ' + esc(mv.note) + '</span>' : '';
+    var removeBtn = document.createElement('button');
+    removeBtn.textContent = '\u00d7';
+    removeBtn.style.cssText = 'background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1;flex-shrink:0';
+    removeBtn.dataset.sid = s.id;
+    removeBtn.dataset.idx = i;
+    removeBtn.onclick = function() { removeRequestedMove(this.dataset.sid, parseInt(this.dataset.idx)); };
+    var row = '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--warm);' + (isPast ? 'opacity:0.45' : '') + '">'
+      + '<span style="font-size:0.88rem;flex:1;' + (isPast ? 'text-decoration:line-through;color:var(--muted)' : '') + '">'
+      + fromLabel + soonTag
+      + (toLabel ? ' <span style="color:var(--viola)">\u2192 ' + toLabel + '</span>' : '')
+      + noteSpan
+      + '</span>'
+      + removeBtn.outerHTML
+      + '</div>';
+    return row;
+  }).join('');
+}
+
+function addRequestedMove(id) {
+  const s = getStudent(id); if (!s) return;
+  const fromEl = document.getElementById('move-from-date-' + id);
+  const toEl   = document.getElementById('move-to-date-' + id);
+  const timeEl = document.getElementById('move-to-time-' + id);
+  const noteEl = document.getElementById('move-note-' + id);
+  const fromDate = fromEl.value; if (!fromDate) { fromEl.focus(); return; }
+  if (!s.requestedMoves) s.requestedMoves = [];
+  // Don't add duplicate "from" dates
+  if (s.requestedMoves.some(m => m.fromDate === fromDate)) { fromEl.value = ''; toEl.value = ''; timeEl.value = ''; noteEl.value = ''; return; }
+  s.requestedMoves.push({
+    fromDate: fromDate,
+    toDate: toEl.value || '',
+    toTime: timeEl.value || '',
+    note: noteEl.value.trim()
+  });
+  fromEl.value = ''; toEl.value = ''; timeEl.value = ''; noteEl.value = '';
+  save(); renderDetail(s);
+  document.querySelectorAll('.moment-tab')[0].click();
+}
+
+function removeRequestedMove(id, idx) {
+  const s = getStudent(id); if (!s || !s.requestedMoves) return;
+  s.requestedMoves.splice(idx, 1);
+  save(); renderDetail(s);
+  document.querySelectorAll('.moment-tab')[0].click();
+}
+
 function addAbsence(id) {
   const s = getStudent(id); if (!s) return;
   const dateEl = document.getElementById('absence-date-' + id);
@@ -2569,6 +2678,41 @@ function toggleCheckboxAtCursor(elId) {
   }
   el.selectionStart = start;
   el.selectionEnd = start;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+// When Enter is pressed on a line starting with a bullet or tick box marker,
+// continue the list onto the next line with the same marker. Pressing Enter
+// on an EMPTY list item (just the marker, nothing typed after it) breaks out
+// of the list instead — otherwise you'd never be able to stop bulleting.
+function handleListEnter(event) {
+  const el = event.target;
+  const val = el.value;
+  const start = el.selectionStart;
+  const end = el.selectionEnd;
+  const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+  const lineEndIdx = (() => { const i = val.indexOf('\n', start); return i === -1 ? val.length : i; })();
+  const line = val.slice(lineStart, lineEndIdx);
+  let marker = null;
+  if (line.startsWith('• '))      marker = '•';
+  else if (line.startsWith('☐ ')) marker = '☐';
+  else if (line.startsWith('☑ ')) marker = '☐'; // new items start unticked
+  if (!marker) return; // not on a list line — let Enter behave normally
+
+  const content = line.slice(2); // text after "marker space"
+  event.preventDefault();
+  if (content.trim() === '') {
+    // Empty list item — remove the marker and just add a plain new line
+    const newVal = val.slice(0, lineStart) + val.slice(lineEndIdx);
+    el.value = newVal;
+    el.selectionStart = el.selectionEnd = lineStart;
+  } else {
+    // Continue the list with the same marker on the next line
+    const insertion = '\n' + marker + ' ';
+    el.value = val.slice(0, start) + insertion + val.slice(end);
+    const newPos = start + insertion.length;
+    el.selectionStart = el.selectionEnd = newPos;
+  }
   el.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
