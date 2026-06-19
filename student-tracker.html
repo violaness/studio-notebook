@@ -1410,8 +1410,13 @@ function isoWeek(date) {
 function teachingWeekKey(date) {
   const d = new Date(date);
   d.setHours(0,0,0,0);
-  // Shift forward by 2 days so Thursday becomes Saturday in the calculation
-  d.setDate(d.getDate() + 2);
+  // Shift forward by 1 day so Thursday midnight (Thu→Fri) triggers the new week.
+  // With +1: Fri(5)→Sat, Sat(6)→Sun... Thu(4)→Fri(5) which still falls in old week.
+  // We want Thu to be the LAST day of the old week, so shift +1 and use Fri as new start.
+  // getDay(): 0=Sun 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat
+  // With shift +1: Thu becomes Fri in shifted date, which hasn't crossed Sat yet → old week.
+  // Fri becomes Sat in shifted date → new week. Correct!
+  d.setDate(d.getDate() + 1);
   // Now roll back to the Saturday that starts this (shifted) week
   const daysSinceSat = (d.getDay() + 1) % 7; // 0=Sat, 1=Sun ... 6=Fri
   d.setDate(d.getDate() - daysSinceSat);
