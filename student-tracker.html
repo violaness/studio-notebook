@@ -1668,8 +1668,7 @@ function renderWeek() {
       if (dayOffset < 0) dayOffset += 7;
       lessonDate.setDate(weekStart.getDate() + dayOffset);
       const lessonDateStr = lessonDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-      const lessonLog = (s.log||[]).find(e => e.date === lessonDateStr)
-                     || (s.log||[]).slice(-1)[0]; // fallback to most recent entry
+      const lessonLog = (s.log||[]).find(e => e.date === lessonDateStr);
       const att = lessonLog ? lessonLog.attendance : null;
       const attBadge = att === 'present'
         ? `<span style="font-size:1rem;margin-left:6px" title="Present">✅</span>`
