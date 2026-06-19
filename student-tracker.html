@@ -2278,6 +2278,34 @@ function renderDetail(s) {
         ${completedScalesHTML(s)}
       </div>
 
+      <!-- BOOKS PURCHASED -->
+      <div class="section-card">
+        <div class="section-label">📚 Books purchased</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">Keep track of which books this pupil already owns, so you don't recommend a duplicate.</div>
+
+        <div style="margin-bottom:14px">
+          <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">Repertoire</div>
+          ${booksPurchasedHTML(s, 'repertoire')}
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input type="text" id="new-book-repertoire-${s.id}" placeholder="Add a repertoire book…" maxlength="80"
+              onkeydown="if(event.key==='Enter')addBookPurchased('${s.id}','repertoire')"
+              style="flex:1;padding:8px 12px;border-radius:8px;font-size:0.88rem">
+            <button onclick="addBookPurchased('${s.id}','repertoire')" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">Add</button>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">Studies</div>
+          ${booksPurchasedHTML(s, 'studies')}
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input type="text" id="new-book-studies-${s.id}" placeholder="Add a studies book…" maxlength="80"
+              onkeydown="if(event.key==='Enter')addBookPurchased('${s.id}','studies')"
+              style="flex:1;padding:8px 12px;border-radius:8px;font-size:0.88rem">
+            <button onclick="addBookPurchased('${s.id}','studies')" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">Add</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ATTENDANCE -->
       <div class="section-card">
         <div class="section-label">Attendance</div>
@@ -3112,6 +3140,52 @@ function completedScalesHTML(s) {
   }
 
   return out;
+}
+
+// ── BOOKS PURCHASED ───────────────────────────────────────────────────────
+// category is 'repertoire' or 'studies'. Stored as s.booksPurchased = { repertoire: [...], studies: [...] }
+function booksPurchasedHTML(s, category) {
+  const books = (s.booksPurchased && s.booksPurchased[category]) || [];
+  if (books.length === 0) {
+    return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">None added yet.</p>';
+  }
+  return books.map(function(b, i) {
+    var removeBtn = document.createElement('button');
+    removeBtn.textContent = '\u00d7';
+    removeBtn.style.cssText = 'background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1;flex-shrink:0';
+    removeBtn.dataset.sid = s.id;
+    removeBtn.dataset.cat = category;
+    removeBtn.dataset.idx = i;
+    removeBtn.onclick = function() { removeBookPurchased(this.dataset.sid, this.dataset.cat, parseInt(this.dataset.idx)); };
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--warm)">'
+      + '<span style="font-size:0.88rem;flex:1">📖 ' + esc(b) + '</span>'
+      + removeBtn.outerHTML
+      + '</div>';
+  }).join('');
+}
+
+function addBookPurchased(id, category) {
+  const s = getStudent(id); if (!s) return;
+  const input = document.getElementById('new-book-' + category + '-' + id);
+  if (!input) return;
+  const title = input.value.trim();
+  if (!title) return;
+  if (!s.booksPurchased) s.booksPurchased = { repertoire: [], studies: [] };
+  if (!s.booksPurchased[category]) s.booksPurchased[category] = [];
+  if (s.booksPurchased[category].some(b => b.toLowerCase() === title.toLowerCase())) { input.value = ''; return; }
+  s.booksPurchased[category].push(title);
+  input.value = '';
+  save();
+  renderDetail(s);
+  document.querySelectorAll('.moment-tab').forEach(t => { if (t.textContent === 'History') t.click(); });
+}
+
+function removeBookPurchased(id, category, idx) {
+  const s = getStudent(id); if (!s || !s.booksPurchased || !s.booksPurchased[category]) return;
+  s.booksPurchased[category].splice(idx, 1);
+  save();
+  renderDetail(s);
+  document.querySelectorAll('.moment-tab').forEach(t => { if (t.textContent === 'History') t.click(); });
 }
 
 function birthdayDisplay(dob) {
