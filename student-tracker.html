@@ -1962,8 +1962,12 @@ function renderDetail(s) {
         </div>
       </div>
       <div class="section-card">
-        <div class="section-label">📌 Plan for today's lesson</div>
+        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
+          <span>📌 Plan for today's lesson</span>
+          ${s.nextLesson ? `<button onclick="clearNextLessonPlan('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>` : ''}
+        </div>
         <textarea rows="28" placeholder="What you want to cover today…"
+          id="nextlesson-${s.id}"
           oninput="updateField('${s.id}','nextLesson',this.value)">${esc(s.nextLesson||'')}</textarea>
         ${(s.log||[]).filter(e=>e.text).length > 0 ? '<button onclick="copyLastLesson(\'' + s.id + '\')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-size:0.8rem;cursor:pointer;width:100%">\u2191 Copy last lesson notes as plan</button>' : ''}
         <div style="margin-top:14px">
@@ -2027,12 +2031,20 @@ function renderDetail(s) {
     <!-- DURING -->
     <div class="moment-panel" id="panel-during">
       ${refSummary(s)}
+      ${s.nextLesson ? `
+      <div class="section-card" style="background:#f8fdf5;border:1.5px solid #c8ddb8">
+        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
+          <span>📌 Plan (from before lesson)</span>
+          <button onclick="clearNextLessonPlan('${s.id}', true)" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
+        </div>
+        <p style="white-space:pre-wrap;font-size:0.88rem;color:var(--ink);margin:4px 0 0">${esc(s.nextLesson)}</p>
+      </div>` : ''}
       <div class="section-card">
         <div class="section-label">Quick notes — right now</div>
         <textarea class="quick-note" rows="28"
           placeholder="Jot anything — key words, reminders, 'try this'…"
           id="during-scratch-${s.id}"
-          oninput="saveDuring('${s.id}')">${esc(s.duringScratch || (s.nextLesson ? '📌 Plan:\n' + s.nextLesson + '\n\n' : ''))}</textarea>
+          oninput="saveDuring('${s.id}')">${esc(s.duringScratch || '')}</textarea>
         <div class="save-toast" id="toast-during-${s.id}" style="opacity:0">✓ Saved</div>
         <div style="margin-top:10px">
           <div class="section-label" style="margin-bottom:8px">Tap to add to notes</div>
@@ -2342,6 +2354,20 @@ function confirmFillSlot() {
 
 
 function updateField(id, field, val) { const s=getStudent(id); if(s){s[field]=val;save();} }
+
+// Clear the carried-over "plan for today's lesson" text.
+function clearNextLessonPlan(id, fromDuring) {
+  const s = getStudent(id); if (!s) return;
+  if (!confirm('Clear the plan from last lesson?')) return;
+  s.nextLesson = '';
+  save();
+  renderDetail(s);
+  document.querySelectorAll('.moment-tab').forEach(t => {
+    if (fromDuring && t.textContent === 'During') t.click();
+    if (!fromDuring && t.textContent === 'Before') t.click();
+  });
+}
+
 function updateGoal(id, key, val) {
   const s = getStudent(id); if (!s) return;
   if (!s.goals) s.goals = {};
@@ -3226,25 +3252,11 @@ function buildCumulativeNote(s) {
   }
   if (s.duringScratch && s.duringScratch.trim()) {
     let scratch = s.duringScratch.trim();
-    // Strip any plan prefix variations
-    const prefixes = [
-      '📌 Plan:\n' + plan,
-      '📌 Plan:\n',
-      '\ud83d\udccc Plan:\n' + plan,
-      '\ud83d\udccc Plan:\n'
-    ];
-    for (const prefix of prefixes) {
-      if (prefix && scratch.startsWith(prefix)) {
-        scratch = scratch.slice(prefix.length).trim();
-        break;
-      }
-    }
-    // Strip scales line if present
+    // Strip scales line if present (legacy notes may still include it)
     scratch = scratch.replace(/^\ud83c\udfbb Scales this week:.*(\n|$)/m, '').trim();
-    // Strip "📝 During lesson:" label if already there
+    // Strip "📝 During lesson:" label if already there (legacy notes)
     scratch = scratch.replace(/^📝 During lesson:\n?/m, '').trim();
-    // Only add if there's something left that isn't just the plan repeated
-    if (scratch && scratch !== plan) {
+    if (scratch) {
       parts.push('📝 During lesson:\n' + scratch);
     }
   }
@@ -5154,8 +5166,9 @@ function exportHTML(pupils, term, includeScales) {
       var lastEntry = (s.log || []).slice(-1)[0];
       if (lastEntry && lastEntry.text) scratch = lastEntry.text.trim();
     }
+    // Strip legacy plan-prefix variations in case older saved notes still have them
     var planPrefix = '\ud83d\udccc Plan:\n' + plan;
-    if (scratch.startsWith(planPrefix)) scratch = scratch.slice(planPrefix.length).trim();
+    if (plan && scratch.startsWith(planPrefix)) scratch = scratch.slice(planPrefix.length).trim();
     var planPrefix2 = '\ud83d\udccc Plan:\n';
     if (scratch.startsWith(planPrefix2)) scratch = scratch.slice(planPrefix2.length).trim();
     scratch = scratch.replace(/^\ud83c\udfbb Scales this week:.*$/m, '').trim();
