@@ -1656,11 +1656,11 @@ function renderWeek() {
       const moved = oneOffMoves[s.id] && oneOffMoves[s.id].week === currentWeek;
       // Check attendance for this pupil's lesson day this week
       const DAYS_ORDER = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-      const weekStart = new Date(); // find the Saturday that started this week
-      const todayDow = weekStart.getDay(); // 0=Sun,6=Sat
-      // Week runs Sat–Wed, so find the most recent Saturday
-      const daysSinceSat = (todayDow + 1) % 7;
-      weekStart.setDate(weekStart.getDate() - daysSinceSat);
+      // Use the teaching week key (which already handles the Friday→Saturday reset)
+      // to derive the Saturday that starts the current teaching week
+      const twk = currentWeek; // e.g. "2026-06-20"
+      const [twkY, twkM, twkD] = twk.split('-').map(Number);
+      const weekStart = new Date(twkY, twkM - 1, twkD);
       // Find the date of this pupil's lesson day in the current week
       const lessonDayIdx = DAYS_ORDER.indexOf(slot.day);
       const lessonDate = new Date(weekStart);
