@@ -3843,6 +3843,51 @@ function scaleCheckKey(studentId, key, type, octave) {
   document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
 }
 
+// Tick (or untick) every type, across every octave, for ONE key — e.g. tap
+// "Tick all" on the C card to mark every row done for C in one go.
+// Toggles: if everything for this key is already ticked, untick it all;
+// otherwise, tick everything that isn't ticked yet.
+function scaleCheckAllForKey(studentId, key) {
+  const s = getStudent(studentId); if (!s) return;
+  const octs = (s.scaleKeyOctaves && s.scaleKeyOctaves[key]) || ['1','2','3'];
+  if (!s.scaleChecklist) s.scaleChecklist = {};
+  if (!s.scaleChecklist[key]) s.scaleChecklist[key] = {};
+  const ticks = s.scaleChecklist[key];
+  const allDone = SCALE_TYPES.every(t => octs.every(o => ticks[t] && ticks[t][o]));
+  SCALE_TYPES.forEach(t => {
+    if (!ticks[t]) ticks[t] = {};
+    octs.forEach(o => { ticks[t][o] = !allDone; });
+  });
+  save();
+  document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
+}
+
+// Tick (or untick) one scale TYPE (e.g. "Major scale") across every key the
+// pupil has, for all of that key's own octaves — e.g. tap the "Major scale"
+// row label to mark Major scale done in every key at once.
+// Toggles: if every key already has this type fully ticked, untick it all;
+// otherwise, tick it everywhere that isn't ticked yet.
+function scaleCheckAllForType(studentId, type) {
+  const s = getStudent(studentId); if (!s) return;
+  const keys = s.scaleKeys || [];
+  if (keys.length === 0) return;
+  if (!s.scaleChecklist) s.scaleChecklist = {};
+  const keyOctaves = s.scaleKeyOctaves || {};
+  const allDone = keys.every(key => {
+    const octs = keyOctaves[key] || ['1','2','3'];
+    const ticks = (s.scaleChecklist[key] || {})[type] || {};
+    return octs.every(o => ticks[o]);
+  });
+  keys.forEach(key => {
+    const octs = keyOctaves[key] || ['1','2','3'];
+    if (!s.scaleChecklist[key]) s.scaleChecklist[key] = {};
+    if (!s.scaleChecklist[key][type]) s.scaleChecklist[key][type] = {};
+    octs.forEach(o => { s.scaleChecklist[key][type][o] = !allDone; });
+  });
+  save();
+  document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
+}
+
 function naturalMinorCheckKey(studentId, key, octave) {
   const s = getStudent(studentId); if (!s) return;
   if (!s.naturalMinorChecklist) s.naturalMinorChecklist = {};
@@ -3947,7 +3992,22 @@ function scalesHTML(s) {
   const cl = s.scaleChecklist || {};
   const keyOctaves = s.scaleKeyOctaves || {};
 
-  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">' +
+  // "Tick a type across all keys" shortcut row, shown once above the key
+  // cards when there's more than one key (no point offering it for just one).
+  let typeShortcuts = '';
+  if (keys.length > 1) {
+    typeShortcuts = '<div style="margin-bottom:10px">'
+      + '<div style="font-size:0.68rem;color:var(--muted);margin-bottom:6px">Tick a type across all keys:</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:6px">'
+      + SCALE_TYPES.map(function(type) {
+          return '<button onclick="scaleCheckAllForType(\'' + s.id + '\',\'' + type + '\')" '
+            + 'style="background:none;border:1.5px solid #e0ddd8;border-radius:999px;padding:4px 10px;font-size:0.7rem;color:var(--muted);cursor:pointer">'
+            + esc(type) + '</button>';
+        }).join('')
+      + '</div></div>';
+  }
+
+  return typeShortcuts + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">' +
     keys.map(function(key) {
       var ticks = cl[key] || {};
       // Use stored octaves for this key, defaulting to ['2'] for old keys with no setting
@@ -3979,6 +4039,7 @@ function scalesHTML(s) {
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
         + '<span style="font-size:1.05rem;font-weight:700">' + esc(key) + '</span>'
         + '<span style="font-size:0.7rem;color:var(--muted)">' + done + '/' + total + '</span>'
+        + '<button onclick="scaleCheckAllForKey(\'' + s.id + '\',\'' + key + '\')" style="background:none;border:none;color:var(--viola);cursor:pointer;font-size:0.72rem;padding:0 6px" title="Tick all for this key">all</button>'
         + '<button onclick="editKeyOctaves(\'' + s.id + '\',\'' + key + '\')" style="background:none;border:none;color:var(--viola);cursor:pointer;font-size:0.72rem;padding:0 6px" title="Edit octaves">oct</button>'
         + '<button onclick="removeScaleKey(\'' + s.id + '\',\'' + key + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem;padding:0 0 0 4px">\u00d7</button>'
         + '</div>'
