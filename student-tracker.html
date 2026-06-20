@@ -2095,7 +2095,7 @@ function renderDetail(s) {
         <textarea class="quick-note" rows="28"
           placeholder="Jot anything — key words, reminders, 'try this'…"
           id="during-scratch-${s.id}"
-          oninput="saveDuring('${s.id}')"
+          oninput="fixupListContinuation('during-scratch-${s.id}');saveDuring('${s.id}')"
           onkeydown="if(event.key==='Enter')handleListEnter(event)">${esc(s.duringScratch || '')}</textarea>
         <div class="save-toast" id="toast-during-${s.id}" style="opacity:0">✓ Saved</div>
         <div style="margin-top:10px">
@@ -2153,7 +2153,7 @@ function renderDetail(s) {
         </div>
         <textarea rows="28" placeholder="What went well, what to remember for next time…"
           id="after-note-${s.id}"
-          oninput="this.dataset.edited='1'"
+          oninput="fixupListContinuation('after-note-${s.id}');this.dataset.edited='1'"
           onkeydown="if(event.key==='Enter')handleListEnter(event)">${buildCumulativeNote(s)}</textarea>
         ${(()=>{
           const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
@@ -2754,7 +2754,6 @@ function toggleCheckboxAtCursor(elId) {
 // continue the list onto the next line with the same marker. Pressing Enter
 // on an EMPTY list item (just the marker, nothing typed after it) breaks out
 // of the list instead — otherwise you'd never be able to stop bulleting.
-let _listEnterHandling = false;
 function handleListEnter(event) {
   const el = event.target;
   const val = el.value;
@@ -2768,13 +2767,6 @@ function handleListEnter(event) {
   else if (line.startsWith('☐ ')) marker = '☐';
   else if (line.startsWith('☑ ')) marker = '☐'; // new items start unticked
   if (!marker) return; // not on a list line — let Enter behave normally
-
-  // Guard against iPad's software keyboard occasionally firing keydown twice
-  // in quick succession (e.g. during predictive-text acceptance), which would
-  // otherwise insert the marker twice for a single Return press.
-  if (_listEnterHandling) { event.preventDefault(); event.stopPropagation(); return; }
-  _listEnterHandling = true;
-  setTimeout(() => { _listEnterHandling = false; }, 50);
 
   const content = line.slice(2); // text after "marker space"
   event.preventDefault();
@@ -2793,6 +2785,42 @@ function handleListEnter(event) {
     el.setSelectionRange(newPos, newPos);
   }
   el.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+// Fallback / safety net for the same feature, triggered on every keystroke via
+// oninput rather than intercepting keydown. iPad Safari's software keyboard
+// doesn't always let keydown interception (handleListEnter above) run in time
+// before inserting its own newline — so this catches that case afterwards:
+// if a fresh blank line has just appeared directly below a bulleted/tick-box
+// line, it retroactively adds the matching marker to that new line.
+function fixupListContinuation(elId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const val = el.value;
+  const pos = el.selectionStart;
+  if (pos !== el.selectionEnd) return; // only handle simple cursor, not a selection
+  // Find the line the cursor is currently on
+  const curLineStart = val.lastIndexOf('\n', pos - 1) + 1;
+  const curLineEnd = (() => { const i = val.indexOf('\n', pos); return i === -1 ? val.length : i; })();
+  const curLine = val.slice(curLineStart, curLineEnd);
+  // Only act if the current line is genuinely empty (just-pressed-Enter state)
+  if (curLine !== '') return;
+  // Must have a previous line to inherit a marker from
+  if (curLineStart === 0) return;
+  const prevLineEnd = curLineStart - 1; // the \n that separates prev line from this one
+  const prevLineStart = val.lastIndexOf('\n', prevLineEnd - 1) + 1;
+  const prevLine = val.slice(prevLineStart, prevLineEnd);
+  let marker = null;
+  if (prevLine.startsWith('• '))      marker = '•';
+  else if (prevLine.startsWith('☐ ')) marker = '☐';
+  else if (prevLine.startsWith('☑ ')) marker = '☐';
+  if (!marker) return; // previous line wasn't a list item — leave it alone
+  if (prevLine.slice(2).trim() === '') return; // previous line was an empty list item — don't re-add (handleListEnter already handles breaking out)
+  // Insert the marker on the now-empty current line
+  const insertion = marker + ' ';
+  el.value = val.slice(0, curLineStart) + insertion + val.slice(curLineStart);
+  const newPos = curLineStart + insertion.length;
+  el.setSelectionRange(newPos, newPos);
 }
 
 
