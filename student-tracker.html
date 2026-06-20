@@ -4419,6 +4419,17 @@ function renderStudioAttendance() {
   // Sort weeks chronologically
   const sortedWeeks = [...allWeeks].sort();
 
+  // Detect gaps between consecutive weeks (e.g. half-term, holidays) so we can
+  // show a thin visual divider rather than columns butting straight up against
+  // each other with no indication a week (or more) was skipped.
+  const weekHasGapBefore = {};
+  for (let i = 1; i < sortedWeeks.length; i++) {
+    const prevSat = weekKeyToSat(sortedWeeks[i-1]);
+    const thisSat = weekKeyToSat(sortedWeeks[i]);
+    const daysBetween = Math.round((thisSat - prevSat) / 86400000);
+    if (daysBetween > 7) weekHasGapBefore[sortedWeeks[i]] = true;
+  }
+
   // Format week header: show Saturday date e.g. "5 Apr\n'25"
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   function fmtWeek(wk) {
@@ -4452,7 +4463,7 @@ function renderStudioAttendance() {
         <thead>
           <tr>
             <th style="text-align:left;padding:6px 8px;background:var(--warm);position:sticky;left:0;z-index:2;min-width:100px;border-radius:8px 0 0 0">Pupil</th>
-            ${sortedWeeks.map(wk => `<th style="padding:4px 6px;background:var(--warm);text-align:center;white-space:nowrap;min-width:44px;line-height:1.3">${fmtWeek(wk)}</th>`).join('')}
+            ${sortedWeeks.map(wk => `<th style="padding:4px 6px;background:var(--warm);text-align:center;white-space:nowrap;min-width:44px;line-height:1.3${weekHasGapBefore[wk] ? ';border-left:3px dashed #b5a98a;padding-left:9px' : ''}">${fmtWeek(wk)}</th>`).join('')}
             <th style="padding:4px 8px;background:var(--warm);text-align:center;white-space:nowrap" title="Lessons attended in this period">#</th>
           </tr>
         </thead>
@@ -4462,10 +4473,11 @@ function renderStudioAttendance() {
             const cells = sortedWeeks.map(wk => {
               const reg   = regularMap[s.id]?.[wk] || null;
               const extra = extraMap[s.id]?.[wk]   || 0;
+              const gapStyle = weekHasGapBefore[wk] ? 'border-left:3px dashed #b5a98a;padding-left:7px' : '';
               if (reg === 'present') attended++;
               attended += extra;
               if (!reg && !extra) {
-                return `<td style="text-align:center;padding:4px 2px;border-bottom:1px solid var(--warm);color:#ddd">·</td>`;
+                return `<td style="text-align:center;padding:4px 2px;border-bottom:1px solid var(--warm);color:#ddd;${gapStyle}">·</td>`;
               }
               const regBadge = reg
                 ? `<span style="display:inline-block;width:26px;height:20px;line-height:20px;border-radius:4px;background:${colMap[reg]};color:#fff;font-size:0.68rem;font-weight:700" title="${fullLabel[reg]||reg}">${labelMap[reg]}</span>`
@@ -4473,7 +4485,7 @@ function renderStudioAttendance() {
               const extraBadge = extra > 0
                 ? `<span onclick="removeExtraFromOverview('${s.id}','${wk}')" style="display:inline-block;width:20px;height:16px;line-height:16px;border-radius:4px;background:#29789E;color:#fff;font-size:0.6rem;font-weight:700;margin-top:2px;cursor:pointer" title="Tap to remove one extra lesson">+${extra}</span>`
                 : '';
-              return `<td style="text-align:center;padding:4px 2px;border-bottom:1px solid var(--warm);vertical-align:middle">
+              return `<td style="text-align:center;padding:4px 2px;border-bottom:1px solid var(--warm);vertical-align:middle;${gapStyle}">
                 <div style="display:flex;flex-direction:column;align-items:center;gap:1px">${regBadge}${extraBadge}</div>
               </td>`;
             }).join('');
@@ -4486,13 +4498,166 @@ function renderStudioAttendance() {
         </tbody>
       </table>
     </div>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:0.75rem;margin-top:8px">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:0.75rem;margin-top:8px;margin-bottom:14px">
       <span><span style="display:inline-block;width:20px;height:16px;border-radius:3px;background:#2F5C1A;vertical-align:middle;margin-right:4px"></span>P = Present</span>
       <span><span style="display:inline-block;width:22px;height:16px;border-radius:3px;background:#c0392b;vertical-align:middle;margin-right:4px"></span>AL = Absent late</span>
       <span><span style="display:inline-block;width:22px;height:16px;border-radius:3px;background:#e67e22;vertical-align:middle;margin-right:4px"></span>AN = Absent notice</span>
       <span><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#aaa;vertical-align:middle;margin-right:4px"></span>C = Cancelled</span>
       <span><span style="display:inline-block;width:20px;height:16px;border-radius:3px;background:#29789E;vertical-align:middle;margin-right:4px"></span>+n = Extra lesson(s)</span>
-    </div>`;
+      <span><span style="display:inline-block;width:0;height:16px;border-left:3px dashed #b5a98a;vertical-align:middle;margin-right:6px"></span>Gap = week(s) not taught</span>
+    </div>
+    <button onclick="exportStudioAttendancePDF()" style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto">🖨️ Download attendance PDF</button>`;
+}
+
+// Builds the same data the live attendance overview shows, using whatever
+// From/To dates are currently set in the filter, and opens it as a printable
+// A4 page — same pattern as the practice plan / studio overview exports.
+function exportStudioAttendancePDF() {
+  const fromVal = document.getElementById('studio-att-from') ? document.getElementById('studio-att-from').value : '';
+  const toVal   = document.getElementById('studio-att-to')   ? document.getElementById('studio-att-to').value   : '';
+  const fromDate = fromVal ? new Date(fromVal) : null;
+  const toDate   = toVal   ? new Date(toVal)   : null;
+
+  function parseDate(str) {
+    const parts = str.split(' ');
+    const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+    return new Date(parts[2], months[parts[1]], parseInt(parts[0]));
+  }
+  function weekKey(d) {
+    const tmp = new Date(d);
+    tmp.setHours(0,0,0,0);
+    const daysSinceSat = (tmp.getDay() + 1) % 7;
+    tmp.setDate(tmp.getDate() - daysSinceSat);
+    const mm = String(tmp.getMonth()+1).padStart(2,'0');
+    const dd = String(tmp.getDate()).padStart(2,'0');
+    return `${tmp.getFullYear()}-${mm}-${dd}`;
+  }
+  function weekKeyToSat(wk) {
+    const [y, m, d] = wk.split('-').map(Number);
+    return new Date(y, m-1, d);
+  }
+
+  const allWeeks = new Set();
+  const regularMap = {};
+  students.forEach(s => {
+    regularMap[s.id] = {};
+    (s.log||[]).forEach(e => {
+      if (!e.attendance) return;
+      const d = parseDate(e.date);
+      if (fromDate && d < fromDate) return;
+      if (toDate   && d > toDate)   return;
+      const wk = weekKey(d);
+      allWeeks.add(wk);
+      const priority = { present:4, 'absent-notice':3, 'absent-late':2, cancelled:1 };
+      const existing = regularMap[s.id][wk];
+      if (!existing || (priority[e.attendance]||0) > (priority[existing]||0)) {
+        regularMap[s.id][wk] = e.attendance;
+      }
+    });
+  });
+
+  const extraMap = {};
+  Object.entries(extraLessons||{}).forEach(([rawKey, entries]) => {
+    let wk;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rawKey)) {
+      const [yy, mm, dd] = rawKey.split('-').map(Number);
+      wk = weekKey(new Date(yy, mm - 1, dd));
+    } else if (/^\d{4}-W\d{1,2}$/.test(rawKey)) {
+      const [yr, wPart] = rawKey.split('-W');
+      const jan4 = new Date(parseInt(yr), 0, 4);
+      const mon = new Date(jan4);
+      mon.setDate(jan4.getDate() - (jan4.getDay()+6)%7 + (parseInt(wPart)-1)*7);
+      wk = weekKey(mon);
+    } else { return; }
+    const sat = weekKeyToSat(wk);
+    const fri = new Date(sat); fri.setDate(sat.getDate()+6);
+    if (fromDate && fri < fromDate) return;
+    if (toDate   && sat > toDate)   return;
+    (entries||[]).forEach(ex => {
+      if (!extraMap[ex.studentId]) extraMap[ex.studentId] = {};
+      extraMap[ex.studentId][wk] = (extraMap[ex.studentId][wk]||0) + 1;
+    });
+    allWeeks.add(wk);
+  });
+
+  if (allWeeks.size === 0) { alert('No attendance recorded for this period.'); return; }
+
+  const sortedWeeks = [...allWeeks].sort();
+  const weekHasGapBefore = {};
+  for (let i = 1; i < sortedWeeks.length; i++) {
+    const prevSat = weekKeyToSat(sortedWeeks[i-1]);
+    const thisSat = weekKeyToSat(sortedWeeks[i]);
+    const daysBetween = Math.round((thisSat - prevSat) / 86400000);
+    if (daysBetween > 7) weekHasGapBefore[sortedWeeks[i]] = true;
+  }
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function fmtWeek(wk) {
+    const sat = weekKeyToSat(wk);
+    return sat.getDate() + ' ' + MONTHS[sat.getMonth()] + ' \'' + String(sat.getFullYear()).slice(2);
+  }
+
+  const activePupils = students.filter(s =>
+    sortedWeeks.some(wk => regularMap[s.id]?.[wk] || extraMap[s.id]?.[wk])
+  ).sort((a,b) => a.name.localeCompare(b.name));
+
+  const colMap   = { present:'#2F5C1A', 'absent-late':'#c0392b', 'absent-notice':'#e67e22', cancelled:'#aaa' };
+  const labelMap = { present:'P', 'absent-late':'AL', 'absent-notice':'AN', cancelled:'C' };
+
+  const periodLabel = (fromVal && toVal)
+    ? fmtWeek(weekKey(new Date(fromVal))) + ' \u2013 ' + fmtWeek(weekKey(new Date(toVal)))
+    : (fromVal ? 'From ' + fmtWeek(weekKey(new Date(fromVal))) : toVal ? 'Up to ' + fmtWeek(weekKey(new Date(toVal))) : 'All time');
+
+  const rowsHTML = activePupils.map(s => {
+    let attended = 0;
+    const cells = sortedWeeks.map(wk => {
+      const reg   = regularMap[s.id]?.[wk] || null;
+      const extra = extraMap[s.id]?.[wk]   || 0;
+      const gapStyle = weekHasGapBefore[wk] ? 'border-left:2px dashed #b5a98a;' : '';
+      if (reg === 'present') attended++;
+      attended += extra;
+      if (!reg && !extra) return `<td style="text-align:center;padding:3px 2px;border-bottom:1px solid #e8e0d0;color:#ccc;${gapStyle}">\u00b7</td>`;
+      const regBadge = reg ? `<span style="display:inline-block;min-width:20px;padding:1px 3px;border-radius:3px;background:${colMap[reg]};color:#fff;font-size:0.62rem;font-weight:700">${labelMap[reg]}</span>` : '';
+      const extraBadge = extra > 0 ? `<span style="display:inline-block;min-width:16px;padding:0 3px;border-radius:3px;background:#29789E;color:#fff;font-size:0.55rem;font-weight:700;margin-top:1px">+${extra}</span>` : '';
+      return `<td style="text-align:center;padding:3px 2px;border-bottom:1px solid #e8e0d0;${gapStyle}"><div style="display:flex;flex-direction:column;align-items:center;gap:1px">${regBadge}${extraBadge}</div></td>`;
+    }).join('');
+    return `<tr><td style="padding:4px 6px;white-space:nowrap;border-bottom:1px solid #e8e0d0;font-weight:500">${esc(s.name)}</td>${cells}<td style="text-align:center;padding:4px 6px;border-bottom:1px solid #e8e0d0;font-weight:700">${attended}</td></tr>`;
+  }).join('');
+
+  const headerCells = sortedWeeks.map(wk => `<th style="padding:3px 4px;background:#f0ece0;text-align:center;white-space:nowrap;font-size:0.62rem;font-weight:700;${weekHasGapBefore[wk] ? 'border-left:2px dashed #b5a98a;' : ''}">${fmtWeek(wk)}</th>`).join('');
+
+  const html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
+    + '<title>Studio Attendance</title>'
+    + '<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">'
+    + '<style>'
+    + '@page{size:A4 landscape;margin:10mm 12mm}'
+    + 'html,body{margin:0;padding:0;font-family:\'Special Elite\',cursive;color:#05270B;background:#fff}'
+    + 'body{box-sizing:border-box;max-width:1000px;margin:24px auto;padding:0 20px}'
+    + 'table{border-collapse:collapse;width:100%}'
+    + '.no-print{margin-bottom:16px;display:flex;gap:10px}'
+    + '@media print{.no-print{display:none!important}body{margin:0;max-width:100%;padding:0}}'
+    + '</style></head><body>'
+    + '<div class="no-print">'
+      + '<button onclick="window.print()" style="background:#29789E;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-family:\'Special Elite\',cursive;font-size:0.9rem;cursor:pointer">\ud83d\udda8\ufe0f\u00a0 Save as PDF / Print</button>'
+      + '<button onclick="window.close()" style="background:none;border:1.5px solid #2F5C1A;color:#2F5C1A;padding:10px 20px;border-radius:8px;font-family:\'Special Elite\',cursive;font-size:0.9rem;cursor:pointer">\u2190 Close</button>'
+    + '</div>'
+    + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;border-bottom:2px solid #2F5C1A;padding-bottom:10px">'
+      + '<div><div style="font-size:1.4rem;font-weight:700">Studio attendance</div><div style="font-size:0.8rem;color:#6b8a6b">' + esc(periodLabel) + '</div></div>'
+      + '<div style="font-size:0.62rem;color:#8aaa7a;text-transform:uppercase;letter-spacing:0.08em">www.violaness.co.uk</div>'
+    + '</div>'
+    + '<table>'
+      + '<thead><tr><th style="text-align:left;padding:3px 6px;background:#f0ece0;font-size:0.68rem">Pupil</th>' + headerCells + '<th style="padding:3px 6px;background:#f0ece0;font-size:0.62rem">#</th></tr></thead>'
+      + '<tbody>' + rowsHTML + '</tbody>'
+    + '</table>'
+    + '<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:0.68rem;margin-top:14px;color:#4a6a3a">'
+      + '<span>P = Present</span><span>AL = Absent late</span><span>AN = Absent notice</span><span>C = Cancelled</span><span>+n = Extra lesson(s)</span><span>Dashed line = week(s) not taught</span>'
+    + '</div>'
+    + '</body></html>';
+
+  const w = window.open('', '_blank');
+  if (!w) { alert('Please allow pop-ups to download the PDF.'); return; }
+  w.document.write(html);
+  w.document.close();
 }
 
 function renderLibrary() {
