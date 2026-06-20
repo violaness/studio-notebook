@@ -3865,7 +3865,8 @@ function doubleStopCheck(studentId, key, type) {
 // Fixed checklist: Theme + Var. 1 through 40. Stored as s.sevcikOp3 = { Theme: true, '1': true, ... }
 // Styled to match the scale checklist cards — small square tick boxes in a
 // label-on-left, checkbox-on-right list. Theme sits on its own row at the
-// top, then Var. 1–40 split into four columns of ten.
+// top, then Var. 1–40 split into eight columns of five — more compact than
+// four columns of ten, less empty space per column.
 const SEVCIK_VARIATIONS = Array.from({length:40}, (_, i) => String(i+1));
 
 function sevcikHTML(s) {
@@ -3873,16 +3874,16 @@ function sevcikHTML(s) {
   const done = (ticks['Theme'] ? 1 : 0) + SEVCIK_VARIATIONS.filter(it => ticks[it]).length;
   const total = 41;
 
-  function buildRows(items) {
+  function buildRows(items, short) {
     return items.map(function(it) {
       const isDone = !!ticks[it];
-      const label = it === 'Theme' ? 'Theme' : 'Var. ' + it;
-      return '<tr><td style="font-size:0.74rem;color:var(--ink);padding:4px 4px 4px 0">' + esc(label) + '</td>'
-        + '<td style="text-align:right;padding:4px 0">'
+      const label = it === 'Theme' ? 'Theme' : (short ? it : 'Var. ' + it);
+      return '<tr><td style="font-size:0.72rem;color:var(--ink);padding:3px 3px 3px 0">' + esc(label) + '</td>'
+        + '<td style="text-align:right;padding:3px 0">'
         + '<button onclick="sevcikCheck(\'' + s.id + '\',\'' + it + '\')" '
-        + 'style="width:24px;height:24px;border-radius:6px;border:1.5px solid ' + (isDone ? 'var(--viola)' : '#e0ddd8') + ';'
+        + 'style="width:22px;height:22px;border-radius:6px;border:1.5px solid ' + (isDone ? 'var(--viola)' : '#e0ddd8') + ';'
         + 'background:' + (isDone ? 'var(--viola)' : 'transparent') + ';'
-        + 'color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.75rem;font-weight:700;margin-left:auto;display:block">'
+        + 'color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.7rem;font-weight:700;margin-left:auto;display:block">'
         + (isDone ? '\u2713' : '') + '</button></td></tr>';
     }).join('');
   }
@@ -3890,21 +3891,16 @@ function sevcikHTML(s) {
   // Theme as its own short, centred row above the grid
   const themeRow = buildRows(['Theme']);
 
-  // Var. 1–40 split into 4 columns of 10
-  const col1 = SEVCIK_VARIATIONS.slice(0, 10);
-  const col2 = SEVCIK_VARIATIONS.slice(10, 20);
-  const col3 = SEVCIK_VARIATIONS.slice(20, 30);
-  const col4 = SEVCIK_VARIATIONS.slice(30, 40);
+  // Var. 1–40 split into 8 columns of 5
+  const cols = [];
+  for (let i = 0; i < 8; i++) cols.push(SEVCIK_VARIATIONS.slice(i*5, i*5+5));
 
   return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
     + '<span style="font-size:0.75rem;color:var(--muted)">' + done + ' / ' + total + ' ticked</span>'
     + '</div>'
     + '<table style="width:100%;max-width:160px;border-collapse:collapse;margin-bottom:10px"><tbody>' + themeRow + '</tbody></table>'
-    + '<div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:12px">'
-    + '<table style="width:100%;border-collapse:collapse"><tbody>' + buildRows(col1) + '</tbody></table>'
-    + '<table style="width:100%;border-collapse:collapse"><tbody>' + buildRows(col2) + '</tbody></table>'
-    + '<table style="width:100%;border-collapse:collapse"><tbody>' + buildRows(col3) + '</tbody></table>'
-    + '<table style="width:100%;border-collapse:collapse"><tbody>' + buildRows(col4) + '</tbody></table>'
+    + '<div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px 12px">'
+    + cols.map(col => '<table style="width:100%;border-collapse:collapse"><tbody>' + buildRows(col, true) + '</tbody></table>').join('')
     + '</div>';
 }
 
@@ -5802,12 +5798,14 @@ function exportSinglePupil(id) {
   const s = getStudent(id); if (!s) return;
   const hasScales = (s.scaleKeys||[]).length > 0 || (s.naturalMinorKeys||[]).length > 0 || (s.doubleStopKeys||[]).length > 0;
   const includeScales = hasScales && confirm('Include scale checklist in the practice plan?');
+  const sevcikTicked = s.sevcikOp3 && Object.values(s.sevcikOp3).some(Boolean);
+  const includeSevcik = sevcikTicked && confirm('Include Sevcik Op. 3 chart in the practice plan?');
   const term = JSON.parse(localStorage.getItem('studio_term') || '{}');
   const termLabel = term.name || new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'});
-  exportHTML([s], termLabel, includeScales);
+  exportHTML([s], termLabel, includeScales, includeSevcik);
 }
 
-function exportHTML(pupils, term, includeScales) {
+function exportHTML(pupils, term, includeScales, includeSevcik) {
   const termLabel = term || new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'});
   const isSingle = pupils.length === 1;
   const singlePupil = isSingle ? pupils[0] : null;
@@ -5879,37 +5877,33 @@ function exportHTML(pupils, term, includeScales) {
         + '</div>';
     }
 
-    // Sevcik Op. 3 — 40 Variations tick chart, only shown if at least one
-    // item has been ticked for this pupil (keeps the plan clean for pupils
-    // who don't use this book). Theme on its own row at the top, then
-    // Var. 1–40 split into four columns of ten, matching the live UI.
+    // Sevcik Op. 3 — 40 Variations tick chart. Only built if the teacher
+    // opted in via the "Include Sevcik chart?" prompt at export time AND at
+    // least one item has been ticked for this pupil (keeps the plan clean
+    // for pupils who don't use this book). Theme on its own row at the top,
+    // then Var. 1–40 split into eight columns of five, matching the live UI.
     var sevcikSection = '';
     var sevcikTicks = s.sevcikOp3 || {};
     var sevcikVariations = Array.from({length:40}, function(_, i) { return String(i+1); });
     var sevcikDoneCount = (sevcikTicks['Theme'] ? 1 : 0) + sevcikVariations.filter(function(it) { return sevcikTicks[it]; }).length;
-    if (sevcikDoneCount > 0) {
+    if (includeSevcik && sevcikDoneCount > 0) {
       function buildSevcikRows(items) {
         return items.map(function(it) {
           var done = !!sevcikTicks[it];
-          var label = it === 'Theme' ? 'Theme' : 'Var. ' + it;
-          return '<tr><td style="font-size:0.7rem;color:#4a6a3a;padding:3px 8px 3px 0;white-space:nowrap">' + label + '</td>'
-            + '<td style="text-align:center;padding:3px 2px"><div style="width:18px;height:18px;border:1.5px solid ' + (done?'#2F5C1A':'#c8ddb8') + ';border-radius:4px;background:' + (done?'#2F5C1A':'#fff') + ';margin:auto;display:flex;align-items:center;justify-content:center"><span style="color:#fff;font-size:0.7rem">' + (done?'\u2713':'') + '</span></div></td></tr>';
+          var label = it === 'Theme' ? 'Theme' : it;
+          return '<tr><td style="font-size:0.66rem;color:#4a6a3a;padding:2px 6px 2px 0;white-space:nowrap">' + label + '</td>'
+            + '<td style="text-align:center;padding:2px 1px"><div style="width:16px;height:16px;border:1.5px solid ' + (done?'#2F5C1A':'#c8ddb8') + ';border-radius:4px;background:' + (done?'#2F5C1A':'#fff') + ';margin:auto;display:flex;align-items:center;justify-content:center"><span style="color:#fff;font-size:0.62rem">' + (done?'\u2713':'') + '</span></div></td></tr>';
         }).join('');
       }
-      var sevcikThemeRow = buildSevcikRows(['Theme']);
-      var sevcikCol1 = sevcikVariations.slice(0, 10);
-      var sevcikCol2 = sevcikVariations.slice(10, 20);
-      var sevcikCol3 = sevcikVariations.slice(20, 30);
-      var sevcikCol4 = sevcikVariations.slice(30, 40);
+      var sevcikThemeRow = buildSevcikRows(['Theme']).replace('Theme</td>', 'Theme</td>').replace(/font-size:0.66rem/, 'font-size:0.7rem;font-weight:700');
+      var sevcikCols = [];
+      for (var sc = 0; sc < 8; sc++) sevcikCols.push(sevcikVariations.slice(sc*5, sc*5+5));
       sevcikSection = '<div style="margin-bottom:20px">'
         + '<div style="font-size:0.65rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">Sevcik Op. 3 \u2014 40 Variations</div>'
         + '<div style="font-size:0.7rem;color:#8aaa7a;margin-bottom:6px">' + sevcikDoneCount + ' of 41 ticked</div>'
         + '<table style="border-collapse:collapse;width:100%;max-width:160px;margin-bottom:8px"><tbody>' + sevcikThemeRow + '</tbody></table>'
-        + '<div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px">'
-        + '<table style="border-collapse:collapse;width:100%"><tbody>' + buildSevcikRows(sevcikCol1) + '</tbody></table>'
-        + '<table style="border-collapse:collapse;width:100%"><tbody>' + buildSevcikRows(sevcikCol2) + '</tbody></table>'
-        + '<table style="border-collapse:collapse;width:100%"><tbody>' + buildSevcikRows(sevcikCol3) + '</tbody></table>'
-        + '<table style="border-collapse:collapse;width:100%"><tbody>' + buildSevcikRows(sevcikCol4) + '</tbody></table>'
+        + '<div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:8px 10px">'
+        + sevcikCols.map(function(col) { return '<table style="border-collapse:collapse;width:100%"><tbody>' + buildSevcikRows(col) + '</tbody></table>'; }).join('')
         + '</div></div>';
     }
 
