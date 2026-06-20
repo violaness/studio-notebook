@@ -3862,26 +3862,43 @@ function doubleStopCheck(studentId, key, type) {
 }
 
 // ── SEVCIK OP. 3 — 40 VARIATIONS TICK CHART ─────────────────────────────────
-// Fixed checklist: Theme + Var. 1 through 40. Stored as s.sevcikOp3 = { theme: true, '1': true, ... }
+// Fixed checklist: Theme + Var. 1 through 40. Stored as s.sevcikOp3 = { Theme: true, '1': true, ... }
+// Styled to match the scale checklist cards — small square tick boxes in a
+// label-on-left, checkbox-on-right list, rather than big number tiles.
+const SEVCIK_ITEMS = ['Theme'].concat(Array.from({length:40}, (_, i) => String(i+1)));
+
 function sevcikHTML(s) {
   const ticks = s.sevcikOp3 || {};
-  const items = ['Theme'];
-  for (let i = 1; i <= 40; i++) items.push(String(i));
-  const doneCount = items.filter(it => ticks[it]).length;
+  const done = SEVCIK_ITEMS.filter(it => ticks[it]).length;
+  const total = SEVCIK_ITEMS.length;
 
-  const tiles = items.map(it => {
-    const isDone = !!ticks[it];
-    const label = it === 'Theme' ? 'Theme' : it;
-    return '<button onclick="sevcikCheck(\'' + s.id + '\',\'' + it + '\')" '
-      + 'style="aspect-ratio:1;min-width:0;border-radius:8px;border:1.5px solid ' + (isDone ? 'var(--viola)' : '#e0ddd8') + ';'
-      + 'background:' + (isDone ? 'var(--viola)' : 'transparent') + ';'
-      + 'color:' + (isDone ? '#fff' : 'var(--ink)') + ';cursor:pointer;font-size:' + (it === 'Theme' ? '0.62rem' : '0.78rem') + ';font-weight:700;'
-      + 'display:flex;align-items:center;justify-content:center;padding:2px">'
-      + esc(label) + '</button>';
-  }).join('');
+  // Split into two columns of rows, like the scale cards do, so it's not one
+  // very long single list — left column Theme+1-20, right column 21-40.
+  const half = Math.ceil(SEVCIK_ITEMS.length / 2);
+  const col1 = SEVCIK_ITEMS.slice(0, half);
+  const col2 = SEVCIK_ITEMS.slice(half);
 
-  return '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">' + doneCount + ' of 41 ticked</div>'
-    + '<div style="display:grid;grid-template-columns:repeat(7, 1fr);gap:6px">' + tiles + '</div>';
+  function buildRows(items) {
+    return items.map(function(it) {
+      const isDone = !!ticks[it];
+      const label = it === 'Theme' ? 'Theme' : 'Var. ' + it;
+      return '<tr><td style="font-size:0.74rem;color:var(--ink);padding:4px 4px 4px 0">' + esc(label) + '</td>'
+        + '<td style="text-align:right;padding:4px 0">'
+        + '<button onclick="sevcikCheck(\'' + s.id + '\',\'' + it + '\')" '
+        + 'style="width:24px;height:24px;border-radius:6px;border:1.5px solid ' + (isDone ? 'var(--viola)' : '#e0ddd8') + ';'
+        + 'background:' + (isDone ? 'var(--viola)' : 'transparent') + ';'
+        + 'color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.75rem;font-weight:700;margin-left:auto;display:block">'
+        + (isDone ? '\u2713' : '') + '</button></td></tr>';
+    }).join('');
+  }
+
+  return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+    + '<span style="font-size:0.75rem;color:var(--muted)">' + done + ' / ' + total + ' ticked</span>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'
+    + '<table style="width:100%;border-collapse:collapse"><tbody>' + buildRows(col1) + '</tbody></table>'
+    + '<table style="width:100%;border-collapse:collapse"><tbody>' + buildRows(col2) + '</tbody></table>'
+    + '</div>';
 }
 
 function sevcikCheck(studentId, item) {
@@ -5855,6 +5872,34 @@ function exportHTML(pupils, term, includeScales) {
         + '</div>';
     }
 
+    // Sevcik Op. 3 — 40 Variations tick chart, only shown if at least one
+    // item has been ticked for this pupil (keeps the plan clean for pupils
+    // who don't use this book).
+    var sevcikSection = '';
+    var sevcikTicks = s.sevcikOp3 || {};
+    var sevcikItems = ['Theme'].concat(Array.from({length:40}, function(_, i) { return String(i+1); }));
+    var sevcikDone = sevcikItems.filter(function(it) { return sevcikTicks[it]; });
+    if (sevcikDone.length > 0) {
+      var sevcikHalf = Math.ceil(sevcikItems.length / 2);
+      var sevcikCol1 = sevcikItems.slice(0, sevcikHalf);
+      var sevcikCol2 = sevcikItems.slice(sevcikHalf);
+      function buildSevcikRows(items) {
+        return items.map(function(it) {
+          var done = !!sevcikTicks[it];
+          var label = it === 'Theme' ? 'Theme' : 'Var. ' + it;
+          return '<tr><td style="font-size:0.7rem;color:#4a6a3a;padding:3px 8px 3px 0;white-space:nowrap">' + label + '</td>'
+            + '<td style="text-align:center;padding:3px 2px"><div style="width:18px;height:18px;border:1.5px solid ' + (done?'#2F5C1A':'#c8ddb8') + ';border-radius:4px;background:' + (done?'#2F5C1A':'#fff') + ';margin:auto;display:flex;align-items:center;justify-content:center"><span style="color:#fff;font-size:0.7rem">' + (done?'\u2713':'') + '</span></div></td></tr>';
+        }).join('');
+      }
+      sevcikSection = '<div style="margin-bottom:20px">'
+        + '<div style="font-size:0.65rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">Sevcik Op. 3 \u2014 40 Variations</div>'
+        + '<div style="font-size:0.7rem;color:#8aaa7a;margin-bottom:6px">' + sevcikDone.length + ' of ' + sevcikItems.length + ' ticked</div>'
+        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:340px">'
+        + '<table style="border-collapse:collapse;width:100%"><tbody>' + buildSevcikRows(sevcikCol1) + '</tbody></table>'
+        + '<table style="border-collapse:collapse;width:100%"><tbody>' + buildSevcikRows(sevcikCol2) + '</tbody></table>'
+        + '</div></div>';
+    }
+
     // Focus / plan section — pulls plan, this week's goal, and during notes as bullets
     var scratch = (s.duringScratch || '').trim();
     if (!scratch) {
@@ -5923,6 +5968,7 @@ function exportHTML(pupils, term, includeScales) {
       + '</div>'
       + piecesSection
       + scalesSection
+      + sevcikSection
       + focusSection
       + notesBox
       + '</div>';
