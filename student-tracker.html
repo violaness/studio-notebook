@@ -4468,8 +4468,9 @@ function renderStudioAttendance() {
           </tr>
         </thead>
         <tbody>
-          ${activePupils.map(s => {
+          ${activePupils.map((s, rowIdx) => {
             let attended = 0;
+            const rowBg = rowIdx % 2 === 1 ? '#f6f3ea' : 'var(--card-bg)';
             const cells = sortedWeeks.map(wk => {
               const reg   = regularMap[s.id]?.[wk] || null;
               const extra = extraMap[s.id]?.[wk]   || 0;
@@ -4477,7 +4478,7 @@ function renderStudioAttendance() {
               if (reg === 'present') attended++;
               attended += extra;
               if (!reg && !extra) {
-                return `<td style="text-align:center;padding:4px 2px;border-bottom:1px solid var(--warm);color:#ddd;${gapStyle}">·</td>`;
+                return `<td style="text-align:center;padding:4px 2px;border-bottom:1px solid var(--warm);color:#ddd;background:${rowBg};${gapStyle}">·</td>`;
               }
               const regBadge = reg
                 ? `<span style="display:inline-block;width:26px;height:20px;line-height:20px;border-radius:4px;background:${colMap[reg]};color:#fff;font-size:0.68rem;font-weight:700" title="${fullLabel[reg]||reg}">${labelMap[reg]}</span>`
@@ -4485,14 +4486,14 @@ function renderStudioAttendance() {
               const extraBadge = extra > 0
                 ? `<span onclick="removeExtraFromOverview('${s.id}','${wk}')" style="display:inline-block;width:20px;height:16px;line-height:16px;border-radius:4px;background:#29789E;color:#fff;font-size:0.6rem;font-weight:700;margin-top:2px;cursor:pointer" title="Tap to remove one extra lesson">+${extra}</span>`
                 : '';
-              return `<td style="text-align:center;padding:4px 2px;border-bottom:1px solid var(--warm);vertical-align:middle;${gapStyle}">
+              return `<td style="text-align:center;padding:4px 2px;border-bottom:1px solid var(--warm);vertical-align:middle;background:${rowBg};${gapStyle}">
                 <div style="display:flex;flex-direction:column;align-items:center;gap:1px">${regBadge}${extraBadge}</div>
               </td>`;
             }).join('');
             return `<tr>
-              <td style="padding:5px 8px;position:sticky;left:0;background:var(--card-bg);z-index:1;white-space:nowrap;border-bottom:1px solid var(--warm);cursor:pointer;font-weight:500" onclick="openStudentFrom('${s.id}','roster')">${s.name}</td>
+              <td style="padding:5px 8px;position:sticky;left:0;background:${rowBg};z-index:1;white-space:nowrap;border-bottom:1px solid var(--warm);cursor:pointer;font-weight:500" onclick="openStudentFrom('${s.id}','roster')">${s.name}</td>
               ${cells}
-              <td style="text-align:center;padding:4px 8px;border-bottom:1px solid var(--warm);font-weight:700;color:var(--ink)">${attended}</td>
+              <td style="text-align:center;padding:4px 8px;border-bottom:1px solid var(--warm);font-weight:700;color:var(--ink);background:${rowBg}">${attended}</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -4608,8 +4609,9 @@ function exportStudioAttendancePDF() {
     ? fmtWeek(weekKey(new Date(fromVal))) + ' \u2013 ' + fmtWeek(weekKey(new Date(toVal)))
     : (fromVal ? 'From ' + fmtWeek(weekKey(new Date(fromVal))) : toVal ? 'Up to ' + fmtWeek(weekKey(new Date(toVal))) : 'All time');
 
-  const rowsHTML = activePupils.map(s => {
+  const rowsHTML = activePupils.map((s, rowIdx) => {
     let attended = 0;
+    const rowBg = rowIdx % 2 === 1 ? 'background:#f6f3ea;' : '';
     const cells = sortedWeeks.map(wk => {
       const reg   = regularMap[s.id]?.[wk] || null;
       const extra = extraMap[s.id]?.[wk]   || 0;
@@ -4621,7 +4623,7 @@ function exportStudioAttendancePDF() {
       const extraBadge = extra > 0 ? `<span style="display:inline-block;min-width:16px;padding:0 3px;border-radius:3px;background:#29789E;color:#fff;font-size:0.55rem;font-weight:700;margin-top:1px">+${extra}</span>` : '';
       return `<td style="text-align:center;padding:3px 2px;border-bottom:1px solid #e8e0d0;${gapStyle}"><div style="display:flex;flex-direction:column;align-items:center;gap:1px">${regBadge}${extraBadge}</div></td>`;
     }).join('');
-    return `<tr><td style="padding:4px 6px;white-space:nowrap;border-bottom:1px solid #e8e0d0;font-weight:500">${esc(s.name)}</td>${cells}<td style="text-align:center;padding:4px 6px;border-bottom:1px solid #e8e0d0;font-weight:700">${attended}</td></tr>`;
+    return `<tr style="${rowBg}"><td style="padding:4px 6px;white-space:nowrap;border-bottom:1px solid #e8e0d0;font-weight:500">${esc(s.name)}</td>${cells}<td style="text-align:center;padding:4px 6px;border-bottom:1px solid #e8e0d0;font-weight:700">${attended}</td></tr>`;
   }).join('');
 
   const headerCells = sortedWeeks.map(wk => `<th style="padding:3px 4px;background:#f0ece0;text-align:center;white-space:nowrap;font-size:0.62rem;font-weight:700;${weekHasGapBefore[wk] ? 'border-left:2px dashed #b5a98a;' : ''}">${fmtWeek(wk)}</th>`).join('');
