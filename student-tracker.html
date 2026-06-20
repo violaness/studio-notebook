@@ -1133,6 +1133,23 @@
   </div>
 </div>
 
+<!-- ADD TYPE MODAL — parallel to Add key, but for picking which scale TYPES
+     are in active use for a pupil (used by the "By type" view) -->
+<div class="modal-overlay" id="add-type-modal">
+  <div class="modal">
+    <h2>Add type</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:12px">Tap one or more scale types to add them to this pupil's checklist.</p>
+    <input type="hidden" id="type-modal-student-id">
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px" id="type-modal-buttons">
+      <!-- populated by openAddTypeModal() -->
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeAddTypeModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmAddTypes()">Add type(s)</button>
+    </div>
+  </div>
+</div>
+
 <!-- EDIT LIBRARY PIECE MODAL -->
 <div class="modal-overlay" id="edit-lib-piece-modal">
   <div class="modal">
@@ -2190,6 +2207,10 @@ function renderDetail(s) {
           <button onclick="openAddKeyModal('${s.id}')"
             style="flex:1;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
             ＋ Add key
+          </button>
+          <button onclick="openAddTypeModal('${s.id}')"
+            style="flex:1;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
+            ＋ Add type
           </button>
         </div>
       </div>
@@ -3989,8 +4010,21 @@ function removeDoubleStopKey(studentId, key) {
 function scalesHTML(s) {
   const keys = s.scaleKeys || [];
   if (keys.length === 0) return '<p style="color:var(--muted);font-size:0.88rem">No keys added yet — tap \u201c+ Add key\u201d below.</p>';
+
+  const mode = s.scaleViewMode === 'type' ? 'type' : 'key';
+  const viewToggle = '<div style="display:flex;gap:6px;margin-bottom:12px">'
+    + '<button onclick="setScaleViewMode(\'' + s.id + '\',\'key\')" style="flex:1;padding:7px;border-radius:8px;border:1.5px solid ' + (mode==='key'?'var(--viola)':'#e0ddd8') + ';background:' + (mode==='key'?'var(--viola)':'transparent') + ';color:' + (mode==='key'?'#fff':'var(--muted)') + ';font-family:\'Special Elite\',cursive;font-size:0.8rem;cursor:pointer;font-weight:600">By key</button>'
+    + '<button onclick="setScaleViewMode(\'' + s.id + '\',\'type\')" style="flex:1;padding:7px;border-radius:8px;border:1.5px solid ' + (mode==='type'?'var(--viola)':'#e0ddd8') + ';background:' + (mode==='type'?'var(--viola)':'transparent') + ';color:' + (mode==='type'?'#fff':'var(--muted)') + ';font-family:\'Special Elite\',cursive;font-size:0.8rem;cursor:pointer;font-weight:600">By type</button>'
+    + '</div>';
+
+  return viewToggle + (mode === 'type' ? scalesByTypeHTML(s) : scalesByKeyHTML(s));
+}
+
+function scalesByKeyHTML(s) {
+  const keys = s.scaleKeys || [];
   const cl = s.scaleChecklist || {};
   const keyOctaves = s.scaleKeyOctaves || {};
+  const activeTypes = getActiveScaleTypes(s);
 
   // "Tick a type across all keys" shortcut row, shown once above the key
   // cards when there's more than one key (no point offering it for just one).
@@ -3999,7 +4033,7 @@ function scalesHTML(s) {
     typeShortcuts = '<div style="margin-bottom:10px">'
       + '<div style="font-size:0.68rem;color:var(--muted);margin-bottom:6px">Tick a type across all keys:</div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:6px">'
-      + SCALE_TYPES.map(function(type) {
+      + activeTypes.map(function(type) {
           return '<button onclick="scaleCheckAllForType(\'' + s.id + '\',\'' + type + '\')" '
             + 'style="background:none;border:1.5px solid #e0ddd8;border-radius:999px;padding:4px 10px;font-size:0.7rem;color:var(--muted);cursor:pointer">'
             + esc(type) + '</button>';
@@ -4013,15 +4047,15 @@ function scalesHTML(s) {
       // Use stored octaves for this key, defaulting to ['2'] for old keys with no setting
       var octs = keyOctaves[key] || ['1','2','3'];
 
-      var total = SCALE_TYPES.length * octs.length;
+      var total = activeTypes.length * octs.length;
       var done = 0;
-      SCALE_TYPES.forEach(function(t) { octs.forEach(function(o) { if(ticks[t]&&ticks[t][o]) done++; }); });
+      activeTypes.forEach(function(t) { octs.forEach(function(o) { if(ticks[t]&&ticks[t][o]) done++; }); });
 
       var headerCells = octs.map(function(o) {
         return '<th style="font-size:0.65rem;color:var(--muted);text-align:center;padding:2px 4px;font-weight:600">' + o + '</th>';
       }).join('');
 
-      var rows = SCALE_TYPES.map(function(type) {
+      var rows = activeTypes.map(function(type) {
         var cells = octs.map(function(oct) {
           var isDone = ticks[type] && ticks[type][oct];
           return '<td style="text-align:center;padding:3px 2px">'
@@ -4046,6 +4080,76 @@ function scalesHTML(s) {
         + '<table style="width:100%;border-collapse:collapse">'
         + '<thead><tr><th style="font-size:0.65rem;color:var(--muted);text-align:left;padding:2px 0;font-weight:600"></th>' + headerCells + '</tr></thead>'
         + '<tbody>' + rows + '</tbody></table></div>';
+    }).join('') + '</div>';
+}
+
+// "By type" view: one card per active scale type, listing every key the
+// pupil has. Reads/writes the exact same s.scaleChecklist[key][type][octave]
+// data as the "by key" view, so ticking in one view shows correctly in the
+// other — nothing is duplicated or stored separately.
+function scalesByTypeHTML(s) {
+  const keys = s.scaleKeys || [];
+  const cl = s.scaleChecklist || {};
+  const keyOctaves = s.scaleKeyOctaves || {};
+  const activeTypes = getActiveScaleTypes(s);
+
+  if (activeTypes.length === 0) {
+    return '<p style="color:var(--muted);font-size:0.88rem">No scale types added yet — tap \u201c+ Add type\u201d below.</p>';
+  }
+
+  // "Tick a key across all types" shortcut row, shown once above the type
+  // cards when there's more than one type (mirrors the by-key view's shortcut).
+  let keyShortcuts = '';
+  if (activeTypes.length > 1 && keys.length > 0) {
+    keyShortcuts = '<div style="margin-bottom:10px">'
+      + '<div style="font-size:0.68rem;color:var(--muted);margin-bottom:6px">Tick a key across all types:</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:6px">'
+      + keys.map(function(key) {
+          return '<button onclick="scaleCheckAllForKey(\'' + s.id + '\',\'' + key + '\')" '
+            + 'style="background:none;border:1.5px solid #e0ddd8;border-radius:999px;padding:4px 10px;font-size:0.7rem;color:var(--muted);cursor:pointer">'
+            + esc(key) + '</button>';
+        }).join('')
+      + '</div></div>';
+  }
+
+  return keyShortcuts + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">' +
+    activeTypes.map(function(type) {
+      if (keys.length === 0) {
+        return '<div style="background:var(--warm);border-radius:10px;padding:10px 12px">'
+          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+          + '<span style="font-size:1.05rem;font-weight:700">' + esc(type) + '</span>'
+          + '<button onclick="removeScaleType(\'' + s.id + '\',\'' + type + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem">\u00d7</button>'
+          + '</div><p style="color:var(--muted);font-size:0.8rem">No keys added yet.</p></div>';
+      }
+
+      var total = 0, done = 0;
+      var rows = keys.map(function(key) {
+        var octs = keyOctaves[key] || ['1','2','3'];
+        var ticks = (cl[key] || {})[type] || {};
+        total += octs.length;
+        var cells = octs.map(function(oct) {
+          var isDone = !!ticks[oct];
+          if (isDone) done++;
+          return '<button onclick="scaleCheckKey(\'' + s.id + '\',\'' + key + '\',\'' + type + '\',\'' + oct + '\')" '
+            + 'style="width:24px;height:24px;border-radius:6px;border:1.5px solid ' + (isDone ? 'var(--viola)' : '#e0ddd8') + ';'
+            + 'background:' + (isDone ? 'var(--viola)' : 'transparent') + ';'
+            + 'color:' + (isDone ? '#fff' : '#ccc') + ';'
+            + 'cursor:pointer;font-size:0.75rem;font-weight:700;margin-right:3px">'
+            + (isDone ? '\u2713' : '') + '</button>';
+        }).join('');
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0">'
+          + '<span style="font-size:0.78rem;color:var(--ink);font-weight:600">' + esc(key) + '</span>'
+          + '<div>' + cells + '</div></div>';
+      }).join('');
+
+      return '<div style="background:var(--warm);border-radius:10px;padding:10px 12px">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+        + '<span style="font-size:1.0rem;font-weight:700">' + esc(type) + '</span>'
+        + '<span style="font-size:0.7rem;color:var(--muted)">' + done + '/' + total + '</span>'
+        + '<button onclick="removeScaleType(\'' + s.id + '\',\'' + type + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem;padding:0 0 0 4px">\u00d7</button>'
+        + '</div>'
+        + rows
+        + '</div>';
     }).join('') + '</div>';
 }
 
@@ -4219,6 +4323,76 @@ function confirmAddKeys() {
     save(); closeAddKeyModal();
     document.getElementById('double-stops-list-' + studentId).innerHTML = doubleStopsHTML(s);
   }
+}
+
+// ── ADD TYPE MODAL (parallel to Add key, for the "By type" scale view) ─────
+// s.scaleActiveTypes holds the subset of SCALE_TYPES a pupil is actively
+// working on. If unset, all 8 standard types are treated as active (so
+// existing pupils with no prior selection behave exactly as before).
+let scaleSelectedTypes = [];
+
+function getActiveScaleTypes(s) {
+  return (s.scaleActiveTypes && s.scaleActiveTypes.length) ? s.scaleActiveTypes : SCALE_TYPES.slice();
+}
+
+function selectScaleType(type) {
+  const idx = scaleSelectedTypes.indexOf(type);
+  if (idx >= 0) scaleSelectedTypes.splice(idx, 1);
+  else scaleSelectedTypes.push(type);
+  document.querySelectorAll('.type-btn').forEach(btn => {
+    const selected = scaleSelectedTypes.includes(btn.dataset.type);
+    btn.style.background  = selected ? 'var(--viola)' : 'transparent';
+    btn.style.color       = selected ? '#fff' : 'var(--ink)';
+    btn.style.borderColor = selected ? 'var(--viola)' : '#e0ddd8';
+  });
+}
+
+function openAddTypeModal(studentId) {
+  const s = getStudent(studentId); if (!s) return;
+  scaleSelectedTypes = [];
+  document.getElementById('type-modal-student-id').value = studentId;
+  const active = getActiveScaleTypes(s);
+  const container = document.getElementById('type-modal-buttons');
+  container.innerHTML = SCALE_TYPES.map(function(type) {
+    const alreadyActive = active.includes(type);
+    return '<button type="button" class="type-btn" data-type="' + esc(type) + '" onclick="selectScaleType(\'' + esc(type) + '\')" '
+      + (alreadyActive ? 'disabled ' : '')
+      + 'style="text-align:left;padding:10px 14px;border-radius:10px;border:1.5px solid #e0ddd8;background:transparent;font-family:\'Special Elite\',cursive;font-size:0.9rem;cursor:' + (alreadyActive ? 'default' : 'pointer') + ';color:' + (alreadyActive ? 'var(--muted)' : 'var(--ink)') + '">'
+      + esc(type) + (alreadyActive ? ' \u2713 already added' : '') + '</button>';
+  }).join('');
+  document.getElementById('add-type-modal').classList.add('open');
+}
+
+function closeAddTypeModal() {
+  document.getElementById('add-type-modal').classList.remove('open');
+}
+
+function confirmAddTypes() {
+  const studentId = document.getElementById('type-modal-student-id').value;
+  const s = getStudent(studentId); if (!s || scaleSelectedTypes.length === 0) { closeAddTypeModal(); return; }
+  const active = getActiveScaleTypes(s);
+  scaleSelectedTypes.forEach(function(t) { if (!active.includes(t)) active.push(t); });
+  s.scaleActiveTypes = active;
+  save(); closeAddTypeModal();
+  document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
+}
+
+function removeScaleType(studentId, type) {
+  const s = getStudent(studentId); if (!s) return;
+  if (!confirm('Remove ' + type + ' from this pupil\u2019s active scale types?')) return;
+  const active = getActiveScaleTypes(s).filter(function(t) { return t !== type; });
+  s.scaleActiveTypes = active;
+  save();
+  document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
+}
+
+// Switch a pupil's scale checklist between "By key" and "By type" views.
+// Stored per pupil so each can be set independently and remembers the choice.
+function setScaleViewMode(studentId, mode) {
+  const s = getStudent(studentId); if (!s) return;
+  s.scaleViewMode = mode;
+  save();
+  document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
 }
 
 
