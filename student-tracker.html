@@ -518,7 +518,6 @@
     <button onclick="backupData();document.getElementById('wednesday-reminder').style.display='none'" style="background:#c9a84c;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:'Special Elite',cursive;font-size:0.82rem;cursor:pointer;white-space:nowrap">Back up now</button>
     <button onclick="localStorage.setItem('backup_reminder_dismissed',new Date().toDateString());document.getElementById('wednesday-reminder').style.display='none'" style="background:none;border:none;color:#c9a84c;cursor:pointer;font-size:1.1rem;padding:0 4px">×</button>
   </div>
-  <div id="today-hero"></div>
   <div id="today-list"></div>
 </div>
 
@@ -1513,40 +1512,6 @@ function renderToday() {
     if (t) {
       const [h,m] = t.split(':').map(Number);
       if ((h*60+m) >= nowTime) { nextId = s.id; break; }
-    }
-  }
-
-  // "Next up" hero card: the first lesson today that hasn't been marked
-  // attended/absent yet, in time order. Different from nextId above (which is
-  // purely time-based) — this skips anyone already dealt with, so the hero
-  // card always shows whoever genuinely needs your attention next.
-  const todayStrForHero = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-  let heroStudent = null;
-  for (const s of sorted) {
-    const log = (s.log||[]).find(e => e.date === todayStrForHero);
-    if (!log || !log.attendance) { heroStudent = s; break; }
-  }
-  const heroEl = document.getElementById('today-hero');
-  if (heroEl) {
-    if (!heroStudent) {
-      heroEl.innerHTML = sorted.length > 0
-        ? `<div class="today-hero-card" style="background:var(--card-bg);border-radius:16px;padding:16px 18px;margin-bottom:14px;box-shadow:var(--shadow);text-align:center;color:var(--muted);font-size:0.92rem">✅ All of today's lessons are marked — nice work!</div>`
-        : '';
-    } else {
-      const hSlot = effectiveSlot(heroStudent);
-      const hTime = heroStudent._extraTime || hSlot.time;
-      const hPlan = (heroStudent.nextLesson || '').trim();
-      heroEl.innerHTML = `
-        <div class="today-hero-card ${heroStudent.instrument}-card" onclick="openStudentFrom('${heroStudent.id}','today')"
-          style="cursor:pointer;border-radius:18px;padding:18px 20px;margin-bottom:16px;box-shadow:0 4px 16px rgba(0,0,0,0.12);display:flex;align-items:center;gap:14px;border-left:5px solid var(--${heroStudent.instrument});background:var(--card-bg)">
-          <div class="ls-avatar avatar-${heroStudent.instrument}" style="width:54px;height:54px;font-size:1.3rem;flex-shrink:0">${getInitials(heroStudent.name)}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px">▶ Next up</div>
-            <div style="font-size:1.25rem;font-weight:700;color:var(--ink);line-height:1.2">${heroStudent.name} <span style="font-size:0.85rem;font-weight:400;color:var(--muted)">— ${hTime || 'time not set'}</span></div>
-            ${hPlan ? `<div style="font-size:0.85rem;color:var(--muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📌 ${esc(hPlan)}</div>` : ''}
-          </div>
-          <div style="font-size:1.4rem;color:var(--muted);flex-shrink:0">›</div>
-        </div>`;
     }
   }
 
@@ -2789,6 +2754,7 @@ function toggleCheckboxAtCursor(elId) {
 // continue the list onto the next line with the same marker. Pressing Enter
 // on an EMPTY list item (just the marker, nothing typed after it) breaks out
 // of the list instead — otherwise you'd never be able to stop bulleting.
+let _listEnterHandling = false;
 function handleListEnter(event) {
   const el = event.target;
   const val = el.value;
@@ -2803,19 +2769,28 @@ function handleListEnter(event) {
   else if (line.startsWith('☑ ')) marker = '☐'; // new items start unticked
   if (!marker) return; // not on a list line — let Enter behave normally
 
+  // Guard against iPad's software keyboard occasionally firing keydown twice
+  // in quick succession (e.g. during predictive-text acceptance), which would
+  // otherwise insert the marker twice for a single Return press.
+  if (_listEnterHandling) { event.preventDefault(); event.stopPropagation(); return; }
+  _listEnterHandling = true;
+  setTimeout(() => { _listEnterHandling = false; }, 50);
+
   const content = line.slice(2); // text after "marker space"
   event.preventDefault();
+  event.stopPropagation();
   if (content.trim() === '') {
     // Empty list item — remove the marker and just add a plain new line
     const newVal = val.slice(0, lineStart) + val.slice(lineEndIdx);
     el.value = newVal;
-    el.selectionStart = el.selectionEnd = lineStart;
+    el.setSelectionRange(lineStart, lineStart);
   } else {
     // Continue the list with the same marker on the next line
     const insertion = '\n' + marker + ' ';
-    el.value = val.slice(0, start) + insertion + val.slice(end);
+    const newVal = val.slice(0, start) + insertion + val.slice(end);
+    el.value = newVal;
     const newPos = start + insertion.length;
-    el.selectionStart = el.selectionEnd = newPos;
+    el.setSelectionRange(newPos, newPos);
   }
   el.dispatchEvent(new Event('input', { bubbles: true }));
 }
