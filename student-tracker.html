@@ -3863,10 +3863,10 @@ function doubleStopCheck(studentId, key, type) {
 
 // ── SEVCIK OP. 3 — 40 VARIATIONS TICK CHART ─────────────────────────────────
 // Fixed checklist: Theme + Var. 1 through 40. Stored as s.sevcikOp3 = { Theme: true, '1': true, ... }
-// Styled to match the scale checklist cards — small square tick boxes in a
-// label-on-left, checkbox-on-right list. Theme sits on its own row at the
-// top, then Var. 1–40 split into eight columns of five — more compact than
-// four columns of ten, less empty space per column.
+// Styled to match the scale checklist cards — small square tick boxes sat
+// right next to their number. Theme on its own short row at the top, then
+// Var. 1–40 in a single row of 8 columns (5 numbers each), tightly packed
+// rather than stretched across the available width.
 const SEVCIK_VARIATIONS = Array.from({length:40}, (_, i) => String(i+1));
 
 function sevcikHTML(s) {
@@ -3874,33 +3874,33 @@ function sevcikHTML(s) {
   const done = (ticks['Theme'] ? 1 : 0) + SEVCIK_VARIATIONS.filter(it => ticks[it]).length;
   const total = 41;
 
-  function buildRows(items, short) {
+  function buildRows(items) {
     return items.map(function(it) {
       const isDone = !!ticks[it];
-      const label = it === 'Theme' ? 'Theme' : (short ? it : 'Var. ' + it);
-      return '<tr><td style="font-size:0.72rem;color:var(--ink);padding:3px 3px 3px 0">' + esc(label) + '</td>'
-        + '<td style="text-align:right;padding:3px 0">'
+      const label = it === 'Theme' ? 'Theme' : it;
+      return '<div style="display:flex;align-items:center;gap:5px;padding:2px 0">'
+        + '<span style="font-size:0.72rem;color:var(--ink);min-width:' + (it === 'Theme' ? '34px' : '14px') + '">' + esc(label) + '</span>'
         + '<button onclick="sevcikCheck(\'' + s.id + '\',\'' + it + '\')" '
-        + 'style="width:22px;height:22px;border-radius:6px;border:1.5px solid ' + (isDone ? 'var(--viola)' : '#e0ddd8') + ';'
+        + 'style="width:20px;height:20px;border-radius:5px;border:1.5px solid ' + (isDone ? 'var(--viola)' : '#e0ddd8') + ';'
         + 'background:' + (isDone ? 'var(--viola)' : 'transparent') + ';'
-        + 'color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.7rem;font-weight:700;margin-left:auto;display:block">'
-        + (isDone ? '\u2713' : '') + '</button></td></tr>';
+        + 'color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.62rem;font-weight:700;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0">'
+        + (isDone ? '\u2713' : '') + '</button></div>';
     }).join('');
   }
 
-  // Theme as its own short, centred row above the grid
+  // Theme as its own short row above the grid
   const themeRow = buildRows(['Theme']);
 
-  // Var. 1–40 split into 8 columns of 5
+  // Var. 1–40 in a single row of 8 columns, 5 numbers stacked in each
   const cols = [];
   for (let i = 0; i < 8; i++) cols.push(SEVCIK_VARIATIONS.slice(i*5, i*5+5));
 
   return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
     + '<span style="font-size:0.75rem;color:var(--muted)">' + done + ' / ' + total + ' ticked</span>'
     + '</div>'
-    + '<table style="width:100%;max-width:160px;border-collapse:collapse;margin-bottom:10px"><tbody>' + themeRow + '</tbody></table>'
-    + '<div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px 12px">'
-    + cols.map(col => '<table style="width:100%;border-collapse:collapse"><tbody>' + buildRows(col, true) + '</tbody></table>').join('')
+    + '<div style="margin-bottom:10px">' + themeRow + '</div>'
+    + '<div style="display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch">'
+    + cols.map(col => '<div style="flex-shrink:0">' + buildRows(col) + '</div>').join('')
     + '</div>';
 }
 
@@ -5881,7 +5881,8 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
     // opted in via the "Include Sevcik chart?" prompt at export time AND at
     // least one item has been ticked for this pupil (keeps the plan clean
     // for pupils who don't use this book). Theme on its own row at the top,
-    // then Var. 1–40 split into eight columns of five, matching the live UI.
+    // then Var. 1–40 in a single row of 8 tightly-packed columns (5 each),
+    // matching the live UI.
     var sevcikSection = '';
     var sevcikTicks = s.sevcikOp3 || {};
     var sevcikVariations = Array.from({length:40}, function(_, i) { return String(i+1); });
@@ -5891,19 +5892,21 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
         return items.map(function(it) {
           var done = !!sevcikTicks[it];
           var label = it === 'Theme' ? 'Theme' : it;
-          return '<tr><td style="font-size:0.66rem;color:#4a6a3a;padding:2px 6px 2px 0;white-space:nowrap">' + label + '</td>'
-            + '<td style="text-align:center;padding:2px 1px"><div style="width:16px;height:16px;border:1.5px solid ' + (done?'#2F5C1A':'#c8ddb8') + ';border-radius:4px;background:' + (done?'#2F5C1A':'#fff') + ';margin:auto;display:flex;align-items:center;justify-content:center"><span style="color:#fff;font-size:0.62rem">' + (done?'\u2713':'') + '</span></div></td></tr>';
+          return '<div style="display:flex;align-items:center;gap:4px;padding:2px 0">'
+            + '<span style="font-size:0.66rem;color:#4a6a3a;min-width:' + (it === 'Theme' ? '30px' : '12px') + '">' + label + '</span>'
+            + '<div style="width:14px;height:14px;border:1.5px solid ' + (done?'#2F5C1A':'#c8ddb8') + ';border-radius:4px;background:' + (done?'#2F5C1A':'#fff') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="color:#fff;font-size:0.55rem">' + (done?'\u2713':'') + '</span></div>'
+            + '</div>';
         }).join('');
       }
-      var sevcikThemeRow = buildSevcikRows(['Theme']).replace('Theme</td>', 'Theme</td>').replace(/font-size:0.66rem/, 'font-size:0.7rem;font-weight:700');
+      var sevcikThemeRow = buildSevcikRows(['Theme']);
       var sevcikCols = [];
       for (var sc = 0; sc < 8; sc++) sevcikCols.push(sevcikVariations.slice(sc*5, sc*5+5));
       sevcikSection = '<div style="margin-bottom:20px">'
         + '<div style="font-size:0.65rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">Sevcik Op. 3 \u2014 40 Variations</div>'
         + '<div style="font-size:0.7rem;color:#8aaa7a;margin-bottom:6px">' + sevcikDoneCount + ' of 41 ticked</div>'
-        + '<table style="border-collapse:collapse;width:100%;max-width:160px;margin-bottom:8px"><tbody>' + sevcikThemeRow + '</tbody></table>'
-        + '<div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:8px 10px">'
-        + sevcikCols.map(function(col) { return '<table style="border-collapse:collapse;width:100%"><tbody>' + buildSevcikRows(col) + '</tbody></table>'; }).join('')
+        + '<div style="margin-bottom:8px">' + sevcikThemeRow + '</div>'
+        + '<div style="display:flex;gap:10px">'
+        + sevcikCols.map(function(col) { return '<div>' + buildSevcikRows(col) + '</div>'; }).join('')
         + '</div></div>';
     }
 
