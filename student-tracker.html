@@ -2302,30 +2302,6 @@ function renderDetail(s) {
       </div>
       <details style="margin-top:10px">
         <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
-          <span>Natural minor</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
-        </summary>
-        <div class="section-card" style="margin-top:6px">
-          <div id="natural-minor-list-${s.id}">${naturalMinorHTML(s)}</div>
-          <button onclick="openAddNaturalMinorModal('${s.id}')"
-            style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--muted);color:var(--muted);border-radius:10px;padding:8px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">
-            ＋ Add natural minor key
-          </button>
-        </div>
-      </details>
-      <details style="margin-top:10px">
-        <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
-          <span>Double stops</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
-        </summary>
-        <div class="section-card" style="margin-top:6px">
-          <div id="double-stops-list-${s.id}">${doubleStopsHTML(s)}</div>
-          <button onclick="openAddDoubleStopModal('${s.id}')"
-            style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--muted);color:var(--muted);border-radius:10px;padding:8px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">
-            ＋ Add double stop key
-          </button>
-        </div>
-      </details>
-      <details style="margin-top:10px">
-        <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
           <span>Sevcik Op. 3 — 40 Variations</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
         </summary>
         <div class="section-card" style="margin-top:6px">
@@ -3938,22 +3914,13 @@ function getScaleChecklist(s) {
   return s.scaleChecklist || {};
 }
 
-function naturalMinorCheckKey(studentId, key, octave) {
-  const s = getStudent(studentId); if (!s) return;
-  if (!s.naturalMinorChecklist) s.naturalMinorChecklist = {};
-  if (!s.naturalMinorChecklist[key]) s.naturalMinorChecklist[key] = {};
-  s.naturalMinorChecklist[key][octave] = !s.naturalMinorChecklist[key][octave];
-  save();
-  document.getElementById('natural-minor-list-' + studentId).innerHTML = naturalMinorHTML(s);
-}
-
 function doubleStopCheck(studentId, key, type) {
   const s = getStudent(studentId); if (!s) return;
   if (!s.doubleStopsChecklist) s.doubleStopsChecklist = {};
   if (!s.doubleStopsChecklist[key]) s.doubleStopsChecklist[key] = {};
   s.doubleStopsChecklist[key][type] = !s.doubleStopsChecklist[key][type];
   save();
-  document.getElementById('double-stops-list-' + studentId).innerHTML = doubleStopsHTML(s);
+  document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
 }
 
 // ── SEVCIK OP. 3 — 40 VARIATIONS TICK CHART ─────────────────────────────────
@@ -4025,7 +3992,7 @@ function removeNaturalMinorKey(studentId, key) {
   if (s.naturalMinorChecklist) delete s.naturalMinorChecklist[key];
   if (s.naturalMinorKeys) s.naturalMinorKeys = s.naturalMinorKeys.filter(k => k !== key);
   save();
-  document.getElementById('natural-minor-list-' + studentId).innerHTML = naturalMinorHTML(s);
+  document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
 }
 
 function removeDoubleStopKey(studentId, key) {
@@ -4033,7 +4000,7 @@ function removeDoubleStopKey(studentId, key) {
   if (s.doubleStopsChecklist) delete s.doubleStopsChecklist[key];
   if (s.doubleStopKeys) s.doubleStopKeys = s.doubleStopKeys.filter(k => k !== key);
   save();
-  document.getElementById('double-stops-list-' + studentId).innerHTML = doubleStopsHTML(s);
+  document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
 }
 
 // Single unified scale chart: one grid, types down the rows, keys across the
@@ -4082,11 +4049,106 @@ function scalesHTML(s) {
       + '</td>' + cells + '<td></td></tr>';
   }).join('');
 
-  return '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'
+  const mainTable = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'
     + '<table style="border-collapse:collapse">'
     + '<thead><tr><th></th>' + keyHeaderCells + '</tr></thead>'
     + '<tbody>' + typeRows + '</tbody>'
     + '</table></div>';
+
+  return mainTable + naturalMinorAndDoubleStopsHTML(s);
+}
+
+// Natural minor and double-stop (3rds/6ths/Octaves) rows, in the same visual
+// style as the main grid above, but using their OWN key lists (a pupil may
+// be working double stops in fewer/different keys than full scales).
+// Kept as separate compact tables since the key columns can differ from the
+// main grid and from each other.
+function naturalMinorAndDoubleStopsHTML(s) {
+  const nmKeys = s.naturalMinorKeys || [];
+  const dsKeys = s.doubleStopKeys || [];
+  const nmTicks = s.naturalMinorChecklist || {};
+  const nmKeyOcts = s.naturalMinorKeyOctaves || {};
+  const dsTicks = s.doubleStopsChecklist || {};
+
+  function isNmDone(key) {
+    const octs = nmKeyOcts[key] || ['2'];
+    const ticks = nmTicks[key] || {};
+    return octs.every(function(o) { return ticks[o]; });
+  }
+  function isDsDone(key, type) {
+    return !!((dsTicks[key] || {})[type]);
+  }
+
+  function keyHeader(keys, addModalMode, removeFn) {
+    return keys.map(function(key) {
+      return '<th style="padding:2px 1px;text-align:center;min-width:30px">'
+        + '<div style="font-size:0.78rem;font-weight:700;color:var(--ink)">' + esc(key) + '</div>'
+        + '<button onclick="' + removeFn + '(\'' + s.id + '\',\'' + key + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.62rem;padding:0">\u00d7</button>'
+        + '</th>';
+    }).join('') + '<th style="padding:2px 1px;text-align:center;min-width:30px;vertical-align:bottom">'
+      + '<button onclick="' + addModalMode + '(\'' + s.id + '\')" style="background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:0.9rem;line-height:1" title="Add key">+</button></th>';
+  }
+
+  let out = '';
+
+  // Natural minor row — single row, one tick per key
+  out += '<div style="margin-top:14px;padding-top:10px;border-top:1.5px dashed #e0ddd8">'
+    + '<div style="font-size:0.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Natural minor</div>';
+  if (nmKeys.length === 0) {
+    out += '<button onclick="openAddNaturalMinorModal(\'' + s.id + '\')" style="background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 14px;font-family:\'Special Elite\',cursive;font-size:0.78rem;cursor:pointer">+ Add key</button>';
+  } else {
+    const cells = nmKeys.map(function(key) {
+      const done = isNmDone(key);
+      return '<td style="text-align:center;padding:3px 1px">'
+        + '<button onclick="naturalMinorCheckCell(\'' + s.id + '\',\'' + key + '\')" '
+        + 'style="width:24px;height:24px;border-radius:6px;border:1.5px solid ' + (done ? 'var(--viola)' : '#e0ddd8') + ';'
+        + 'background:' + (done ? 'var(--viola)' : 'transparent') + ';color:' + (done ? '#fff' : '#ccc') + ';'
+        + 'cursor:pointer;font-size:0.72rem;font-weight:700;margin:auto;display:block">' + (done ? '\u2713' : '') + '</button></td>';
+    }).join('');
+    out += '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="border-collapse:collapse">'
+      + '<thead><tr><th></th>' + keyHeader(nmKeys, 'openAddNaturalMinorModal', 'removeNaturalMinorKey') + '</tr></thead>'
+      + '<tbody><tr><td></td>' + cells + '<td></td></tr></tbody></table></div>';
+  }
+  out += '</div>';
+
+  // Double stops — 3 rows (3rds, 6ths, Octaves), one tick per key per type
+  out += '<div style="margin-top:14px;padding-top:10px;border-top:1.5px dashed #e0ddd8">'
+    + '<div style="font-size:0.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Double stops</div>';
+  if (dsKeys.length === 0) {
+    out += '<button onclick="openAddDoubleStopModal(\'' + s.id + '\')" style="background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 14px;font-family:\'Special Elite\',cursive;font-size:0.78rem;cursor:pointer">+ Add key</button>';
+  } else {
+    const dsRows = DS_TYPES.map(function(type) {
+      const cells = dsKeys.map(function(key) {
+        const done = isDsDone(key, type);
+        return '<td style="text-align:center;padding:3px 1px">'
+          + '<button onclick="doubleStopCheck(\'' + s.id + '\',\'' + key + '\',\'' + type + '\')" '
+          + 'style="width:24px;height:24px;border-radius:6px;border:1.5px solid ' + (done ? 'var(--viola)' : '#e0ddd8') + ';'
+          + 'background:' + (done ? 'var(--viola)' : 'transparent') + ';color:' + (done ? '#fff' : '#ccc') + ';'
+          + 'cursor:pointer;font-size:0.72rem;font-weight:700;margin:auto;display:block">' + (done ? '\u2713' : '') + '</button></td>';
+      }).join('');
+      return '<tr><td style="font-size:0.68rem;color:var(--muted);padding:3px 6px 3px 0;white-space:nowrap;text-align:left">' + esc(type) + '</td>' + cells + '<td></td></tr>';
+    }).join('');
+    out += '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="border-collapse:collapse">'
+      + '<thead><tr><th></th>' + keyHeader(dsKeys, 'openAddDoubleStopModal', 'removeDoubleStopKey') + '</tr></thead>'
+      + '<tbody>' + dsRows + '</tbody></table></div>';
+  }
+  out += '</div>';
+
+  return out;
+}
+
+// Toggle Natural minor for one key — ticks/unticks all of that key's
+// configured octaves together, same pattern as the main grid's scaleCheckCell.
+function naturalMinorCheckCell(studentId, key) {
+  const s = getStudent(studentId); if (!s) return;
+  const octs = (s.naturalMinorKeyOctaves || {})[key] || ['2'];
+  if (!s.naturalMinorChecklist) s.naturalMinorChecklist = {};
+  if (!s.naturalMinorChecklist[key]) s.naturalMinorChecklist[key] = {};
+  const ticks = s.naturalMinorChecklist[key];
+  const allDone = octs.every(function(o) { return ticks[o]; });
+  octs.forEach(function(o) { ticks[o] = !allDone; });
+  save();
+  document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
 }
 
 // Toggle a key+type cell: ticks/unticks ALL of that key's configured octaves
@@ -4131,66 +4193,6 @@ function editKeyOctaves(studentId, key) {
   document.getElementById('add-key-modal').classList.add('open');
 }
 let _editOctavesKey = null;
-
-function naturalMinorHTML(s) {
-  var keys = s.naturalMinorKeys || [];
-  if (keys.length === 0) return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No natural minor keys added.</p>';
-  var cl = s.naturalMinorChecklist || {};
-  var keyOcts = s.naturalMinorKeyOctaves || {};
-  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
-    keys.map(function(key) {
-      var ticks = cl[key] || {};
-      var octs = keyOcts[key] || ['2'];
-      var cells = octs.map(function(oct) {
-        var isDone = ticks[oct];
-        return '<td style="text-align:center;padding:3px 2px">'
-          + '<button onclick="naturalMinorCheckKey(\'' + s.id + '\',\'' + key + '\',\'' + oct + '\')" '
-          + 'style="width:26px;height:26px;border-radius:6px;border:1.5px solid ' + (isDone ? 'var(--viola)' : '#e0ddd8') + ';'
-          + 'background:' + (isDone ? 'var(--viola)' : 'transparent') + ';'
-          + 'color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.8rem;font-weight:700;margin:auto;display:block">'
-          + (isDone ? '\u2713' : '') + '</button></td>';
-      }).join('');
-      var headerCells = octs.map(function(o) {
-        return '<th style="font-size:0.65rem;color:var(--muted);text-align:center;font-weight:600">' + o + '</th>';
-      }).join('');
-      return '<div style="background:var(--warm);border-radius:10px;padding:10px 12px">'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
-        + '<span style="font-size:1rem;font-weight:700">' + esc(key) + '</span>'
-        + '<button onclick="removeNaturalMinorKey(\'' + s.id + '\',\'' + key + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem">\u00d7</button>'
-        + '</div>'
-        + '<table style="width:100%;border-collapse:collapse">'
-        + '<thead><tr><th></th>' + headerCells + '</tr></thead>'
-        + '<tbody><tr><td style="font-size:0.68rem;color:var(--muted);padding:3px 4px 3px 0">Natural minor</td>' + cells + '</tr></tbody></table>'
-        + '</div>';
-    }).join('') + '</div>';
-}
-
-function doubleStopsHTML(s) {
-  var keys = s.doubleStopKeys || [];
-  if (keys.length === 0) return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No double stop keys added.</p>';
-  var cl = s.doubleStopsChecklist || {};
-  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
-    keys.map(function(key) {
-      var ticks = cl[key] || {};
-      var rows = DS_TYPES.map(function(type) {
-        var isDone = ticks[type];
-        return '<tr><td style="font-size:0.68rem;color:var(--muted);padding:3px 4px 3px 0">' + esc(type) + '</td>'
-          + '<td style="text-align:center;padding:3px 2px">'
-          + '<button onclick="doubleStopCheck(\'' + s.id + '\',\'' + key + '\',\'' + type + '\')" '
-          + 'style="width:26px;height:26px;border-radius:6px;border:1.5px solid ' + (isDone ? 'var(--viola)' : '#e0ddd8') + ';'
-          + 'background:' + (isDone ? 'var(--viola)' : 'transparent') + ';'
-          + 'color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.8rem;font-weight:700;margin:auto;display:block">'
-          + (isDone ? '\u2713' : '') + '</button></td></tr>';
-      }).join('');
-      return '<div style="background:var(--warm);border-radius:10px;padding:10px 12px">'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
-        + '<span style="font-size:1rem;font-weight:700">' + esc(key) + '</span>'
-        + '<button onclick="removeDoubleStopKey(\'' + s.id + '\',\'' + key + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem">\u00d7</button>'
-        + '</div>'
-        + '<table style="width:100%;border-collapse:collapse"><tbody>' + rows + '</tbody></table>'
-        + '</div>';
-    }).join('') + '</div>';
-}
 
 // ── KEY MODAL (shared for main / natural minor / double stops) ──────────────
 let _keyModalMode = 'main'; // 'main' | 'naturalMinor' | 'doubleStop'
@@ -4270,12 +4272,12 @@ function confirmAddKeys() {
       s.naturalMinorKeyOctaves[k] = selectedOctaves;
     });
     save(); closeAddKeyModal();
-    document.getElementById('natural-minor-list-' + studentId).innerHTML = naturalMinorHTML(s);
+    document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
   } else {
     if (!s.doubleStopKeys) s.doubleStopKeys = [];
     scaleSelectedKeys.forEach(function(k) { if (!s.doubleStopKeys.includes(k)) s.doubleStopKeys.push(k); });
     save(); closeAddKeyModal();
-    document.getElementById('double-stops-list-' + studentId).innerHTML = doubleStopsHTML(s);
+    document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
   }
 }
 
@@ -6012,12 +6014,12 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
     // Pieces section
     var piecesSection = '';
     if (pieces.length > 0) {
-      piecesSection = '<div style="margin-bottom:20px">'
-        + '<div style="font-size:0.65rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">Pieces &amp; exercises</div>'
+      piecesSection = '<div style="margin-bottom:16px">'
+        + '<div style="font-size:0.6rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">Pieces &amp; exercises</div>'
         + pieces.map(function(p) {
-            return '<div style="display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid #e8f0e0">'
-              + '<div style="width:6px;height:6px;border-radius:50%;background:#8AB640;flex-shrink:0;margin-top:2px"></div>'
-              + '<div style="font-size:0.95rem;color:#1a3a0a;flex:1">' + p + '</div>'
+            return '<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid #e8f0e0">'
+              + '<div style="width:5px;height:5px;border-radius:50%;background:#8AB640;flex-shrink:0;margin-top:2px"></div>'
+              + '<div style="font-size:0.8rem;color:#1a3a0a;flex:1">' + p + '</div>'
               + '</div>';
           }).join('')
         + '</div>';
@@ -6112,10 +6114,10 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
     var focusSection = '';
     if (plan || bulletLines.length > 0) {
       var bullets = bulletLines.length > 0
-        ? '<ul style="margin:8px 0 0 0;padding-left:18px;list-style:none">'
+        ? '<ul style="margin:6px 0 0 0;padding-left:16px;list-style:none">'
           + bulletLines.map(function(line) {
-              return '<li style="font-size:0.92rem;color:#1a3a0a;line-height:1.6;margin-bottom:4px;display:flex;gap:8px;align-items:baseline">'
-                + '<span style="color:#8AB640;font-size:1rem;flex-shrink:0">\u2022</span>'
+              return '<li style="font-size:0.78rem;color:#1a3a0a;line-height:1.45;margin-bottom:3px;display:flex;gap:6px;align-items:baseline">'
+                + '<span style="color:#8AB640;font-size:0.85rem;flex-shrink:0">\u2022</span>'
                 + '<span>' + line + '</span></li>';
             }).join('')
           + '</ul>'
@@ -6125,9 +6127,9 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
         ? plan.split('\n').map(function(l) { return esc(l.trim()); }).filter(function(l){ return l.length > 0; }).join('<br>')
         : '';
 
-      focusSection = '<div style="background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:14px 16px;margin-bottom:20px">'
-        + '<div style="font-size:0.65rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">\ud83d\udccc This week\'s focus</div>'
-        + (planHTML ? '<div style="font-size:0.92rem;color:#1a3a0a;line-height:1.6;font-weight:600">' + planHTML + '</div>' : '')
+      focusSection = '<div style="background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:11px 14px;margin-bottom:16px">'
+        + '<div style="font-size:0.6rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">\ud83d\udccc This week\'s focus</div>'
+        + (planHTML ? '<div style="font-size:0.78rem;color:#1a3a0a;line-height:1.45;font-weight:600">' + planHTML + '</div>' : '')
         + bullets
         + '</div>';
     }
