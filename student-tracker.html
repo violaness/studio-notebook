@@ -481,9 +481,91 @@
     .moment-tab { font-size: 0.75rem; padding: 8px 3px; }
     .slot-actions { flex-direction: column; gap: 4px; }
   }
+
+  /* ── NOTEBOOK COVER ──────────────────────────────────────────────────── */
+  #notebook-cover {
+    position: fixed; inset: 0; z-index: 999;
+    background: linear-gradient(135deg, #06330e 0%, var(--ink) 55%, #042008 100%);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transform-origin: left center;
+    transition: transform 0.6s cubic-bezier(.4,0,.2,1), opacity 0.5s ease 0.1s;
+    box-shadow: 6px 0 24px rgba(0,0,0,0.4);
+  }
+  #notebook-cover.opening {
+    transform: perspective(1800px) rotateY(-105deg);
+    opacity: 0;
+    pointer-events: none;
+  }
+  #notebook-cover.hidden { display: none; }
+
+  /* Spiral binding down the left edge */
+  #notebook-cover .spiral-edge {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 34px;
+    display: flex; flex-direction: column; align-items: center; justify-content: space-evenly;
+    background: linear-gradient(90deg, rgba(0,0,0,0.25), transparent);
+  }
+  #notebook-cover .spiral-ring {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 3px solid #b8c4a8;
+    background: var(--paper);
+    box-shadow: inset 0 0 0 3px var(--ink), 1px 1px 2px rgba(0,0,0,0.3);
+    flex-shrink: 0;
+  }
+
+  #notebook-cover .cover-content {
+    text-align: center; color: var(--paper);
+    padding: 0 32px 0 50px;
+    max-width: 360px;
+  }
+  #notebook-cover .cover-icon {
+    font-size: 3.2rem; margin-bottom: 18px;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+  }
+  #notebook-cover .cover-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.1rem; color: var(--string);
+    margin-bottom: 6px; line-height: 1.15;
+  }
+  #notebook-cover .cover-subtitle {
+    font-family: 'Special Elite', cursive;
+    font-size: 0.92rem; color: #c8d8c0;
+    margin-bottom: 38px; letter-spacing: 0.02em;
+  }
+  #notebook-cover .cover-tap-hint {
+    font-family: 'Special Elite', cursive;
+    font-size: 0.78rem; color: #8fae80;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    animation: cover-pulse 2.2s ease-in-out infinite;
+  }
+  @keyframes cover-pulse {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+  }
+  #notebook-cover .cover-tap-hint svg { width: 16px; height: 16px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    #notebook-cover { transition: opacity 0.3s ease; }
+    #notebook-cover.opening { transform: none; }
+    #notebook-cover .cover-tap-hint { animation: none; }
+  }
 </style>
 </head>
 <body>
+
+<!-- NOTEBOOK COVER — shown once per session, tap/click to open -->
+<div id="notebook-cover" onclick="openNotebookCover()">
+  <div class="spiral-edge" id="spiral-edge"></div>
+  <div class="cover-content">
+    <div class="cover-icon">🎻</div>
+    <div class="cover-title">Studio Notebook</div>
+    <div class="cover-subtitle">www.violaness.co.uk</div>
+    <div class="cover-tap-hint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      tap to open
+    </div>
+  </div>
+</div>
 
 <!-- FOLDER BODY (header) — sits at top, tabs at bottom = Oxford folder look -->
 <header class="folder-body">
@@ -6616,6 +6698,34 @@ renderToday();
 renderRoster();
 // Show the notes toggle button
 document.getElementById('notes-toggle-btn').style.display = 'block';
+
+// ── NOTEBOOK COVER ───────────────────────────────────────────────────────
+// Shows once per browser session (so it doesn't get in the way every time
+// you switch views, but reappears fresh next time you actually reopen the
+// app — e.g. tomorrow, or after closing Safari).
+(function initNotebookCover() {
+  const cover = document.getElementById('notebook-cover');
+  if (!cover) return;
+
+  // Build the spiral binding rings, enough to fill the edge height
+  const edge = document.getElementById('spiral-edge');
+  if (edge) {
+    const ringCount = Math.max(8, Math.round(window.innerHeight / 48));
+    edge.innerHTML = Array.from({length: ringCount}, () => '<div class="spiral-ring"></div>').join('');
+  }
+
+  if (sessionStorage.getItem('studio_cover_opened') === '1') {
+    cover.classList.add('hidden');
+  }
+})();
+
+function openNotebookCover() {
+  const cover = document.getElementById('notebook-cover');
+  if (!cover) return;
+  cover.classList.add('opening');
+  sessionStorage.setItem('studio_cover_opened', '1');
+  setTimeout(() => { cover.classList.add('hidden'); }, 650);
+}
 </script>
 </body>
 </html>
