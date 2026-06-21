@@ -5009,7 +5009,7 @@ function exportStudioAttendancePDF() {
   const headerCells = sortedWeeks.map(wk => `<th style="padding:3px 4px;background:#f0ece0;text-align:center;white-space:nowrap;font-size:0.62rem;font-weight:700;${weekHasGapBefore[wk] ? 'border-left:2px dashed #b5a98a;' : ''}">${fmtWeek(wk)}</th>`).join('');
 
   const html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
-    + '<title>Studio Attendance</title>'
+    + '<title>Studio Attendance \u2014 Violaness</title>'
     + '<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">'
     + '<style>'
     + '@page{size:A4 landscape;margin:10mm 12mm}'
@@ -5023,6 +5023,7 @@ function exportStudioAttendancePDF() {
       + '<button onclick="window.print()" style="background:#29789E;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-family:\'Special Elite\',cursive;font-size:0.9rem;cursor:pointer">\ud83d\udda8\ufe0f\u00a0 Save as PDF / Print</button>'
       + '<button onclick="window.close()" style="background:none;border:1.5px solid #2F5C1A;color:#2F5C1A;padding:10px 20px;border-radius:8px;font-family:\'Special Elite\',cursive;font-size:0.9rem;cursor:pointer">\u2190 Close</button>'
     + '</div>'
+    + '<div class="no-print" style="margin-top:-8px;margin-bottom:18px;font-size:0.78rem;color:#8aaa7a;max-width:480px">\ud83d\udca1 No URL/date footer: instead of this button, use Safari\u2019s own Share icon (top of screen) \u2192 Options \u2192 PDF \u2192 Done \u2192 Save to Files or share directly. That route skips the print engine entirely, so no footer gets added.</div>'
     + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;border-bottom:2px solid #2F5C1A;padding-bottom:10px">'
       + '<div><div style="font-size:1.4rem;font-weight:700">Studio attendance</div><div style="font-size:0.8rem;color:#6b8a6b">' + esc(periodLabel) + '</div></div>'
       + '<div style="font-size:0.62rem;color:#8aaa7a;text-transform:uppercase;letter-spacing:0.08em">www.violaness.co.uk</div>'
@@ -6306,7 +6307,7 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
   }).join('');
 
   const html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
-    + '<title>Practice Plan</title>'
+    + '<title>Practice Plan \u2014 Violaness</title>'
     + '<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">'
     + '<style>'
     + '@page{size:A4 portrait;margin:12mm 14mm}'
@@ -6321,6 +6322,7 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
       + '<button onclick="window.print()" style="background:#29789E;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-family:\'Special Elite\',cursive;font-size:0.9rem;cursor:pointer">\ud83d\udda8\ufe0f\u00a0 Save as PDF / Print</button>'
       + '<button onclick="window.close()" style="background:none;border:1.5px solid #2F5C1A;color:#2F5C1A;padding:10px 20px;border-radius:8px;font-family:\'Special Elite\',cursive;font-size:0.9rem;cursor:pointer">\u2190 Close</button>'
     + '</div>'
+    + '<div class="no-print" style="margin-top:-8px;margin-bottom:18px;font-size:0.78rem;color:#8aaa7a;max-width:480px">\ud83d\udca1 No URL/date footer: instead of this button, use Safari\u2019s own Share icon (top of screen) \u2192 Options \u2192 PDF \u2192 Done \u2192 Save to Files or share directly. That route skips the print engine entirely, so no footer gets added.</div>'
     + practicePages
     + '</body></html>';
 
