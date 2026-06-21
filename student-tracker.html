@@ -6030,26 +6030,77 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
     if (includeScales && (s.scaleKeys||[]).length > 0) {
       var cl = s.scaleChecklist || {};
       var keyOcts = s.scaleKeyOctaves || {};
-      var STYPES = ['Major scale','Major arpeggio','Harmonic minor scale','Melodic minor scale','Minor arpeggio','Dominant 7th','Diminished 7th','Chromatic scale'];
-      var scaleRows = (s.scaleKeys||[]).map(function(key) {
-        var ticks = cl[key] || {};
+      var activeTypes = getActiveScaleTypes(s);
+      var pdfKeys = s.scaleKeys || [];
+
+      function pdfIsCellDone(key, type) {
         var octs = keyOcts[key] || ['1','2','3'];
-        var octCols = octs.map(function(o) {
-          return '<th style="font-size:0.58rem;color:#8aaa7a;text-align:center;padding:1px 3px;font-weight:600">' + o + '</th>';
-        }).join('');
-        var typeRows = STYPES.map(function(type) {
-          var cells = octs.map(function(oct) {
-            var done = ticks[type] && ticks[type][oct];
-            return '<td style="text-align:center;padding:2px 1px"><div style="width:15px;height:15px;border:1.5px solid ' + (done?'#2F5C1A':'#c8ddb8') + ';border-radius:3px;background:' + (done?'#2F5C1A':'#fff') + ';margin:auto;display:flex;align-items:center;justify-content:center"><span style="color:#fff;font-size:0.6rem">' + (done?'\u2713':'') + '</span></div></td>';
-          }).join('');
-          return '<tr><td style="font-size:0.6rem;color:#4a6a3a;padding:2px 5px 2px 0;white-space:nowrap">' + type + '</td>' + cells + '</tr>';
-        }).join('');
-        return '<div style="margin-bottom:10px"><div style="font-size:0.8rem;font-weight:700;color:#2F5C1A;margin-bottom:3px">' + key + '</div>'
-          + '<table style="border-collapse:collapse;width:100%"><thead><tr><th style="text-align:left;padding:1px 4px 1px 0"></th>' + octCols + '</tr></thead><tbody>' + typeRows + '</tbody></table></div>';
+        var ticks = (cl[key] || {})[type] || {};
+        return octs.every(function(o) { return ticks[o]; });
+      }
+      function pdfCheckbox(done) {
+        return '<div style="width:15px;height:15px;border:1.5px solid ' + (done?'#2F5C1A':'#c8ddb8') + ';border-radius:3px;background:' + (done?'#2F5C1A':'#fff') + ';margin:auto;display:flex;align-items:center;justify-content:center"><span style="color:#fff;font-size:0.6rem">' + (done?'\u2713':'') + '</span></div>';
+      }
+
+      // Main grid: types down the rows, keys across the columns — same shape
+      // as the in-app "By key / type" unified chart.
+      var keyHeaderCells = pdfKeys.map(function(key) {
+        return '<th style="font-size:0.68rem;font-weight:700;color:#2F5C1A;text-align:center;padding:1px 3px">' + esc(key) + '</th>';
       }).join('');
-      scalesSection = '<div style="margin-bottom:20px">'
-        + '<div style="font-size:0.65rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">\ud83c\udfbb Scales</div>'
-        + '<div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px 14px">' + scaleRows + '</div>'
+      var mainRows = activeTypes.map(function(type) {
+        var cells = pdfKeys.map(function(key) {
+          return '<td style="text-align:center;padding:2px 1px">' + pdfCheckbox(pdfIsCellDone(key, type)) + '</td>';
+        }).join('');
+        return '<tr><td style="font-size:0.6rem;color:#4a6a3a;padding:2px 6px 2px 0;white-space:nowrap;text-align:left">' + esc(type) + '</td>' + cells + '</tr>';
+      }).join('');
+      var mainGrid = '<table style="border-collapse:collapse"><thead><tr><th></th>' + keyHeaderCells + '</tr></thead><tbody>' + mainRows + '</tbody></table>';
+
+      // Natural minor row, own key list
+      var nmKeys = s.naturalMinorKeys || [];
+      var nmChecklist = s.naturalMinorChecklist || {};
+      var nmKeyOcts = s.naturalMinorKeyOctaves || {};
+      var nmGrid = '';
+      if (nmKeys.length > 0) {
+        var nmHeaderCells = nmKeys.map(function(key) {
+          return '<th style="font-size:0.65rem;font-weight:700;color:#2F5C1A;text-align:center;padding:1px 3px">' + esc(key) + '</th>';
+        }).join('');
+        var nmCells = nmKeys.map(function(key) {
+          var octs = nmKeyOcts[key] || ['2'];
+          var ticks = nmChecklist[key] || {};
+          var done = octs.every(function(o) { return ticks[o]; });
+          return '<td style="text-align:center;padding:2px 1px">' + pdfCheckbox(done) + '</td>';
+        }).join('');
+        nmGrid = '<div style="margin-top:10px;padding-top:8px;border-top:1px dashed #c8ddb8">'
+          + '<div style="font-size:0.6rem;font-weight:700;color:#6b8a6b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Natural minor</div>'
+          + '<table style="border-collapse:collapse"><thead><tr><th></th>' + nmHeaderCells + '</tr></thead><tbody><tr><td></td>' + nmCells + '</tr></tbody></table>'
+          + '</div>';
+      }
+
+      // Double stops — 3rds / 6ths / Octaves, own key list
+      var dsKeys = s.doubleStopKeys || [];
+      var dsChecklist = s.doubleStopsChecklist || {};
+      var dsGrid = '';
+      if (dsKeys.length > 0) {
+        var dsHeaderCells = dsKeys.map(function(key) {
+          return '<th style="font-size:0.65rem;font-weight:700;color:#2F5C1A;text-align:center;padding:1px 3px">' + esc(key) + '</th>';
+        }).join('');
+        var dsRows = DS_TYPES.map(function(type) {
+          var cells = dsKeys.map(function(key) {
+            var done = !!((dsChecklist[key] || {})[type]);
+            return '<td style="text-align:center;padding:2px 1px">' + pdfCheckbox(done) + '</td>';
+          }).join('');
+          return '<tr><td style="font-size:0.6rem;color:#4a6a3a;padding:2px 6px 2px 0;white-space:nowrap;text-align:left">' + esc(type) + '</td>' + cells + '</tr>';
+        }).join('');
+        dsGrid = '<div style="margin-top:10px;padding-top:8px;border-top:1px dashed #c8ddb8">'
+          + '<div style="font-size:0.6rem;font-weight:700;color:#6b8a6b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Double stops</div>'
+          + '<table style="border-collapse:collapse"><thead><tr><th></th>' + dsHeaderCells + '</tr></thead><tbody>' + dsRows + '</tbody></table>'
+          + '</div>';
+      }
+
+      scalesSection = '<div style="margin-bottom:16px">'
+        + '<div style="font-size:0.6rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">\ud83c\udfbb Scales</div>'
+        + '<div style="overflow-x:auto">' + mainGrid + '</div>'
+        + nmGrid + dsGrid
         + '</div>';
     } else if (scalesWeek.length > 0) {
       scalesSection = '<div style="margin-bottom:20px">'
@@ -6127,7 +6178,7 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
         ? plan.split('\n').map(function(l) { return esc(l.trim()); }).filter(function(l){ return l.length > 0; }).join('<br>')
         : '';
 
-      focusSection = '<div style="background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:11px 14px;margin-bottom:16px">'
+      focusSection = '<div style="background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:11px 14px;margin-bottom:16px;width:100%;box-sizing:border-box">'
         + '<div style="font-size:0.6rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">\ud83d\udccc This week\'s focus</div>'
         + (planHTML ? '<div style="font-size:0.78rem;color:#1a3a0a;line-height:1.45;font-weight:600">' + planHTML + '</div>' : '')
         + bullets
@@ -6155,7 +6206,7 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
       + '</div>'
 
       // Practice days
-      + '<div style="background:#f0f7ea;border-radius:10px;padding:12px 16px;margin-bottom:20px">'
+      + '<div style="background:#f0f7ea;border-radius:10px;padding:12px 16px;margin-bottom:20px;width:100%;box-sizing:border-box">'
         + '<div style="font-size:0.62rem;color:#6b8a6b;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px">Tick each practice session</div>'
         + '<div style="display:flex;gap:10px;justify-content:space-between">' + tickBoxes + '</div>'
       + '</div>'
