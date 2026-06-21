@@ -6173,21 +6173,21 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
         var ticks = cl[key] || {};
         var octs = keyOcts[key] || ['1','2','3'];
         var octCols = octs.map(function(o) {
-          return '<th style="font-size:0.6rem;color:#8aaa7a;text-align:center;padding:2px 4px;font-weight:600">' + o + '</th>';
+          return '<th style="font-size:0.58rem;color:#8aaa7a;text-align:center;padding:1px 3px;font-weight:600">' + o + '</th>';
         }).join('');
         var typeRows = STYPES.map(function(type) {
           var cells = octs.map(function(oct) {
             var done = ticks[type] && ticks[type][oct];
-            return '<td style="text-align:center;padding:3px 2px"><div style="width:18px;height:18px;border:1.5px solid ' + (done?'#2F5C1A':'#c8ddb8') + ';border-radius:4px;background:' + (done?'#2F5C1A':'#fff') + ';margin:auto;display:flex;align-items:center;justify-content:center"><span style="color:#fff;font-size:0.7rem">' + (done?'\u2713':'') + '</span></div></td>';
+            return '<td style="text-align:center;padding:2px 1px"><div style="width:15px;height:15px;border:1.5px solid ' + (done?'#2F5C1A':'#c8ddb8') + ';border-radius:3px;background:' + (done?'#2F5C1A':'#fff') + ';margin:auto;display:flex;align-items:center;justify-content:center"><span style="color:#fff;font-size:0.6rem">' + (done?'\u2713':'') + '</span></div></td>';
           }).join('');
-          return '<tr><td style="font-size:0.68rem;color:#4a6a3a;padding:3px 8px 3px 0;white-space:nowrap">' + type + '</td>' + cells + '</tr>';
+          return '<tr><td style="font-size:0.6rem;color:#4a6a3a;padding:2px 5px 2px 0;white-space:nowrap">' + type + '</td>' + cells + '</tr>';
         }).join('');
-        return '<div style="margin-bottom:12px"><div style="font-size:0.85rem;font-weight:700;color:#2F5C1A;margin-bottom:4px">' + key + '</div>'
-          + '<table style="border-collapse:collapse;width:auto"><thead><tr><th style="text-align:left;padding:2px 8px 2px 0"></th>' + octCols + '</tr></thead><tbody>' + typeRows + '</tbody></table></div>';
+        return '<div style="margin-bottom:10px"><div style="font-size:0.8rem;font-weight:700;color:#2F5C1A;margin-bottom:3px">' + key + '</div>'
+          + '<table style="border-collapse:collapse;width:100%"><thead><tr><th style="text-align:left;padding:1px 4px 1px 0"></th>' + octCols + '</tr></thead><tbody>' + typeRows + '</tbody></table></div>';
       }).join('');
       scalesSection = '<div style="margin-bottom:20px">'
         + '<div style="font-size:0.65rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">\ud83c\udfbb Scales</div>'
-        + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">' + scaleRows + '</div>'
+        + '<div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px 14px">' + scaleRows + '</div>'
         + '</div>';
     } else if (scalesWeek.length > 0) {
       scalesSection = '<div style="margin-bottom:20px">'
