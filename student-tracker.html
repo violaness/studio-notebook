@@ -6146,10 +6146,6 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
 
     // Focus / plan section — pulls plan, this week's goal, and during notes as bullets
     var scratch = (s.duringScratch || '').trim();
-    if (!scratch) {
-      var lastEntry = (s.log || []).slice(-1)[0];
-      if (lastEntry && lastEntry.text) scratch = lastEntry.text.trim();
-    }
     // Strip legacy plan-prefix variations in case older saved notes still have them
     var planPrefix = '\ud83d\udccc Plan:\n' + plan;
     if (plan && scratch.startsWith(planPrefix)) scratch = scratch.slice(planPrefix.length).trim();
