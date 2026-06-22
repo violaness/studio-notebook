@@ -2091,7 +2091,7 @@ function renderDetail(s) {
           <span>📌 Plan for today's lesson</span>
           ${s.nextLesson ? `<button onclick="clearNextLessonPlan('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>` : ''}
         </div>
-        <textarea rows="28" placeholder="What you want to cover today…"
+        <textarea rows="14" placeholder="What you want to cover today…"
           id="nextlesson-${s.id}"
           oninput="updateField('${s.id}','nextLesson',this.value)">${esc(s.nextLesson||'')}</textarea>
         ${(s.log||[]).filter(e=>e.text).length > 0 ? '<button onclick="copyLastLesson(\'' + s.id + '\')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-size:0.8rem;cursor:pointer;width:100%">\u2191 Copy last lesson notes as plan</button>' : ''}
