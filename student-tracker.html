@@ -2201,15 +2201,25 @@ function renderDetail(s) {
       </div>` : ''}
       <div class="section-card">
         <div class="section-label">Quick notes — right now</div>
-        <div style="display:flex;gap:6px;margin-bottom:6px">
-          <button type="button" onclick="insertLinePrefix('during-scratch-${s.id}','•');saveDuring('${s.id}')" title="Bullet point" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:5px 12px;font-size:0.85rem;cursor:pointer;color:var(--ink)">• Bullet</button>
-          <button type="button" onclick="insertLinePrefix('during-scratch-${s.id}','☐');saveDuring('${s.id}')" title="Tick box" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:5px 12px;font-size:0.85rem;cursor:pointer;color:var(--ink)">☐ Tick box</button>
+        <div style="display:flex;gap:10px;margin-bottom:12px;align-items:stretch">
+          <button type="button" onclick="openScratchForDictation('${s.id}')"
+            style="flex:2;background:var(--violin);color:#fff;border:none;border-radius:12px;padding:14px 10px;font-family:'Special Elite',cursive;font-size:1.1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+            🎤 <span>Speak</span>
+          </button>
+          <button type="button" onclick="openScratchForTyping('${s.id}')"
+            style="flex:1;background:none;border:1.5px solid #e0ddd8;border-radius:12px;padding:14px 10px;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:6px">
+            ⌨️ <span>Type</span>
+          </button>
         </div>
-        <textarea class="quick-note" rows="28"
+        <textarea class="quick-note" rows="10"
           placeholder="Jot anything — key words, reminders, 'try this'…"
           id="during-scratch-${s.id}"
           oninput="fixupListContinuation('during-scratch-${s.id}');saveDuring('${s.id}')"
           onkeydown="if(event.key==='Enter')handleListEnter(event)">${esc(s.duringScratch || '')}</textarea>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button type="button" onclick="insertLinePrefix('during-scratch-${s.id}','•');saveDuring('${s.id}')" title="Bullet point" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;color:var(--muted)">• Bullet</button>
+          <button type="button" onclick="insertLinePrefix('during-scratch-${s.id}','☐');saveDuring('${s.id}')" title="Tick box" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;color:var(--muted)">☐ Tick box</button>
+        </div>
         <div class="save-toast" id="toast-during-${s.id}" style="opacity:0">✓ Saved</div>
         <div style="margin-top:10px">
           <div class="section-label" style="margin-bottom:8px">Tap to add to notes</div>
@@ -2259,15 +2269,25 @@ function renderDetail(s) {
       ${refSummary(s)}
       <div class="section-card">
         <div class="section-label">Lesson notes</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">Built from your plan and during-lesson notes — edit freely before saving to the log.</div>
-        <div style="display:flex;gap:6px;margin-bottom:6px">
-          <button type="button" onclick="insertLinePrefix('after-note-${s.id}','•')" title="Bullet point" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:5px 12px;font-size:0.85rem;cursor:pointer;color:var(--ink)">• Bullet</button>
-          <button type="button" onclick="insertLinePrefix('after-note-${s.id}','☐')" title="Tick box" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:5px 12px;font-size:0.85rem;cursor:pointer;color:var(--ink)">☐ Tick box</button>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">Built from your plan and during-lesson notes — edit freely before saving to the log.</div>
+        <div style="display:flex;gap:10px;margin-bottom:12px;align-items:stretch">
+          <button type="button" onclick="openAfterForDictation('${s.id}')"
+            style="flex:2;background:var(--violin);color:#fff;border:none;border-radius:12px;padding:14px 10px;font-family:'Special Elite',cursive;font-size:1.1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+            🎤 <span>Speak</span>
+          </button>
+          <button type="button" onclick="openAfterForTyping('${s.id}')"
+            style="flex:1;background:none;border:1.5px solid #e0ddd8;border-radius:12px;padding:14px 10px;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:6px">
+            ⌨️ <span>Type</span>
+          </button>
         </div>
-        <textarea rows="28" placeholder="What went well, what to remember for next time…"
+        <textarea rows="10" placeholder="What went well, what to remember for next time…"
           id="after-note-${s.id}"
           oninput="fixupListContinuation('after-note-${s.id}');this.dataset.edited='1'"
           onkeydown="if(event.key==='Enter')handleListEnter(event)">${buildCumulativeNote(s)}</textarea>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button type="button" onclick="insertLinePrefix('after-note-${s.id}','•')" title="Bullet point" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;color:var(--muted)">• Bullet</button>
+          <button type="button" onclick="insertLinePrefix('after-note-${s.id}','☐')" title="Tick box" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;color:var(--muted)">☐ Tick box</button>
+        </div>
         ${(()=>{
           const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
           const todayEntry = (s.log||[]).find(e => e.date === today);
@@ -2966,6 +2986,37 @@ function saveEditLogModal() {
 }
 
 let _saveDuringTimer = null;
+// ── MIC / TYPE HELPERS ───────────────────────────────────────────────────────
+// Focus a textarea and scroll it to the vertical centre of the screen so it
+// sits comfortably mid-screen when the iPad keyboard appears.
+function focusAndCentre(el) {
+  if (!el) return;
+  el.focus();
+  // Small delay so the keyboard has time to start appearing before we scroll
+  setTimeout(function() {
+    const rect = el.getBoundingClientRect();
+    const targetY = rect.top + window.scrollY - (window.innerHeight / 2) + (rect.height / 2);
+    window.scrollTo({ top: targetY, behavior: 'smooth' });
+  }, 150);
+}
+
+function openScratchForDictation(id) {
+  const el = document.getElementById('during-scratch-' + id);
+  focusAndCentre(el);
+}
+function openScratchForTyping(id) {
+  const el = document.getElementById('during-scratch-' + id);
+  focusAndCentre(el);
+}
+function openAfterForDictation(id) {
+  const el = document.getElementById('after-note-' + id);
+  focusAndCentre(el);
+}
+function openAfterForTyping(id) {
+  const el = document.getElementById('after-note-' + id);
+  focusAndCentre(el);
+}
+
 function saveDuring(id) {
   clearTimeout(_saveDuringTimer);
   _saveDuringTimer = setTimeout(function() {
