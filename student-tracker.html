@@ -178,6 +178,9 @@
     border-radius: 999px;  
     margin-left: 6px; vertical-align: middle;
   }
+  .next-badge.imminent {
+    background: #e67e22; color: #fff;
+  }
 
   /* ── WEEK VIEW ── */
   .week-day { margin-bottom: 20px; }
@@ -1610,11 +1613,17 @@ function renderToday() {
   // Work out who's "next" (first lesson whose time is >= now)
   const nowTime = now.getHours()*60 + now.getMinutes();
   let nextId = null;
+  let imminentId = null;
   for (const s of sorted) {
     const t = s._extraTime || effectiveSlot(s).time;
     if (t) {
       const [h,m] = t.split(':').map(Number);
-      if ((h*60+m) >= nowTime) { nextId = s.id; break; }
+      const lessonMins = h*60+m;
+      if (lessonMins >= nowTime) {
+        nextId = s.id;
+        if (lessonMins - nowTime <= 5) imminentId = s.id;
+        break;
+      }
     }
   }
 
@@ -1641,6 +1650,7 @@ function renderToday() {
     const _slot = effectiveSlot(s);
     const slot = { time: s._extraTime || _slot.time, day: _slot.day };
     const isNext = s.id === nextId;
+    const isImminent = s.id === imminentId;
     const lastLog = (s.log||[]).slice(-1)[0];
     const todayStr = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
     const todayLog = (s.log||[]).find(e => e.date === todayStr);
@@ -1660,7 +1670,7 @@ function renderToday() {
       <div class="lesson-summary-header" onclick="toggleSummary('${s.id}')">
         <div class="ls-avatar avatar-${s.instrument}" style="${markedAbsentToday?'opacity:0.4;':''}">${getInitials(s.name)}</div>
         <div class="ls-info">
-          <div class="ls-name" style="${markedAbsentToday?'color:var(--muted);text-decoration:line-through;':''}">${s.name}${isNext?'<span class="next-badge">Next</span>':''}${markedAbsentToday?'<span style="font-size:0.68rem;color:#c0392b;font-weight:700;margin-left:6px;text-decoration:none;display:inline-block">absent</span>':''}</div>
+          <div class="ls-name" style="${markedAbsentToday?'color:var(--muted);text-decoration:line-through;':''}">${s.name}${isNext?`<span class="next-badge${isImminent?' imminent':''}">Next</span>`:''}${markedAbsentToday?'<span style="font-size:0.68rem;color:#c0392b;font-weight:700;margin-left:6px;text-decoration:none;display:inline-block">absent</span>':''}</div>
           <div class="ls-time">${slot.time || 'time not set'} · ${instrDot(s.instrument)}${s.instrument} · ${s.level}</div>
         </div>
         <div class="ls-chevron">›</div>
@@ -6610,6 +6620,14 @@ syncRequestedAbsencesToLog();
 syncRequestedMovesToWeek();
 renderToday();
 renderRoster();
+// Refresh Today view every 30 seconds so the "Next" badge colour updates
+// automatically (e.g. turns amber when a lesson is 5 minutes away).
+setInterval(function() {
+  if (document.getElementById('today-list') &&
+      document.querySelector('.tab-btn[data-tab="today"].active')) {
+    renderToday();
+  }
+}, 30000);
 // Show the notes toggle button
 document.getElementById('notes-toggle-btn').style.display = 'block';
 
