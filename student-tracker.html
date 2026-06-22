@@ -5287,8 +5287,8 @@ function nextPupilHTML(s) {
   return `<div style="margin-top:10px">
     <button onclick="openStudentFrom('${next.id}','today')"
       style="width:100%;background:${bg};color:${fg};border:none;border-radius:10px;padding:12px 16px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
-      <span>Next: ${next.name}${slot.time ? ' · ' + slot.time : ''}</span>
-      <span>→</span>
+      <span>Next →</span>
+      <span>${next.name}${slot.time ? ' · ' + slot.time : ''}</span>
     </button>
   </div>`;
 }
