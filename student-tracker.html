@@ -658,23 +658,31 @@
     <div id="studio-attendance"></div>
   </details>
   <!-- TECHNICAL FOCUS -->
-  <div class="section-card" style="margin-bottom:14px">
-    <div class="section-label">Technical focus words</div>
-    <div style="margin-bottom:10px">
-      <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">Built-in</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px" id="lib-builtin-chips"></div>
+  <details class="section-card" style="margin-bottom:14px;padding:0">
+    <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.72rem;font-weight:700;color:var(--muted)">
+      <span>Technical focus words</span>
+      <span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+    </summary>
+    <div style="padding:0 14px 14px">
+      <div style="margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:0.72rem;font-weight:700;color:var(--muted)">Built-in</div>
+          <button onclick="restoreBuiltinChips()" style="background:none;border:none;font-size:0.7rem;color:var(--muted);cursor:pointer;text-decoration:underline;padding:0">Restore deleted</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px" id="lib-builtin-chips"></div>
+      </div>
+      <div id="lib-custom-chips-section" style="margin-bottom:10px">
+        <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">My custom words</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px" id="lib-custom-chips"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input type="text" id="lib-new-chip" placeholder="Add a new focus word…" maxlength="40"
+          onkeydown="if(event.key==='Enter')addLibChip()"
+          style="flex:1;padding:8px 12px;border-radius:999px;font-size:0.88rem">
+        <button onclick="addLibChip()" style="background:var(--viola);color:#fff;border:none;border-radius:999px;padding:8px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">Add</button>
+      </div>
     </div>
-    <div id="lib-custom-chips-section" style="margin-bottom:10px">
-      <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">My custom words</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px" id="lib-custom-chips"></div>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:10px">
-      <input type="text" id="lib-new-chip" placeholder="Add a new focus word…" maxlength="40"
-        onkeydown="if(event.key==='Enter')addLibChip()"
-        style="flex:1;padding:8px 12px;border-radius:999px;font-size:0.88rem">
-      <button onclick="addLibChip()" style="background:var(--viola);color:#fff;border:none;border-radius:999px;padding:8px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">Add</button>
-    </div>
-  </div>
+  </details>
 
   <!-- PIECES BY CATEGORY -->
   <div class="section-card" style="margin-bottom:14px">
@@ -1459,7 +1467,8 @@ const TECH_OPTIONS = [
 
 // ── STATE ──────────────────────────────────────────────────────────────────
 let students     = JSON.parse(localStorage.getItem('studio_students')      || '[]');
-let customChips  = JSON.parse(localStorage.getItem('studio_custom_chips')  || '[]');
+let customChips      = JSON.parse(localStorage.getItem('studio_custom_chips')      || '[]');
+let deletedBuiltins  = JSON.parse(localStorage.getItem('studio_deleted_builtins')  || '[]');
 let customPieces = JSON.parse(localStorage.getItem('studio_custom_pieces') || '[]');
 let oneOffMoves  = JSON.parse(localStorage.getItem('studio_one_off_moves') || '{}');
 let waitingList  = JSON.parse(localStorage.getItem('studio_waiting_list')  || '[]');
@@ -1471,12 +1480,13 @@ let movingStudentId = null;
 
 // ── PERSISTENCE ───────────────────────────────────────────────────────────
 function save() {
-  localStorage.setItem('studio_students',       JSON.stringify(students));
-  localStorage.setItem('studio_custom_chips',   JSON.stringify(customChips));
-  localStorage.setItem('studio_custom_pieces',  JSON.stringify(customPieces));
-  localStorage.setItem('studio_one_off_moves',  JSON.stringify(oneOffMoves));
-  localStorage.setItem('studio_waiting_list',   JSON.stringify(waitingList));
-  localStorage.setItem('studio_extra_lessons',  JSON.stringify(extraLessons));
+  localStorage.setItem('studio_students',          JSON.stringify(students));
+  localStorage.setItem('studio_custom_chips',      JSON.stringify(customChips));
+  localStorage.setItem('studio_deleted_builtins',  JSON.stringify(deletedBuiltins));
+  localStorage.setItem('studio_custom_pieces',     JSON.stringify(customPieces));
+  localStorage.setItem('studio_one_off_moves',     JSON.stringify(oneOffMoves));
+  localStorage.setItem('studio_waiting_list',      JSON.stringify(waitingList));
+  localStorage.setItem('studio_extra_lessons',     JSON.stringify(extraLessons));
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
@@ -2073,19 +2083,21 @@ function renderDetail(s) {
           <button class="add-piece-btn" style="flex:1" onclick="addPiece('${s.id}')">＋ Add manually</button>
         </div>
       </div>
-      <div class="section-card">
-        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
+      <details class="section-card" style="padding:0">
+        <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.72rem;font-weight:700;color:var(--muted)">
           <span>🔧 Technical focus</span>
-          ${(s.techFocus||[]).length ? `<button onclick="clearAllTechFocus('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear all</button>` : ''}
+          <span style="font-size:0.7rem;font-weight:400;color:var(--muted)">tap to expand</span>
+        </summary>
+        <div style="padding:0 14px 14px">
+          <div class="tech-chips">${techHTML}</div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <input type="text" id="new-tech-chip-${s.id}" placeholder="Add a new focus word…" maxlength="40"
+              onkeydown="if(event.key==='Enter')addTechChipForPupil('${s.id}')"
+              style="flex:1;padding:8px 12px;border-radius:999px;font-size:0.88rem">
+            <button onclick="addTechChipForPupil('${s.id}')" style="background:var(--viola);color:#fff;border:none;border-radius:999px;padding:8px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">Add</button>
+          </div>
         </div>
-        <div class="tech-chips">${techHTML}</div>
-        <div style="display:flex;gap:8px;margin-top:10px">
-          <input type="text" id="new-tech-chip-${s.id}" placeholder="Add a new focus word…" maxlength="40"
-            onkeydown="if(event.key==='Enter')addTechChipForPupil('${s.id}')"
-            style="flex:1;padding:8px 12px;border-radius:999px;font-size:0.88rem">
-          <button onclick="addTechChipForPupil('${s.id}')" style="background:var(--viola);color:#fff;border:none;border-radius:999px;padding:8px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">Add</button>
-        </div>
-      </div>
+      </details>
       <div class="section-card">
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span>📌 Plan for today's lesson</span>
@@ -2788,6 +2800,15 @@ function removeCustomChip(chip, studentId) {
   customChips=customChips.filter(c=>c!==chip);
   students.forEach(s=>{if(s.techFocus)s.techFocus=s.techFocus.filter(t=>t!==chip);});
   save();
+  renderLibChips();
+  const s=getStudent(studentId); if(s)renderDetail(s);
+}
+
+function deleteBuiltinChip(chip, studentId) {
+  if (!deletedBuiltins.includes(chip)) deletedBuiltins.push(chip);
+  students.forEach(s=>{if(s.techFocus)s.techFocus=s.techFocus.filter(t=>t!==chip);});
+  save();
+  renderLibChips();
   const s=getStudent(studentId); if(s)renderDetail(s);
 }
 
@@ -3079,13 +3100,18 @@ function buildPiecesHTML(s) {
 }
 
 function buildTechHTML(s, allTech) {
-  return allTech.map(function(t, i) {
-    const isCustom = i >= TECH_OPTIONS.length;
+  return allTech.filter(function(t, i) {
+    // Hide built-ins that have been deleted
+    return i >= TECH_OPTIONS.length || !deletedBuiltins.includes(t);
+  }).map(function(t, i) {
+    const isCustom = !TECH_OPTIONS.includes(t);
     const selected = (s.techFocus||[]).includes(t);
     var btn = '<button class="tech-chip' + (isCustom?' custom-chip':'') + (selected?' selected':'') + '"'
       + ' onclick="toggleTech(\'' + s.id + '\',\'' + esc(t) + '\',this)">' + esc(t);
     if (isCustom) {
       btn += ' <span onclick="event.stopPropagation();removeCustomChip(\'' + esc(t) + '\',\'' + s.id + '\')" style="margin-left:4px;opacity:0.6;font-size:0.8em" title="Remove">\u00d7</span>';
+    } else {
+      btn += ' <span onclick="event.stopPropagation();deleteBuiltinChip(\'' + esc(t) + '\',\'' + s.id + '\')" style="margin-left:4px;opacity:0.4;font-size:0.8em" title="Hide">\u00d7</span>';
     }
     btn += '</button>';
     return btn;
@@ -5016,12 +5042,13 @@ function populateCatFilters() {
 }
 
 function renderLibChips() {
-  // Built-in chips
+  // Built-in chips — show all, with delete button, greyed if deleted
   const builtIn = document.getElementById('lib-builtin-chips');
   if (builtIn) {
-    builtIn.innerHTML = TECH_OPTIONS.map(t =>
-      `<span style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;font-size:0.8rem;color:var(--muted)">${esc(t)}</span>`
-    ).join('');
+    builtIn.innerHTML = TECH_OPTIONS.map(t => {
+      const deleted = deletedBuiltins.includes(t);
+      return `<span style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;font-size:0.8rem;color:${deleted?'#ccc':'var(--muted)'};display:inline-flex;align-items:center;gap:4px;${deleted?'text-decoration:line-through;':''}">${esc(t)}<button onclick="toggleBuiltinChip('${esc(t)}')" style="background:none;border:none;cursor:pointer;font-size:0.9rem;padding:0;color:${deleted?'#8AB640':'#ccc'}" title="${deleted?'Restore':'Hide'}">${deleted?'↩':'×'}</button></span>`;
+    }).join('');
   }
   // Custom chips
   const custom = document.getElementById('lib-custom-chips');
@@ -5037,6 +5064,23 @@ function renderLibChips() {
       ).join('');
     }
   }
+}
+
+function toggleBuiltinChip(chip) {
+  if (deletedBuiltins.includes(chip)) {
+    deletedBuiltins = deletedBuiltins.filter(t => t !== chip);
+  } else {
+    deletedBuiltins.push(chip);
+    students.forEach(s => { if(s.techFocus) s.techFocus = s.techFocus.filter(t => t !== chip); });
+  }
+  save();
+  renderLibChips();
+}
+
+function restoreBuiltinChips() {
+  deletedBuiltins = [];
+  save();
+  renderLibChips();
 }
 
 function addLibChip() {
@@ -6504,7 +6548,8 @@ function backupData() {
     _version: 1,
     _exported: new Date().toISOString(),
     studio_students:      localStorage.getItem('studio_students')      || '[]',
-    studio_custom_chips:  localStorage.getItem('studio_custom_chips')  || '[]',
+    studio_custom_chips:      localStorage.getItem('studio_custom_chips')      || '[]',
+    studio_deleted_builtins:  localStorage.getItem('studio_deleted_builtins')  || '[]',
     studio_custom_pieces: localStorage.getItem('studio_custom_pieces') || '[]',
     studio_one_off_moves: localStorage.getItem('studio_one_off_moves') || '{}',
     studio_waiting_list:  localStorage.getItem('studio_waiting_list')  || '[]',
@@ -6538,19 +6583,20 @@ function restoreData(event) {
       }
       if (!confirm(`Restore backup from ${payload._exported ? new Date(payload._exported).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : 'unknown date'}?\n\nThis will replace all current data.`)) return;
 
-      const keys = ['studio_students','studio_custom_chips','studio_custom_pieces',
+      const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
         'studio_term','studio_eod','studio_skipped_weeks','studio_extra_lessons','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
 
       // Reload state
-      students     = JSON.parse(localStorage.getItem('studio_students')      || '[]');
-      customChips  = JSON.parse(localStorage.getItem('studio_custom_chips')  || '[]');
-      customPieces = JSON.parse(localStorage.getItem('studio_custom_pieces') || '[]');
-      oneOffMoves  = JSON.parse(localStorage.getItem('studio_one_off_moves') || '{}');
-      waitingList  = JSON.parse(localStorage.getItem('studio_waiting_list')  || '[]');
-      skippedWeeks = JSON.parse(localStorage.getItem('studio_skipped_weeks') || '{}');
-      extraLessons = JSON.parse(localStorage.getItem('studio_extra_lessons') || '{}');
+      students        = JSON.parse(localStorage.getItem('studio_students')         || '[]');
+      customChips     = JSON.parse(localStorage.getItem('studio_custom_chips')     || '[]');
+      deletedBuiltins = JSON.parse(localStorage.getItem('studio_deleted_builtins') || '[]');
+      customPieces    = JSON.parse(localStorage.getItem('studio_custom_pieces')    || '[]');
+      oneOffMoves     = JSON.parse(localStorage.getItem('studio_one_off_moves')    || '{}');
+      waitingList     = JSON.parse(localStorage.getItem('studio_waiting_list')     || '[]');
+      skippedWeeks    = JSON.parse(localStorage.getItem('studio_skipped_weeks')    || '{}');
+      extraLessons    = JSON.parse(localStorage.getItem('studio_extra_lessons')    || '{}');
       repairStudentIDs();
             closeBackupModal();
       renderToday();
