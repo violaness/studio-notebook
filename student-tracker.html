@@ -2053,7 +2053,7 @@ function renderDetail(s) {
       <button onclick="openExtraLessonModal('${s.id}')" style="background:var(--string);color:#05270B;border:none;border-radius:10px;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Add extra lesson this week">+ Extra</button>
       <button onclick="exportSinglePupil('${s.id}')" style="background:#29789E;color:#fff;border:none;border-radius:10px;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Download &amp; email practice plan">✉ Practice Plan</button>
     </div>
-    ${nextPupilHTML(s)}
+    <div id="next-pupil-banner">${nextPupilHTML(s)}</div>
 
     <div class="moment-tabs" style="flex-wrap:wrap">
       <button class="moment-tab active" onclick="switchMoment(this,'panel-before')">Before</button>
@@ -5210,9 +5210,20 @@ function nextPupilHTML(s) {
   if (idx === -1 || idx >= todaySlots.length - 1) return '';
   const next = todaySlots[idx + 1];
   const slot = effectiveSlot(next);
+  // Check if the next lesson is within 5 minutes
+  let imminent = false;
+  if (slot.time) {
+    const now = new Date();
+    const nowMins = now.getHours()*60 + now.getMinutes();
+    const [h,m] = slot.time.split(':').map(Number);
+    const diff = (h*60+m) - nowMins;
+    imminent = diff >= 0 && diff <= 5;
+  }
+  const bg = imminent ? '#e67e22' : 'var(--string)';
+  const fg = imminent ? '#fff' : '#05270B';
   return `<div style="margin-top:10px">
     <button onclick="openStudentFrom('${next.id}','today')"
-      style="width:100%;background:var(--string);color:#05270B;border:none;border-radius:10px;padding:12px 16px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+      style="width:100%;background:${bg};color:${fg};border:none;border-radius:10px;padding:12px 16px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
       <span>Next: ${next.name}${slot.time ? ' · ' + slot.time : ''}</span>
       <span>→</span>
     </button>
@@ -6626,6 +6637,19 @@ setInterval(function() {
   if (document.getElementById('today-list') &&
       document.querySelector('.tab-btn[data-tab="today"].active')) {
     renderToday();
+  }
+  // Also refresh the next-pupil banner on the detail view
+  const banner = document.getElementById('next-pupil-banner');
+  if (banner) {
+    const detailView = document.getElementById('view-detail');
+    if (detailView && detailView.classList.contains('active')) {
+      const nameEl = detailView.querySelector('.detail-name');
+      if (nameEl) {
+        const pupilName = nameEl.textContent.trim();
+        const s = students.find(p => p.name === pupilName);
+        if (s) banner.innerHTML = nextPupilHTML(s);
+      }
+    }
   }
 }, 30000);
 // Show the notes toggle button
