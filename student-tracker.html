@@ -2201,16 +2201,6 @@ function renderDetail(s) {
       </div>` : ''}
       <div class="section-card">
         <div class="section-label">Quick notes — right now</div>
-        <div style="display:flex;gap:10px;margin-bottom:12px;align-items:stretch">
-          <button type="button" onclick="openScratchForDictation('${s.id}')"
-            style="flex:2;background:var(--violin);color:#fff;border:none;border-radius:12px;padding:14px 10px;font-family:'Special Elite',cursive;font-size:1.1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
-            🎤 <span>Speak</span>
-          </button>
-          <button type="button" onclick="openScratchForTyping('${s.id}')"
-            style="flex:1;background:none;border:1.5px solid #e0ddd8;border-radius:12px;padding:14px 10px;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:6px">
-            ⌨️ <span>Type</span>
-          </button>
-        </div>
         <textarea class="quick-note"
           placeholder="Jot anything — key words, reminders, 'try this'…"
           id="during-scratch-${s.id}"
@@ -2270,16 +2260,6 @@ function renderDetail(s) {
       <div class="section-card">
         <div class="section-label">Lesson notes</div>
         <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">Built from your plan and during-lesson notes — edit freely before saving to the log.</div>
-        <div style="display:flex;gap:10px;margin-bottom:12px;align-items:stretch">
-          <button type="button" onclick="openAfterForDictation('${s.id}')"
-            style="flex:2;background:var(--violin);color:#fff;border:none;border-radius:12px;padding:14px 10px;font-family:'Special Elite',cursive;font-size:1.1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
-            🎤 <span>Speak</span>
-          </button>
-          <button type="button" onclick="openAfterForTyping('${s.id}')"
-            style="flex:1;background:none;border:1.5px solid #e0ddd8;border-radius:12px;padding:14px 10px;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:6px">
-            ⌨️ <span>Type</span>
-          </button>
-        </div>
         <textarea rows="10" placeholder="What went well, what to remember for next time…"
           id="after-note-${s.id}"
           oninput="autoGrow(this);fixupListContinuation('after-note-${s.id}');this.dataset.edited='1'"
@@ -2302,21 +2282,15 @@ function renderDetail(s) {
       </div>
       <div class="section-card" style="background:#f8fdf5;border:1.5px solid #c8ddb8">
         <div class="section-label" style="color:var(--string)">📌 Next lesson — what to focus on</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">Saved when you tap "Save to lesson log" — appears on the Before tab next time.</div>
-        <div style="display:flex;gap:10px;margin-bottom:12px;align-items:stretch">
-          <button type="button" onclick="openNextLessonForDictation('${s.id}')"
-            style="flex:2;background:var(--violin);color:#fff;border:none;border-radius:12px;padding:14px 10px;font-family:'Special Elite',cursive;font-size:1.1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
-            🎤 <span>Speak</span>
-          </button>
-          <button type="button" onclick="openNextLessonForTyping('${s.id}')"
-            style="flex:1;background:none;border:1.5px solid #c8ddb8;border-radius:12px;padding:14px 10px;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:6px">
-            ⌨️ <span>Type</span>
-          </button>
-        </div>
         <textarea class="quick-note" style="background:#f0fae8;border-color:#c8ddb8"
           placeholder="What to do next lesson…"
           id="next-lesson-capture-${s.id}"
           oninput="autoGrow(this)">${esc(s.nextLesson||'')}</textarea>
+        <button onclick="saveNextLesson('${s.id}')"
+          style="margin-top:10px;width:100%;background:var(--string);color:#05270B;border:none;border-radius:10px;padding:11px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer">
+          ✓ Save to Before tab
+        </button>
+        <div class="save-toast" id="toast-next-${s.id}">✓ Saved to Before tab</div>
       </div>
       <div class="section-card">
         <div class="section-label">Attendance — today's lesson</div>
@@ -3075,12 +3049,18 @@ function saveLog(id) {
   const text=el.value.trim(); if(!text)return;
   if(!s.log)s.log=[];
   s.log.push({date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),text});
-  // Transfer the "next lesson" capture to the Before tab plan
-  const nextEl = document.getElementById(`next-lesson-capture-${id}`);
-  s.nextLesson = nextEl ? nextEl.value.trim() : '';
   s.duringScratch=''; save(); el.value='';
   showToast(`toast-after-${id}`); renderDetail(s);
   document.querySelectorAll('.moment-tab').forEach(t => { if(t.textContent==='After') t.click(); });
+}
+
+function saveNextLesson(id) {
+  const s = getStudent(id); if (!s) return;
+  const el = document.getElementById('next-lesson-capture-' + id);
+  if (!el) return;
+  s.nextLesson = el.value.trim();
+  save();
+  showToast('toast-next-' + id);
 }
 function buildPiecesHTML(s) {
   const pieces = s.pieces && s.pieces.length ? s.pieces : [''];
