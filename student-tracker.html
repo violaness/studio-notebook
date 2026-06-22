@@ -344,7 +344,7 @@
     transition: border-color 0.15s; line-height: 1.5;
   }
   textarea:focus, input[type="text"]:focus { outline: none; border-color: var(--viola); background: #fff; }
-  textarea.quick-note { font-size: 1rem; min-height: 90px; background: #fffdf7; border-style: dashed; }
+  textarea.quick-note { font-size: 1rem; min-height: 160px; background: #fffdf7; border-style: dashed; resize: none; overflow: hidden; }
 
   .pieces-list { display: flex; flex-direction: column; gap: 7px; }
   .piece-item { display: flex; gap: 9px; align-items: center; }
@@ -2211,10 +2211,10 @@ function renderDetail(s) {
             ⌨️ <span>Type</span>
           </button>
         </div>
-        <textarea class="quick-note" rows="10"
+        <textarea class="quick-note"
           placeholder="Jot anything — key words, reminders, 'try this'…"
           id="during-scratch-${s.id}"
-          oninput="fixupListContinuation('during-scratch-${s.id}');saveDuring('${s.id}')"
+          oninput="autoGrow(this);fixupListContinuation('during-scratch-${s.id}');saveDuring('${s.id}')"
           onkeydown="if(event.key==='Enter')handleListEnter(event)">${esc(s.duringScratch || '')}</textarea>
         <div style="display:flex;gap:6px;margin-top:6px">
           <button type="button" onclick="insertLinePrefix('during-scratch-${s.id}','•');saveDuring('${s.id}')" title="Bullet point" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;color:var(--muted)">• Bullet</button>
@@ -2282,7 +2282,7 @@ function renderDetail(s) {
         </div>
         <textarea rows="10" placeholder="What went well, what to remember for next time…"
           id="after-note-${s.id}"
-          oninput="fixupListContinuation('after-note-${s.id}');this.dataset.edited='1'"
+          oninput="autoGrow(this);fixupListContinuation('after-note-${s.id}');this.dataset.edited='1'"
           onkeydown="if(event.key==='Enter')handleListEnter(event)">${buildCumulativeNote(s)}</textarea>
         <div style="display:flex;gap:6px;margin-top:6px">
           <button type="button" onclick="insertLinePrefix('after-note-${s.id}','•')" title="Bullet point" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;color:var(--muted)">• Bullet</button>
@@ -2433,6 +2433,13 @@ function renderDetail(s) {
       </div>
     </div>
   `;
+  // Size any pre-filled auto-grow textareas correctly on render
+  setTimeout(function() {
+    ['during-scratch-' + s.id, 'after-note-' + s.id].forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) autoGrow(el);
+    });
+  }, 50);
 }
 
 // ── REQUESTED ABSENCES ────────────────────────────────────────────────────
@@ -2986,6 +2993,12 @@ function saveEditLogModal() {
 }
 
 let _saveDuringTimer = null;
+// ── AUTO-GROW TEXTAREA ────────────────────────────────────────────────────────
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
 // ── MIC / TYPE HELPERS ───────────────────────────────────────────────────────
 // Focus a textarea and scroll it to the vertical centre of the screen so it
 // sits comfortably mid-screen when the iPad keyboard appears.
@@ -4945,7 +4958,6 @@ function exportStudioAttendancePDF() {
       + '<button onclick="window.print()" style="background:#29789E;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-family:\'Special Elite\',cursive;font-size:0.9rem;cursor:pointer">\ud83d\udda8\ufe0f\u00a0 Save as PDF / Print</button>'
       + '<button onclick="window.close()" style="background:none;border:1.5px solid #2F5C1A;color:#2F5C1A;padding:10px 20px;border-radius:8px;font-family:\'Special Elite\',cursive;font-size:0.9rem;cursor:pointer">\u2190 Close</button>'
     + '</div>'
-    + '<div class="no-print" style="margin-top:-8px;margin-bottom:18px;font-size:0.78rem;color:#8aaa7a;max-width:480px">\ud83d\udca1 No URL/date footer: instead of this button, use Safari\u2019s own Share icon (top of screen) \u2192 Options \u2192 PDF \u2192 Done \u2192 Save to Files or share directly. That route skips the print engine entirely, so no footer gets added.</div>'
     + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;border-bottom:2px solid #2F5C1A;padding-bottom:10px">'
       + '<div><div style="font-size:1.4rem;font-weight:700">Studio attendance</div><div style="font-size:0.8rem;color:#6b8a6b">' + esc(periodLabel) + '</div></div>'
       + '<div style="font-size:0.62rem;color:#8aaa7a;text-transform:uppercase;letter-spacing:0.08em">www.violaness.co.uk</div>'
@@ -6302,7 +6314,6 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
       + '<button onclick="window.print()" style="background:#29789E;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-family:\'Special Elite\',cursive;font-size:0.9rem;cursor:pointer">\ud83d\udda8\ufe0f\u00a0 Save as PDF / Print</button>'
       + '<button onclick="window.close()" style="background:none;border:1.5px solid #2F5C1A;color:#2F5C1A;padding:10px 20px;border-radius:8px;font-family:\'Special Elite\',cursive;font-size:0.9rem;cursor:pointer">\u2190 Close</button>'
     + '</div>'
-    + '<div class="no-print" style="margin-top:-8px;margin-bottom:18px;font-size:0.78rem;color:#8aaa7a;max-width:480px">\ud83d\udca1 No URL/date footer: instead of this button, use Safari\u2019s own Share icon (top of screen) \u2192 Options \u2192 PDF \u2192 Done \u2192 Save to Files or share directly. That route skips the print engine entirely, so no footer gets added.</div>'
     + practicePages
     + '</body></html>';
 
