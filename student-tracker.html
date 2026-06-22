@@ -2300,6 +2300,24 @@ function renderDetail(s) {
         <button class="save-btn" onclick="saveLog('${s.id}')">Save to lesson log</button>
         <div class="save-toast" id="toast-after-${s.id}">✓ Added to log</div>
       </div>
+      <div class="section-card" style="background:#f8fdf5;border:1.5px solid #c8ddb8">
+        <div class="section-label" style="color:var(--string)">📌 Next lesson — what to focus on</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">Saved when you tap "Save to lesson log" — appears on the Before tab next time.</div>
+        <div style="display:flex;gap:10px;margin-bottom:12px;align-items:stretch">
+          <button type="button" onclick="openNextLessonForDictation('${s.id}')"
+            style="flex:2;background:var(--violin);color:#fff;border:none;border-radius:12px;padding:14px 10px;font-family:'Special Elite',cursive;font-size:1.1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+            🎤 <span>Speak</span>
+          </button>
+          <button type="button" onclick="openNextLessonForTyping('${s.id}')"
+            style="flex:1;background:none;border:1.5px solid #c8ddb8;border-radius:12px;padding:14px 10px;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:6px">
+            ⌨️ <span>Type</span>
+          </button>
+        </div>
+        <textarea class="quick-note" style="background:#f0fae8;border-color:#c8ddb8"
+          placeholder="What to do next lesson…"
+          id="next-lesson-capture-${s.id}"
+          oninput="autoGrow(this)">${esc(s.nextLesson||'')}</textarea>
+      </div>
       <div class="section-card">
         <div class="section-label">Attendance — today's lesson</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">
@@ -2435,7 +2453,7 @@ function renderDetail(s) {
   `;
   // Size any pre-filled auto-grow textareas correctly on render
   setTimeout(function() {
-    ['during-scratch-' + s.id, 'after-note-' + s.id].forEach(function(id) {
+    ['during-scratch-' + s.id, 'after-note-' + s.id, 'next-lesson-capture-' + s.id].forEach(function(id) {
       const el = document.getElementById(id);
       if (el) autoGrow(el);
     });
@@ -3030,6 +3048,15 @@ function openAfterForTyping(id) {
   focusAndCentre(el);
 }
 
+function openNextLessonForDictation(id) {
+  const el = document.getElementById('next-lesson-capture-' + id);
+  focusAndCentre(el);
+}
+function openNextLessonForTyping(id) {
+  const el = document.getElementById('next-lesson-capture-' + id);
+  focusAndCentre(el);
+}
+
 function saveDuring(id) {
   clearTimeout(_saveDuringTimer);
   _saveDuringTimer = setTimeout(function() {
@@ -3048,7 +3075,10 @@ function saveLog(id) {
   const text=el.value.trim(); if(!text)return;
   if(!s.log)s.log=[];
   s.log.push({date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),text});
-  s.duringScratch=''; s.nextLesson=''; save(); el.value='';
+  // Transfer the "next lesson" capture to the Before tab plan
+  const nextEl = document.getElementById(`next-lesson-capture-${id}`);
+  s.nextLesson = nextEl ? nextEl.value.trim() : '';
+  s.duringScratch=''; save(); el.value='';
   showToast(`toast-after-${id}`); renderDetail(s);
   document.querySelectorAll('.moment-tab').forEach(t => { if(t.textContent==='After') t.click(); });
 }
