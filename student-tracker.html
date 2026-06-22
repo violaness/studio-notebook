@@ -2260,7 +2260,7 @@ function renderDetail(s) {
       <div class="section-card">
         <div class="section-label">Lesson notes</div>
         <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">Built from your plan and during-lesson notes — edit freely before saving to the log.</div>
-        <textarea rows="10" placeholder="What went well, what to remember for next time…"
+        <textarea class="quick-note" placeholder="What went well, what to remember for next time…"
           id="after-note-${s.id}"
           oninput="autoGrow(this);fixupListContinuation('after-note-${s.id}');this.dataset.edited='1'"
           onkeydown="if(event.key==='Enter')handleListEnter(event)">${buildCumulativeNote(s)}</textarea>
