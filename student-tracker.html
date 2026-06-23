@@ -2156,6 +2156,7 @@ function renderDetail(s) {
       <div class="section-card" style="background:#eef6ff;border:1.5px solid #a8c8e8">
         <div class="section-label" style="color:#1a4a6b">📋 Note for next week</div>
         <textarea rows="3" placeholder="Anything to prepare or remember for next lesson…"
+          id="nextWeeknote-${s.id}"
           oninput="updateField('${s.id}','nextWeekNote',this.value)"
           style="background:transparent;border-color:rgba(0,80,140,0.15)">${esc(s.nextWeekNote||'')}</textarea>
       </div>
@@ -2335,7 +2336,7 @@ function renderDetail(s) {
         <textarea class="quick-note" style="background:#f0fae8;border-color:#c8ddb8"
           placeholder="What to do next lesson…"
           id="next-lesson-capture-${s.id}"
-          oninput="autoGrow(this)">${esc(s.nextLesson||'')}</textarea>
+          oninput="autoGrow(this)">${esc(s.nextWeekNote||'')}</textarea>
         <button onclick="saveNextLesson('${s.id}')"
           style="margin-top:10px;width:100%;background:var(--string);color:#05270B;border:none;border-radius:10px;padding:11px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer">
           ✓ Save to Before tab
@@ -3124,11 +3125,11 @@ function saveNextLesson(id) {
   const s = getStudent(id); if (!s) return;
   const el = document.getElementById('next-lesson-capture-' + id);
   if (!el) return;
-  s.nextLesson = el.value.trim();
+  s.nextWeekNote = el.value.trim();
   save();
-  // Update the Before tab textarea immediately so it reflects the new value
-  const beforeEl = document.getElementById('nextlesson-' + id);
-  if (beforeEl) beforeEl.value = s.nextLesson;
+  // Update the Before tab "Note for next week" textarea immediately
+  const beforeEl = document.getElementById('nextWeeknote-' + id);
+  if (beforeEl) beforeEl.value = s.nextWeekNote;
   showToast('toast-next-' + id);
 }
 function buildPiecesHTML(s) {
