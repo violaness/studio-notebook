@@ -5221,7 +5221,9 @@ function renderLibChips() {
     } else {
       custom.innerHTML = customChips.map((t,i) => {
         const color = techChipColor(t);
-        return `<span style="padding:6px 12px;border-radius:999px;border:1.5px solid ${color||'var(--viola)'};border-left:4px solid ${color||'var(--viola)'};font-size:0.8rem;color:#05270B;display:flex;align-items:center;gap:6px;background:${color||'var(--viola)'}">
+        const border = color || '#e0ddd8';
+        const bg = color ? color + '33' : 'transparent';
+        return `<span style="padding:6px 12px;border-radius:999px;border:1.5px solid ${border};border-left:4px solid ${border};font-size:0.8rem;color:#05270B;display:flex;align-items:center;gap:6px;background:${bg}">
           ${esc(t)}
           <button onclick="removeLibChip(${i})" style="background:none;border:none;color:rgba(0,0,0,0.4);cursor:pointer;font-size:0.9rem;padding:0;line-height:1">×</button>
         </span>`;
