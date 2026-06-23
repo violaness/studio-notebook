@@ -725,11 +725,14 @@
         <input type="text" id="lib-new-piece-grade" placeholder="Grade (optional)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <select id="lib-new-piece-cat" onchange="toggleNewCatInput(this.value)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
           <option value="My Library">My Library</option>
-          <option value="Repertoire - Viola">Repertoire — Viola</option>
-          <option value="Repertoire - Violin">Repertoire — Violin</option>
+          <option value="Scalability">Scalability</option>
+          <option value="Technique">Technique</option>
           <option value="Studies - Viola">Studies — Viola</option>
           <option value="Studies - Violin">Studies — Violin</option>
-          <option value="Technique">Technique</option>
+          <option value="Repertoire - Viola">Repertoire — Viola</option>
+          <option value="Repertoire - Violin">Repertoire — Violin</option>
+          <option value="Beginner Repertoire - Viola">Beginner Repertoire — Viola</option>
+          <option value="Beginner Repertoire - Violin">Beginner Repertoire — Violin</option>
           <option value="__new__">+ New category…</option>
         </select>
         <input type="text" id="lib-new-piece-cat-custom" placeholder="New category name" style="display:none;padding:8px 12px;border-radius:8px;font-size:0.88rem">
@@ -1281,11 +1284,14 @@
       <label class="field-label">Category</label>
       <select id="edit-lib-piece-cat">
         <option value="My Library">My Library</option>
-        <option value="Repertoire - Viola">Repertoire — Viola</option>
-        <option value="Repertoire - Violin">Repertoire — Violin</option>
+        <option value="Scalability">Scalability</option>
+        <option value="Technique">Technique</option>
         <option value="Studies - Viola">Studies — Viola</option>
         <option value="Studies - Violin">Studies — Violin</option>
-        <option value="Technique">Technique</option>
+        <option value="Repertoire - Viola">Repertoire — Viola</option>
+        <option value="Repertoire - Violin">Repertoire — Violin</option>
+        <option value="Beginner Repertoire - Viola">Beginner Repertoire — Viola</option>
+        <option value="Beginner Repertoire - Violin">Beginner Repertoire — Violin</option>
       </select>
     </div>
     <div class="modal-actions">
@@ -5176,15 +5182,19 @@ const BUILTIN_CATS = ['My Library','Scalability','Technique','Studies - Viola','
 // dropdowns, so pieces filed under them can still be found/filtered.
 function populateCatFilters() {
   const customCats = [...new Set(customPieces.map(p => p.cat).filter(c => c && !BUILTIN_CATS.includes(c)))].sort();
-  ['lib-cat-filter','piece-cat-filter'].forEach(id => {
+  // Update all four category selects: filter dropdowns + add + edit modals
+  ['lib-cat-filter','piece-cat-filter','lib-new-piece-cat','edit-lib-piece-cat'].forEach(id => {
     const sel = document.getElementById(id); if (!sel) return;
     const current = sel.value;
-    // Remove any previously-added custom options (marked with data-custom-cat)
+    // Remove any previously-added custom options
     [...sel.querySelectorAll('option[data-custom-cat]')].forEach(o => o.remove());
+    // For the add dropdown, insert before the "+ New category…" option
+    const newOpt = sel.querySelector('option[value="__new__"]');
     customCats.forEach(cat => {
       const opt = document.createElement('option');
       opt.value = cat; opt.textContent = cat; opt.setAttribute('data-custom-cat','1');
-      sel.appendChild(opt);
+      if (newOpt) sel.insertBefore(opt, newOpt);
+      else sel.appendChild(opt);
     });
     if ([...sel.options].some(o => o.value === current)) sel.value = current;
   });
@@ -5344,6 +5354,7 @@ function addLibPiece() {
 
 function editLibPiece(idx) {
   const p = customPieces[idx]; if (!p) return;
+  populateCatFilters();
   document.getElementById('edit-lib-piece-idx').value = idx;
   document.getElementById('edit-lib-piece-title').value    = p.title    || '';
   document.getElementById('edit-lib-piece-composer').value = p.composer || '';
