@@ -755,6 +755,37 @@
       </div>
     </div>
   </div>
+
+  <!-- WAITING LIST -->
+  <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:0.72rem;font-weight:800;color:var(--muted)">Waiting list</div>
+      <button onclick="openAddWaitingModal()" style="background:var(--violin);color:#fff;border:none;border-radius:999px;padding:6px 14px;font-family:'Special Elite',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">＋ Add</button>
+    </div>
+    <div id="waiting-list"></div>
+  </div>
+
+  <!-- LENDING LOG -->
+  <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:0.72rem;font-weight:800;color:var(--muted)">📚 Books on loan</div>
+      <button onclick="toggleLendingForm()" style="background:var(--string);color:#05270B;border:none;border-radius:999px;padding:6px 14px;font-family:'Special Elite',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">＋ Log a loan</button>
+    </div>
+    <div id="lending-form" style="display:none;background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:12px;margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div>
+          <div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase">Book title</div>
+          <input type="text" id="lend-book" placeholder="Book name…" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box">
+        </div>
+        <div>
+          <div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase">Lent to</div>
+          <input type="text" id="lend-to" placeholder="Pupil name…" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box">
+        </div>
+      </div>
+      <button onclick="addLendingEntry()" style="width:100%;background:var(--string);color:#05270B;border:none;border-radius:8px;padding:9px;font-family:'Special Elite',cursive;font-size:0.88rem;font-weight:600;cursor:pointer">✓ Save loan</button>
+    </div>
+    <div id="lending-list"></div>
+  </div>
 </div>
 
 <!-- PERSISTENT TEACHING NOTES BAR -->
@@ -819,37 +850,6 @@
     <button class="filter-chip" data-filter="advanced" onclick="setFilter(this,'advanced')">Advanced</button>
   </div>
   <div id="roster-list"></div>
-
-  <!-- WAITING LIST AT BOTTOM OF ALL PUPILS -->
-  <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div style="font-size:0.72rem;font-weight:800;color:var(--muted)">Waiting list</div>
-      <button onclick="openAddWaitingModal()" style="background:var(--violin);color:#fff;border:none;border-radius:999px;padding:6px 14px;font-family:'Special Elite',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">＋ Add</button>
-    </div>
-    <div id="waiting-list"></div>
-  </div>
-
-  <!-- LENDING LOG -->
-  <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div style="font-size:0.72rem;font-weight:800;color:var(--muted)">📚 Books on loan</div>
-      <button onclick="toggleLendingForm()" style="background:var(--string);color:#05270B;border:none;border-radius:999px;padding:6px 14px;font-family:'Special Elite',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">＋ Log a loan</button>
-    </div>
-    <div id="lending-form" style="display:none;background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:12px;margin-bottom:12px">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-        <div>
-          <div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase">Book title</div>
-          <input type="text" id="lend-book" placeholder="Book name…" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box">
-        </div>
-        <div>
-          <div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase">Lent to</div>
-          <input type="text" id="lend-to" placeholder="Pupil name…" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box">
-        </div>
-      </div>
-      <button onclick="addLendingEntry()" style="width:100%;background:var(--string);color:#05270B;border:none;border-radius:8px;padding:9px;font-family:'Special Elite',cursive;font-size:0.88rem;font-weight:600;cursor:pointer">✓ Save loan</button>
-    </div>
-    <div id="lending-list"></div>
-  </div>
 </div>
 
 <!-- DETAIL VIEW -->
