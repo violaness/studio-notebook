@@ -2513,105 +2513,124 @@ function renderDetail(s) {
     <!-- HISTORY -->
     <div class="moment-panel" id="panel-history">
 
-      <!-- GOALS (moved here) -->
-      <div class="section-card">
-        <div class="section-label">🎯 Goals</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-          <div>
-            <div class="goal-label long-term" style="font-size:0.72rem;font-weight:700;margin-bottom:4px">Long-term</div>
-            <textarea rows="3" placeholder="Where are they heading overall?"
-              oninput="updateGoal('${s.id}','longTerm',this.value)">${esc((s.goals||{}).longTerm||'')}</textarea>
+      <!-- GOALS -->
+      <details class="section-card" style="padding:0">
+        <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
+          <span>🎯 Goals</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+        </summary>
+        <div style="padding:0 14px 14px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+            <div>
+              <div class="goal-label long-term" style="font-size:0.72rem;font-weight:700;margin-bottom:4px">Long-term</div>
+              <textarea rows="3" placeholder="Where are they heading overall?"
+                oninput="updateGoal('${s.id}','longTerm',this.value)">${esc((s.goals||{}).longTerm||'')}</textarea>
+            </div>
+            <div>
+              <div class="goal-label medium" style="font-size:0.72rem;font-weight:700;margin-bottom:4px">Medium-term</div>
+              <textarea rows="3" placeholder="Next few months…"
+                oninput="updateGoal('${s.id}','medium',this.value)">${esc((s.goals||{}).medium||'')}</textarea>
+            </div>
+            <div>
+              <div class="goal-label short" style="font-size:0.72rem;font-weight:700;margin-bottom:4px">Short-term</div>
+              <textarea rows="3" placeholder="Next few weeks…"
+                oninput="updateGoal('${s.id}','shortTerm',this.value)">${esc((s.goals||{}).shortTerm||'')}</textarea>
+            </div>
           </div>
-          <div>
-            <div class="goal-label medium" style="font-size:0.72rem;font-weight:700;margin-bottom:4px">Medium-term</div>
-            <textarea rows="3" placeholder="Next few months…"
-              oninput="updateGoal('${s.id}','medium',this.value)">${esc((s.goals||{}).medium||'')}</textarea>
-          </div>
-          <div>
-            <div class="goal-label short" style="font-size:0.72rem;font-weight:700;margin-bottom:4px">Short-term</div>
-            <textarea rows="3" placeholder="Next few weeks…"
-              oninput="updateGoal('${s.id}','shortTerm',this.value)">${esc((s.goals||{}).shortTerm||'')}</textarea>
-          </div>
+          <div class="save-toast" id="toast-goals-${s.id}">✓ Saved</div>
         </div>
-        <div class="save-toast" id="toast-goals-${s.id}">✓ Saved</div>
-      </div>
+      </details>
 
       <!-- COMPLETED PIECES -->
-      <div class="section-card">
-        <div class="section-label">✓ Completed pieces</div>
-        ${completedPiecesHTML(s)}
-      </div>
+      <details class="section-card" style="padding:0">
+        <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
+          <span>✓ Completed pieces</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+        </summary>
+        <div style="padding:0 14px 14px">${completedPiecesHTML(s)}</div>
+      </details>
 
       <!-- COMPLETED STUDIES -->
-      <div class="section-card">
-        <div class="section-label">📖 Completed studies</div>
-        ${completedStudiesHTML(s)}
-      </div>
+      <details class="section-card" style="padding:0">
+        <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
+          <span>📖 Completed studies</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+        </summary>
+        <div style="padding:0 14px 14px">${completedStudiesHTML(s)}</div>
+      </details>
 
       <!-- COMPLETED SCALES -->
-      <div class="section-card">
-        <div class="section-label">🎼 Completed scales</div>
-        ${completedScalesHTML(s)}
-      </div>
+      <details class="section-card" style="padding:0">
+        <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
+          <span>🎼 Completed scales</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+        </summary>
+        <div style="padding:0 14px 14px">${completedScalesHTML(s)}</div>
+      </details>
 
       <!-- BOOKS PURCHASED -->
-      <div class="section-card">
-        <div class="section-label">📚 Books purchased</div>
-        <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">Keep track of which books this pupil already owns, so you don't recommend a duplicate.</div>
-
-        <div style="margin-bottom:14px">
-          <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">Repertoire</div>
-          ${booksPurchasedHTML(s, 'repertoire')}
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <input type="text" id="new-book-repertoire-${s.id}" placeholder="Add a repertoire book…" maxlength="80"
-              onkeydown="if(event.key==='Enter')addBookPurchased('${s.id}','repertoire')"
-              style="flex:1;padding:8px 12px;border-radius:8px;font-size:0.88rem">
-            <button onclick="addBookPurchased('${s.id}','repertoire')" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">Add</button>
+      <details class="section-card" style="padding:0">
+        <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
+          <span>📚 Books purchased</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+        </summary>
+        <div style="padding:0 14px 14px">
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">Keep track of which books this pupil already owns, so you don't recommend a duplicate.</div>
+          <div style="margin-bottom:14px">
+            <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">Repertoire</div>
+            ${booksPurchasedHTML(s, 'repertoire')}
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <input type="text" id="new-book-repertoire-${s.id}" placeholder="Add a repertoire book…" maxlength="80"
+                onkeydown="if(event.key==='Enter')addBookPurchased('${s.id}','repertoire')"
+                style="flex:1;padding:8px 12px;border-radius:8px;font-size:0.88rem">
+              <button onclick="addBookPurchased('${s.id}','repertoire')" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">Add</button>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">Studies</div>
+            ${booksPurchasedHTML(s, 'studies')}
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <input type="text" id="new-book-studies-${s.id}" placeholder="Add a studies book…" maxlength="80"
+                onkeydown="if(event.key==='Enter')addBookPurchased('${s.id}','studies')"
+                style="flex:1;padding:8px 12px;border-radius:8px;font-size:0.88rem">
+              <button onclick="addBookPurchased('${s.id}','studies')" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">Add</button>
+            </div>
           </div>
         </div>
-
-        <div>
-          <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">Studies</div>
-          ${booksPurchasedHTML(s, 'studies')}
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <input type="text" id="new-book-studies-${s.id}" placeholder="Add a studies book…" maxlength="80"
-              onkeydown="if(event.key==='Enter')addBookPurchased('${s.id}','studies')"
-              style="flex:1;padding:8px 12px;border-radius:8px;font-size:0.88rem">
-            <button onclick="addBookPurchased('${s.id}','studies')" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">Add</button>
-          </div>
-        </div>
-      </div>
+      </details>
 
       <!-- ATTENDANCE -->
-      <div class="section-card">
-        <div class="section-label">Attendance</div>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
-          <div>
-            <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">From</label>
-            <input type="date" id="att-from-${s.id}" onchange="renderAttendanceChart('${s.id}')"
-              style="display:block;width:100%;min-height:44px;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none">
+      <details class="section-card" style="padding:0">
+        <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
+          <span>Attendance</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+        </summary>
+        <div style="padding:0 14px 14px">
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+            <div>
+              <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">From</label>
+              <input type="date" id="att-from-${s.id}" onchange="renderAttendanceChart('${s.id}')"
+                style="display:block;width:100%;min-height:44px;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none">
+            </div>
+            <div>
+              <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">To</label>
+              <input type="date" id="att-to-${s.id}" onchange="renderAttendanceChart('${s.id}')"
+                style="display:block;width:100%;min-height:44px;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none">
+            </div>
+            <button onclick="clearAttDates('${s.id}')" style="background:none;border:1.5px solid var(--warm);border-radius:8px;padding:8px 10px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer">All time</button>
           </div>
-          <div>
-            <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">To</label>
-            <input type="date" id="att-to-${s.id}" onchange="renderAttendanceChart('${s.id}')"
-              style="display:block;width:100%;min-height:44px;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none">
-          </div>
-          <button onclick="clearAttDates('${s.id}')" style="background:none;border:1.5px solid var(--warm);border-radius:8px;padding:8px 10px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer">All time</button>
+          <div id="att-chart-${s.id}">${attendanceChart(s, null, null)}</div>
         </div>
-        <div id="att-chart-${s.id}">${attendanceChart(s, null, null)}</div>
-      </div>
+      </details>
 
       <!-- LESSON HISTORY -->
-      <div class="section-card">
-        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
+      <details class="section-card" open style="padding:0">
+        <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
           <span>Lesson history</span>
-          <button onclick="exportLessonHistory('${s.id}')"
-            style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:5px 12px;font-family:'Special Elite',cursive;font-size:0.75rem;cursor:pointer">
-            ↓ Export PDF
-          </button>
+          <span style="display:flex;align-items:center;gap:10px">
+            <button onclick="event.stopPropagation();exportLessonHistory('${s.id}')"
+              style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-family:'Special Elite',cursive;font-size:0.72rem;cursor:pointer">↓ Export PDF</button>
+            <span style="font-size:0.7rem;font-weight:400">tap to collapse</span>
+          </span>
+        </summary>
+        <div style="padding:0 14px 14px">
+          <div id="log-list-${s.id}">${logHTML}</div>
         </div>
-        <div id="log-list-${s.id}">${logHTML}</div>
-      </div>
+      </details>
     </div>
   `;
   // Size any pre-filled auto-grow textareas correctly on render
