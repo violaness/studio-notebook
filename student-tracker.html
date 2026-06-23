@@ -675,6 +675,19 @@
         <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">My custom words</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px" id="lib-custom-chips"></div>
       </div>
+      <!-- Category editor -->
+      <details style="margin-top:10px">
+        <summary style="cursor:pointer;font-size:0.72rem;font-weight:700;color:var(--muted);list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 0">
+          <span>🎨 Edit categories</span>
+          <span style="font-weight:400">tap to expand</span>
+        </summary>
+        <div style="margin-top:10px">
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+            ${TECH_CATEGORIES.map(c => `<span style="padding:4px 10px;border-radius:999px;background:${c.color};font-size:0.75rem;font-weight:700;color:#05270B">${c.label}</span>`).join('')}
+          </div>
+          <div id="lib-category-editor"></div>
+        </div>
+      </details>
       <div style="display:flex;gap:8px;margin-top:10px">
         <input type="text" id="lib-new-chip" placeholder="Add a new focus word…" maxlength="40"
           onkeydown="if(event.key==='Enter')addLibChip()"
@@ -1460,15 +1473,46 @@
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
 const DAYS = ['Saturday','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday'];
 const TECH_OPTIONS = [
-  'Bowing', 'Intonation', 'Left hand', 'Posture',
-  'Scales', 'Sight-reading', 'Expression', 'Shifting',
-  'Vibrato', 'Rhythm', 'Dynamics', 'Theory'
+  'Bowing', 'Dynamics', 'Expression', 'Intonation',
+  'Left hand', 'Posture', 'Rhythm', 'Scales',
+  'Shifting', 'Sight-reading', 'Theory', 'Vibrato'
 ];
+
+const TECH_CATEGORIES = [
+  { id: 'left',           label: 'Left hand',              color: '#C9B8E8' },
+  { id: 'right',          label: 'Right hand & bowing',    color: '#B8D4E8' },
+  { id: 'posture',        label: 'Posture & setup',        color: '#E8D4B8' },
+  { id: 'interpretation', label: 'Interpretation',         color: '#E8B8C4' },
+  { id: 'theory',         label: 'Theory & reading',       color: '#B8E0C4' },
+];
+
+// Default category assignments — user can override via localStorage
+const TECH_CATEGORY_DEFAULTS = {
+  'Intonation':    'left',
+  'Left hand':     'left',
+  'Shifting':      'left',
+  'Vibrato':       'left',
+  'Bowing':        'right',
+  'Bow hold':      'right',
+  'Bow distribution': 'right',
+  'Parallel bow':  'right',
+  'Tilt bow':      'right',
+  'Tap Pinky':     'right',
+  'Feet':          'posture',
+  'Posture':       'posture',
+  'Dynamics':      'interpretation',
+  'Expression':    'interpretation',
+  'Rhythm':        'interpretation',
+  'Scales':        'theory',
+  'Sight-reading': 'theory',
+  'Theory':        'theory',
+};
 
 // ── STATE ──────────────────────────────────────────────────────────────────
 let students     = JSON.parse(localStorage.getItem('studio_students')      || '[]');
 let customChips      = JSON.parse(localStorage.getItem('studio_custom_chips')      || '[]');
 let deletedBuiltins  = JSON.parse(localStorage.getItem('studio_deleted_builtins')  || '[]');
+let techCategoryMap  = JSON.parse(localStorage.getItem('studio_tech_categories')   || 'null') || Object.assign({}, TECH_CATEGORY_DEFAULTS);
 let customPieces = JSON.parse(localStorage.getItem('studio_custom_pieces') || '[]');
 let oneOffMoves  = JSON.parse(localStorage.getItem('studio_one_off_moves') || '{}');
 let waitingList  = JSON.parse(localStorage.getItem('studio_waiting_list')  || '[]');
@@ -1483,6 +1527,7 @@ function save() {
   localStorage.setItem('studio_students',          JSON.stringify(students));
   localStorage.setItem('studio_custom_chips',      JSON.stringify(customChips));
   localStorage.setItem('studio_deleted_builtins',  JSON.stringify(deletedBuiltins));
+  localStorage.setItem('studio_tech_categories',   JSON.stringify(techCategoryMap));
   localStorage.setItem('studio_custom_pieces',     JSON.stringify(customPieces));
   localStorage.setItem('studio_one_off_moves',     JSON.stringify(oneOffMoves));
   localStorage.setItem('studio_waiting_list',      JSON.stringify(waitingList));
@@ -2043,7 +2088,7 @@ function renderDetail(s) {
   const slot = effectiveSlot(s);
 
   const piecesHTML = buildPiecesHTML(s);
-  const allTech = [...TECH_OPTIONS,...customChips];
+  const allTech = [...TECH_OPTIONS,...customChips].sort((a,b) => a.localeCompare(b));
   const techHTML = buildTechHTML(s, allTech);
   const logHTML = buildLogHTML(s);
 
@@ -3161,15 +3206,27 @@ function buildPiecesHTML(s) {
   }).join('');
 }
 
+function techChipColor(word) {
+  const catId = techCategoryMap[word];
+  if (!catId) return null;
+  const cat = TECH_CATEGORIES.find(c => c.id === catId);
+  return cat ? cat.color : null;
+}
+
 function buildTechHTML(s, allTech) {
-  return allTech.filter(function(t, i) {
-    // Hide built-ins that have been deleted
-    return i >= TECH_OPTIONS.length || !deletedBuiltins.includes(t);
-  }).map(function(t, i) {
+  return allTech.filter(function(t) {
+    return TECH_OPTIONS.includes(t) ? !deletedBuiltins.includes(t) : true;
+  }).map(function(t) {
     const isCustom = !TECH_OPTIONS.includes(t);
     const selected = (s.techFocus||[]).includes(t);
+    const color = techChipColor(t);
+    const borderColor = selected ? (color || 'var(--viola)') : (color || '#e0ddd8');
+    const bg = selected ? (color || 'var(--viola)') : 'transparent';
+    const textColor = selected ? '#05270B' : 'var(--ink)';
     var btn = '<button class="tech-chip' + (isCustom?' custom-chip':'') + (selected?' selected':'') + '"'
-      + ' onclick="toggleTech(\'' + s.id + '\',\'' + esc(t) + '\',this)">' + esc(t);
+      + ' onclick="toggleTech(\'' + s.id + '\',\'' + esc(t) + '\',this)"'
+      + ' style="border-left: 4px solid ' + borderColor + ';background:' + bg + ';color:' + textColor + '">'
+      + esc(t);
     if (isCustom) {
       btn += ' <span onclick="event.stopPropagation();removeCustomChip(\'' + esc(t) + '\',\'' + s.id + '\')" style="margin-left:4px;opacity:0.6;font-size:0.8em" title="Remove">\u00d7</span>';
     } else {
@@ -5134,28 +5191,55 @@ function populateCatFilters() {
 }
 
 function renderLibChips() {
-  // Built-in chips — show all, with delete button, greyed if deleted
   const builtIn = document.getElementById('lib-builtin-chips');
   if (builtIn) {
     builtIn.innerHTML = TECH_OPTIONS.map(t => {
       const deleted = deletedBuiltins.includes(t);
-      return `<span style="padding:6px 12px;border-radius:999px;border:1.5px solid #e0ddd8;font-size:0.8rem;color:${deleted?'#ccc':'var(--muted)'};display:inline-flex;align-items:center;gap:4px;${deleted?'text-decoration:line-through;':''}">${esc(t)}<button onclick="toggleBuiltinChip('${esc(t)}')" style="background:none;border:none;cursor:pointer;font-size:0.9rem;padding:0;color:${deleted?'#8AB640':'#ccc'}" title="${deleted?'Restore':'Hide'}">${deleted?'↩':'×'}</button></span>`;
+      const color = techChipColor(t);
+      const border = deleted ? '#e0ddd8' : (color || '#e0ddd8');
+      return `<span style="padding:6px 12px;border-radius:999px;border:1.5px solid ${border};border-left:4px solid ${border};font-size:0.8rem;color:${deleted?'#ccc':'var(--muted)'};display:inline-flex;align-items:center;gap:4px;${deleted?'text-decoration:line-through;':''}">${esc(t)}<button onclick="toggleBuiltinChip('${esc(t)}')" style="background:none;border:none;cursor:pointer;font-size:0.9rem;padding:0;color:${deleted?'#8AB640':'#ccc'}" title="${deleted?'Restore':'Hide'}">${deleted?'↩':'×'}</button></span>`;
     }).join('');
   }
-  // Custom chips
   const custom = document.getElementById('lib-custom-chips');
   if (custom) {
     if (customChips.length === 0) {
       custom.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">No custom words yet.</p>';
     } else {
-      custom.innerHTML = customChips.map((t,i) =>
-        `<span style="padding:6px 12px;border-radius:999px;border:1.5px solid var(--viola);background:var(--viola);color:#fff;font-size:0.8rem;display:flex;align-items:center;gap:6px">
+      custom.innerHTML = customChips.map((t,i) => {
+        const color = techChipColor(t);
+        return `<span style="padding:6px 12px;border-radius:999px;border:1.5px solid ${color||'var(--viola)'};border-left:4px solid ${color||'var(--viola)'};font-size:0.8rem;color:#05270B;display:flex;align-items:center;gap:6px;background:${color||'var(--viola)'}">
           ${esc(t)}
-          <button onclick="removeLibChip(${i})" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:0.9rem;padding:0;line-height:1">×</button>
-        </span>`
-      ).join('');
+          <button onclick="removeLibChip(${i})" style="background:none;border:none;color:rgba(0,0,0,0.4);cursor:pointer;font-size:0.9rem;padding:0;line-height:1">×</button>
+        </span>`;
+      }).join('');
     }
   }
+  renderCategoryEditor();
+}
+
+function renderCategoryEditor() {
+  const el = document.getElementById('lib-category-editor');
+  if (!el) return;
+  const allWords = [...TECH_OPTIONS.filter(t => !deletedBuiltins.includes(t)), ...customChips].sort((a,b) => a.localeCompare(b));
+  el.innerHTML = allWords.map(t => {
+    const currentCat = techCategoryMap[t] || '';
+    const color = techChipColor(t);
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="flex:1;font-size:0.82rem;padding:4px 8px;border-left:4px solid ${color||'#e0ddd8'};border-radius:4px">${esc(t)}</span>
+      <select onchange="setTechCategory('${esc(t)}',this.value)"
+        style="font-size:0.78rem;padding:4px 6px;border-radius:6px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;background:${color||'#fff'}">
+        <option value="" ${!currentCat?'selected':''}>— none —</option>
+        ${TECH_CATEGORIES.map(c => `<option value="${c.id}" ${currentCat===c.id?'selected':''} style="background:${c.color}">${c.label}</option>`).join('')}
+      </select>
+    </div>`;
+  }).join('');
+}
+
+function setTechCategory(word, catId) {
+  if (catId) { techCategoryMap[word] = catId; }
+  else { delete techCategoryMap[word]; }
+  save();
+  renderLibChips();
 }
 
 function toggleBuiltinChip(chip) {
@@ -6642,6 +6726,7 @@ function backupData() {
     studio_students:      localStorage.getItem('studio_students')      || '[]',
     studio_custom_chips:      localStorage.getItem('studio_custom_chips')      || '[]',
     studio_deleted_builtins:  localStorage.getItem('studio_deleted_builtins')  || '[]',
+    studio_tech_categories:   localStorage.getItem('studio_tech_categories')   || 'null',
     studio_custom_pieces: localStorage.getItem('studio_custom_pieces') || '[]',
     studio_one_off_moves: localStorage.getItem('studio_one_off_moves') || '{}',
     studio_waiting_list:  localStorage.getItem('studio_waiting_list')  || '[]',
@@ -6684,6 +6769,7 @@ function restoreData(event) {
       students        = JSON.parse(localStorage.getItem('studio_students')         || '[]');
       customChips     = JSON.parse(localStorage.getItem('studio_custom_chips')     || '[]');
       deletedBuiltins = JSON.parse(localStorage.getItem('studio_deleted_builtins') || '[]');
+      techCategoryMap = JSON.parse(localStorage.getItem('studio_tech_categories')  || 'null') || Object.assign({}, TECH_CATEGORY_DEFAULTS);
       customPieces    = JSON.parse(localStorage.getItem('studio_custom_pieces')    || '[]');
       oneOffMoves     = JSON.parse(localStorage.getItem('studio_one_off_moves')    || '{}');
       waitingList     = JSON.parse(localStorage.getItem('studio_waiting_list')     || '[]');
