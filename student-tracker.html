@@ -760,7 +760,7 @@
   <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div style="font-size:0.72rem;font-weight:800;color:var(--muted)">Waiting list</div>
-      <button onclick="openAddWaitingModal()" style="background:var(--violin);color:#fff;border:none;border-radius:999px;padding:6px 14px;font-family:'Special Elite',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">＋ Add</button>
+      <button onclick="openAddWaitingModal()" style="background:var(--violin);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;min-width:160px">＋ Add</button>
     </div>
     <div id="waiting-list"></div>
   </div>
@@ -769,7 +769,7 @@
   <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div style="font-size:0.72rem;font-weight:800;color:var(--muted)">📚 Books on loan</div>
-      <button onclick="toggleLendingForm()" style="background:var(--string);color:#05270B;border:none;border-radius:999px;padding:6px 14px;font-family:'Special Elite',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">＋ Log a loan</button>
+      <button onclick="toggleLendingForm()" style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;min-width:160px">＋ Log a loan</button>
     </div>
     <div id="lending-form" style="display:none;background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:12px;margin-bottom:12px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
@@ -2462,7 +2462,7 @@ function renderDetail(s) {
         <textarea class="quick-note" style="background:#f0fae8;border-color:#c8ddb8"
           placeholder="What to do next lesson…"
           id="next-lesson-capture-${s.id}"
-          oninput="autoGrow(this)">${esc(s.nextWeekNote||'')}</textarea>
+          oninput="autoGrow(this);autoSaveNextLesson('${s.id}',this.value)">${esc(s.nextWeekNote||'')}</textarea>
         <button onclick="saveNextLesson('${s.id}')"
           style="margin-top:10px;width:100%;background:var(--string);color:#05270B;border:none;border-radius:10px;padding:11px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer">
           ✓ Save to Before tab
@@ -3350,6 +3350,12 @@ function exportLessonHistory(id) {
     a.download = s.name.replace(/\s+/g,'-') + '-lesson-history.html';
     a.click(); URL.revokeObjectURL(a.href);
   }
+}
+
+function autoSaveNextLesson(id, value) {
+  const s = getStudent(id); if (!s) return;
+  s.nextWeekNote = value;
+  save();
 }
 
 function saveNextLesson(id) {
