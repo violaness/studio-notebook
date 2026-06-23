@@ -683,7 +683,11 @@
         </summary>
         <div style="margin-top:10px">
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
-            ${TECH_CATEGORIES.map(c => `<span style="padding:4px 10px;border-radius:999px;background:${c.color};font-size:0.75rem;font-weight:700;color:#05270B">${c.label}</span>`).join('')}
+            <span style="padding:4px 10px;border-radius:999px;background:#C9B8E8;font-size:0.75rem;font-weight:700;color:#05270B">Left hand</span>
+            <span style="padding:4px 10px;border-radius:999px;background:#B8D4E8;font-size:0.75rem;font-weight:700;color:#05270B">Right hand & bowing</span>
+            <span style="padding:4px 10px;border-radius:999px;background:#E8DCCC;font-size:0.75rem;font-weight:700;color:#05270B">Posture & setup</span>
+            <span style="padding:4px 10px;border-radius:999px;background:#E8B8C4;font-size:0.75rem;font-weight:700;color:#05270B">Interpretation</span>
+            <span style="padding:4px 10px;border-radius:999px;background:#B8E0C4;font-size:0.75rem;font-weight:700;color:#05270B">Technique</span>
           </div>
           <div id="lib-category-editor"></div>
         </div>
@@ -1487,9 +1491,9 @@ const TECH_OPTIONS = [
 const TECH_CATEGORIES = [
   { id: 'left',           label: 'Left hand',              color: '#C9B8E8' },
   { id: 'right',          label: 'Right hand & bowing',    color: '#B8D4E8' },
-  { id: 'posture',        label: 'Posture & setup',        color: '#E8D4B8' },
+  { id: 'posture',        label: 'Posture & setup',        color: '#E8DCCC' },
   { id: 'interpretation', label: 'Interpretation',         color: '#E8B8C4' },
-  { id: 'theory',         label: 'Theory & reading',       color: '#B8E0C4' },
+  { id: 'theory',         label: 'Technique',              color: '#B8E0C4' },
 ];
 
 // Default category assignments — user can override via localStorage
@@ -3227,8 +3231,8 @@ function buildTechHTML(s, allTech) {
     const selected = (s.techFocus||[]).includes(t);
     const color = techChipColor(t);
     const borderColor = selected ? (color || 'var(--viola)') : (color || '#e0ddd8');
-    const bg = selected ? (color || 'var(--viola)') : 'transparent';
-    const textColor = selected ? '#05270B' : 'var(--ink)';
+    const bg = selected ? (color || 'var(--viola)') : (color ? color + '33' : 'transparent');
+    const textColor = '#05270B';
     var btn = '<button class="tech-chip' + (isCustom?' custom-chip':'') + (selected?' selected':'') + '"'
       + ' onclick="toggleTech(\'' + s.id + '\',\'' + esc(t) + '\',this)"'
       + ' style="border-left: 4px solid ' + borderColor + ';background:' + bg + ';color:' + textColor + '">'
@@ -5230,14 +5234,14 @@ function renderLibChips() {
 function renderCategoryEditor() {
   const el = document.getElementById('lib-category-editor');
   if (!el) return;
-  const allWords = [...TECH_OPTIONS.filter(t => !deletedBuiltins.includes(t)), ...customChips].sort((a,b) => a.localeCompare(b));
+  const allWords = [...new Set([...TECH_OPTIONS.filter(t => !deletedBuiltins.includes(t)), ...customChips])].sort((a,b) => a.localeCompare(b));
   el.innerHTML = allWords.map(t => {
     const currentCat = techCategoryMap[t] || '';
     const color = techChipColor(t);
-    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <span style="flex:1;font-size:0.82rem;padding:4px 8px;border-left:4px solid ${color||'#e0ddd8'};border-radius:4px">${esc(t)}</span>
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="width:110px;flex-shrink:0;font-size:0.82rem;padding:4px 8px;border-left:4px solid ${color||'#e0ddd8'};border-radius:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t)}</span>
       <select onchange="setTechCategory('${esc(t)}',this.value)"
-        style="font-size:0.78rem;padding:4px 6px;border-radius:6px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;background:${color||'#fff'}">
+        style="flex:1;font-size:0.78rem;padding:4px 6px;border-radius:6px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;background:${color||'#fff'};color:#05270B">
         <option value="" ${!currentCat?'selected':''}>— none —</option>
         ${TECH_CATEGORIES.map(c => `<option value="${c.id}" ${currentCat===c.id?'selected':''} style="background:${c.color}">${c.label}</option>`).join('')}
       </select>
