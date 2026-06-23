@@ -2478,8 +2478,19 @@ function renderDetail(s) {
         ${(()=>{ const last=(s.log||[]).slice(-1)[0]; return last&&last.attendance?`<button onclick="clearAttendance('${s.id}')" style="background:none;border:none;font-size:0.78rem;color:var(--muted);cursor:pointer;margin-top:4px;padding:0">Clear attendance</button>`:''; })()}
       </div>
       <div class="section-card">
-        <div class="section-label">Lesson history</div>
-        ${logHTML}
+        <div class="section-label">Last lesson</div>
+        ${(function() {
+          const last = (s.log||[]).filter(e => e.text || e.attendance).slice(-1)[0];
+          if (!last) return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No previous lesson recorded yet.</p>';
+          const attLabels = {present:'✅ Present','absent-late':'❌ Late cancel','absent-notice':'🔔 Good notice',cancelled:'🚫 Cancelled'};
+          const att = last.attendance ? ' · <span style="font-size:0.75rem;color:var(--muted)">' + (attLabels[last.attendance]||'') + '</span>' : '';
+          const lines = (last.text||'').split('\n').filter(function(l){ return l.trim(); });
+          const textHTML = lines.length
+            ? lines.map(function(l){ return '<div style="display:flex;gap:6px;margin-bottom:3px"><span style="color:var(--viola);flex-shrink:0">•</span><span>' + esc(l.trim()) + '</span></div>'; }).join('')
+            : '<div style="color:var(--muted);font-style:italic;font-size:0.82rem">No notes</div>';
+          return '<div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:6px">' + esc(last.date) + att + '</div>'
+            + '<div style="font-size:0.88rem;line-height:1.6">' + textHTML + '</div>';
+        })()}
       </div>
     </div>
 
