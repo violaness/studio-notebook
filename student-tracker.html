@@ -2342,7 +2342,12 @@ function renderDetail(s) {
         <div style="margin-top:10px">
           <div class="section-label" style="margin-bottom:8px">Tap to add to notes</div>
           <div class="tech-chips" style="margin-bottom:8px">
-            ${allTech.map(t => `<button class="tech-chip" onclick="insertIntoScratch('${s.id}','${esc(t)}')">${esc(t)}</button>`).join('')}
+            ${allTech.filter(t => TECH_OPTIONS.includes(t) ? !deletedBuiltins.includes(t) : true).map(t => {
+              const color = techChipColor(t);
+              const border = color || '#e0ddd8';
+              const bg = color ? color + '33' : 'transparent';
+              return `<button class="tech-chip" onclick="insertIntoScratch('${s.id}','${esc(t)}')" style="border-left:4px solid ${border};background:${bg}">${esc(t)}</button>`;
+            }).join('')}
           </div>
         </div>
       </div>
