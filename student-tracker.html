@@ -1776,21 +1776,18 @@ function renderWeek() {
     for (const s of activeStudents) {
       const slot = effectiveSlot(s);
       const moved = oneOffMoves[s.id] && oneOffMoves[s.id].week === currentWeek;
-      // Check attendance for this pupil's lesson day this week
-      const DAYS_ORDER = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-      // Use the teaching week key (which already handles the Friday→Saturday reset)
-      // to derive the Saturday that starts the current teaching week
-      const twk = currentWeek; // e.g. "2026-06-20"
-      const [twkY, twkM, twkD] = twk.split('-').map(Number);
+      // Find attendance for this pupil in the current teaching week
+      // (match any log entry whose date falls within Sat–Wed of this week)
+      const [twkY, twkM, twkD] = currentWeek.split('-').map(Number);
       const weekStart = new Date(twkY, twkM - 1, twkD);
-      // Find the date of this pupil's lesson day in the current week
-      const lessonDayIdx = DAYS_ORDER.indexOf(slot.day);
-      const lessonDate = new Date(weekStart);
-      let dayOffset = lessonDayIdx - 6; // 6 = Saturday
-      if (dayOffset < 0) dayOffset += 7;
-      lessonDate.setDate(weekStart.getDate() + dayOffset);
-      const lessonDateStr = lessonDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-      const lessonLog = (s.log||[]).find(e => e.date === lessonDateStr);
+      const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
+      const lessonLog = (s.log||[]).find(e => {
+        const parts = e.date.split(' ');
+        if (parts.length < 3) return false;
+        const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+        const d = new Date(parseInt(parts[2]), months[parts[1]], parseInt(parts[0]));
+        return d >= weekStart && d <= weekEnd && e.attendance;
+      });
       const att = lessonLog ? lessonLog.attendance : null;
       const attBadge = att === 'present'
         ? `<span style="font-size:1rem;margin-left:6px" title="Present">✅</span>`
@@ -5851,20 +5848,9 @@ function lessonCount(s) {
 function setAttendance(id, status) {
   const s = getStudent(id); if (!s) return;
   if (!s.log) s.log = [];
-  // Use the lesson's scheduled date (not necessarily today) so the week view
-  // can find the entry by matching the lesson day date in the current week.
-  const slot = effectiveSlot(s);
-  const DAYS_ORDER = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const [twkY, twkM, twkD] = currentWeek.split('-').map(Number);
-  const weekStart = new Date(twkY, twkM - 1, twkD);
-  const lessonDayIdx = DAYS_ORDER.indexOf(slot.day);
-  let dayOffset = lessonDayIdx - 6;
-  if (dayOffset < 0) dayOffset += 7;
-  const lessonDate = new Date(weekStart);
-  lessonDate.setDate(weekStart.getDate() + dayOffset);
-  const dateStr = lessonDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-  let entry = s.log.find(e => e.date === dateStr);
-  if (!entry) { entry = { date: dateStr, text: '', attendance: status }; s.log.push(entry); }
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  let entry = s.log.find(e => e.date === today);
+  if (!entry) { entry = { date: today, text: '', attendance: status }; s.log.push(entry); }
   else { entry.attendance = status; }
   save(); showToast('toast-attendance-' + id); renderDetail(s);
   document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===2) t.click(); });
@@ -5872,17 +5858,8 @@ function setAttendance(id, status) {
 
 function clearAttendance(id) {
   const s = getStudent(id); if (!s) return;
-  const slot = effectiveSlot(s);
-  const DAYS_ORDER = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const [twkY, twkM, twkD] = currentWeek.split('-').map(Number);
-  const weekStart = new Date(twkY, twkM - 1, twkD);
-  const lessonDayIdx = DAYS_ORDER.indexOf(slot.day);
-  let dayOffset = lessonDayIdx - 6;
-  if (dayOffset < 0) dayOffset += 7;
-  const lessonDate = new Date(weekStart);
-  lessonDate.setDate(weekStart.getDate() + dayOffset);
-  const dateStr = lessonDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-  const entry = s.log && s.log.find(e => e.date === dateStr);
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const entry = s.log && s.log.find(e => e.date === today);
   if (entry) { entry.attendance = ''; save(); renderDetail(s);
     document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===2) t.click(); }); }
 }
