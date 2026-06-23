@@ -695,10 +695,18 @@
           <div id="lib-category-editor"></div>
         </div>
       </details>
-      <div style="display:flex;gap:8px;margin-top:10px">
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
         <input type="text" id="lib-new-chip" placeholder="Add a new focus word…" maxlength="40"
           onkeydown="if(event.key==='Enter')addLibChip()"
-          style="flex:1;padding:8px 12px;border-radius:999px;font-size:0.88rem">
+          style="flex:2;min-width:120px;padding:8px 12px;border-radius:999px;font-size:0.88rem">
+        <select id="lib-new-chip-cat" style="flex:1;min-width:100px;padding:8px 10px;border-radius:999px;font-size:0.82rem;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
+          <option value="">— no category —</option>
+          <option value="left">Left hand</option>
+          <option value="right">Right hand & bowing</option>
+          <option value="posture">Posture & setup</option>
+          <option value="interpretation">Interpretation</option>
+          <option value="theory">Technique</option>
+        </select>
         <button onclick="addLibChip()" style="background:var(--viola);color:#fff;border:none;border-radius:999px;padding:8px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">Add</button>
       </div>
     </div>
@@ -5349,8 +5357,11 @@ function addLibChip() {
   const val = input.value.trim();
   if (!val || customChips.includes(val)) return;
   customChips.push(val);
+  const catSel = document.getElementById('lib-new-chip-cat');
+  if (catSel && catSel.value) techCategoryMap[val] = catSel.value;
   save();
   input.value = '';
+  if (catSel) catSel.value = '';
   renderLibChips();
 }
 
