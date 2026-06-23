@@ -2852,7 +2852,16 @@ function deleteBuiltinChip(chip, studentId) {
 }
 
 function insertIntoScratch(id, text) {
-  const el = document.getElementById('during-scratch-' + id);
+  // Insert into whichever note textarea is currently visible
+  // (During → during-scratch, After → after-note, otherwise fall back to during-scratch)
+  let el = null;
+  const afterPanel = document.getElementById('panel-after');
+  const duringPanel = document.getElementById('panel-during');
+  if (afterPanel && afterPanel.classList.contains('active')) {
+    el = document.getElementById('after-note-' + id);
+  } else {
+    el = document.getElementById('during-scratch-' + id);
+  }
   if (!el) return;
   const start = el.selectionStart;
   const end = el.selectionEnd;
@@ -2868,8 +2877,15 @@ function insertIntoScratch(id, text) {
   const newPos = start + inserted.length;
   el.selectionStart = newPos;
   el.selectionEnd = newPos;
+  autoGrow(el);
   const s = getStudent(id);
-  if (s) { s.duringScratch = el.value; save(); }
+  if (s) {
+    if (afterPanel && afterPanel.classList.contains('active')) {
+      el.dataset.edited = '1';
+    } else {
+      s.duringScratch = el.value; save();
+    }
+  }
   el.focus();
 }
 
