@@ -2432,7 +2432,10 @@ function renderDetail(s) {
     <div class="moment-panel" id="panel-after">
       ${refSummary(s)}
       <div class="section-card">
-        <div class="section-label">Lesson notes</div>
+        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Lesson notes</span>
+          <button onclick="document.getElementById('after-note-${s.id}').value='';document.getElementById('after-note-${s.id}').dataset.edited='1';autoGrow(document.getElementById('after-note-${s.id}'))" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
+        </div>
         <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">Built from your plan and during-lesson notes — edit freely before saving to the log.</div>
         <textarea class="quick-note" placeholder="What went well, what to remember for next time…"
           id="after-note-${s.id}"
