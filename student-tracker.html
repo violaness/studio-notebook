@@ -4210,14 +4210,34 @@ function scalesHTML(s) {
 
   const typeRows = activeTypes.map(function(type) {
     const cells = keys.map(function(key) {
-      const done = isCellDone(key, type);
-      return '<td style="text-align:center;padding:3px 1px">'
-        + '<button onclick="scaleCheckCell(\'' + s.id + '\',\'' + key + '\',\'' + type + '\')" '
-        + 'style="width:26px;height:26px;border-radius:6px;border:1.5px solid ' + (done ? 'var(--viola)' : '#e0ddd8') + ';'
-        + 'background:' + (done ? 'var(--viola)' : 'transparent') + ';'
-        + 'color:' + (done ? '#fff' : '#ccc') + ';'
-        + 'cursor:pointer;font-size:0.8rem;font-weight:700;margin:auto;display:block">'
-        + (done ? '\u2713' : '') + '</button></td>';
+      const octs = keyOctaves[key] || ['1','2','3'];
+      const ticks = (cl[key] || {})[type] || {};
+      if (octs.length === 1) {
+        // Single octave — one box as before
+        const done = !!ticks[octs[0]];
+        return '<td style="text-align:center;padding:3px 1px">'
+          + '<button onclick="scaleCheckCell(\'' + s.id + '\',\'' + key + '\',\'' + type + '\')" '
+          + 'style="width:26px;height:26px;border-radius:6px;border:1.5px solid ' + (done ? 'var(--viola)' : '#e0ddd8') + ';'
+          + 'background:' + (done ? 'var(--viola)' : 'transparent') + ';'
+          + 'color:' + (done ? '#fff' : '#ccc') + ';'
+          + 'cursor:pointer;font-size:0.8rem;font-weight:700;margin:auto;display:block">'
+          + (done ? '\u2713' : '') + '</button></td>';
+      } else {
+        // Multiple octaves — one small box per octave, stacked
+        const boxes = octs.map(function(o) {
+          const done = !!ticks[o];
+          return '<div style="display:flex;align-items:center;justify-content:center;gap:2px;margin-bottom:2px">'
+            + '<button onclick="scaleCheckOctave(\'' + s.id + '\',\'' + key + '\',\'' + type + '\',\'' + o + '\')" '
+            + 'style="width:22px;height:22px;border-radius:5px;border:1.5px solid ' + (done ? 'var(--viola)' : '#e0ddd8') + ';'
+            + 'background:' + (done ? 'var(--viola)' : 'transparent') + ';'
+            + 'color:' + (done ? '#fff' : '#bbb') + ';'
+            + 'cursor:pointer;font-size:0.7rem;font-weight:700;display:block;padding:0">'
+            + (done ? '\u2713' : '') + '</button>'
+            + '<span style="font-size:0.55rem;color:var(--muted);line-height:1">' + o + '</span>'
+            + '</div>';
+        }).join('');
+        return '<td style="text-align:center;padding:3px 1px">' + boxes + '</td>';
+      }
     }).join('');
     return '<tr><td style="font-size:0.7rem;color:var(--muted);padding:3px 8px 3px 0;white-space:nowrap;text-align:left">' + esc(type)
       + ' <button onclick="removeScaleType(\'' + s.id + '\',\'' + esc(type) + '\')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.65rem;padding:0 0 0 2px">\u00d7</button>'
@@ -4338,6 +4358,16 @@ function scaleCheckCell(studentId, key, type) {
   const ticks = s.scaleChecklist[key][type];
   const allDone = octs.every(function(o) { return ticks[o]; });
   octs.forEach(function(o) { ticks[o] = !allDone; });
+  save();
+  document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
+}
+
+function scaleCheckOctave(studentId, key, type, octave) {
+  const s = getStudent(studentId); if (!s) return;
+  if (!s.scaleChecklist) s.scaleChecklist = {};
+  if (!s.scaleChecklist[key]) s.scaleChecklist[key] = {};
+  if (!s.scaleChecklist[key][type]) s.scaleChecklist[key][type] = {};
+  s.scaleChecklist[key][type][octave] = !s.scaleChecklist[key][type][octave];
   save();
   document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
 }
@@ -5821,9 +5851,20 @@ function lessonCount(s) {
 function setAttendance(id, status) {
   const s = getStudent(id); if (!s) return;
   if (!s.log) s.log = [];
-  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-  let entry = s.log.find(e => e.date === today);
-  if (!entry) { entry = { date: today, text: '', attendance: status }; s.log.push(entry); }
+  // Use the lesson's scheduled date (not necessarily today) so the week view
+  // can find the entry by matching the lesson day date in the current week.
+  const slot = effectiveSlot(s);
+  const DAYS_ORDER = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const [twkY, twkM, twkD] = currentWeek.split('-').map(Number);
+  const weekStart = new Date(twkY, twkM - 1, twkD);
+  const lessonDayIdx = DAYS_ORDER.indexOf(slot.day);
+  let dayOffset = lessonDayIdx - 6;
+  if (dayOffset < 0) dayOffset += 7;
+  const lessonDate = new Date(weekStart);
+  lessonDate.setDate(weekStart.getDate() + dayOffset);
+  const dateStr = lessonDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  let entry = s.log.find(e => e.date === dateStr);
+  if (!entry) { entry = { date: dateStr, text: '', attendance: status }; s.log.push(entry); }
   else { entry.attendance = status; }
   save(); showToast('toast-attendance-' + id); renderDetail(s);
   document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===2) t.click(); });
@@ -5831,8 +5872,17 @@ function setAttendance(id, status) {
 
 function clearAttendance(id) {
   const s = getStudent(id); if (!s) return;
-  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-  const entry = s.log && s.log.find(e => e.date === today);
+  const slot = effectiveSlot(s);
+  const DAYS_ORDER = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const [twkY, twkM, twkD] = currentWeek.split('-').map(Number);
+  const weekStart = new Date(twkY, twkM - 1, twkD);
+  const lessonDayIdx = DAYS_ORDER.indexOf(slot.day);
+  let dayOffset = lessonDayIdx - 6;
+  if (dayOffset < 0) dayOffset += 7;
+  const lessonDate = new Date(weekStart);
+  lessonDate.setDate(weekStart.getDate() + dayOffset);
+  const dateStr = lessonDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const entry = s.log && s.log.find(e => e.date === dateStr);
   if (entry) { entry.attendance = ''; save(); renderDetail(s);
     document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===2) t.click(); }); }
 }
