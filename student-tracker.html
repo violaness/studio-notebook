@@ -2192,7 +2192,7 @@ function renderDetail(s) {
 
     <details class="section-card" style="margin-bottom:8px;padding:0">
       <summary style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
-        <span>😊 Little Details</span>
+        <span>🐢 Little Details</span>
         <span style="font-size:0.7rem;font-weight:400">tap to expand</span>
       </summary>
       <div style="padding:0 14px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -3671,22 +3671,21 @@ function completedScalesHTML(s) {
 
 // ── BOOKS PURCHASED ───────────────────────────────────────────────────────
 // category is 'repertoire' or 'studies'. Stored as s.booksPurchased = { repertoire: [...], studies: [...] }
+// Each entry is either a plain string (legacy) or {title, date}
 function booksPurchasedHTML(s, category) {
   const books = (s.booksPurchased && s.booksPurchased[category]) || [];
   if (books.length === 0) {
     return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">None added yet.</p>';
   }
   return books.map(function(b, i) {
-    var removeBtn = document.createElement('button');
-    removeBtn.textContent = '\u00d7';
-    removeBtn.style.cssText = 'background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1;flex-shrink:0';
-    removeBtn.dataset.sid = s.id;
-    removeBtn.dataset.cat = category;
-    removeBtn.dataset.idx = i;
-    removeBtn.onclick = function() { removeBookPurchased(this.dataset.sid, this.dataset.cat, parseInt(this.dataset.idx)); };
+    const title = typeof b === 'string' ? b : b.title;
+    const date  = typeof b === 'string' ? '' : (b.date||'');
     return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--warm)">'
-      + '<span style="font-size:0.88rem;flex:1">📖 ' + esc(b) + '</span>'
-      + removeBtn.outerHTML
+      + '<span style="font-size:0.88rem;flex:1">📖 ' + esc(title)
+      + (date ? '<span style="font-size:0.72rem;color:var(--muted);margin-left:8px">' + esc(date) + '</span>' : '')
+      + '</span>'
+      + '<button onclick="removeBookPurchased(\'' + s.id + '\',\'' + category + '\',' + i + ')" '
+      + 'style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1;flex-shrink:0">\u00d7</button>'
       + '</div>';
   }).join('');
 }
@@ -3699,8 +3698,9 @@ function addBookPurchased(id, category) {
   if (!title) return;
   if (!s.booksPurchased) s.booksPurchased = { repertoire: [], studies: [] };
   if (!s.booksPurchased[category]) s.booksPurchased[category] = [];
-  if (s.booksPurchased[category].some(b => b.toLowerCase() === title.toLowerCase())) { input.value = ''; return; }
-  s.booksPurchased[category].push(title);
+  if (s.booksPurchased[category].some(b => (typeof b === 'string' ? b : b.title).toLowerCase() === title.toLowerCase())) { input.value = ''; return; }
+  const date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  s.booksPurchased[category].push({ title, date });
   input.value = '';
   save();
   renderDetail(s);
