@@ -3337,7 +3337,11 @@ function buildLogHTML(s) {
     }).join('');
     var attBadge = e.attendance ? ' \u00b7 <span style="font-size:0.75rem;color:var(--muted)">' + (attLabels[e.attendance]||'') + '</span>' : '';
     var textHTML = e.text
-      ? '<div class="log-text"' + (isAbsent?' style="color:var(--muted);"':'') + '>' + esc(e.text) + '</div>'
+      ? '<div class="log-text"' + (isAbsent?' style="color:var(--muted);"':'') + '>'
+        + e.text.split('\n').filter(function(l){ return l.trim(); }).map(function(l){
+            return '<div style="display:flex;gap:6px;margin-bottom:2px"><span style="color:var(--viola);flex-shrink:0">•</span><span>' + esc(l.trim()) + '</span></div>';
+          }).join('')
+        + '</div>'
       : '<div style="font-size:0.8rem;color:var(--muted);font-style:italic">No notes</div>';
     return '<div class="log-entry" style="position:relative;padding-right:80px;' + (isAbsent?'opacity:0.55;background:#f8f0f0;':'') + '">'
       + '<div class="log-date"' + (isAbsent?' style="text-decoration:line-through;color:var(--muted);"':'') + '>' + esc(e.date) + attBadge + '</div>'
