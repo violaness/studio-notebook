@@ -2027,8 +2027,15 @@ function switchMoment(tab, panel) {
     afterTextareas.forEach(el => {
       const id = el.id.replace('after-note-', '');
       const s = getStudent(id);
-      if (s && !el.dataset.edited) {
-        el.value = buildCumulativeNote(s);
+      if (s) {
+        // Flush any pending during-scratch save before building the note
+        clearTimeout(_saveDuringTimer);
+        const duringEl = document.getElementById('during-scratch-' + id);
+        if (duringEl) { s.duringScratch = duringEl.value; save(); }
+        if (!el.dataset.edited) {
+          el.value = buildCumulativeNote(s);
+          autoGrow(el);
+        }
       }
     });
   }
@@ -2064,6 +2071,37 @@ function renderDetail(s) {
       <button onclick="exportSinglePupil('${s.id}')" style="background:#29789E;color:#fff;border:none;border-radius:10px;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Download &amp; email practice plan">✉ Practice Plan</button>
     </div>
     <div id="next-pupil-banner">${nextPupilHTML(s)}</div>
+
+    <details class="section-card" style="margin-bottom:8px;padding:0">
+      <summary style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
+        <span>😊 Little Details</span>
+        <span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+      </summary>
+      <div style="padding:0 14px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        ${[
+          ['siblings',  '👨‍👩‍👧 Siblings'],
+          ['pets',      '🐾 Pets'],
+          ['hobbies',   '🎨 Hobbies & interests'],
+          ['favColour', '🎨 Favourite colour'],
+          ['favAnimal', '🦊 Favourite animal'],
+          ['school',    '🏫 School'],
+        ].map(([field, label]) => `
+          <div>
+            <div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">${label}</div>
+            <input type="text" value="${esc((s.littleDetails||{})[field]||'')}"
+              placeholder="—"
+              oninput="updateLittleDetail('${s.id}','${field}',this.value)"
+              style="width:100%;padding:6px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box">
+          </div>
+        `).join('')}
+        <div style="grid-column:1/-1">
+          <div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">📝 Free notes</div>
+          <textarea placeholder="Anything else to remember…"
+            oninput="autoGrow(this);updateLittleDetail('${s.id}','freeNotes',this.value)"
+            style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:70px">${esc((s.littleDetails||{}).freeNotes||'')}</textarea>
+        </div>
+      </div>
+    </details>
 
     <div class="moment-tabs" style="flex-wrap:wrap">
       <button class="moment-tab active" onclick="switchMoment(this,'panel-before')">Before</button>
@@ -3075,12 +3113,22 @@ function saveLog(id) {
   document.querySelectorAll('.moment-tab').forEach(t => { if(t.textContent==='After') t.click(); });
 }
 
+function updateLittleDetail(id, field, value) {
+  const s = getStudent(id); if (!s) return;
+  if (!s.littleDetails) s.littleDetails = {};
+  s.littleDetails[field] = value;
+  save();
+}
+
 function saveNextLesson(id) {
   const s = getStudent(id); if (!s) return;
   const el = document.getElementById('next-lesson-capture-' + id);
   if (!el) return;
   s.nextLesson = el.value.trim();
   save();
+  // Update the Before tab textarea immediately so it reflects the new value
+  const beforeEl = document.getElementById('nextlesson-' + id);
+  if (beforeEl) beforeEl.value = s.nextLesson;
   showToast('toast-next-' + id);
 }
 function buildPiecesHTML(s) {
