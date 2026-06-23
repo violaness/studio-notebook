@@ -4055,9 +4055,6 @@ const PIECE_DB = [
 function buildCumulativeNote(s) {
   const parts = [];
   let plan = (s.nextLesson||'').trim();
-  // Defensive: if the plan text already starts with our own "📌 Plan:" header
-  // (e.g. from an older bug, or copied from an already-built note), strip it
-  // so we don't ever wrap a header in another header.
   plan = plan.replace(/^📌 Plan:\n?/, '').trim();
   if (plan) {
     parts.push('📌 Plan:\n' + plan);
@@ -4065,13 +4062,29 @@ function buildCumulativeNote(s) {
   if ((s.scalesThisWeek||[]).length > 0) {
     parts.push('\ud83c\udfbb Scales this week: ' + s.scalesThisWeek.join(', '));
   }
+  // Include ticked scale checklist items
+  const cl = s.scaleChecklist || {};
+  const keyOctaves = s.scaleKeyOctaves || {};
+  const activeTypes = s.scaleActiveTypes || [];
+  const activeKeys = Object.keys(cl);
+  const tickedLines = [];
+  activeKeys.forEach(function(key) {
+    activeTypes.forEach(function(type) {
+      const ticks = (cl[key]||{})[type] || {};
+      const octs = keyOctaves[key] || ['1'];
+      const tickedOcts = octs.filter(function(o) { return ticks[o]; });
+      if (tickedOcts.length > 0) {
+        tickedLines.push(key + ' ' + type + (octs.length > 1 ? ' (' + tickedOcts.map(function(o){ return o + ' oct'; }).join(', ') + ')' : ''));
+      }
+    });
+  });
+  if (tickedLines.length > 0) {
+    parts.push('✅ Scales done this lesson:\n' + tickedLines.map(function(l){ return '• ' + l; }).join('\n'));
+  }
   if (s.duringScratch && s.duringScratch.trim()) {
     let scratch = s.duringScratch.trim();
-    // Strip a leading Plan header if present (e.g. pasted from elsewhere)
     scratch = scratch.replace(/^📌 Plan:\n?/, '').trim();
-    // Strip scales line if present (legacy notes may still include it)
     scratch = scratch.replace(/^\ud83c\udfbb Scales this week:.*(\n|$)/m, '').trim();
-    // Strip "📝 During lesson:" label if already there (legacy notes)
     scratch = scratch.replace(/^📝 During lesson:\n?/m, '').trim();
     if (scratch) {
       parts.push('📝 During lesson:\n' + scratch);
