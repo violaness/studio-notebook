@@ -936,7 +936,11 @@
 <div class="modal-overlay" id="move-modal">
   <div class="modal">
     <h2>Move lesson</h2>
-    <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px">Move <strong id="move-pupil-name"></strong> to a different slot this week only.</p>
+    <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px">Move <strong id="move-pupil-name"></strong> to a different slot.</p>
+    <div class="field-group">
+      <label class="field-label">Date</label>
+      <input type="date" id="move-date">
+    </div>
     <div class="field-group">
       <label class="field-label">New day</label>
       <select id="move-day">
@@ -2033,6 +2037,9 @@ function openMoveModal(id) {
   const cur = effectiveSlot(s);
   document.getElementById('move-day').value  = cur.day  || 'Monday';
   document.getElementById('move-time').value = cur.time || '';
+  // Pre-fill date with today
+  const today = new Date();
+  document.getElementById('move-date').value = today.toISOString().slice(0,10);
   document.getElementById('move-modal').classList.add('open');
 }
 function closeMoveModal() {
@@ -2043,7 +2050,19 @@ function confirmMove() {
   if (!movingStudentId) return;
   const day  = document.getElementById('move-day').value;
   const time = document.getElementById('move-time').value.trim();
-  oneOffMoves[movingStudentId] = { week: currentWeek, day, time };
+  const dateVal = document.getElementById('move-date').value;
+  // Derive the teaching week key (Saturday) from the chosen date
+  let weekKey = currentWeek;
+  if (dateVal) {
+    const d = new Date(dateVal + 'T12:00:00');
+    const dow = d.getDay(); // 0=Sun,6=Sat
+    // Teaching week starts Saturday (6), so find the most recent Saturday
+    const daysFromSat = (dow + 1) % 7; // days since last Saturday
+    const sat = new Date(d);
+    sat.setDate(d.getDate() - daysFromSat);
+    weekKey = sat.toISOString().slice(0,10);
+  }
+  oneOffMoves[movingStudentId] = { week: weekKey, day, time };
   save(); closeMoveModal(); renderWeek();
 }
 
