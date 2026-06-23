@@ -600,7 +600,10 @@
 <!-- TODAY VIEW -->
 <div id="view-today" class="view active">
   <div class="today-date" id="today-heading"></div>
-  <div class="today-sub" id="today-sub"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <div class="today-sub" id="today-sub" style="margin-bottom:0"></div>
+    <button id="expand-all-btn" onclick="toggleAllCards()" style="background:none;border:1.5px solid #e0ddd8;border-radius:999px;padding:4px 14px;font-family:'Special Elite',cursive;font-size:0.78rem;color:var(--muted);cursor:pointer">Expand all</button>
+  </div>
   <div id="wednesday-reminder" style="display:none;background:#fffbe6;border:1.5px solid #c9a84c;border-radius:12px;padding:12px 16px;margin-bottom:14px;align-items:center;gap:12px;flex-wrap:wrap">
     <span style="font-size:1.1rem">💾</span>
     <span style="flex:1;font-size:0.88rem;color:#7a5c00">Wednesday — time for your weekly backup!</span>
@@ -1827,6 +1830,17 @@ function renderToday() {
 function toggleSummary(id) {
   const el = document.getElementById('lsc-' + id);
   if (el) el.classList.toggle('expanded');
+}
+
+function toggleAllCards() {
+  const cards = document.querySelectorAll('.lesson-summary');
+  const btn = document.getElementById('expand-all-btn');
+  const anyCollapsed = [...cards].some(c => !c.classList.contains('expanded'));
+  cards.forEach(c => {
+    if (anyCollapsed) c.classList.add('expanded');
+    else c.classList.remove('expanded');
+  });
+  if (btn) btn.textContent = anyCollapsed ? 'Collapse all' : 'Expand all';
 }
 
 // ── WEEK VIEW ─────────────────────────────────────────────────────────────
