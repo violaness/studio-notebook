@@ -7119,7 +7119,53 @@ setInterval(function() {
 // Show the notes toggle button
 document.getElementById('notes-toggle-btn').style.display = 'block';
 
-// ── NOTEBOOK COVER ───────────────────────────────────────────────────────
+// ── SWIPE NAVIGATION FOR BEFORE/DURING/AFTER/SCALES/HISTORY TABS ────────────
+(function() {
+  const PANELS = ['panel-before','panel-during','panel-after','panel-scales','panel-history'];
+  let touchStartX = 0, touchStartY = 0;
+
+  function currentPanelIndex() {
+    return PANELS.findIndex(function(id) {
+      const el = document.getElementById(id);
+      return el && el.classList.contains('active');
+    });
+  }
+
+  document.addEventListener('touchstart', function(e) {
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e) {
+    // Only act if we're in the detail view
+    const detail = document.getElementById('view-detail');
+    if (!detail || !detail.classList.contains('active')) return;
+
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - touchStartX;
+    const dy = touch.clientY - touchStartY;
+
+    // Must be more horizontal than vertical, and at least 60px
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+
+    const idx = currentPanelIndex();
+    if (idx === -1) return;
+
+    let nextIdx = dx < 0 ? idx + 1 : idx - 1;
+    if (nextIdx < 0 || nextIdx >= PANELS.length) return;
+
+    // Find the tab button for the target panel and click it
+    const targetPanel = PANELS[nextIdx];
+    const tabs = document.querySelectorAll('.moment-tab');
+    tabs.forEach(function(tab) {
+      // Match by the onclick attribute panel name
+      if (tab.getAttribute('onclick') && tab.getAttribute('onclick').includes(targetPanel)) {
+        tab.click();
+      }
+    });
+  }, { passive: true });
+})();
 // Shows once per browser session (so it doesn't get in the way every time
 // you switch views, but reappears fresh next time you actually reopen the
 // app — e.g. tomorrow, or after closing Safari).
