@@ -1597,6 +1597,17 @@ function esc(str) {
   return String(str||'')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// Convert plain URLs in text to clickable links (for summary/display views)
+function linkify(str) {
+  return esc(str).replace(/(https?:\/\/[^\s<>"&]+)/g, function(url) {
+    const href = url.replace(/&amp;/g,'&');
+    const label = href.length > 50 ? href.slice(0,47) + '…' : href;
+    return '<a href="' + href + '" target="_blank" rel="noopener" '
+      + 'style="color:#29789E;text-decoration:underline;word-break:break-all" '
+      + 'onclick="event.stopPropagation()">' + label + '</a>';
+  });
+}
 function getStudent(id) { return students.find(x => x.id === id); }
 
 // Returns Monday-based day name for today
@@ -2492,7 +2503,7 @@ function renderDetail(s) {
           const att = last.attendance ? ' · <span style="font-size:0.75rem;color:var(--muted)">' + (attLabels[last.attendance]||'') + '</span>' : '';
           const lines = (last.text||'').split('\n').filter(function(l){ return l.trim(); });
           const textHTML = lines.length
-            ? lines.map(function(l){ return '<div style="display:flex;gap:6px;margin-bottom:3px"><span style="color:var(--viola);flex-shrink:0">•</span><span>' + esc(l.trim()) + '</span></div>'; }).join('')
+            ? lines.map(function(l){ return '<div style="display:flex;gap:6px;margin-bottom:3px"><span style="color:var(--viola);flex-shrink:0">•</span><span>' + linkify(l.trim()) + '</span></div>'; }).join('')
             : '<div style="color:var(--muted);font-style:italic;font-size:0.82rem">No notes</div>';
           return '<div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:6px">' + esc(last.date) + att + '</div>'
             + '<div style="font-size:0.88rem;line-height:1.6">' + textHTML + '</div>';
@@ -3433,7 +3444,7 @@ function buildLogHTML(s) {
     var textHTML = e.text
       ? '<div class="log-text"' + (isAbsent?' style="color:var(--muted);"':'') + '>'
         + e.text.split('\n').filter(function(l){ return l.trim(); }).map(function(l){
-            return '<div style="display:flex;gap:6px;margin-bottom:2px"><span style="color:var(--viola);flex-shrink:0">•</span><span>' + esc(l.trim()) + '</span></div>';
+            return '<div style="display:flex;gap:6px;margin-bottom:2px"><span style="color:var(--viola);flex-shrink:0">•</span><span>' + linkify(l.trim()) + '</span></div>';
           }).join('')
         + '</div>'
       : '<div style="font-size:0.8rem;color:var(--muted);font-style:italic">No notes</div>';
@@ -4220,8 +4231,8 @@ function refSummary(s) {
   if (plan) {
     const planLines = plan.split('\n').filter(function(l) { return l.trim(); });
     const planHTML = planLines.length > 1
-      ? planLines.map(function(l) { return '<div style="display:flex;gap:6px;margin-bottom:2px"><span style="color:var(--viola);flex-shrink:0">•</span><span>' + esc(l.trim()) + '</span></div>'; }).join('')
-      : esc(plan);
+      ? planLines.map(function(l) { return '<div style="display:flex;gap:6px;margin-bottom:2px"><span style="color:var(--viola);flex-shrink:0">•</span><span>' + linkify(l.trim()) + '</span></div>'; }).join('')
+      : linkify(plan);
     inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83d\udccc PLAN FOR TODAY</div><div style="font-size:0.88rem;line-height:1.5;color:var(--ink)">' + planHTML + '</div></div>';
   }
   if (pieces.length) inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83c\udfb5 PIECES &amp; EXERCISES</div><div>' + piecesHTML + '</div></div>';
