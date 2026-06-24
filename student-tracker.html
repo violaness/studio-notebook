@@ -1202,6 +1202,16 @@
       <input type="text" id="edit-log-date" placeholder="e.g. 14 Jun 2026" style="font-family:'Special Elite',cursive">
     </div>
     <div class="field-group">
+      <label class="field-label">Attendance</label>
+      <select id="edit-log-attendance" style="font-family:'Special Elite',cursive">
+        <option value="">— not recorded —</option>
+        <option value="present">✓ Present</option>
+        <option value="absent-late">✕ Late cancel</option>
+        <option value="absent-notice">– Good notice</option>
+        <option value="cancelled">– Cancelled by me</option>
+      </select>
+    </div>
+    <div class="field-group">
       <label class="field-label">Notes</label>
       <textarea id="edit-log-text" rows="6" placeholder="Lesson notes…"></textarea>
     </div>
@@ -2229,6 +2239,12 @@ function renderDetail(s) {
           </div>
         `).join('')}
         <div style="grid-column:1/-1">
+          <div style="font-size:0.68rem;font-weight:700;color:#e67e22;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">🚩 Follow-up note</div>
+          <textarea placeholder="Reason for flag…"
+            oninput="autoGrow(this);updateLittleDetail('${s.id}','followUpNote',this.value)"
+            style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #f5c99a;font-family:'Special Elite',cursive;font-size:0.85rem;background:#fffaf5;color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:50px">${esc((s.littleDetails||{}).followUpNote||'')}</textarea>
+        </div>
+        <div style="grid-column:1/-1">
           <div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">📝 Free notes</div>
           <textarea placeholder="Anything else to remember…"
             oninput="autoGrow(this);updateLittleDetail('${s.id}','freeNotes',this.value)"
@@ -2477,7 +2493,10 @@ function renderDetail(s) {
         <div class="save-toast" id="toast-after-${s.id}">✓ Added to log</div>
       </div>
       <div class="section-card" style="background:#f8fdf5;border:1.5px solid #c8ddb8">
-        <div class="section-label" style="color:var(--string)">📌 Next lesson — what to focus on</div>
+        <div class="section-label" style="color:var(--string);display:flex;align-items:center;justify-content:space-between">
+          <span>📌 Next lesson — what to focus on</span>
+          <button onclick="clearNextLessonCapture('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
+        </div>
         <textarea class="quick-note" style="background:#f0fae8;border-color:#c8ddb8"
           placeholder="What to do next lesson…"
           id="next-lesson-capture-${s.id}"
@@ -3215,6 +3234,7 @@ function openEditLogModal(id, idx) {
   document.getElementById('edit-log-student-id').value = id;
   document.getElementById('edit-log-entry-idx').value = idx;
   document.getElementById('edit-log-date').value = e.date || '';
+  document.getElementById('edit-log-attendance').value = e.attendance || '';
   document.getElementById('edit-log-text').value = e.text || '';
   document.getElementById('edit-log-modal').classList.add('open');
 }
@@ -3225,8 +3245,9 @@ function saveEditLogModal() {
   const id  = document.getElementById('edit-log-student-id').value;
   const idx = parseInt(document.getElementById('edit-log-entry-idx').value);
   const s   = getStudent(id); if (!s || !s.log[idx]) return;
-  s.log[idx].date = document.getElementById('edit-log-date').value.trim() || s.log[idx].date;
-  s.log[idx].text = document.getElementById('edit-log-text').value.trim();
+  s.log[idx].date       = document.getElementById('edit-log-date').value.trim() || s.log[idx].date;
+  s.log[idx].attendance = document.getElementById('edit-log-attendance').value || '';
+  s.log[idx].text       = document.getElementById('edit-log-text').value.trim();
   save();
   closeEditLogModal();
   renderDetail(s);
@@ -3362,6 +3383,16 @@ function toggleFollowUp(id) {
   s.followUp = !s.followUp;
   save();
   renderDetail(s);
+}
+
+function clearNextLessonCapture(id) {
+  const s = getStudent(id); if (!s) return;
+  s.nextWeekNote = '';
+  save();
+  const el = document.getElementById('next-lesson-capture-' + id);
+  if (el) { el.value = ''; autoGrow(el); }
+  const beforeEl = document.getElementById('nextWeeknote-' + id);
+  if (beforeEl) { beforeEl.value = ''; }
 }
 
 function clearNextWeekNote(id) {
