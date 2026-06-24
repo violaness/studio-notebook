@@ -1602,10 +1602,9 @@ function esc(str) {
 function linkify(str) {
   return esc(str).replace(/(https?:\/\/[^\s<>"&]+)/g, function(url) {
     const href = url.replace(/&amp;/g,'&');
-    const label = href.length > 50 ? href.slice(0,47) + '…' : href;
     return '<a href="' + href + '" target="_blank" rel="noopener" '
       + 'style="color:#29789E;text-decoration:underline;word-break:break-all" '
-      + 'onclick="event.stopPropagation()">' + label + '</a>';
+      + 'onclick="event.stopPropagation()">' + url + '</a>';
   });
 }
 function getStudent(id) { return students.find(x => x.id === id); }
