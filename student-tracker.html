@@ -1895,11 +1895,13 @@ function renderWeek() {
       });
       const att = lessonLog ? lessonLog.attendance : null;
       const attBadge = att === 'present'
-        ? `<span style="font-size:1rem;margin-left:6px" title="Present">✅</span>`
-        : att === 'absent-late' || att === 'absent-notice'
-        ? `<span style="font-size:1rem;margin-left:6px" title="Absent">❌</span>`
+        ? `<span style="font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:999px;border:1.5px solid #2F5C1A;color:#2F5C1A;margin-left:6px;vertical-align:middle" title="Present">✓</span>`
+        : att === 'absent-late'
+        ? `<span style="font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:999px;border:1.5px solid #A0522D;color:#A0522D;margin-left:6px;vertical-align:middle" title="Late cancel">✕</span>`
+        : att === 'absent-notice'
+        ? `<span style="font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:999px;border:1.5px solid #29789E;color:#29789E;margin-left:6px;vertical-align:middle" title="Good notice">–</span>`
         : att === 'cancelled'
-        ? `<span style="font-size:1rem;margin-left:6px" title="Cancelled">🚫</span>`
+        ? `<span style="font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:999px;border:1.5px dashed #ccc;color:#999;margin-left:6px;vertical-align:middle" title="Cancelled">–</span>`
         : '';
       const isAbsent = att === 'absent-late' || att === 'absent-notice';
       html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer${isAbsent ? ';border-style:dashed;opacity:0.6' : ''}">
@@ -2482,7 +2484,7 @@ function renderDetail(s) {
         ${(function() {
           const last = (s.log||[]).filter(e => e.text || e.attendance).slice(-1)[0];
           if (!last) return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No previous lesson recorded yet.</p>';
-          const attLabels = {present:'✅ Present','absent-late':'❌ Late cancel','absent-notice':'🔔 Good notice',cancelled:'🚫 Cancelled'};
+          const attLabels = {present:'✓ Present','absent-late':'✕ Late cancel','absent-notice':'– Good notice',cancelled:'– Cancelled'};
           const att = last.attendance ? ' · <span style="font-size:0.75rem;color:var(--muted)">' + (attLabels[last.attendance]||'') + '</span>' : '';
           const lines = (last.text||'').split('\n').filter(function(l){ return l.trim(); });
           const textHTML = lines.length
@@ -3309,7 +3311,7 @@ function exportLessonHistory(id) {
   const s = getStudent(id); if (!s) return;
   const log = (s.log || []).filter(e => e.text || e.attendance);
   if (log.length === 0) { alert('No lesson history to export yet.'); return; }
-  const attLabels = { present:'✅ Present', 'absent-late':'❌ Late cancel', 'absent-notice':'🔔 Good notice', cancelled:'🚫 Cancelled' };
+  const attLabels = { present:'✓ Present', 'absent-late':'✕ Late cancel', 'absent-notice':'– Good notice', cancelled:'– Cancelled' };
   const entries = [...log].reverse().map(function(e) {
     const att = e.attendance ? ' &nbsp;·&nbsp; <span style="color:#666">' + (attLabels[e.attendance]||'') + '</span>' : '';
     const lines = (e.text||'').split('\n').filter(function(l){ return l.trim(); });
@@ -3419,7 +3421,7 @@ function buildTechHTML(s, allTech) {
 function buildLogHTML(s) {
   const log = s.log || [];
   if (log.length === 0) return '<p style="color:var(--muted);font-size:0.88rem;">No lesson notes yet.</p>';
-  const attLabels = {present:'\u2705 Present','absent-late':'\u274c Late cancel','absent-notice':'\ud83d\udd14 Good notice',cancelled:'\ud83d\udeab Cancelled'};
+  const attLabels = {present:'✓ Present','absent-late':'✕ Late cancel','absent-notice':'– Good notice',cancelled:'– Cancelled'};
   return [...log].reverse().map(function(e, i) {
     const realIdx = log.length - 1 - i;
     const isAbsent = e.attendance && e.attendance !== 'present';
@@ -3460,10 +3462,10 @@ function pupilMetaHTML(s) {
 
 function attendanceButtonsHTML(s) {
   var labels = {
-    'present':        '\u2705 Present',
-    'absent-late':    '\u274c Absent \u2014 last minute (charges apply)',
-    'absent-notice':  '\ud83d\udd14 Absent \u2014 good notice (no charge)',
-    'cancelled':      '\ud83d\udeab Cancelled by me'
+    'present':        '✓ Present',
+    'absent-late':    '✕ Absent — last minute (charges apply)',
+    'absent-notice':  '– Absent — good notice (no charge)',
+    'cancelled':      '– Cancelled by me'
   };
   var last = (s.log||[]).slice(-1)[0];
   var cur = last && last.attendance ? last.attendance : '';
