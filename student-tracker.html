@@ -6156,8 +6156,8 @@ function setAttendance(id, status) {
 
 function clearAttendance(id) {
   const s = getStudent(id); if (!s) return;
-  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-  const entry = s.log && s.log.find(e => e.date === today);
+  // Find the most recent log entry that has an attendance mark
+  const entry = (s.log||[]).slice().reverse().find(e => e.attendance);
   if (entry) { entry.attendance = ''; save(); renderDetail(s);
     document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===2) t.click(); }); }
 }
