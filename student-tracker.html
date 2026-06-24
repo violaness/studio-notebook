@@ -2674,31 +2674,17 @@ function absencesHTML(s) {
     var noteSpan = ab.note ? '<span style="color:var(--muted);font-size:0.82rem"> \u2014 ' + esc(ab.note) + '</span>' : '';
     var fillBtn = '';
     if (!isPast) {
-      var btnEl = document.createElement('button');
-      btnEl.textContent = 'Fill slot';
-      btnEl.style.cssText = 'background:var(--string);color:#05270B;border:none;border-radius:6px;padding:4px 9px;font-family:\'Special Elite\',cursive;font-size:0.72rem;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap';
-      btnEl.dataset.sid = s.id;
-      btnEl.dataset.idx = i;
-      btnEl.dataset.date = ab.date;
-      btnEl.dataset.time = s.lessonTime || '';
-      btnEl.dataset.day = dayName;
-      btnEl.onclick = function() {
-        openFillSlotModal(this.dataset.sid, parseInt(this.dataset.idx), this.dataset.date, this.dataset.time, this.dataset.day);
-      };
-      fillBtn = btnEl.outerHTML;
+      fillBtn = '<button onclick="openFillSlotModal(\'' + s.id + '\',' + i + ',\'' + ab.date + '\',\'' + (s.lessonTime||'') + '\',\'' + dayName + '\')" '
+        + 'style="background:var(--string);color:#05270B;border:none;border-radius:6px;padding:4px 9px;font-family:\'Special Elite\',cursive;font-size:0.72rem;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap">Fill slot</button>';
     }
-    var removeBtn = document.createElement('button');
-    removeBtn.textContent = '\u00d7';
-    removeBtn.style.cssText = 'background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1;flex-shrink:0';
-    removeBtn.dataset.sid = s.id;
-    removeBtn.dataset.idx = i;
-    removeBtn.onclick = function() { removeAbsence(this.dataset.sid, parseInt(this.dataset.idx)); };
+    var removeBtn = '<button onclick="removeAbsence(\'' + s.id + '\',' + i + ')" '
+      + 'style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1;flex-shrink:0">\u00d7</button>';
     var row = '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--warm);' + (isPast ? 'opacity:0.45' : '') + '">'
       + '<span style="font-size:0.88rem;flex:1;' + (isPast ? 'text-decoration:line-through;color:var(--muted)' : '') + '">'
       + label + soonTag + noteSpan
       + '</span>'
       + fillBtn
-      + removeBtn.outerHTML
+      + removeBtn
       + '</div>';
     return row;
   }).join('');
@@ -7229,6 +7215,8 @@ document.getElementById('notes-toggle-btn').style.display = 'block';
   }
 
   document.addEventListener('touchstart', function(e) {
+    // Ignore Apple Pencil — only respond to finger swipes
+    if (e.touches[0].touchType === 'stylus') return;
     const touch = e.touches[0];
     touchStartX = touch.clientX;
     touchStartY = touch.clientY;
@@ -7238,6 +7226,8 @@ document.getElementById('notes-toggle-btn').style.display = 'block';
     // Only act if we're in the detail view
     const detail = document.getElementById('view-detail');
     if (!detail || !detail.classList.contains('active')) return;
+    // Ignore Apple Pencil
+    if (e.changedTouches[0].touchType === 'stylus') return;
 
     const touch = e.changedTouches[0];
     const dx = touch.clientX - touchStartX;
