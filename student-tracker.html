@@ -2288,7 +2288,10 @@ function renderDetail(s) {
         ${lessonCount(s)}
       </div>
       <div class="section-card" style="background:#eef6ff;border:1.5px solid #a8c8e8">
-        <div class="section-label" style="color:#1a4a6b">📋 Note for next week</div>
+        <div class="section-label" style="color:#1a4a6b;display:flex;align-items:center;justify-content:space-between">
+          <span>📋 Note for next week</span>
+          <button onclick="clearNextWeekNote('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
+        </div>
         <textarea rows="3" placeholder="Anything to prepare or remember for next lesson…"
           id="nextWeeknote-${s.id}"
           oninput="updateField('${s.id}','nextWeekNote',this.value)"
@@ -3359,6 +3362,14 @@ function toggleFollowUp(id) {
   s.followUp = !s.followUp;
   save();
   renderDetail(s);
+}
+
+function clearNextWeekNote(id) {
+  const s = getStudent(id); if (!s) return;
+  s.nextWeekNote = '';
+  save();
+  const el = document.getElementById('nextWeeknote-' + id);
+  if (el) { el.value = ''; autoGrow(el); }
 }
 
 function autoSaveNextLesson(id, value) {
