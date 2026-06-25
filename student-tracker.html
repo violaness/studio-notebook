@@ -6886,27 +6886,30 @@ function exportAll() {
     const lastLog = (s.log||[]).slice(-1)[0];
     const pieces = piecesDisplay(s);
     const nextWeekNote = (s.nextWeekNote||'').trim();
+    // Truncate last lesson notes to keep rows compact
+    const noteText = lastLog ? (lastLog.text||'').trim() : '';
+    const noteLines = noteText.split('\n').filter(function(l){ return l.trim(); });
+    const noteSummary = noteLines.slice(0,4).map(function(l){ return '• ' + l.trim(); }).join('<br>') 
+      + (noteLines.length > 4 ? '<br><span style="color:#aaa">…+'+(noteLines.length-4)+' more</span>' : '');
 
     return '<tr style="border-bottom:1px solid #e8f0e0;page-break-inside:avoid">'
-      // Name + lesson time
-      + '<td style="padding:10px 12px;vertical-align:top;min-width:120px">'
-        + '<div style="font-size:1rem;font-weight:700;color:#05270B">' + esc(s.name) + '</div>'
-        + '<div style="font-size:0.72rem;color:#8aaa7a;margin-top:2px">' + (s.instrument||'') + (slot.day?' \u00b7 '+slot.day+(slot.time?' '+slot.time:''):'') + '</div>'
+      + '<td style="padding:5px 8px;vertical-align:top;width:100px">'
+        + '<div style="font-size:0.85rem;font-weight:700;color:#05270B">' + esc(s.name) + '</div>'
+        + '<div style="font-size:0.65rem;color:#8aaa7a">' + (s.instrument||'') + (slot.day?' · '+slot.day+(slot.time?' '+slot.time:''):'') + '</div>'
       + '</td>'
-      // Last lesson date + notes
-      + '<td style="padding:10px 12px;vertical-align:top">'
-        + (lastLog ? '<div style="font-size:0.72rem;color:#8aaa7a;margin-bottom:3px">' + esc(lastLog.date) + '</div>'
-                   + '<div style="font-size:0.85rem;color:#1a3a0a;line-height:1.5">' + esc(lastLog.text||'') + '</div>'
-                 : '<div style="font-size:0.82rem;color:#aaa;font-style:italic">No notes yet</div>')
+      + '<td style="padding:5px 8px;vertical-align:top;width:80px">'
+        + (lastLog ? '<div style="font-size:0.65rem;color:#8aaa7a">' + esc(lastLog.date) + '</div>' : '<span style="font-size:0.72rem;color:#aaa;font-style:italic">—</span>')
       + '</td>'
-      // Current pieces
-      + '<td style="padding:10px 12px;vertical-align:top;min-width:140px">'
-        + (pieces.length ? pieces.map(function(p){ return '<div style="font-size:0.82rem;color:#2F5C1A;margin-bottom:2px">' + esc(p) + '</div>'; }).join('') : '<span style="font-size:0.8rem;color:#aaa;font-style:italic">—</span>')
+      + '<td style="padding:5px 8px;vertical-align:top">'
+        + (noteText ? '<div style="font-size:0.72rem;color:#1a3a0a;line-height:1.35">' + noteSummary + '</div>'
+                    : '<span style="font-size:0.72rem;color:#aaa;font-style:italic">No notes</span>')
       + '</td>'
-      // Note for next week (editable in report)
-      + '<td style="padding:10px 12px;vertical-align:top;min-width:160px">'
+      + '<td style="padding:5px 8px;vertical-align:top;width:120px">'
+        + (pieces.length ? pieces.map(function(p){ return '<div style="font-size:0.7rem;color:#2F5C1A;margin-bottom:1px">' + esc(p) + '</div>'; }).join('') : '<span style="font-size:0.7rem;color:#aaa">—</span>')
+      + '</td>'
+      + '<td style="padding:5px 8px;vertical-align:top;width:130px">'
         + '<div contenteditable="true" data-sid="' + s.id + '" oninput="saveNextWeekNote(this)" '
-          + 'style="min-height:48px;border:1px solid #c8ddb8;border-radius:6px;padding:5px 8px;font-family:\'Special Elite\',cursive;font-size:0.82rem;color:#1a3a0a;outline:none;background:#f8fdf5">'
+          + 'style="min-height:32px;border:1px solid #c8ddb8;border-radius:4px;padding:3px 6px;font-family:\'Special Elite\',cursive;font-size:0.72rem;color:#1a3a0a;outline:none;background:#f8fdf5">'
           + esc(nextWeekNote)
           + '</div>'
       + '</td>'
@@ -6917,24 +6920,27 @@ function exportAll() {
     + '<title>Studio Overview — ' + termLabel + '</title>'
     + '<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">'
     + '<style>'
-    + 'body{font-family:\'Special Elite\',cursive;max-width:1000px;margin:32px auto;padding:0 24px;color:#05270B}'
+    + '@page{size:A4 landscape;margin:10mm 12mm}'
+    + 'body{font-family:\'Special Elite\',cursive;color:#05270B;font-size:12px;margin:0;padding:0}'
     + 'table{width:100%;border-collapse:collapse}'
-    + 'th{text-align:left;font-size:0.65rem;font-weight:700;color:#8aaa7a;letter-spacing:0.08em;text-transform:uppercase;padding:8px 12px;border-bottom:2px solid #2F5C1A}'
-    + '@media print{.no-print{display:none!important}body{margin:16px}}'
+    + 'th{text-align:left;font-size:0.6rem;font-weight:700;color:#8aaa7a;letter-spacing:0.08em;text-transform:uppercase;padding:4px 8px;border-bottom:2px solid #2F5C1A}'
+    + '@media print{.no-print{display:none!important}}'
     + '</style></head><body>'
-    + '<div class="no-print" style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap">'
-      + '<button onclick="window.print()" style="background:#29789E;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-family:\'Special Elite\',cursive;font-size:0.9rem;cursor:pointer">\ud83d\udda8\ufe0f\u00a0 Save as PDF / Print</button>'
-      + '<button onclick="window.close()" style="background:none;border:1.5px solid #2F5C1A;color:#2F5C1A;padding:10px 20px;border-radius:8px;font-family:\'Special Elite\',cursive;font-size:0.9rem;cursor:pointer">\u2190 Close</button>'
+    + '<div class="no-print" style="margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap">'
+      + '<button onclick="window.print()" style="background:#29789E;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-family:\'Special Elite\',cursive;font-size:0.85rem;cursor:pointer">\ud83d\udda8\ufe0f\u00a0 Save as PDF / Print</button>'
+      + '<button onclick="window.close()" style="background:none;border:1.5px solid #2F5C1A;color:#2F5C1A;padding:8px 16px;border-radius:8px;font-family:\'Special Elite\',cursive;font-size:0.85rem;cursor:pointer">\u2190 Close</button>'
     + '</div>'
-    + '<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #2F5C1A">'
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #2F5C1A">'
       + '<div>'
-        + '<div style="font-size:1.6rem;font-weight:700;color:#05270B">Studio overview</div>'
-        + '<div style="font-size:0.82rem;color:#8aaa7a;margin-top:2px">' + dateStr + ' \u00b7 ' + sorted.length + ' pupils</div>'
+        + '<div style="font-size:1.3rem;font-weight:700;color:#05270B">Studio overview</div>'
+        + '<div style="font-size:0.72rem;color:#8aaa7a;margin-top:2px">' + dateStr + ' · ' + sorted.length + ' pupils</div>'
       + '</div>'
+      + '<div style="font-size:0.6rem;color:#8AB640;letter-spacing:0.1em;text-transform:uppercase">www.violaness.co.uk</div>'
     + '</div>'
     + '<table>'
       + '<thead><tr>'
         + '<th>Pupil</th>'
+        + '<th>Date</th>'
         + '<th>Last lesson notes</th>'
         + '<th>Current pieces</th>'
         + '<th>Note for next week</th>'
