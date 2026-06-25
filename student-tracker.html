@@ -6889,27 +6889,26 @@ function exportAll() {
     // Truncate last lesson notes to keep rows compact
     const noteText = lastLog ? (lastLog.text||'').trim() : '';
     const noteLines = noteText.split('\n').filter(function(l){ return l.trim(); });
-    const noteSummary = noteLines.slice(0,4).map(function(l){ return '• ' + l.trim(); }).join('<br>') 
-      + (noteLines.length > 4 ? '<br><span style="color:#aaa">…+'+(noteLines.length-4)+' more</span>' : '');
+    const noteSummary = noteLines.map(function(l){ return '• ' + l.trim(); }).join('<br>');
 
     return '<tr style="border-bottom:1px solid #e8f0e0;page-break-inside:avoid">'
-      + '<td style="padding:5px 8px;vertical-align:top;width:100px">'
+      + '<td style="padding:5px 8px;vertical-align:top;width:90px">'
         + '<div style="font-size:0.85rem;font-weight:700;color:#05270B">' + esc(s.name) + '</div>'
         + '<div style="font-size:0.65rem;color:#8aaa7a">' + (s.instrument||'') + (slot.day?' · '+slot.day+(slot.time?' '+slot.time:''):'') + '</div>'
       + '</td>'
-      + '<td style="padding:5px 8px;vertical-align:top;width:80px">'
+      + '<td style="padding:5px 8px;vertical-align:top;width:60px">'
         + (lastLog ? '<div style="font-size:0.65rem;color:#8aaa7a">' + esc(lastLog.date) + '</div>' : '<span style="font-size:0.72rem;color:#aaa;font-style:italic">—</span>')
       + '</td>'
       + '<td style="padding:5px 8px;vertical-align:top">'
         + (noteText ? '<div style="font-size:0.72rem;color:#1a3a0a;line-height:1.35">' + noteSummary + '</div>'
                     : '<span style="font-size:0.72rem;color:#aaa;font-style:italic">No notes</span>')
       + '</td>'
-      + '<td style="padding:5px 8px;vertical-align:top;width:120px">'
+      + '<td style="padding:5px 8px;vertical-align:top;width:110px">'
         + (pieces.length ? pieces.map(function(p){ return '<div style="font-size:0.7rem;color:#2F5C1A;margin-bottom:1px">' + esc(p) + '</div>'; }).join('') : '<span style="font-size:0.7rem;color:#aaa">—</span>')
       + '</td>'
-      + '<td style="padding:5px 8px;vertical-align:top;width:130px">'
+      + '<td style="padding:5px 8px;vertical-align:top;width:90px">'
         + '<div contenteditable="true" data-sid="' + s.id + '" oninput="saveNextWeekNote(this)" '
-          + 'style="min-height:32px;border:1px solid #c8ddb8;border-radius:4px;padding:3px 6px;font-family:\'Special Elite\',cursive;font-size:0.72rem;color:#1a3a0a;outline:none;background:#f8fdf5">'
+          + 'style="min-height:28px;border:1px solid #c8ddb8;border-radius:4px;padding:3px 6px;font-family:\'Special Elite\',cursive;font-size:0.65rem;color:#1a3a0a;outline:none;background:#f8fdf5">'
           + esc(nextWeekNote)
           + '</div>'
       + '</td>'
