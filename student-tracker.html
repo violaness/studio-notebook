@@ -6815,6 +6815,18 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
       + '<div style="border:1.5px solid #c8ddb8;border-radius:10px;height:90px;background:#fff"></div>'
       + '</div>';
 
+    // Last lesson notes
+    var lastLog = (s.log||[]).filter(function(e){ return e.text; }).slice(-1)[0];
+    var lastLessonSection = '';
+    if (lastLog) {
+      var lastLines = (lastLog.text||'').split('\n').filter(function(l){ return l.trim(); });
+      lastLessonSection = '<div style="margin-bottom:16px;border-top:1px dashed #c8ddb8;padding-top:12px">'
+        + '<div style="font-size:0.6rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">Last lesson · ' + esc(lastLog.date) + '</div>'
+        + '<div style="font-size:0.75rem;color:#4a6a3a;line-height:1.4">'
+        + lastLines.map(function(l){ return '• ' + esc(l.trim()); }).join('<br>')
+        + '</div></div>';
+    }
+
     return '<div class="practice-page">'
       // Header
       + '<div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #2F5C1A">'
@@ -6838,6 +6850,7 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
       + scalesSection
       + sevcikSection
       + focusSection
+      + lastLessonSection
       + notesBox
       + '</div>';
   }).join('');
@@ -6892,11 +6905,12 @@ function exportAll() {
     const noteSummary = noteLines.map(function(l){ return '• ' + l.trim(); }).join('<br>');
 
     return '<tr style="border-bottom:1px solid #e8f0e0;page-break-inside:avoid">'
-      + '<td style="padding:5px 8px;vertical-align:top;width:90px">'
+      + '<td style="padding:5px 8px;vertical-align:top;width:110px">'
         + '<div style="font-size:0.85rem;font-weight:700;color:#05270B">' + esc(s.name) + '</div>'
         + '<div style="font-size:0.65rem;color:#8aaa7a">' + (s.instrument||'') + (slot.day?' · '+slot.day+(slot.time?' '+slot.time:''):'') + '</div>'
+        + (nextWeekNote ? '<div style="margin-top:5px;border:1px solid #c8ddb8;border-radius:4px;padding:3px 5px;font-size:0.65rem;color:#1a3a0a;background:#f8fdf5">' + esc(nextWeekNote) + '</div>' : '')
       + '</td>'
-      + '<td style="padding:5px 8px;vertical-align:top;width:60px">'
+      + '<td style="padding:5px 8px;vertical-align:top;width:55px">'
         + (lastLog ? '<div style="font-size:0.65rem;color:#8aaa7a">' + esc(lastLog.date) + '</div>' : '<span style="font-size:0.72rem;color:#aaa;font-style:italic">—</span>')
       + '</td>'
       + '<td style="padding:5px 8px;vertical-align:top">'
@@ -6905,12 +6919,6 @@ function exportAll() {
       + '</td>'
       + '<td style="padding:5px 8px;vertical-align:top;width:110px">'
         + (pieces.length ? pieces.map(function(p){ return '<div style="font-size:0.7rem;color:#2F5C1A;margin-bottom:1px">' + esc(p) + '</div>'; }).join('') : '<span style="font-size:0.7rem;color:#aaa">—</span>')
-      + '</td>'
-      + '<td style="padding:5px 8px;vertical-align:top;width:90px">'
-        + '<div contenteditable="true" data-sid="' + s.id + '" oninput="saveNextWeekNote(this)" '
-          + 'style="min-height:28px;border:1px solid #c8ddb8;border-radius:4px;padding:3px 6px;font-family:\'Special Elite\',cursive;font-size:0.65rem;color:#1a3a0a;outline:none;background:#f8fdf5">'
-          + esc(nextWeekNote)
-          + '</div>'
       + '</td>'
       + '</tr>';
   }).join('');
@@ -6938,11 +6946,10 @@ function exportAll() {
     + '</div>'
     + '<table>'
       + '<thead><tr>'
-        + '<th>Pupil</th>'
+        + '<th>Pupil &amp; next week</th>'
         + '<th>Date</th>'
         + '<th>Last lesson notes</th>'
         + '<th>Current pieces</th>'
-        + '<th>Note for next week</th>'
       + '</tr></thead>'
       + '<tbody>' + rows + '</tbody>'
     + '</table>'
