@@ -6924,7 +6924,7 @@ function exportAll() {
   }).join('');
 
   const html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
-    + '<title>Studio Overview — ' + termLabel + '</title>'
+    + '<title>Studio Overview — ' + dateStr + '</title>'
     + '<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">'
     + '<style>'
     + '@page{size:A4 landscape;margin:10mm 12mm}'
@@ -6961,7 +6961,7 @@ function exportAll() {
   else {
     const blob = new Blob([html], {type:'text/html'});
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob); a.download = 'Studio-Overview.html'; a.click();
+    a.href = URL.createObjectURL(blob); a.download = 'Studio-Overview-' + new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-') + '.html'; a.click();
     URL.revokeObjectURL(a.href);
   }
   closeExportModal();
