@@ -6905,20 +6905,20 @@ function exportAll() {
     const noteSummary = noteLines.map(function(l){ return '• ' + l.trim(); }).join('<br>');
 
     return '<tr style="border-bottom:1px solid #e8f0e0;page-break-inside:avoid">'
-      + '<td style="padding:5px 8px;vertical-align:top;width:110px">'
+      + '<td style="padding:5px 8px;vertical-align:top;width:85px">'
         + '<div style="font-size:0.85rem;font-weight:700;color:#05270B">' + esc(s.name) + '</div>'
         + '<div style="font-size:0.65rem;color:#8aaa7a">' + (s.instrument||'') + (slot.day?' · '+slot.day+(slot.time?' '+slot.time:''):'') + '</div>'
-        + (nextWeekNote ? '<div style="margin-top:5px;border:1px solid #c8ddb8;border-radius:4px;padding:3px 5px;font-size:0.65rem;color:#1a3a0a;background:#f8fdf5">' + esc(nextWeekNote) + '</div>' : '')
+        + (nextWeekNote ? '<div style="margin-top:5px;border:1px solid #c8ddb8;border-radius:4px;padding:3px 5px;font-size:0.62rem;color:#1a3a0a;background:#f8fdf5;word-break:break-word">' + esc(nextWeekNote) + '</div>' : '')
       + '</td>'
-      + '<td style="padding:5px 8px;vertical-align:top;width:55px">'
-        + (lastLog ? '<div style="font-size:0.65rem;color:#8aaa7a">' + esc(lastLog.date) + '</div>' : '<span style="font-size:0.72rem;color:#aaa;font-style:italic">—</span>')
+      + '<td style="padding:5px 8px;vertical-align:top;width:50px">'
+        + (lastLog ? '<div style="font-size:0.62rem;color:#8aaa7a">' + esc(lastLog.date) + '</div>' : '<span style="font-size:0.65rem;color:#aaa;font-style:italic">—</span>')
       + '</td>'
       + '<td style="padding:5px 8px;vertical-align:top">'
         + (noteText ? '<div style="font-size:0.72rem;color:#1a3a0a;line-height:1.35">' + noteSummary + '</div>'
                     : '<span style="font-size:0.72rem;color:#aaa;font-style:italic">No notes</span>')
       + '</td>'
-      + '<td style="padding:5px 8px;vertical-align:top;width:110px">'
-        + (pieces.length ? pieces.map(function(p){ return '<div style="font-size:0.7rem;color:#2F5C1A;margin-bottom:1px">' + esc(p) + '</div>'; }).join('') : '<span style="font-size:0.7rem;color:#aaa">—</span>')
+      + '<td style="padding:5px 8px;vertical-align:top;width:100px">'
+        + (pieces.length ? pieces.map(function(p){ return '<div style="font-size:0.68rem;color:#2F5C1A;margin-bottom:1px">' + esc(p) + '</div>'; }).join('') : '<span style="font-size:0.68rem;color:#aaa">—</span>')
       + '</td>'
       + '</tr>';
   }).join('');
