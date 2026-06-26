@@ -5576,7 +5576,7 @@ function renderLibPieces() {
           </div>
           ${isCustom ? `
             <button onclick="editLibPiece(${customIdx})" style="background:none;border:1.5px solid var(--viola);border-radius:6px;padding:3px 8px;color:var(--viola);cursor:pointer;font-size:0.75rem;flex-shrink:0">Edit</button>
-            <button onclick="removeLibPiece('${esc(p.title)}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px;flex-shrink:0">×</button>` : ''}
+            <button onclick="removeLibPiece(${customIdx})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px;flex-shrink:0">×</button>` : ''}
         </div>`;
       }).join('')}
     </div>`).join('');
@@ -5641,8 +5641,8 @@ function saveEditLibPiece() {
 }
 
 
-function removeLibPiece(title) {
-  customPieces = customPieces.filter(p => p.title !== title);
+function removeLibPiece(idx) {
+  customPieces.splice(idx, 1);
   save();
   renderLibPieces();
 }
