@@ -571,6 +571,13 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
       tap to open
     </div>
+    <div id="cover-eod-reminder" style="display:none;margin-top:16px;cursor:pointer" onclick="event.stopPropagation();openNotebookCover();setTimeout(openEodModal,400)">
+      <div style="background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.25);border-radius:12px;padding:10px 16px;max-width:260px;text-align:left">
+        <div style="font-size:0.68rem;font-weight:700;color:#8AB640;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px">☑️ To do</div>
+        <div id="cover-eod-items" style="font-size:0.8rem;color:rgba(255,255,255,0.85);line-height:1.6"></div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:6px">tap to open checklist</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -6060,6 +6067,22 @@ function calcInput(key) {
   updateCalcDisplay();
 }
 
+function renderCoverEod() {
+  const data = getEodData();
+  const unchecked = data.items.filter(function(_, i) { return !data.checked.includes(i); });
+  const reminder = document.getElementById('cover-eod-reminder');
+  const itemsEl = document.getElementById('cover-eod-items');
+  if (!reminder || !itemsEl) return;
+  if (unchecked.length === 0) {
+    reminder.style.display = 'none';
+    return;
+  }
+  itemsEl.innerHTML = unchecked.map(function(item) {
+    return '• ' + esc(item);
+  }).join('<br>');
+  reminder.style.display = 'block';
+}
+
 function openEodModal() { renderEodList(); document.getElementById('eod-modal').classList.add('open'); }
 function closeEodModal() { document.getElementById('eod-modal').classList.remove('open'); }
 function getEodData() {
@@ -7262,6 +7285,7 @@ syncRequestedAbsencesToLog();
 syncRequestedMovesToWeek();
 renderToday();
 renderRoster();
+renderCoverEod();
 // Refresh Today view every 30 seconds so the "Next" badge colour updates
 // automatically (e.g. turns amber when a lesson is 5 minutes away).
 setInterval(function() {
