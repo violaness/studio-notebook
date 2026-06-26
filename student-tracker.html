@@ -2731,12 +2731,16 @@ function absencesHTML(s) {
 // the Week view's "Move" button). This is for moving a specific future-dated
 // lesson — e.g. "the lesson on 10 July moves to 12 July" — booked ahead of time.
 function requestedMovesHTML(s) {
-  const moves = (s.requestedMoves || []).slice().sort(function(a,b){ return a.fromDate.localeCompare(b.fromDate); });
+  const moves = (s.requestedMoves || []);
   if (moves.length === 0) {
     return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No requested moves noted.</p>';
   }
   const today = new Date(); today.setHours(0,0,0,0);
-  return moves.map(function(mv, i) {
+  // Map with original indices before sorting
+  return moves.map(function(mv, origIdx) { return {mv, origIdx}; })
+    .sort(function(a,b){ return a.mv.fromDate.localeCompare(b.mv.fromDate); })
+    .map(function(item) {
+    var mv = item.mv, origIdx = item.origIdx;
     var fromD = new Date(mv.fromDate);
     var isPast = fromD < today;
     var daysAway = Math.round((fromD - today) / (1000*60*60*24));
@@ -2751,9 +2755,9 @@ function requestedMovesHTML(s) {
       if (mv.toTime) toLabel += ' \u00b7 ' + mv.toTime;
     }
     var noteSpan = mv.note ? '<span style="color:var(--muted);font-size:0.82rem"> \u2014 ' + esc(mv.note) + '</span>' : '';
-    var removeBtn = '<button onclick="removeRequestedMove(\'' + s.id + '\',' + i + ')" '
+    var removeBtn = '<button onclick="removeRequestedMove(\'' + s.id + '\',' + origIdx + ')" '
       + 'style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1;flex-shrink:0">\u00d7</button>';
-    var row = '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--warm);' + (isPast ? 'opacity:0.45' : '') + '">'
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--warm);' + (isPast ? 'opacity:0.45' : '') + '">'
       + '<span style="font-size:0.88rem;flex:1;' + (isPast ? 'text-decoration:line-through;color:var(--muted)' : '') + '">'
       + fromLabel + soonTag
       + (toLabel ? ' <span style="color:var(--viola)">\u2192 ' + toLabel + '</span>' : '')
@@ -2761,7 +2765,6 @@ function requestedMovesHTML(s) {
       + '</span>'
       + removeBtn
       + '</div>';
-    return row;
   }).join('');
 }
 
