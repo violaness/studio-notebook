@@ -2095,16 +2095,11 @@ function confirmMove() {
   const day  = document.getElementById('move-day').value;
   const time = document.getElementById('move-time').value.trim();
   const dateVal = document.getElementById('move-date').value;
-  // Derive the teaching week key (Saturday) from the chosen date
+  // Use the teaching week key derived from the chosen date
   let weekKey = currentWeek;
   if (dateVal) {
     const d = new Date(dateVal + 'T12:00:00');
-    const dow = d.getDay(); // 0=Sun,6=Sat
-    // Teaching week starts Saturday (6), so find the most recent Saturday
-    const daysFromSat = (dow + 1) % 7; // days since last Saturday
-    const sat = new Date(d);
-    sat.setDate(d.getDate() - daysFromSat);
-    weekKey = sat.toISOString().slice(0,10);
+    weekKey = teachingWeekKey(d);
   }
   oneOffMoves[movingStudentId] = { week: weekKey, day, time };
   save(); closeMoveModal(); renderWeek();
