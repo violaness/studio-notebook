@@ -7219,41 +7219,55 @@ function syncRequestedMovesToWeek() {
   let changed = false;
   students.forEach(s => {
     (s.requestedMoves || []).forEach(mv => {
-      if (mv.activated) return; // already applied — don't redo it
+      if (mv.activated) return;
       const [fy, fm, fd] = (mv.fromDate || '').split('-').map(Number);
       if (!fy || !fm || !fd) return;
       const fromDateObj = new Date(fy, fm - 1, fd);
-      if (teachingWeekKey(fromDateObj) !== currentWeek) return; // not this week yet
+      if (teachingWeekKey(fromDateObj) !== currentWeek) return;
 
-      // 1) Free up the original slot this week by recording a one-off move
-      //    that points nowhere meaningful — simplest correct option is to
-      //    mark that day's lesson as moved by giving it an empty day, which
-      //    effectiveSlot() doesn't directly support, so instead we mark the
-      //    original lesson date as "absent-notice" in the log (consistent
-      //    with how a requested absence is shown) rather than altering the
-      //    weekly slot itself.
-      const fromLogStr = fromDateObj.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-      if (!s.log) s.log = [];
-      let fromEntry = s.log.find(e => e.date === fromLogStr);
-      if (!fromEntry) { s.log.push({ date: fromLogStr, text: '', attendance: 'absent-notice' }); }
-      else if (!fromEntry.attendance) { fromEntry.attendance = 'absent-notice'; }
+      // If the week view Move button has already moved this pupil this week, skip
+      const existingMove = oneOffMoves[s.id];
+      if (existingMove && existingMove.week === currentWeek) {
+        mv.activated = true;
+        changed = true;
+        return;
+      }
 
-      // 2) Add the new date as an extra lesson on its own week, so it shows
-      //    up with a +1 badge wherever that week falls (this week or later).
+      // Use oneOffMoves to hide the original slot (so effectiveSlot moves it away)
+      // and add the new slot as an extra lesson
       if (mv.toDate) {
         const [ty, tm, td] = mv.toDate.split('-').map(Number);
         if (ty && tm && td) {
           const toDateObj = new Date(ty, tm - 1, td);
-          // extraLessons is keyed by the Sat-based teaching week key, matching
-          // the format used everywhere else extras are added (Fill slot, +Extra).
           const toWeekKey = teachingWeekKey(toDateObj);
-          if (!extraLessons[toWeekKey]) extraLessons[toWeekKey] = [];
           const dayName = DAY_NAMES[toDateObj.getDay()];
-          const already = extraLessons[toWeekKey].some(e => e.studentId === s.id && e.day === dayName && e.time === (mv.toTime || s.lessonTime || ''));
-          if (!already) {
-            extraLessons[toWeekKey].push({ studentId: s.id, day: dayName, time: mv.toTime || s.lessonTime || '' });
+          const toTime = mv.toTime || s.lessonTime || '';
+
+          // If moving within the same week, use oneOffMoves to replace the slot
+          if (toWeekKey === currentWeek) {
+            oneOffMoves[s.id] = { week: currentWeek, day: dayName, time: toTime };
+          } else {
+            // Moving to a different week — mark original as absent and add extra
+            const fromLogStr = fromDateObj.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+            if (!s.log) s.log = [];
+            let fromEntry = s.log.find(e => e.date === fromLogStr);
+            if (!fromEntry) { s.log.push({ date: fromLogStr, text: '', attendance: 'absent-notice' }); }
+            else if (!fromEntry.attendance) { fromEntry.attendance = 'absent-notice'; }
+
+            if (!extraLessons[toWeekKey]) extraLessons[toWeekKey] = [];
+            const already = extraLessons[toWeekKey].some(e => e.studentId === s.id && e.day === dayName && e.time === toTime);
+            if (!already) {
+              extraLessons[toWeekKey].push({ studentId: s.id, day: dayName, time: toTime });
+            }
           }
         }
+      } else {
+        // No destination — just mark original as absent
+        const fromLogStr = fromDateObj.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+        if (!s.log) s.log = [];
+        let fromEntry = s.log.find(e => e.date === fromLogStr);
+        if (!fromEntry) { s.log.push({ date: fromLogStr, text: '', attendance: 'absent-notice' }); }
+        else if (!fromEntry.attendance) { fromEntry.attendance = 'absent-notice'; }
       }
 
       mv.activated = true;
