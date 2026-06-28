@@ -344,24 +344,24 @@
     transition: border-color 0.15s; line-height: 1.85; letter-spacing: 0.01em;
   }
   textarea:focus, input[type="text"]:focus { outline: none; border-color: var(--viola); background: #fff; }
-  /* Lined notebook effect for main writing areas */
+    /* Lined notebook effect for main writing areas */
   textarea.quick-note, textarea.lined-note {
-    font-size: 1rem; min-height: 160px; border-style: dashed; resize: none; overflow: hidden;
-    line-height: 1.85em; letter-spacing: 0.02em;
-    padding: 0 20px;
-    padding-top: 1.85em;
-    background-image: repeating-linear-gradient(
-      to bottom,
-      transparent,
-      transparent calc(1.85em - 1px),
-      rgba(0,0,0,0.055) calc(1.85em - 1px),
-      rgba(0,0,0,0.055) 1.85em
-    );
-    background-size: 100% 1.85em;
-    background-origin: content-box;
-    background-attachment: local;
+    font-size: 16px !important;
+    min-height: 160px; 
+    border-style: dashed; 
+    resize: none; 
+    overflow: auto;
+    letter-spacing: 0.02em;
+    padding: 7px 20px 0 20px;
     box-sizing: border-box;
+    background-attachment: local;
+
+    /* 👑 THE MATCHING TWINS (Fixed pixels to prevent iPad alignment drift) */
+    line-height: 32px !important;        
+    background-size: 100% 32px;
+    background-image: linear-gradient(to bottom, transparent 31px, rgba(0, 0, 0, 0.055) 31px);
   }
+
   textarea.quick-note { background-color: #fffdf7; }
 
   .pieces-list { display: flex; flex-direction: column; gap: 7px; }
