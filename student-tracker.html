@@ -2788,7 +2788,7 @@ function addRequestedMove(id) {
   });
   fromEl.value = ''; toEl.value = ''; timeEl.value = ''; noteEl.value = '';
   save(); renderDetail(s);
-  document.querySelectorAll('.moment-tab')[0].click();
+
 }
 
 function removeRequestedMove(id, idx) {
@@ -2823,7 +2823,7 @@ function removeRequestedMove(id, idx) {
     }
   }
   save(); renderDetail(s);
-  document.querySelectorAll('.moment-tab')[0].click();
+
 }
 
 function addAbsence(id) {
@@ -2850,7 +2850,7 @@ function addAbsence(id) {
   }
   dateEl.value = ''; noteEl.value = '';
   save(); renderDetail(s);
-  document.querySelectorAll('.moment-tab')[0].click();
+
 }
 
 function removeAbsence(id, idx) {
@@ -2867,7 +2867,7 @@ function removeAbsence(id, idx) {
     if (entry && entry.attendance === 'absent-notice') entry.attendance = '';
   }
   save(); renderDetail(s);
-  document.querySelectorAll('.moment-tab')[0].click();
+
 }
 
 // ── FILL SLOT ─────────────────────────────────────────────────────────────
@@ -2962,7 +2962,7 @@ function addPiece(id) {
   const s=getStudent(id); if(!s)return;
   if(!s.pieces)s.pieces=[];
   s.pieces.push(''); save(); renderDetail(s);
-  document.querySelectorAll('.moment-tab')[0].click();
+
   setTimeout(()=>{
     const inputs=document.querySelectorAll(`#pieces-list-${id} input`);
     if(inputs.length)inputs[inputs.length-1].focus();
@@ -2990,7 +2990,6 @@ function clearAllTechFocus(id) {
   s.techFocus = [];
   save();
   renderDetail(s);
-  document.querySelectorAll('.moment-tab').forEach(t => { if (t.textContent === 'Before') t.click(); });
 }
 
 // Add a brand new custom focus word (pill) from the pupil's Before tab.
@@ -3009,7 +3008,6 @@ function addTechChipForPupil(id) {
   if (!s.techFocus.includes(val)) s.techFocus.push(val);
   save();
   renderDetail(s);
-  document.querySelectorAll('.moment-tab').forEach(t => { if (t.textContent === 'Before') t.click(); });
 }
 
 function showCustomChipInput(id) {
@@ -3026,7 +3024,7 @@ function confirmCustomChip(id) {
   const s=getStudent(id);
   if(s&&!(s.techFocus||[]).includes(val)){if(!s.techFocus)s.techFocus=[];s.techFocus.push(val);save();}
   hideCustomChipInput(id);
-  if(s){renderDetail(s);document.querySelectorAll('.moment-tab')[0].click();}
+  if(s){renderDetail(s);}
 }
 function removeCustomChip(chip, studentId) {
   customChips=customChips.filter(c=>c!==chip);
@@ -3666,7 +3664,7 @@ function toggleScaleForWeek(id, key) {
   const el = document.getElementById('scales-week-' + id);
   if (el) el.innerHTML = scalesForWeekHTML(s);
   renderDetail(s);
-  document.querySelectorAll('.moment-tab')[0].click();
+
 }
 
 function scalesThisWeekText(s) {
@@ -6198,7 +6196,7 @@ function copyLastLesson(id) {
   text = text.replace(/\n*📝 During lesson:\n?/m, '\n\n');
   s.nextLesson = text.trim();
   save(); renderDetail(s);
-  document.querySelectorAll('.moment-tab')[0].click();
+
 }
 
 // ── LESSON COUNT ──────────────────────────────────────────────────────────
@@ -6233,8 +6231,7 @@ function clearAttendance(id) {
   const s = getStudent(id); if (!s) return;
   // Find the most recent log entry that has an attendance mark
   const entry = (s.log||[]).slice().reverse().find(e => e.attendance);
-  if (entry) { entry.attendance = ''; save(); renderDetail(s);
-    document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===2) t.click(); }); }
+  if (entry) { entry.attendance = ''; save(); renderDetail(s); }
 }
 
 function attendanceChart(s, fromDate, toDate) {
@@ -6335,7 +6332,7 @@ function restorePiece(id, idx) {
   if (!s.pieces) s.pieces = [];
   s.pieces.push(piece.title);
   save(); renderDetail(s);
-  document.querySelectorAll('.moment-tab')[0].click();
+
 }
 
 // ── WAITING LIST ──────────────────────────────────────────────────────────
@@ -6485,7 +6482,7 @@ function selectPiece(title) {
   save();
   closePieceDB();
   renderDetail(s);
-  document.querySelectorAll('.moment-tab')[0].click();
+
 }
 
 
