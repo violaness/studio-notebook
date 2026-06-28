@@ -2075,7 +2075,7 @@ function renderRosterList(filtered) {
     const lastNote = (s.log||[]).slice(-1)[0];
     const snippet = lastNote ? lastNote.text.slice(0,60)+(lastNote.text.length>60?'…':'') : '';
     const slot = effectiveSlot(s);
-    const dayLabel = slot.day ? `<span style="font-size:0.72rem;color:var(--muted);background:var(--warm);padding:2px 8px;border-radius:999px">${slot.day}${slot.time?' '+slot.time:''}</span>` : '';
+    const dayLabel = slot.day ? `<span style="font-size:0.72rem;color:var(--muted)">◷ ${slot.day}${slot.time?' '+slot.time:''}</span>` : '';
     return `<div class="student-card ${s.instrument}-card" onclick="openStudentFrom('${s.id}','roster')">
       <div class="student-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
       <div class="student-info">
@@ -2253,7 +2253,7 @@ function renderDetail(s) {
           <span class="badge badge-${s.level}">${s.level}</span>
           <span class="badge" style="background:var(--warm);color:var(--muted)">${(s.pupilType||'child')==='adult'?'Adult':'School age'}</span>
           ${s.rate ? `<span class="badge" style="background:#dff0d8;color:#2F5C1A">£${s.rate} per lesson</span>` : ''}
-          ${slot.day?`<span class="badge" style="background:var(--warm);color:var(--muted)">${slot.day}${slot.time?' '+slot.time:''}${s.duration?' · '+s.duration+'min':''}</span>`:''}
+          ${slot.day?`<span style="font-size:0.78rem;color:var(--muted)">◷ ${slot.day}${slot.time?' '+slot.time:''}${s.duration?' · '+s.duration+'min':''}</span>`:''}
         </div>
         ${pupilMetaHTML(s)}
       </div>
