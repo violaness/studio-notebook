@@ -2206,15 +2206,13 @@ function renderDetail(s) {
         </div>
         ${pupilMetaHTML(s)}
       </div>
-      <button onclick="deletePupil('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer;flex-shrink:0;align-self:flex-start" title="Remove pupil">🗑️ Remove</button>
-      <button onclick="openEditModal('${s.id}')" style="background:none;border:1.5px solid var(--viola);border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--viola);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Edit pupil">✏️ Edit</button>
-      <button onclick="openTimerModal('${s.name}','${s.duration||60}')" style="background:var(--violin);color:#fff;border:none;border-radius:10px;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Lesson timer">⏱ Timer</button>
-      <button onclick="openExtraLessonModal('${s.id}')" style="background:var(--string);color:#05270B;border:none;border-radius:10px;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Add extra lesson this week">+ Extra</button>
-      <button onclick="exportSinglePupil('${s.id}')" style="background:#29789E;color:#fff;border:none;border-radius:10px;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Download &amp; email practice plan">✉ Practice Plan</button>
+      <button onclick="openEditModal('${s.id}')" style="background:none;border:1.5px solid var(--viola);border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--viola);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Edit pupil">✏️ Edit</button>
+      <button onclick="openMoveModal('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Move lesson">📅 Move</button>
+      <button onclick="openExtraLessonModal('${s.id}')" style="background:var(--string);color:#05270B;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Add extra lesson this week">+ Extra</button>
+      <button onclick="exportSinglePupil('${s.id}')" style="background:#29789E;color:#fff;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Practice plan">✉ Plan</button>
       <button onclick="toggleFollowUp('${s.id}')" title="${s.followUp?'Clear follow-up flag':'Flag for follow-up'}"
-        style="background:${s.followUp?'#e67e22':'none'};color:${s.followUp?'#fff':'var(--muted)'};border:1.5px solid ${s.followUp?'#e67e22':'#e0ddd8'};border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px">
-        🚩${s.followUp?' Flagged':''}
-      </button>
+        style="background:${s.followUp?'#e67e22':'none'};color:${s.followUp?'#fff':'var(--muted)'};border:1.5px solid ${s.followUp?'#e67e22':'#e0ddd8'};border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px">🚩</button>
+      <button onclick="if(confirm('Remove ${esc(s.name)}? This cannot be undone.'))deletePupil('${s.id}')" style="background:none;border:none;color:#ccc;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:4px;font-size:0.72rem;padding:0 4px;height:35px" title="Remove pupil">🗑</button>
     </div>
     <div id="next-pupil-banner">${nextPupilHTML(s)}</div>
 
