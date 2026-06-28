@@ -1658,7 +1658,7 @@ function linkify(str) {
     const isAudio = /soundcloud\.com|spotify\.com|music\./i.test(href);
     const label = isVideo ? '[ Watch ]' : isAudio ? '[ Listen ]' : '[ Link ]';
     return '<a href="' + href + '" target="_blank" rel="noopener" '
-      + 'style="color:#29789E;text-decoration:none;font-size:0.78rem;border:1px solid #29789E;border-radius:4px;padding:1px 6px;white-space:nowrap" '
+      + 'style="color:#29789E;text-decoration:none;font-size:0.85rem;white-space:nowrap" '
       + 'onclick="event.stopPropagation()">' + label + '</a>';
   });
 }
