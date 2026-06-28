@@ -2306,8 +2306,13 @@ function renderDetail(s) {
       <div class="section-card">
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span>📌 Plan for today's lesson</span>
-          ${s.nextLesson ? `<button onclick="clearNextLessonPlan('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>` : ''}
+          <span style="display:flex;gap:6px;align-items:center">
+            <button id="mic-test-btn-${s.id}" onclick="testMic('${s.id}','nextlesson-${s.id}')"
+              style="background:#f0ede8;border:none;border-radius:8px;padding:3px 8px;font-family:'Special Elite',cursive;font-size:0.75rem;color:var(--muted);cursor:pointer">🎤 test</button>
+            ${s.nextLesson ? `<button onclick="clearNextLessonPlan('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>` : ''}
+          </span>
         </div>
+        <div id="mic-test-msg-${s.id}" style="font-size:0.72rem;color:var(--muted);margin-bottom:4px;min-height:1em"></div>
         <textarea rows="14" placeholder="What you want to cover today…" class="lined-note"
           id="nextlesson-${s.id}"
           oninput="updateField('${s.id}','nextLesson',this.value)">${esc(s.nextLesson||'')}</textarea>
@@ -3415,6 +3420,44 @@ function clearNextWeekNote(id) {
   save();
   const el = document.getElementById('nextWeeknote-' + id);
   if (el) { el.value = ''; autoGrow(el); }
+}
+
+function testMic(pupilId, textareaId) {
+  const msg = document.getElementById('mic-test-msg-' + pupilId);
+  const btn = document.getElementById('mic-test-btn-' + pupilId);
+  const textarea = document.getElementById(textareaId);
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    msg.textContent = '❌ Speech recognition not supported in this browser.';
+    msg.style.color = '#c0392b';
+    return;
+  }
+  const recognition = new SR();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.lang = 'en-GB';
+  recognition.onstart = function() {
+    btn.textContent = '🔴 listening…';
+    btn.style.background = '#ffecec';
+    msg.textContent = 'Speak now…';
+    msg.style.color = 'var(--muted)';
+  };
+  recognition.onresult = function(e) {
+    const transcript = e.results[0][0].transcript;
+    textarea.value += (textarea.value ? ' ' : '') + transcript;
+    textarea.dispatchEvent(new Event('input', {bubbles: true}));
+    msg.textContent = '✓ Got it! Tap test again to try more.';
+    msg.style.color = '#2F5C1A';
+  };
+  recognition.onerror = function(e) {
+    msg.textContent = '❌ Error: ' + e.error;
+    msg.style.color = '#c0392b';
+  };
+  recognition.onend = function() {
+    btn.textContent = '🎤 test';
+    btn.style.background = '#f0ede8';
+  };
+  recognition.start();
 }
 
 function autoSaveNextLesson(id, value) {
