@@ -6232,7 +6232,6 @@ function setAttendance(id, status) {
   if (!entry) { entry = { date: today, text: '', attendance: status }; s.log.push(entry); }
   else { entry.attendance = status; }
   save(); showToast('toast-attendance-' + id); renderDetail(s);
-  document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===2) t.click(); });
 }
 
 function clearAttendance(id) {
