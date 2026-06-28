@@ -341,10 +341,25 @@
     width: 100%; font-family: 'Special Elite', cursive; font-size: 0.93rem;
     border: 1.5px solid #e0ddd8; border-radius: 8px; padding: 9px 11px;
     background: var(--paper); color: var(--ink); resize: vertical;
-    transition: border-color 0.15s; line-height: 1.5;
+    transition: border-color 0.15s; line-height: 1.85;
   }
   textarea:focus, input[type="text"]:focus { outline: none; border-color: var(--viola); background: #fff; }
-  textarea.quick-note { font-size: 1rem; min-height: 160px; background: #fffdf7; border-style: dashed; resize: none; overflow: hidden; }
+  /* Lined notebook effect for main writing areas */
+  textarea.quick-note, textarea.lined-note {
+    font-size: 1rem; min-height: 160px; border-style: dashed; resize: none; overflow: hidden;
+    line-height: 1.85;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent calc(1.85em - 1px),
+      rgba(0,0,0,0.055) calc(1.85em - 1px),
+      rgba(0,0,0,0.055) 1.85em
+    );
+    background-size: 100% 1.85em;
+    background-attachment: local;
+    padding-top: 10px;
+  }
+  textarea.quick-note { background-color: #fffdf7; }
 
   .pieces-list { display: flex; flex-direction: column; gap: 7px; }
   .piece-item { display: flex; gap: 9px; align-items: center; }
@@ -2293,7 +2308,7 @@ function renderDetail(s) {
           <span>📌 Plan for today's lesson</span>
           ${s.nextLesson ? `<button onclick="clearNextLessonPlan('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>` : ''}
         </div>
-        <textarea rows="14" placeholder="What you want to cover today…"
+        <textarea rows="14" placeholder="What you want to cover today…" class="lined-note"
           id="nextlesson-${s.id}"
           oninput="updateField('${s.id}','nextLesson',this.value)">${esc(s.nextLesson||'')}</textarea>
         ${(s.log||[]).filter(e=>e.text).length > 0 ? '<button onclick="copyLastLesson(\'' + s.id + '\')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-size:0.8rem;cursor:pointer;width:100%">\u2191 Copy last lesson notes as plan</button>' : ''}
@@ -2310,14 +2325,14 @@ function renderDetail(s) {
           <span>📋 Note for next week</span>
           <button onclick="clearNextWeekNote('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
         </div>
-        <textarea rows="3" placeholder="Anything to prepare or remember for next lesson…"
+        <textarea rows="3" placeholder="Anything to prepare or remember for next lesson…" class="lined-note"
           id="nextWeeknote-${s.id}"
           oninput="updateField('${s.id}','nextWeekNote',this.value)"
           style="background:transparent;border-color:rgba(0,80,140,0.15)">${esc(s.nextWeekNote||'')}</textarea>
       </div>
       <div class="section-card" style="background:var(--warm)">
         <div class="section-label">Pupil notes</div>
-        <textarea rows="5" placeholder="Long-term notes about this pupil — learning style, what works, exam plans…"
+        <textarea rows="5" placeholder="Long-term notes about this pupil — learning style, what works, exam plans…" class="lined-note"
           oninput="updateField('${s.id}','pupilNotes',this.value)"
           style="background:transparent;border-color:rgba(0,0,0,0.1)">${esc(s.pupilNotes||'')}</textarea>
       </div>
