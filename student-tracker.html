@@ -2187,13 +2187,6 @@ function renderDetail(s) {
   const el = document.getElementById('detail-content');
   const slot = effectiveSlot(s);
 
-  // Remember which tab was active before re-render
-  const activePanel = el.querySelector('.moment-panel.active');
-  const activePanelId = activePanel ? activePanel.id : 'panel-before';
-  el.querySelectorAll('details[open] > summary').forEach(function(sum) {
-    openSummaries.add(sum.textContent.trim().slice(0, 30));
-  });
-
   const piecesHTML = buildPiecesHTML(s);
   const allTech = [...TECH_OPTIONS,...customChips].sort((a,b) => a.localeCompare(b));
   const techHTML = buildTechHTML(s, allTech);
@@ -2697,15 +2690,6 @@ function renderDetail(s) {
       const el = document.getElementById(id);
       if (el) autoGrow(el);
     });
-    // Reopen any <details> that were open before re-render
-    if (openSummaries.size > 0) {
-      document.getElementById('detail-content').querySelectorAll('details').forEach(function(det) {
-        const sum = det.querySelector('summary');
-        if (sum && openSummaries.has(sum.textContent.trim().slice(0, 30))) {
-          det.open = true;
-        }
-      });
-    }
   }, 50);
 }
 
