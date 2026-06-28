@@ -2018,11 +2018,23 @@ function renderWeek() {
     </div>`;
   }
   document.getElementById('week-grid').innerHTML = html;
-  // Week total
+  // Week total + date range
   const wkHrs = Math.floor(weekTotalMins/60), wkRem = weekTotalMins%60;
   const wkLabel = weekTotalMins > 0 ? (wkHrs>0?wkHrs+'h ':''+(wkRem>0?wkRem+'m':'')) : '0h';
   const summary = document.getElementById('week-hours-summary');
-  if (summary) summary.textContent = 'Week total: ' + wkLabel.trim() + ' teaching';
+  if (summary) {
+    const [wy, wm, wd] = currentWeek.split('-').map(Number);
+    const weekStart = new Date(wy, wm-1, wd);
+    const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
+    const fmtShort = function(d) { return d.getDate() + ' ' + d.toLocaleDateString('en-GB',{month:'short'}); };
+    const fmtFull  = function(d) { return fmtShort(d) + ' ' + d.getFullYear(); };
+    const dateRange = fmtShort(weekStart) + ' – ' + fmtFull(weekEnd);
+    summary.innerHTML = '<span style="color:var(--ink);font-weight:600">' + dateRange + '</span>'
+      + '<span style="flex:1;margin:0 12px;border-top:1px solid #e0ddd8;display:inline-block;vertical-align:middle"></span>'
+      + '<span>Week total: ' + wkLabel.trim() + ' teaching</span>';
+    summary.style.display = 'flex';
+    summary.style.alignItems = 'center';
+  }
 }
 
 // ── ROSTER ────────────────────────────────────────────────────────────────
