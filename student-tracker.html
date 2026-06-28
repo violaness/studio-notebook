@@ -347,8 +347,9 @@
   /* Lined notebook effect for main writing areas */
   textarea.quick-note, textarea.lined-note {
     font-size: 1rem; min-height: 160px; border-style: dashed; resize: none; overflow: hidden;
-    line-height: 1.85; letter-spacing: 0.02em;
-    padding: 14px 20px;
+    line-height: 1.85em; letter-spacing: 0.02em;
+    padding: 0 20px;
+    padding-top: 1.85em;
     background-image: repeating-linear-gradient(
       to bottom,
       transparent,
@@ -357,7 +358,9 @@
       rgba(0,0,0,0.055) 1.85em
     );
     background-size: 100% 1.85em;
+    background-origin: content-box;
     background-attachment: local;
+    box-sizing: border-box;
   }
   textarea.quick-note { background-color: #fffdf7; }
 
