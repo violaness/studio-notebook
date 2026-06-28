@@ -7,20 +7,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Studio Notebook</title>
-  <style>
-  /* 🖨️ Clean Print Settings: Erases default browser headers, URLs, and footers */
-  @media print {
-    @page {
-      margin: 0; /* 💥 The magic switch that forcefully deletes Safari's URL & date footers! */
-    }
-    body {
-      padding: 1.5cm; /* Gives your attendance table a beautiful, professional border away from the page edges */
-      background: #fff !important;
-    }
-  }
-</style>
-
-
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Special+Elite&display=swap');
 
@@ -2324,7 +2310,7 @@ function renderDetail(s) {
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span>📌 Plan for today's lesson</span>
           <span style="display:flex;gap:6px;align-items:center">
-            <button id="mic-test-btn-${s.id}" onclick="testMic('${s.id}','nextlesson-${s.id}')"
+            <button id="mic-test-btn-${s.id}" onclick="testMic('mic-test-btn-${s.id}','mic-test-msg-${s.id}','nextlesson-${s.id}')"
               style="background:#f0ede8;border:none;border-radius:8px;padding:3px 8px;font-family:'Special Elite',cursive;font-size:0.75rem;color:var(--muted);cursor:pointer">🎤 test</button>
             ${s.nextLesson ? `<button onclick="clearNextLessonPlan('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>` : ''}
           </span>
@@ -2443,7 +2429,12 @@ function renderDetail(s) {
         <p style="white-space:pre-wrap;font-size:0.88rem;color:var(--ink);margin:4px 0 0">${linkify(s.nextLesson)}</p>
       </div>` : ''}
       <div class="section-card">
-        <div class="section-label">Quick notes — right now</div>
+        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Quick notes — right now</span>
+          <button id="mic-during-btn-${s.id}" onclick="testMic('mic-during-btn-${s.id}','mic-test-msg-during-${s.id}','during-scratch-${s.id}')"
+            style="background:#f0ede8;border:none;border-radius:8px;padding:3px 8px;font-family:'Special Elite',cursive;font-size:0.75rem;color:var(--muted);cursor:pointer">🎤</button>
+        </div>
+        <div id="mic-test-msg-during-${s.id}" style="font-size:0.72rem;color:var(--muted);min-height:1em"></div>
         <textarea class="quick-note"
           placeholder="Jot anything — key words, reminders, 'try this'…"
           id="during-scratch-${s.id}"
@@ -2508,8 +2499,13 @@ function renderDetail(s) {
       <div class="section-card">
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span>Lesson notes</span>
-          <button onclick="document.getElementById('after-note-${s.id}').value='';document.getElementById('after-note-${s.id}').dataset.edited='1';autoGrow(document.getElementById('after-note-${s.id}'))" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
+          <span style="display:flex;gap:6px;align-items:center">
+            <button id="mic-after-btn-${s.id}" onclick="testMic('mic-after-btn-${s.id}','mic-test-msg-after-${s.id}','after-note-${s.id}')"
+              style="background:#f0ede8;border:none;border-radius:8px;padding:3px 8px;font-family:'Special Elite',cursive;font-size:0.75rem;color:var(--muted);cursor:pointer">🎤</button>
+            <button onclick="document.getElementById('after-note-${s.id}').value='';document.getElementById('after-note-${s.id}').dataset.edited='1';autoGrow(document.getElementById('after-note-${s.id}'))" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
+          </span>
         </div>
+        <div id="mic-test-msg-after-${s.id}" style="font-size:0.72rem;color:var(--muted);min-height:1em"></div>
         <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">Built from your plan and during-lesson notes — edit freely before saving to the log.</div>
         <textarea class="quick-note" placeholder="What went well, what to remember for next time…"
           id="after-note-${s.id}"
@@ -3439,9 +3435,9 @@ function clearNextWeekNote(id) {
   if (el) { el.value = ''; autoGrow(el); }
 }
 
-function testMic(pupilId, textareaId) {
-  const msg = document.getElementById('mic-test-msg-' + pupilId);
-  const btn = document.getElementById('mic-test-btn-' + pupilId);
+function testMic(btnId, msgId, textareaId) {
+  const msg = document.getElementById(msgId);
+  const btn = document.getElementById(btnId);
   const textarea = document.getElementById(textareaId);
 
   // If already listening, stop
