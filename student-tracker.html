@@ -3429,36 +3429,61 @@ function testMic(pupilId, textareaId) {
   const msg = document.getElementById('mic-test-msg-' + pupilId);
   const btn = document.getElementById('mic-test-btn-' + pupilId);
   const textarea = document.getElementById(textareaId);
+
+  // If already listening, stop
+  if (btn._recognition) {
+    btn._recognition.stop();
+    btn._recognition = null;
+    btn.textContent = '🎤 test';
+    btn.style.background = '#f0ede8';
+    msg.textContent = '';
+    return;
+  }
+
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
-    msg.textContent = '❌ Speech recognition not supported in this browser.';
+    msg.textContent = '❌ Not supported in this browser.';
     msg.style.color = '#c0392b';
     return;
   }
   const recognition = new SR();
-  recognition.continuous = false;
+  recognition.continuous = true;
   recognition.interimResults = false;
   recognition.lang = 'en-GB';
+
   recognition.onstart = function() {
-    btn.textContent = '🔴 listening…';
+    btn._recognition = recognition;
+    btn.textContent = '🔴 tap to stop';
     btn.style.background = '#ffecec';
-    msg.textContent = 'Speak now…';
+    msg.textContent = 'Listening… tap button to stop.';
     msg.style.color = 'var(--muted)';
   };
   recognition.onresult = function(e) {
-    const transcript = e.results[0][0].transcript;
-    textarea.value += (textarea.value ? ' ' : '') + transcript;
-    textarea.dispatchEvent(new Event('input', {bubbles: true}));
-    msg.textContent = '✓ Got it! Tap test again to try more.';
-    msg.style.color = '#2F5C1A';
+    let transcript = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) transcript += e.results[i][0].transcript;
+    }
+    if (transcript) {
+      textarea.value += (textarea.value ? ' ' : '') + transcript;
+      textarea.dispatchEvent(new Event('input', {bubbles: true}));
+    }
   };
   recognition.onerror = function(e) {
     msg.textContent = '❌ Error: ' + e.error;
     msg.style.color = '#c0392b';
-  };
-  recognition.onend = function() {
+    btn._recognition = null;
     btn.textContent = '🎤 test';
     btn.style.background = '#f0ede8';
+  };
+  recognition.onend = function() {
+    // Only reset if not manually stopped (already handled above)
+    if (btn._recognition) {
+      btn._recognition = null;
+      btn.textContent = '🎤 test';
+      btn.style.background = '#f0ede8';
+      msg.textContent = '✓ Done. Tap to dictate again.';
+      msg.style.color = '#2F5C1A';
+    }
   };
   recognition.start();
 }
