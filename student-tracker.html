@@ -2706,11 +2706,6 @@ function renderDetail(s) {
         }
       });
     }
-    // Restore the active tab
-    if (activePanelId !== 'panel-before') {
-      const tabBtn = document.querySelector('.moment-tab[onclick*="' + activePanelId + '"]');
-      if (tabBtn) switchMoment(tabBtn, activePanelId);
-    }
   }, 50);
 }
 
