@@ -7,6 +7,17 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Studio Notebook</title>
+    /* 🖨️ Clean Print Settings: Erases default browser headers, URLs, and footers */
+  @media print {
+    @page {
+      margin: 0; /* 💥 The magic switch that forcefully deletes Safari's URL & date footers! */
+    }
+    body {
+      padding: 1.5cm; /* Gives your attendance table a beautiful, professional border away from the page edges */
+      background: #fff !important;
+    }
+  }
+
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Special+Elite&display=swap');
 
