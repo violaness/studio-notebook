@@ -6325,17 +6325,16 @@ function copyLastLesson(id) {
   const s = getStudent(id); if (!s) return;
   const lastNote = [...(s.log||[])].filter(e=>e.text).pop();
   if (!lastNote) return;
-  // The saved note may itself have been built by buildCumulativeNote() and so
-  // can already contain "📌 Plan:" / "🎻 Scales this week:" / "📝 During lesson:"
-  // section headers. Strip those out so copying it as a fresh plan doesn't
-  // duplicate them when buildCumulativeNote wraps it again next time.
   let text = lastNote.text;
   text = text.replace(/^📌 Plan:\n?/m, '');
   text = text.replace(/\n*🎻 Scales this week:.*$/m, '');
+  text = text.replace(/\n*✅ Scales done this lesson:[\s\S]*?(?=\n\n|\n📝|$)/m, '');
   text = text.replace(/\n*📝 During lesson:\n?/m, '\n\n');
-  s.nextLesson = text.trim();
+  text = text.trim();
+  // If stripping left nothing useful, use the raw text instead
+  if (!text) text = lastNote.text.trim();
+  s.nextLesson = text;
   save(); renderDetail(s);
-
 }
 
 // ── LESSON COUNT ──────────────────────────────────────────────────────────
