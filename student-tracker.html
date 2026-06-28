@@ -3332,13 +3332,13 @@ function saveDuring(id) {
 }
 function saveLog(id) {
   const s=getStudent(id); if(!s)return;
-  const el=document.getElementById(`after-note-${id}`);
+  const el=document.getElementById('after-note-'+id);
+  if(!el)return;
   const text=el.value.trim(); if(!text)return;
   if(!s.log)s.log=[];
   s.log.push({date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),text});
   s.duringScratch=''; save(); el.value='';
-  showToast(`toast-after-${id}`); renderDetail(s);
-  document.querySelectorAll('.moment-tab').forEach(t => { if(t.textContent==='After') t.click(); });
+  showToast('toast-after-'+id); renderDetail(s);
 }
 
 function updateLittleDetail(id, field, value) {
