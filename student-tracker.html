@@ -811,6 +811,18 @@
     </div>
     <div id="lending-list"></div>
   </div>
+
+  <!-- SPEECH REPLACEMENTS -->
+  <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
+    <div style="font-size:0.72rem;font-weight:800;color:var(--muted);margin-bottom:4px">🎤 Voice text — auto-corrections</div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Words or phrases that get replaced automatically after dictation.</div>
+    <div id="speech-replacements-list"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+      <input type="text" id="new-replace-from" placeholder="Replace this…" style="font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
+      <input type="text" id="new-replace-to" placeholder="With this (blank to delete)…" style="font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
+    </div>
+    <button onclick="addSpeechReplacement()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:10px auto 0;min-width:160px">+ Add correction</button>
+  </div>
 </div>
 
 <!-- PERSISTENT TEACHING NOTES BAR -->
@@ -1600,8 +1612,9 @@ let deletedBuiltins  = JSON.parse(localStorage.getItem('studio_deleted_builtins'
 let techCategoryMap  = JSON.parse(localStorage.getItem('studio_tech_categories')   || 'null') || Object.assign({}, TECH_CATEGORY_DEFAULTS);
 let customPieces = JSON.parse(localStorage.getItem('studio_custom_pieces') || '[]');
 let oneOffMoves  = JSON.parse(localStorage.getItem('studio_one_off_moves') || '{}');
-let waitingList  = JSON.parse(localStorage.getItem('studio_waiting_list')  || '[]');
-let lendingLog   = JSON.parse(localStorage.getItem('studio_lending_log')   || '[]');
+let waitingList      = JSON.parse(localStorage.getItem('studio_waiting_list')      || '[]');
+let lendingLog       = JSON.parse(localStorage.getItem('studio_lending_log')       || '[]');
+let speechReplacements = JSON.parse(localStorage.getItem('studio_speech_replacements') || '[{"from":"gonna","to":"going to"},{"from":"wanna","to":"want to"},{"from":"kinda","to":"kind of"}]');
 let extraLessons = JSON.parse(localStorage.getItem('studio_extra_lessons') || '{}');
 
 let currentFilter  = 'all';
@@ -1617,7 +1630,8 @@ function save() {
   localStorage.setItem('studio_custom_pieces',     JSON.stringify(customPieces));
   localStorage.setItem('studio_one_off_moves',     JSON.stringify(oneOffMoves));
   localStorage.setItem('studio_waiting_list',      JSON.stringify(waitingList));
-  localStorage.setItem('studio_lending_log',       JSON.stringify(lendingLog));
+  localStorage.setItem('studio_lending_log',           JSON.stringify(lendingLog));
+  localStorage.setItem('studio_speech_replacements',   JSON.stringify(speechReplacements));
   localStorage.setItem('studio_extra_lessons',     JSON.stringify(extraLessons));
 }
 
@@ -2028,6 +2042,7 @@ function renderRoster() {
   loadTermDates();
   renderWaiting();
   renderLendingLog();
+  renderSpeechReplacements();
 }
 
 function renderRosterList(filtered) {
@@ -3474,6 +3489,7 @@ function testMic(btnId, msgId, textareaId) {
       if (e.results[i].isFinal) transcript += e.results[i][0].transcript;
     }
     if (transcript) {
+      transcript = applyReplacements(transcript);
       const val = textarea.value;
       // Don't add a leading space if we're at the start of a line or the box is empty
       const needsSpace = val.length > 0 && val[val.length - 1] !== '\n';
@@ -3499,6 +3515,15 @@ function testMic(btnId, msgId, textareaId) {
     }
   };
   recognition.start();
+}
+
+function applyReplacements(text) {
+  speechReplacements.forEach(function(r) {
+    if (!r.from) return;
+    const regex = new RegExp('\\b' + r.from.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b', 'gi');
+    text = text.replace(regex, r.to || '');
+  });
+  return text.replace(/\s{2,}/g,' ').trim();
 }
 
 function autoSaveNextLesson(id, value) {
@@ -6502,6 +6527,37 @@ function markReturned(idx) {
 
 function removeLendingEntry(idx) {
   lendingLog.splice(idx,1); save(); renderLendingLog();
+}
+
+function renderSpeechReplacements() {
+  const el = document.getElementById('speech-replacements-list'); if (!el) return;
+  if (speechReplacements.length === 0) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No corrections yet.</p>';
+    return;
+  }
+  el.innerHTML = speechReplacements.map(function(r, i) {
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--warm)">'
+      + '<span style="font-size:0.85rem;flex:1"><span style="color:#c0392b">' + esc(r.from) + '</span>'
+      + ' → <span style="color:#2F5C1A">' + (r.to ? esc(r.to) : '<em style="color:var(--muted)">deleted</em>') + '</span></span>'
+      + '<button onclick="removeSpeechReplacement(' + i + ')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 4px">×</button>'
+      + '</div>';
+  }).join('');
+}
+
+function addSpeechReplacement() {
+  const from = document.getElementById('new-replace-from').value.trim().toLowerCase();
+  const to   = document.getElementById('new-replace-to').value.trim();
+  if (!from) return;
+  speechReplacements = speechReplacements.filter(function(r){ return r.from !== from; });
+  speechReplacements.push({ from, to });
+  document.getElementById('new-replace-from').value = '';
+  document.getElementById('new-replace-to').value = '';
+  save(); renderSpeechReplacements();
+}
+
+function removeSpeechReplacement(idx) {
+  speechReplacements.splice(idx, 1);
+  save(); renderSpeechReplacements();
 }
 
 function renderLendingLog() {
