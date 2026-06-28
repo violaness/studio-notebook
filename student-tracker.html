@@ -1650,13 +1650,16 @@ function esc(str) {
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Convert plain URLs in text to clickable links (for summary/display views)
+// Convert plain URLs in text to clean tappable links (for summary/display views)
 function linkify(str) {
   return esc(str).replace(/(https?:\/\/[^\s<>"&]+)/g, function(url) {
     const href = url.replace(/&amp;/g,'&');
+    const isVideo = /youtu\.be|youtube\.com|vimeo\.com/i.test(href);
+    const isAudio = /soundcloud\.com|spotify\.com|music\./i.test(href);
+    const label = isVideo ? '[ Watch ]' : isAudio ? '[ Listen ]' : '[ Link ]';
     return '<a href="' + href + '" target="_blank" rel="noopener" '
-      + 'style="color:#29789E;text-decoration:underline;word-break:break-all" '
-      + 'onclick="event.stopPropagation()">' + url + '</a>';
+      + 'style="color:#29789E;text-decoration:none;font-size:0.78rem;border:1px solid #29789E;border-radius:4px;padding:1px 6px;white-space:nowrap" '
+      + 'onclick="event.stopPropagation()">' + label + '</a>';
   });
 }
 function getStudent(id) { return students.find(x => x.id === id); }
