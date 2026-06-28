@@ -2709,7 +2709,7 @@ function renderDetail(s) {
     // Restore the active tab
     if (activePanelId !== 'panel-before') {
       const tabBtn = document.querySelector('.moment-tab[onclick*="' + activePanelId + '"]');
-      if (tabBtn) tabBtn.click();
+      if (tabBtn) switchMoment(tabBtn, activePanelId);
     }
   }, 50);
 }
@@ -3538,8 +3538,18 @@ function attendanceButtonsHTML(s) {
     'absent-notice':  '– Absent — good notice (no charge)',
     'cancelled':      '– Cancelled by me'
   };
-  var last = (s.log||[]).slice(-1)[0];
-  var cur = last && last.attendance ? last.attendance : '';
+  // Find attendance from current teaching week only
+  const [twkY, twkM, twkD] = currentWeek.split('-').map(Number);
+  const weekStart = new Date(twkY, twkM - 1, twkD);
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
+  const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  const thisWeekEntry = (s.log||[]).find(function(e) {
+    const parts = (e.date||'').split(' ');
+    if (parts.length < 3) return false;
+    const d = new Date(parseInt(parts[2]), months[parts[1]], parseInt(parts[0]));
+    return d >= weekStart && d <= weekEnd && e.attendance;
+  });
+  var cur = thisWeekEntry ? thisWeekEntry.attendance : '';
   return ['present','absent-late','absent-notice','cancelled'].map(function(status) {
     var active = cur === status;
     return '<button onclick="setAttendance(\'' + s.id + '\',\'' + status + '\')" '
