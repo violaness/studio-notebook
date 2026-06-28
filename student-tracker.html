@@ -3520,10 +3520,9 @@ function testMic(btnId, msgId, textareaId) {
     btn.style.background = '#f0ede8';
   };
   recognition.onend = function() {
-    // Only reset if not manually stopped (already handled above)
     if (btn._recognition) {
       btn._recognition = null;
-      btn.textContent = '🎤 test';
+      btn.textContent = '🎤';
       btn.style.background = '#f0ede8';
       msg.textContent = '✓ Done. Tap to dictate again.';
       msg.style.color = '#2F5C1A';
