@@ -2187,8 +2187,9 @@ function renderDetail(s) {
   const el = document.getElementById('detail-content');
   const slot = effectiveSlot(s);
 
-  // Remember which <details> elements are currently open so we can restore them
-  const openSummaries = new Set();
+  // Remember which tab was active before re-render
+  const activePanel = el.querySelector('.moment-panel.active');
+  const activePanelId = activePanel ? activePanel.id : 'panel-before';
   el.querySelectorAll('details[open] > summary').forEach(function(sum) {
     openSummaries.add(sum.textContent.trim().slice(0, 30));
   });
@@ -2704,6 +2705,11 @@ function renderDetail(s) {
           det.open = true;
         }
       });
+    }
+    // Restore the active tab
+    if (activePanelId !== 'panel-before') {
+      const tabBtn = document.querySelector('.moment-tab[onclick*="' + activePanelId + '"]');
+      if (tabBtn) tabBtn.click();
     }
   }, 50);
 }
