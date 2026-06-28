@@ -1966,7 +1966,7 @@ function renderWeek() {
         ? `<span style="font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:999px;border:1.5px dashed #ccc;color:#999;margin-left:6px;vertical-align:middle" title="Cancelled">–</span>`
         : '';
       const isAbsent = att === 'absent-late' || att === 'absent-notice';
-      html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer${isAbsent ? ';border-style:dashed;opacity:0.6' : ''}">
+      html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer${isAbsent ? ';border:1px dashed #ddd;opacity:0.4;background:#fafafa' : ''}">
         <div class="slot-time">${slot.time||'—'}</div>
         <div class="slot-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
         <div class="slot-info">
@@ -2002,7 +2002,7 @@ function renderWeek() {
     // Skipped pupils — collapsed greyed slots
     for (const s of skippedStudents) {
       const slot = effectiveSlot(s);
-      html += `<div class="week-slot ${s.instrument}-slot" style="opacity:0.45;min-height:38px;padding:8px 14px;border-style:dashed;cursor:default">
+      html += `<div class="week-slot ${s.instrument}-slot" style="opacity:0.35;min-height:38px;padding:8px 14px;border:1px dashed #ddd;background:#fafafa;cursor:default">
         <div class="slot-time" style="font-size:0.72rem">${slot.time||'—'}</div>
         <div class="slot-avatar avatar-${s.instrument}" style="width:28px;height:28px;font-size:0.75rem">${getInitials(s.name)}</div>
         <div class="slot-info">
