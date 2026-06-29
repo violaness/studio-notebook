@@ -2596,7 +2596,7 @@ function renderDetail(s) {
       </div>
       <div class="section-card">
         <div class="section-label">Last lesson</div>
-        ${(function() {
+        <div id="last-lesson-panel-${s.id}">${(function() {
           const last = (s.log||[]).filter(e => e.text || e.attendance).slice(-1)[0];
           if (!last) return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No previous lesson recorded yet.</p>';
           const attLabels = {present:'✓ Present','absent-late':'✕ Late cancel','absent-notice':'– Good notice',cancelled:'– Cancelled'};
@@ -2607,7 +2607,7 @@ function renderDetail(s) {
             : '<div style="color:var(--muted);font-style:italic;font-size:0.82rem">No notes</div>';
           return '<div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:6px">' + esc(last.date) + att + '</div>'
             + '<div style="font-size:0.88rem;line-height:1.6">' + textHTML + '</div>';
-        })()}
+        })()}</div>
       </div>
     </div>
 
@@ -3406,8 +3406,20 @@ function saveLog(id) {
   const text=el.value.trim(); if(!text)return;
   if(!s.log)s.log=[];
   s.log.push({date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),text});
-  s.duringScratch=''; save(); el.value='';
-  showToast('toast-after-'+id); renderDetail(s);
+  s.duringScratch=''; save(); el.value=''; autoGrow(el);
+  showToast('toast-after-'+id);
+  // Update just the Last lesson panel if visible, without full re-render
+  const lastPanel = document.getElementById('last-lesson-panel-' + id);
+  if (lastPanel) {
+    const last = (s.log||[]).filter(function(e){ return e.text||e.attendance; }).slice(-1)[0];
+    if (last) {
+      const attLabels = {present:'✓ Present','absent-late':'✕ Late cancel','absent-notice':'– Good notice',cancelled:'– Cancelled'};
+      const att = last.attendance ? ' · <span style="font-size:0.75rem;color:var(--muted)">' + (attLabels[last.attendance]||'') + '</span>' : '';
+      const lines = (last.text||'').split('\n').filter(function(l){ return l.trim(); });
+      const textHTML = lines.map(function(l){ return '<div style="display:flex;gap:6px;margin-bottom:3px"><span style="color:var(--viola);flex-shrink:0">•</span><span>' + linkify(l.trim()) + '</span></div>'; }).join('');
+      lastPanel.innerHTML = '<div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:6px">' + esc(last.date) + att + '</div><div style="font-size:0.88rem;line-height:1.6">' + textHTML + '</div>';
+    }
+  }
 }
 
 function updateLittleDetail(id, field, value) {
@@ -6385,7 +6397,20 @@ function setAttendance(id, status) {
   let entry = s.log.find(e => e.date === today);
   if (!entry) { entry = { date: today, text: '', attendance: status }; s.log.push(entry); }
   else { entry.attendance = status; }
-  save(); showToast('toast-attendance-' + id); renderDetail(s);
+  save();
+  showToast('toast-attendance-' + id);
+  // Update just the attendance buttons in place — no full re-render needed
+  const container = document.querySelector('[id^="toast-attendance-"]');
+  const attSection = container ? container.closest('.section-card') : null;
+  if (attSection) {
+    attSection.innerHTML = attendanceButtonsHTML(s)
+      + '<div class="save-toast show" id="toast-attendance-' + id + '" style="opacity:1">✓ Attendance saved</div>'
+      + (entry.attendance ? '<button onclick="clearAttendance(\'' + id + '\')" style="background:none;border:none;font-size:0.78rem;color:var(--muted);cursor:pointer;margin-top:4px;padding:0">Clear attendance</button>' : '');
+    setTimeout(function() {
+      const toast = document.getElementById('toast-attendance-' + id);
+      if (toast) toast.style.opacity = '0';
+    }, 1500);
+  }
 }
 
 function clearAttendance(id) {
