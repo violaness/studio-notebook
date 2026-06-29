@@ -2779,8 +2779,11 @@ function renderDetail(s) {
     }
     // Restore active tab
     if (activeDetailPanel && activeDetailPanel !== 'panel-before') {
-      const btn = document.querySelector('.moment-tab[onclick*="' + activeDetailPanel + '"]');
-      if (btn) switchMoment(btn, activeDetailPanel);
+      document.querySelectorAll('.moment-tab').forEach(function(t) {
+        if (t.getAttribute('onclick') && t.getAttribute('onclick').indexOf(activeDetailPanel) !== -1) {
+          switchMoment(t, activeDetailPanel);
+        }
+      });
     }
   }, 50);
 }
@@ -3503,7 +3506,7 @@ function testMic(btnId, msgId, textareaId) {
   if (btn._recognition) {
     btn._recognition.stop();
     btn._recognition = null;
-    btn.textContent = '🎤 test';
+    btn.textContent = '🎤';
     btn.style.background = '#f0ede8';
     msg.textContent = '';
     return;
@@ -3545,7 +3548,7 @@ function testMic(btnId, msgId, textareaId) {
     msg.textContent = '❌ Error: ' + e.error;
     msg.style.color = '#c0392b';
     btn._recognition = null;
-    btn.textContent = '🎤 test';
+    btn.textContent = '🎤';
     btn.style.background = '#f0ede8';
   };
   recognition.onend = function() {
