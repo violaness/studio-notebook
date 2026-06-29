@@ -2234,12 +2234,16 @@ function switchMoment(tab, panel) {
   }
 }
 
-// Tracks which <details> sections are open per student, persists across renderDetail calls
-const openDetailSections = {};
+// Tracks which panel tab was active, persists across renderDetail calls
+let activeDetailPanel = 'panel-before';
 
 function renderDetail(s) {
   const el = document.getElementById('detail-content');
   const slot = effectiveSlot(s);
+
+  // Save which panel is currently active
+  const activePanel = el.querySelector('.moment-panel.active');
+  if (activePanel) activeDetailPanel = activePanel.id;
 
   // Save which <details> are currently open for this student
   const openSet = new Set();
@@ -2772,6 +2776,11 @@ function renderDetail(s) {
           det.open = true;
         }
       });
+    }
+    // Restore active tab
+    if (activeDetailPanel && activeDetailPanel !== 'panel-before') {
+      const btn = document.querySelector('.moment-tab[onclick*="' + activeDetailPanel + '"]');
+      if (btn) switchMoment(btn, activeDetailPanel);
     }
   }, 50);
 }
