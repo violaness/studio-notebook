@@ -2234,9 +2234,19 @@ function switchMoment(tab, panel) {
   }
 }
 
+// Tracks which <details> sections are open per student, persists across renderDetail calls
+const openDetailSections = {};
+
 function renderDetail(s) {
   const el = document.getElementById('detail-content');
   const slot = effectiveSlot(s);
+
+  // Save which <details> are currently open for this student
+  const openSet = new Set();
+  el.querySelectorAll('details[open] > summary').forEach(function(sum) {
+    openSet.add(sum.textContent.trim().slice(0, 40));
+  });
+  if (openSet.size > 0) openDetailSections[s.id] = openSet;
 
   const piecesHTML = buildPiecesHTML(s);
   const allTech = [...TECH_OPTIONS,...customChips].sort((a,b) => a.localeCompare(b));
@@ -2753,6 +2763,16 @@ function renderDetail(s) {
       const el = document.getElementById(id);
       if (el) autoGrow(el);
     });
+    // Restore open <details> sections for this student
+    const saved = openDetailSections[s.id];
+    if (saved && saved.size > 0) {
+      document.getElementById('detail-content').querySelectorAll('details').forEach(function(det) {
+        const sum = det.querySelector('summary');
+        if (sum && saved.has(sum.textContent.trim().slice(0, 40))) {
+          det.open = true;
+        }
+      });
+    }
   }, 50);
 }
 
