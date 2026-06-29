@@ -2777,14 +2777,6 @@ function renderDetail(s) {
         }
       });
     }
-    // Restore active tab
-    if (activeDetailPanel && activeDetailPanel !== 'panel-before') {
-      document.querySelectorAll('.moment-tab').forEach(function(t) {
-        if (t.getAttribute('onclick') && t.getAttribute('onclick').indexOf(activeDetailPanel) !== -1) {
-          switchMoment(t, activeDetailPanel);
-        }
-      });
-    }
   }, 50);
 }
 
