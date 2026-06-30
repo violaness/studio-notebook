@@ -590,10 +590,10 @@
       tap to open
     </div>
     <div id="cover-eod-reminder" style="display:none;margin-top:16px;cursor:pointer" onclick="event.stopPropagation();openNotebookCover();setTimeout(openEodModal,400)">
-      <div style="background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.25);border-radius:12px;padding:10px 16px;max-width:260px;text-align:left">
-        <div style="font-size:0.68rem;font-weight:700;color:#8AB640;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px">☑️ To do</div>
-        <div id="cover-eod-items" style="font-size:0.8rem;color:rgba(255,255,255,0.85);line-height:1.6"></div>
-        <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:6px">tap to open checklist</div>
+      <div id="cover-eod-box" style="background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.25);border-radius:12px;padding:18px 22px;width:280px;min-height:280px;display:flex;flex-direction:column;text-align:left">
+        <div id="cover-eod-label" style="font-size:0.78rem;font-weight:700;color:#8AB640;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px">☑️ To do</div>
+        <div id="cover-eod-items" style="font-size:1rem;color:rgba(255,255,255,0.85);line-height:2;flex:1"></div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.5);margin-top:10px">tap to open checklist</div>
       </div>
     </div>
   </div>
@@ -6392,11 +6392,18 @@ function renderCoverEod() {
   const unchecked = data.items.filter(function(_, i) { return !data.checked.includes(i); });
   const reminder = document.getElementById('cover-eod-reminder');
   const itemsEl = document.getElementById('cover-eod-items');
+  const box = document.getElementById('cover-eod-box');
+  const label = document.getElementById('cover-eod-label');
   if (!reminder || !itemsEl) return;
   if (unchecked.length === 0) {
     reminder.style.display = 'none';
     return;
   }
+  // Pick a random accent colour each time so it doesn't fade into the background
+  const accents = ['#8AB640', '#46C6E5', '#e67e22', '#C9B8E8', '#E8B8C4'];
+  const accent = accents[Math.floor(Math.random() * accents.length)];
+  if (box) box.style.borderColor = accent + '66';
+  if (label) label.style.color = accent;
   itemsEl.innerHTML = unchecked.map(function(item) {
     return '• ' + esc(item);
   }).join('<br>');
