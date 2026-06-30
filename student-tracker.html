@@ -1567,6 +1567,11 @@
 </div>
 
 <script>
+window.onerror = function(msg, src, line, col, err) {
+  console.error('Studio Notebook error:', msg, 'at', src, line, col, err);
+  return true; // Prevents the error propagating and crashing the page
+};
+
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
 const DAYS = ['Saturday','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday'];
 const TECH_OPTIONS = [
@@ -3548,7 +3553,14 @@ function testMic(btnId, msgId, textareaId) {
       msg.style.color = '#2F5C1A';
     }
   };
-  recognition.start();
+  try {
+    recognition.start();
+  } catch(e) {
+    btn.textContent = '🎤';
+    btn.style.background = '#f0ede8';
+    if (msg) { msg.textContent = '⚠ Could not start mic. Tap to try again.'; msg.style.color = '#c0392b'; }
+    btn._recognition = null;
+  }
 }
 
 function applyReplacements(text) {
