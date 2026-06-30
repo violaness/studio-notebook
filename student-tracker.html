@@ -664,7 +664,8 @@
         Download your weekly schedule to add to your phone's Calendar app.
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
-        <button class="import-btn" style="background:#29789E" onclick="exportTimetableIcs()">📅 Export to Calendar</button>
+        <button class="import-btn" style="background:#29789E" onclick="exportThisWeekIcs()">📅 This week (with moves)</button>
+        <button class="import-btn" style="background:var(--muted)" onclick="exportTimetableIcs()">📆 Regular schedule</button>
       </div>
     </div>
   </details>
@@ -4040,6 +4041,98 @@ function showToast(toastId) {
 }
 
 // ── ICS IMPORT ────────────────────────────────────────────────────────────
+
+function exportThisWeekIcs() {
+  const dayToJsNum = { Sunday:0, Monday:1, Tuesday:2, Wednesday:3, Thursday:4, Friday:5, Saturday:6 };
+  const [wy, wm, wd] = currentWeek.split('-').map(Number);
+  const weekStart = new Date(wy, wm-1, wd); // Saturday of this teaching week
+
+  function dateForDayInWeek(dayName) {
+    const targetDow = dayToJsNum[dayName];
+    const satDow = 6;
+    const diff = (targetDow - satDow + 7) % 7;
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + diff);
+    return d;
+  }
+
+  function fmtIcsDateTime(date, timeStr) {
+    const [hh, mm] = (timeStr || '00:00').split(':').map(Number);
+    const d = new Date(date);
+    d.setHours(hh || 0, mm || 0, 0, 0);
+    const pad = function(n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + '00';
+  }
+
+  let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Studio Notebook//EN\r\nCALSCALE:GREGORIAN\r\n';
+  const todayStamp = Date.now();
+  let count = 0;
+
+  students.forEach(function(s) {
+    if (!s.lessonDay) return;
+    // Skip fortnightly pupils who are skipping this week
+    if (s.frequency === 'fortnightly' && skippedWeeks[currentWeek] && skippedWeeks[currentWeek].includes(s.id)) return;
+    // Skip if absent this week (requested absence covering this lesson's date)
+    const slot = effectiveSlot(s);
+    if (!slot.day) return;
+    const lessonDate = dateForDayInWeek(slot.day);
+    const lessonDateStr = lessonDate.toISOString().slice(0,10);
+    const isAbsent = (s.absences||[]).some(function(a) { return a.date === lessonDateStr; });
+    if (isAbsent) return;
+
+    const duration = parseInt(s.duration) || 30;
+    const dtStart = fmtIcsDateTime(lessonDate, slot.time);
+    const endDate = new Date(lessonDate);
+    const [hh, mm] = (slot.time||'00:00').split(':').map(Number);
+    endDate.setHours(hh, mm + duration, 0, 0);
+    const dtEnd = fmtIcsDateTime(endDate, endDate.getHours() + ':' + String(endDate.getMinutes()).padStart(2,'0'));
+    const wasMoved = oneOffMoves[s.id] && oneOffMoves[s.id].week === currentWeek;
+
+    ics += 'BEGIN:VEVENT\r\n'
+      + 'UID:' + s.id + '-' + currentWeek + '-lesson@studio-notebook\r\n'
+      + 'DTSTAMP:' + fmtIcsDateTime(new Date(todayStamp), '00:00') + '\r\n'
+      + 'DTSTART:' + dtStart + '\r\n'
+      + 'DTEND:' + dtEnd + '\r\n'
+      + 'SUMMARY:' + (s.name || 'Lesson') + ' — ' + (s.instrument || '') + (wasMoved ? ' (moved)' : '') + '\r\n'
+      + 'DESCRIPTION:' + (s.level || '') + ' lesson, ' + duration + ' minutes' + (wasMoved ? ' — moved from usual slot' : '') + '\r\n'
+      + 'END:VEVENT\r\n';
+    count++;
+  });
+
+  // Extra lessons this week (e.g. moved-in slots, fill slots)
+  (extraLessons[currentWeek] || []).forEach(function(ex) {
+    const s = getStudent(ex.studentId); if (!s) return;
+    const lessonDate = dateForDayInWeek(ex.day);
+    const duration = parseInt(s.duration) || 30;
+    const dtStart = fmtIcsDateTime(lessonDate, ex.time);
+    const endDate = new Date(lessonDate);
+    const [hh, mm] = (ex.time||'00:00').split(':').map(Number);
+    endDate.setHours(hh, mm + duration, 0, 0);
+    const dtEnd = fmtIcsDateTime(endDate, endDate.getHours() + ':' + String(endDate.getMinutes()).padStart(2,'0'));
+
+    ics += 'BEGIN:VEVENT\r\n'
+      + 'UID:' + s.id + '-' + currentWeek + '-extra-' + ex.day + ex.time + '@studio-notebook\r\n'
+      + 'DTSTAMP:' + fmtIcsDateTime(new Date(todayStamp), '00:00') + '\r\n'
+      + 'DTSTART:' + dtStart + '\r\n'
+      + 'DTEND:' + dtEnd + '\r\n'
+      + 'SUMMARY:' + (s.name || 'Lesson') + ' — ' + (s.instrument || '') + ' (extra)\r\n'
+      + 'DESCRIPTION:' + (s.level || '') + ' lesson, ' + duration + ' minutes — extra/fill slot\r\n'
+      + 'END:VEVENT\r\n';
+    count++;
+  });
+
+  ics += 'END:VCALENDAR\r\n';
+
+  if (count === 0) { alert('No lessons found for this week to export.'); return; }
+
+  const blob = new Blob([ics], {type: 'text/calendar'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const wkLabel = weekStart.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}).replace(/\s/g,'-');
+  a.download = 'Studio-Notebook-Week-' + wkLabel + '.ics';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 
 function exportTimetableIcs() {
   const dayToIcsCode = { Sunday:'SU', Monday:'MO', Tuesday:'TU', Wednesday:'WE', Thursday:'TH', Friday:'FR', Saturday:'SA' };
