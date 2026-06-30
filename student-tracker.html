@@ -658,6 +658,15 @@
         <button class="import-btn" style="background:var(--muted)" onclick="document.getElementById('ics-file-input').click()">Upload file</button>
       </div>
     </div>
+    <div class="import-bar" style="margin-top:10px">
+      <div class="import-bar-text">
+        <strong>📤 Export timetable</strong>
+        Download your weekly schedule to add to your phone's Calendar app.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+        <button class="import-btn" style="background:#29789E" onclick="exportTimetableIcs()">📅 Export to Calendar</button>
+      </div>
+    </div>
   </details>
 </div>
 
@@ -4031,6 +4040,61 @@ function showToast(toastId) {
 }
 
 // ── ICS IMPORT ────────────────────────────────────────────────────────────
+
+function exportTimetableIcs() {
+  const dayToIcsCode = { Sunday:'SU', Monday:'MO', Tuesday:'TU', Wednesday:'WE', Thursday:'TH', Friday:'FR', Saturday:'SA' };
+  const dayToJsNum = { Sunday:0, Monday:1, Tuesday:2, Wednesday:3, Thursday:4, Friday:5, Saturday:6 };
+
+  function nextDateForDay(dayName) {
+    const today = new Date();
+    const targetDow = dayToJsNum[dayName];
+    const d = new Date(today);
+    let diff = (targetDow - today.getDay() + 7) % 7;
+    d.setDate(today.getDate() + diff);
+    return d;
+  }
+
+  function fmtIcsDateTime(date, timeStr) {
+    const [hh, mm] = (timeStr || '00:00').split(':').map(Number);
+    const d = new Date(date);
+    d.setHours(hh || 0, mm || 0, 0, 0);
+    const pad = function(n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + '00';
+  }
+
+  let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Studio Notebook//EN\r\nCALSCALE:GREGORIAN\r\n';
+
+  students.forEach(function(s) {
+    if (!s.lessonDay || !s.lessonTime) return;
+    const startDate = nextDateForDay(s.lessonDay);
+    const duration = parseInt(s.duration) || 30;
+    const dtStart = fmtIcsDateTime(startDate, s.lessonTime);
+    const endDate = new Date(startDate);
+    const [hh, mm] = s.lessonTime.split(':').map(Number);
+    endDate.setHours(hh, mm + duration, 0, 0);
+    const dtEnd = fmtIcsDateTime(endDate, endDate.getHours() + ':' + String(endDate.getMinutes()).padStart(2,'0'));
+    const icsDay = dayToIcsCode[s.lessonDay];
+    const freq = s.frequency === 'fortnightly' ? 'WEEKLY;INTERVAL=2' : 'WEEKLY';
+
+    ics += 'BEGIN:VEVENT\r\n'
+      + 'UID:' + s.id + '-lesson@studio-notebook\r\n'
+      + 'DTSTART:' + dtStart + '\r\n'
+      + 'DTEND:' + dtEnd + '\r\n'
+      + 'RRULE:FREQ=' + freq + ';BYDAY=' + icsDay + '\r\n'
+      + 'SUMMARY:' + (s.name || 'Lesson') + ' — ' + (s.instrument || '') + '\r\n'
+      + 'DESCRIPTION:' + (s.level || '') + ' lesson, ' + duration + ' minutes\r\n'
+      + 'END:VEVENT\r\n';
+  });
+
+  ics += 'END:VCALENDAR\r\n';
+
+  const blob = new Blob([ics], {type: 'text/calendar'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Studio-Notebook-Timetable.ics';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 
 function handleIcsUpload(event) {
   const file = event.target.files[0];
