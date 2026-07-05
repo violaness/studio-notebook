@@ -2293,6 +2293,12 @@ function renderDetail(s) {
   const el = document.getElementById('detail-content');
   const slot = effectiveSlot(s);
 
+  // Stop any active mic recognition before the DOM is rebuilt, to avoid
+  // stale element references causing problems in the speech callbacks
+  el.querySelectorAll('button[id^="mic-"]').forEach(function(b) {
+    if (b._recognition) { try { b._recognition.stop(); } catch(e) {} b._recognition = null; }
+  });
+
   // Save which <details> are currently open for this student
   const openSet = new Set();
   el.querySelectorAll('details[open] > summary').forEach(function(sum) {
@@ -3564,41 +3570,44 @@ function testMic(btnId, msgId, textareaId) {
   recognition.lang = 'en-GB';
 
   recognition.onstart = function() {
-    btn._recognition = recognition;
-    btn.textContent = '🔴 tap to stop';
-    btn.style.background = '#ffecec';
-    msg.textContent = 'Listening… tap button to stop.';
-    msg.style.color = 'var(--muted)';
+    try {
+      btn._recognition = recognition;
+      btn.textContent = '🔴 tap to stop';
+      btn.style.background = '#ffecec';
+      if (msg) { msg.textContent = 'Listening… tap button to stop.'; msg.style.color = 'var(--muted)'; }
+    } catch(e) { console.error('mic onstart error', e); }
   };
   recognition.onresult = function(e) {
-    let transcript = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (e.results[i].isFinal) transcript += e.results[i][0].transcript;
-    }
-    if (transcript) {
-      transcript = applyReplacements(transcript);
-      const val = textarea.value;
-      // Don't add a leading space if we're at the start of a line or the box is empty
-      const needsSpace = val.length > 0 && val[val.length - 1] !== '\n';
-      textarea.value = val + (needsSpace ? ' ' : '') + transcript;
-      textarea.dispatchEvent(new Event('input', {bubbles: true}));
-    }
+    try {
+      if (!document.body.contains(textarea)) { recognition.stop(); return; }
+      let transcript = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) transcript += e.results[i][0].transcript;
+      }
+      if (transcript) {
+        transcript = applyReplacements(transcript);
+        const val = textarea.value;
+        const needsSpace = val.length > 0 && val[val.length - 1] !== '\n';
+        textarea.value = val + (needsSpace ? ' ' : '') + transcript;
+        textarea.dispatchEvent(new Event('input', {bubbles: true}));
+      }
+    } catch(e) { console.error('mic onresult error', e); }
   };
   recognition.onerror = function(e) {
-    msg.textContent = '❌ Error: ' + e.error;
-    msg.style.color = '#c0392b';
-    btn._recognition = null;
-    btn.textContent = '🎤';
-    btn.style.background = '#f0ede8';
+    try {
+      if (msg) { msg.textContent = '❌ Error: ' + e.error; msg.style.color = '#c0392b'; }
+      btn._recognition = null;
+      if (btn) { btn.textContent = '🎤'; btn.style.background = '#f0ede8'; }
+    } catch(err) { console.error('mic onerror handler error', err); }
   };
   recognition.onend = function() {
-    if (btn._recognition) {
-      btn._recognition = null;
-      btn.textContent = '🎤';
-      btn.style.background = '#f0ede8';
-      msg.textContent = '✓ Done. Tap to dictate again.';
-      msg.style.color = '#2F5C1A';
-    }
+    try {
+      if (btn._recognition) {
+        btn._recognition = null;
+        if (btn) { btn.textContent = '🎤'; btn.style.background = '#f0ede8'; }
+        if (msg) { msg.textContent = '✓ Done. Tap to dictate again.'; msg.style.color = '#2F5C1A'; }
+      }
+    } catch(e) { console.error('mic onend error', e); }
   };
   try {
     recognition.start();
