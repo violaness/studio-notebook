@@ -1994,9 +1994,30 @@ function renderWeek() {
         <span style="margin-left:auto;font-weight:400;letter-spacing:0">${totalActive?totalActive+' lesson'+(totalActive!==1?'s':'')+(dayHrsLabel?' · '+dayHrsLabel:''):'no lessons'}${skippedStudents.length?' · '+skippedStudents.length+' skipped':''}</span>
       </div>`;
 
+    // Helper functions for gap detection
+    function timeToMins(t) { const [h,m]=(t||'00:00').split(':').map(Number); return h*60+(m||0); }
+    function minsToTime(m) { return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); }
+    function gapHTML(fromTime, toTime) {
+      const gap = timeToMins(toTime) - timeToMins(fromTime);
+      if (gap < 30) return '';
+      const label = gap >= 60 ? Math.floor(gap/60)+'h'+(gap%60?' '+gap%60+'m':'')+ ' free' : gap+' min free';
+      return `<div style="display:flex;align-items:center;gap:8px;padding:4px 14px;opacity:0.5">
+        <div style="font-size:0.72rem;color:var(--muted);white-space:nowrap;min-width:36px">${fromTime}</div>
+        <div style="flex:1;border-top:1px dashed #c8d8c8"></div>
+        <div style="font-size:0.7rem;color:var(--muted);white-space:nowrap">${label}</div>
+        <div style="flex:1;border-top:1px dashed #c8d8c8"></div>
+      </div>`;
+    }
+
     // Active slots
+    let prevEndMins = null;
     for (const s of activeStudents) {
       const slot = effectiveSlot(s);
+      const slotStart = timeToMins(slot.time);
+      if (prevEndMins !== null && slotStart - prevEndMins >= 30) {
+        html += gapHTML(minsToTime(prevEndMins), slot.time||'');
+      }
+      prevEndMins = slotStart + parseInt(s.duration||60);
       const moved = oneOffMoves[s.id] && oneOffMoves[s.id].week === currentWeek;
       // Find attendance for this pupil in the current teaching week
       // (match any log entry whose date falls within Sat–Wed of this week)
@@ -2040,6 +2061,11 @@ function renderWeek() {
     for (const ex of sortByTime(dayExtras.map(e => ({...e, lessonDay: e.day, lessonTime: e.time})))) {
       const s = getStudent(ex.studentId);
       if (!s) continue;
+      const exStart = timeToMins(ex.time);
+      if (prevEndMins !== null && exStart - prevEndMins >= 30) {
+        html += gapHTML(minsToTime(prevEndMins), ex.time||'');
+      }
+      prevEndMins = exStart + parseInt(s.duration||60);
       const exIdx = (extraLessons[currentWeek] || []).findIndex(e => e.studentId === ex.studentId && e.day === ex.day && e.time === ex.time);
       html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer;border-style:dashed;">
         <div class="slot-time">${ex.time||'—'}</div>
