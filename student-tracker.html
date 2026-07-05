@@ -590,10 +590,10 @@
       tap to open
     </div>
     <div id="cover-eod-reminder" style="display:none;margin-top:16px;cursor:pointer" onclick="event.stopPropagation();openNotebookCover();setTimeout(openEodModal,400)">
-      <div style="background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.25);border-radius:12px;padding:10px 16px;max-width:260px;text-align:left">
-        <div style="font-size:0.68rem;font-weight:700;color:#8AB640;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px">☑️ To do</div>
-        <div id="cover-eod-items" style="font-size:0.8rem;color:rgba(255,255,255,0.85);line-height:1.6"></div>
-        <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:6px">tap to open checklist</div>
+      <div id="cover-eod-box" style="background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.25);border-radius:12px;padding:18px 22px;width:280px;min-height:280px;display:flex;flex-direction:column;text-align:left">
+        <div id="cover-eod-label" style="font-size:0.78rem;font-weight:700;color:#8AB640;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px">☑️ To do</div>
+        <div id="cover-eod-items" style="font-size:1rem;color:#fff;line-height:2;flex:1;font-weight:500"></div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.7);margin-top:10px">tap to open checklist</div>
       </div>
     </div>
   </div>
@@ -627,7 +627,10 @@
   <div class="today-date" id="today-heading"></div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
     <div class="today-sub" id="today-sub" style="margin-bottom:0"></div>
-    <button id="expand-all-btn" onclick="toggleAllCards()" style="background:none;border:1.5px solid #e0ddd8;border-radius:999px;padding:4px 14px;font-family:'Special Elite',cursive;font-size:0.78rem;color:var(--muted);cursor:pointer">Expand all</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="wake-lock-btn" onclick="toggleWakeLock()" style="background:none;border:1.5px solid #e0ddd8;border-radius:999px;padding:4px 14px;font-family:'Special Elite',cursive;font-size:0.78rem;color:var(--muted);cursor:pointer">☀️ Keep awake</button>
+      <button id="expand-all-btn" onclick="toggleAllCards()" style="background:none;border:1.5px solid #e0ddd8;border-radius:999px;padding:4px 14px;font-family:'Special Elite',cursive;font-size:0.78rem;color:var(--muted);cursor:pointer">Expand all</button>
+    </div>
   </div>
   <div id="wednesday-reminder" style="display:none;background:#fffbe6;border:1.5px solid #c9a84c;border-radius:12px;padding:12px 16px;margin-bottom:14px;align-items:center;gap:12px;flex-wrap:wrap">
     <span style="font-size:1.1rem">💾</span>
@@ -656,6 +659,16 @@
         <button id="sync-url-btn" class="import-btn" onclick="openUrlModal()">🔗 Sync URL</button>
         <button class="import-btn" onclick="openPasteModal()">Paste .ics</button>
         <button class="import-btn" style="background:var(--muted)" onclick="document.getElementById('ics-file-input').click()">Upload file</button>
+      </div>
+    </div>
+    <div class="import-bar" style="margin-top:10px">
+      <div class="import-bar-text">
+        <strong>📤 Export timetable</strong>
+        Download your weekly schedule to add to your phone's Calendar app.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+        <button class="import-btn" style="background:#29789E" onclick="exportThisWeekIcs()">📅 This week (with moves)</button>
+        <button class="import-btn" style="background:var(--muted)" onclick="exportTimetableIcs()">📆 Regular schedule</button>
       </div>
     </div>
   </details>
@@ -810,6 +823,18 @@
       <button onclick="addLendingEntry()" style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">✓ Save loan</button>
     </div>
     <div id="lending-list"></div>
+  </div>
+
+  <!-- SPEECH REPLACEMENTS -->
+  <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
+    <div style="font-size:0.72rem;font-weight:800;color:var(--muted);margin-bottom:4px">🎤 Voice text — auto-corrections</div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Words or phrases that get replaced automatically after dictation.</div>
+    <div id="speech-replacements-list"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+      <input type="text" id="new-replace-from" placeholder="Replace this…" style="font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
+      <input type="text" id="new-replace-to" placeholder="With this (blank to delete)…" style="font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
+    </div>
+    <button onclick="addSpeechReplacement()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:10px auto 0;min-width:160px">+ Add correction</button>
   </div>
 </div>
 
@@ -1555,6 +1580,45 @@
 </div>
 
 <script>
+// ── SCREEN WAKE LOCK (keep screen awake during lessons) ─────────────────────
+let wakeLockSentinel = null;
+
+async function toggleWakeLock() {
+  const btn = document.getElementById('wake-lock-btn');
+  if (wakeLockSentinel) {
+    try { await wakeLockSentinel.release(); } catch(e) {}
+    wakeLockSentinel = null;
+    if (btn) { btn.textContent = '☀️ Keep awake'; btn.style.background = 'none'; btn.style.color = 'var(--muted)'; }
+    return;
+  }
+  if (!('wakeLock' in navigator)) {
+    alert('Sorry, this iPad/browser doesn\'t support keeping the screen awake from the app. Try Settings → Display & Brightness → Auto-Lock instead.');
+    return;
+  }
+  try {
+    wakeLockSentinel = await navigator.wakeLock.request('screen');
+    if (btn) { btn.textContent = '☀️ Awake'; btn.style.background = '#8AB640'; btn.style.color = '#05270B'; }
+    wakeLockSentinel.addEventListener('release', function() {
+      wakeLockSentinel = null;
+      if (btn) { btn.textContent = '☀️ Keep awake'; btn.style.background = 'none'; btn.style.color = 'var(--muted)'; }
+    });
+  } catch(e) {
+    alert('Could not keep the screen awake — this can happen if the tab loses focus. Try again, or use the iPad\'s Auto-Lock setting instead.');
+  }
+}
+
+// Re-request the wake lock if the page becomes visible again (e.g. after switching apps)
+document.addEventListener('visibilitychange', function() {
+  if (wakeLockSentinel !== null && document.visibilityState === 'visible') {
+    navigator.wakeLock.request('screen').then(function(lock) { wakeLockSentinel = lock; }).catch(function() {});
+  }
+});
+
+window.onerror = function(msg, src, line, col, err) {
+  console.error('Studio Notebook error:', msg, 'at', src, line, col, err);
+  return true; // Prevents the error propagating and crashing the page
+};
+
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
 const DAYS = ['Saturday','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday'];
 const TECH_OPTIONS = [
@@ -1600,8 +1664,9 @@ let deletedBuiltins  = JSON.parse(localStorage.getItem('studio_deleted_builtins'
 let techCategoryMap  = JSON.parse(localStorage.getItem('studio_tech_categories')   || 'null') || Object.assign({}, TECH_CATEGORY_DEFAULTS);
 let customPieces = JSON.parse(localStorage.getItem('studio_custom_pieces') || '[]');
 let oneOffMoves  = JSON.parse(localStorage.getItem('studio_one_off_moves') || '{}');
-let waitingList  = JSON.parse(localStorage.getItem('studio_waiting_list')  || '[]');
-let lendingLog   = JSON.parse(localStorage.getItem('studio_lending_log')   || '[]');
+let waitingList      = JSON.parse(localStorage.getItem('studio_waiting_list')      || '[]');
+let lendingLog       = JSON.parse(localStorage.getItem('studio_lending_log')       || '[]');
+let speechReplacements = JSON.parse(localStorage.getItem('studio_speech_replacements') || '[{"from":"gonna","to":"going to"},{"from":"wanna","to":"want to"},{"from":"kinda","to":"kind of"}]');
 let extraLessons = JSON.parse(localStorage.getItem('studio_extra_lessons') || '{}');
 
 let currentFilter  = 'all';
@@ -1617,7 +1682,8 @@ function save() {
   localStorage.setItem('studio_custom_pieces',     JSON.stringify(customPieces));
   localStorage.setItem('studio_one_off_moves',     JSON.stringify(oneOffMoves));
   localStorage.setItem('studio_waiting_list',      JSON.stringify(waitingList));
-  localStorage.setItem('studio_lending_log',       JSON.stringify(lendingLog));
+  localStorage.setItem('studio_lending_log',           JSON.stringify(lendingLog));
+  localStorage.setItem('studio_speech_replacements',   JSON.stringify(speechReplacements));
   localStorage.setItem('studio_extra_lessons',     JSON.stringify(extraLessons));
 }
 
@@ -1636,13 +1702,16 @@ function esc(str) {
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Convert plain URLs in text to clickable links (for summary/display views)
+// Convert plain URLs in text to clean tappable links (for summary/display views)
 function linkify(str) {
   return esc(str).replace(/(https?:\/\/[^\s<>"&]+)/g, function(url) {
     const href = url.replace(/&amp;/g,'&');
+    const isVideo = /youtu\.be|youtube\.com|vimeo\.com/i.test(href);
+    const isAudio = /soundcloud\.com|spotify\.com|music\./i.test(href);
+    const label = isVideo ? '[ Watch ]' : isAudio ? '[ Listen ]' : '[ Link ]';
     return '<a href="' + href + '" target="_blank" rel="noopener" '
-      + 'style="color:#29789E;text-decoration:underline;word-break:break-all" '
-      + 'onclick="event.stopPropagation()">' + url + '</a>';
+      + 'style="color:#29789E;text-decoration:none;font-size:0.85rem;white-space:nowrap" '
+      + 'onclick="event.stopPropagation()">' + label + '</a>';
   });
 }
 function getStudent(id) { return students.find(x => x.id === id); }
@@ -1925,39 +1994,9 @@ function renderWeek() {
         <span style="margin-left:auto;font-weight:400;letter-spacing:0">${totalActive?totalActive+' lesson'+(totalActive!==1?'s':'')+(dayHrsLabel?' · '+dayHrsLabel:''):'no lessons'}${skippedStudents.length?' · '+skippedStudents.length+' skipped':''}</span>
       </div>`;
 
-    // Build a combined sorted list of all slots for this day (active + extras)
-    // to detect gaps between consecutive lessons
-    const allSlots = [
-      ...activeStudents.map(s => ({ time: effectiveSlot(s).time || '00:00', duration: parseInt(s.duration||60) })),
-      ...dayExtras.map(e => { const st = getStudent(e.studentId); return { time: e.time || '00:00', duration: parseInt((st&&st.duration)||60) }; })
-    ].sort((a,b) => a.time.localeCompare(b.time));
-
-    function timeToMins(t) { const [h,m] = (t||'00:00').split(':').map(Number); return h*60+(m||0); }
-    function minsToTime(m) { return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0'); }
-
-    function gapSlotHTML(fromTime, toTime) {
-      const gapMins = timeToMins(toTime) - timeToMins(fromTime);
-      if (gapMins < 30) return '';
-      const label = gapMins >= 60
-        ? Math.floor(gapMins/60) + 'h' + (gapMins%60 ? ' ' + gapMins%60 + 'm' : '') + ' free'
-        : gapMins + ' min free';
-      return `<div style="display:flex;align-items:center;gap:8px;padding:4px 14px;opacity:0.55">
-        <div style="font-size:0.72rem;color:var(--muted);white-space:nowrap;min-width:36px">${fromTime}</div>
-        <div style="flex:1;border-top:1px dashed #c8d8c8"></div>
-        <div style="font-size:0.7rem;color:var(--muted);white-space:nowrap">${label}</div>
-        <div style="flex:1;border-top:1px dashed #c8d8c8"></div>
-      </div>`;
-    }
-
-    // Active slots — with gap indicators between them
-    let prevEndMins = null;
+    // Active slots
     for (const s of activeStudents) {
       const slot = effectiveSlot(s);
-      const startMins = timeToMins(slot.time);
-      if (prevEndMins !== null && startMins - prevEndMins >= 30) {
-        html += gapSlotHTML(minsToTime(prevEndMins), slot.time||'');
-      }
-      prevEndMins = startMins + parseInt(s.duration||60);
       const moved = oneOffMoves[s.id] && oneOffMoves[s.id].week === currentWeek;
       // Find attendance for this pupil in the current teaching week
       // (match any log entry whose date falls within Sat–Wed of this week)
@@ -1982,7 +2021,7 @@ function renderWeek() {
         ? `<span style="font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:999px;border:1.5px dashed #ccc;color:#999;margin-left:6px;vertical-align:middle" title="Cancelled">–</span>`
         : '';
       const isAbsent = att === 'absent-late' || att === 'absent-notice';
-      html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer${isAbsent ? ';border-style:dashed;opacity:0.6' : ''}">
+      html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer${isAbsent ? ';border:1px dashed #ddd;opacity:0.4;background:#fafafa' : ''}">
         <div class="slot-time">${slot.time||'—'}</div>
         <div class="slot-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
         <div class="slot-info">
@@ -1997,15 +2036,10 @@ function renderWeek() {
       </div>`;
     }
 
-    // Extra lessons for this day — with gap detection continuing from active slots
+    // Extra lessons for this day
     for (const ex of sortByTime(dayExtras.map(e => ({...e, lessonDay: e.day, lessonTime: e.time})))) {
       const s = getStudent(ex.studentId);
       if (!s) continue;
-      const exStartMins = timeToMins(ex.time);
-      if (prevEndMins !== null && exStartMins - prevEndMins >= 30) {
-        html += gapSlotHTML(minsToTime(prevEndMins), ex.time||'');
-      }
-      prevEndMins = exStartMins + parseInt(s.duration||60);
       const exIdx = (extraLessons[currentWeek] || []).findIndex(e => e.studentId === ex.studentId && e.day === ex.day && e.time === ex.time);
       html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer;border-style:dashed;">
         <div class="slot-time">${ex.time||'—'}</div>
@@ -2023,7 +2057,7 @@ function renderWeek() {
     // Skipped pupils — collapsed greyed slots
     for (const s of skippedStudents) {
       const slot = effectiveSlot(s);
-      html += `<div class="week-slot ${s.instrument}-slot" style="opacity:0.45;min-height:38px;padding:8px 14px;border-style:dashed;cursor:default">
+      html += `<div class="week-slot ${s.instrument}-slot" style="opacity:0.35;min-height:38px;padding:8px 14px;border:1px dashed #ddd;background:#fafafa;cursor:default">
         <div class="slot-time" style="font-size:0.72rem">${slot.time||'—'}</div>
         <div class="slot-avatar avatar-${s.instrument}" style="width:28px;height:28px;font-size:0.75rem">${getInitials(s.name)}</div>
         <div class="slot-info">
@@ -2039,11 +2073,23 @@ function renderWeek() {
     </div>`;
   }
   document.getElementById('week-grid').innerHTML = html;
-  // Week total
+  // Week total + date range
   const wkHrs = Math.floor(weekTotalMins/60), wkRem = weekTotalMins%60;
   const wkLabel = weekTotalMins > 0 ? (wkHrs>0?wkHrs+'h ':''+(wkRem>0?wkRem+'m':'')) : '0h';
   const summary = document.getElementById('week-hours-summary');
-  if (summary) summary.textContent = 'Week total: ' + wkLabel.trim() + ' teaching';
+  if (summary) {
+    const [wy, wm, wd] = currentWeek.split('-').map(Number);
+    const weekStart = new Date(wy, wm-1, wd);
+    const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
+    const fmtShort = function(d) { return d.getDate() + ' ' + d.toLocaleDateString('en-GB',{month:'short'}); };
+    const fmtFull  = function(d) { return fmtShort(d) + ' ' + d.getFullYear(); };
+    const dateRange = fmtShort(weekStart) + ' – ' + fmtFull(weekEnd);
+    summary.innerHTML = '<span style="color:var(--ink);font-weight:600">' + dateRange + '</span>'
+      + '<span style="flex:1;margin:0 12px;border-top:1px solid #e0ddd8;display:inline-block;vertical-align:middle"></span>'
+      + '<span>Week total: ' + wkLabel.trim() + ' teaching</span>';
+    summary.style.display = 'flex';
+    summary.style.alignItems = 'center';
+  }
 }
 
 // ── ROSTER ────────────────────────────────────────────────────────────────
@@ -2063,6 +2109,7 @@ function renderRoster() {
   loadTermDates();
   renderWaiting();
   renderLendingLog();
+  renderSpeechReplacements();
 }
 
 function renderRosterList(filtered) {
@@ -2080,7 +2127,7 @@ function renderRosterList(filtered) {
     const lastNote = (s.log||[]).slice(-1)[0];
     const snippet = lastNote ? lastNote.text.slice(0,60)+(lastNote.text.length>60?'…':'') : '';
     const slot = effectiveSlot(s);
-    const dayLabel = slot.day ? `<span style="font-size:0.72rem;color:var(--muted);background:var(--warm);padding:2px 8px;border-radius:999px">${slot.day}${slot.time?' '+slot.time:''}</span>` : '';
+    const dayLabel = slot.day ? `<span style="font-size:0.72rem;color:var(--muted)">◷ ${slot.day}${slot.time?' '+slot.time:''}</span>` : '';
     return `<div class="student-card ${s.instrument}-card" onclick="openStudentFrom('${s.id}','roster')">
       <div class="student-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
       <div class="student-info">
@@ -2239,9 +2286,19 @@ function switchMoment(tab, panel) {
   }
 }
 
+// Tracks which <details> sections are open per student, persists across renderDetail calls
+const openDetailSections = {};
+
 function renderDetail(s) {
   const el = document.getElementById('detail-content');
   const slot = effectiveSlot(s);
+
+  // Save which <details> are currently open for this student
+  const openSet = new Set();
+  el.querySelectorAll('details[open] > summary').forEach(function(sum) {
+    openSet.add(sum.textContent.trim().slice(0, 40));
+  });
+  if (openSet.size > 0) openDetailSections[s.id] = openSet;
 
   const piecesHTML = buildPiecesHTML(s);
   const allTech = [...TECH_OPTIONS,...customChips].sort((a,b) => a.localeCompare(b));
@@ -2258,7 +2315,7 @@ function renderDetail(s) {
           <span class="badge badge-${s.level}">${s.level}</span>
           <span class="badge" style="background:var(--warm);color:var(--muted)">${(s.pupilType||'child')==='adult'?'Adult':'School age'}</span>
           ${s.rate ? `<span class="badge" style="background:#dff0d8;color:#2F5C1A">£${s.rate} per lesson</span>` : ''}
-          ${slot.day?`<span class="badge" style="background:var(--warm);color:var(--muted)">${slot.day}${slot.time?' '+slot.time:''}${s.duration?' · '+s.duration+'min':''}</span>`:''}
+          ${slot.day?`<span style="font-size:0.78rem;color:var(--muted)">◷ ${slot.day}${slot.time?' '+slot.time:''}${s.duration?' · '+s.duration+'min':''}</span>`:''}
         </div>
         ${pupilMetaHTML(s)}
       </div>
@@ -2345,8 +2402,8 @@ function renderDetail(s) {
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span>📌 Plan for today's lesson</span>
           <span style="display:flex;gap:6px;align-items:center">
-            <button id="mic-test-btn-${s.id}" onclick="testMic('${s.id}','nextlesson-${s.id}')"
-              style="background:#f0ede8;border:none;border-radius:8px;padding:3px 8px;font-family:'Special Elite',cursive;font-size:0.75rem;color:var(--muted);cursor:pointer">🎤 test</button>
+            <button id="mic-test-btn-${s.id}" onclick="testMic('mic-test-btn-${s.id}','mic-test-msg-${s.id}','nextlesson-${s.id}')"
+              style="background:#f0ede8;border:none;border-radius:8px;padding:3px 8px;font-family:'Special Elite',cursive;font-size:0.75rem;color:var(--muted);cursor:pointer">🎤</button>
             ${s.nextLesson ? `<button onclick="clearNextLessonPlan('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>` : ''}
           </span>
         </div>
@@ -2464,7 +2521,12 @@ function renderDetail(s) {
         <p style="white-space:pre-wrap;font-size:0.88rem;color:var(--ink);margin:4px 0 0">${linkify(s.nextLesson)}</p>
       </div>` : ''}
       <div class="section-card">
-        <div class="section-label">Quick notes — right now</div>
+        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Quick notes — right now</span>
+          <button id="mic-during-btn-${s.id}" onclick="testMic('mic-during-btn-${s.id}','mic-test-msg-during-${s.id}','during-scratch-${s.id}')"
+            style="background:#f0ede8;border:none;border-radius:8px;padding:3px 8px;font-family:'Special Elite',cursive;font-size:0.75rem;color:var(--muted);cursor:pointer">🎤</button>
+        </div>
+        <div id="mic-test-msg-during-${s.id}" style="font-size:0.72rem;color:var(--muted);min-height:1em"></div>
         <textarea class="quick-note"
           placeholder="Jot anything — key words, reminders, 'try this'…"
           id="during-scratch-${s.id}"
@@ -2529,8 +2591,13 @@ function renderDetail(s) {
       <div class="section-card">
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span>Lesson notes</span>
-          <button onclick="document.getElementById('after-note-${s.id}').value='';document.getElementById('after-note-${s.id}').dataset.edited='1';autoGrow(document.getElementById('after-note-${s.id}'))" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
+          <span style="display:flex;gap:6px;align-items:center">
+            <button id="mic-after-btn-${s.id}" onclick="testMic('mic-after-btn-${s.id}','mic-test-msg-after-${s.id}','after-note-${s.id}')"
+              style="background:#f0ede8;border:none;border-radius:8px;padding:3px 8px;font-family:'Special Elite',cursive;font-size:0.75rem;color:var(--muted);cursor:pointer">🎤</button>
+            <button onclick="document.getElementById('after-note-${s.id}').value='';document.getElementById('after-note-${s.id}').dataset.edited='1';autoGrow(document.getElementById('after-note-${s.id}'))" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
+          </span>
         </div>
+        <div id="mic-test-msg-after-${s.id}" style="font-size:0.72rem;color:var(--muted);min-height:1em"></div>
         <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">Built from your plan and during-lesson notes — edit freely before saving to the log.</div>
         <textarea class="quick-note" placeholder="What went well, what to remember for next time…"
           id="after-note-${s.id}"
@@ -2577,7 +2644,7 @@ function renderDetail(s) {
       </div>
       <div class="section-card">
         <div class="section-label">Last lesson</div>
-        ${(function() {
+        <div id="last-lesson-panel-${s.id}">${(function() {
           const last = (s.log||[]).filter(e => e.text || e.attendance).slice(-1)[0];
           if (!last) return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No previous lesson recorded yet.</p>';
           const attLabels = {present:'✓ Present','absent-late':'✕ Late cancel','absent-notice':'– Good notice',cancelled:'– Cancelled'};
@@ -2588,7 +2655,7 @@ function renderDetail(s) {
             : '<div style="color:var(--muted);font-style:italic;font-size:0.82rem">No notes</div>';
           return '<div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:6px">' + esc(last.date) + att + '</div>'
             + '<div style="font-size:0.88rem;line-height:1.6">' + textHTML + '</div>';
-        })()}
+        })()}</div>
       </div>
     </div>
 
@@ -2748,6 +2815,16 @@ function renderDetail(s) {
       const el = document.getElementById(id);
       if (el) autoGrow(el);
     });
+    // Restore open <details> sections for this student
+    const saved = openDetailSections[s.id];
+    if (saved && saved.size > 0) {
+      document.getElementById('detail-content').querySelectorAll('details').forEach(function(det) {
+        const sum = det.querySelector('summary');
+        if (sum && saved.has(sum.textContent.trim().slice(0, 40))) {
+          det.open = true;
+        }
+      });
+    }
   }, 50);
 }
 
@@ -3460,16 +3537,16 @@ function clearNextWeekNote(id) {
   if (el) { el.value = ''; autoGrow(el); }
 }
 
-function testMic(pupilId, textareaId) {
-  const msg = document.getElementById('mic-test-msg-' + pupilId);
-  const btn = document.getElementById('mic-test-btn-' + pupilId);
+function testMic(btnId, msgId, textareaId) {
+  const msg = document.getElementById(msgId);
+  const btn = document.getElementById(btnId);
   const textarea = document.getElementById(textareaId);
 
   // If already listening, stop
   if (btn._recognition) {
     btn._recognition.stop();
     btn._recognition = null;
-    btn.textContent = '🎤 test';
+    btn.textContent = '🎤';
     btn.style.background = '#f0ede8';
     msg.textContent = '';
     return;
@@ -3499,7 +3576,11 @@ function testMic(pupilId, textareaId) {
       if (e.results[i].isFinal) transcript += e.results[i][0].transcript;
     }
     if (transcript) {
-      textarea.value += (textarea.value ? ' ' : '') + transcript;
+      transcript = applyReplacements(transcript);
+      const val = textarea.value;
+      // Don't add a leading space if we're at the start of a line or the box is empty
+      const needsSpace = val.length > 0 && val[val.length - 1] !== '\n';
+      textarea.value = val + (needsSpace ? ' ' : '') + transcript;
       textarea.dispatchEvent(new Event('input', {bubbles: true}));
     }
   };
@@ -3507,20 +3588,35 @@ function testMic(pupilId, textareaId) {
     msg.textContent = '❌ Error: ' + e.error;
     msg.style.color = '#c0392b';
     btn._recognition = null;
-    btn.textContent = '🎤 test';
+    btn.textContent = '🎤';
     btn.style.background = '#f0ede8';
   };
   recognition.onend = function() {
-    // Only reset if not manually stopped (already handled above)
     if (btn._recognition) {
       btn._recognition = null;
-      btn.textContent = '🎤 test';
+      btn.textContent = '🎤';
       btn.style.background = '#f0ede8';
       msg.textContent = '✓ Done. Tap to dictate again.';
       msg.style.color = '#2F5C1A';
     }
   };
-  recognition.start();
+  try {
+    recognition.start();
+  } catch(e) {
+    btn.textContent = '🎤';
+    btn.style.background = '#f0ede8';
+    if (msg) { msg.textContent = '⚠ Could not start mic. Tap to try again.'; msg.style.color = '#c0392b'; }
+    btn._recognition = null;
+  }
+}
+
+function applyReplacements(text) {
+  speechReplacements.forEach(function(r) {
+    if (!r.from) return;
+    const regex = new RegExp('\\b' + r.from.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b', 'gi');
+    text = text.replace(regex, r.to || '');
+  });
+  return text.replace(/\s{2,}/g,' ').trim();
 }
 
 function autoSaveNextLesson(id, value) {
@@ -3982,6 +4078,153 @@ function showToast(toastId) {
 }
 
 // ── ICS IMPORT ────────────────────────────────────────────────────────────
+
+function exportThisWeekIcs() {
+  const dayToJsNum = { Sunday:0, Monday:1, Tuesday:2, Wednesday:3, Thursday:4, Friday:5, Saturday:6 };
+  const [wy, wm, wd] = currentWeek.split('-').map(Number);
+  const weekStart = new Date(wy, wm-1, wd); // Saturday of this teaching week
+
+  function dateForDayInWeek(dayName) {
+    const targetDow = dayToJsNum[dayName];
+    const satDow = 6;
+    const diff = (targetDow - satDow + 7) % 7;
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + diff);
+    return d;
+  }
+
+  function fmtIcsDateTime(date, timeStr) {
+    const [hh, mm] = (timeStr || '00:00').split(':').map(Number);
+    const d = new Date(date);
+    d.setHours(hh || 0, mm || 0, 0, 0);
+    const pad = function(n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + '00';
+  }
+
+  let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Studio Notebook//EN\r\nCALSCALE:GREGORIAN\r\n';
+  const todayStamp = Date.now();
+  let count = 0;
+
+  students.forEach(function(s) {
+    if (!s.lessonDay) return;
+    // Skip fortnightly pupils who are skipping this week
+    if (s.frequency === 'fortnightly' && skippedWeeks[currentWeek] && skippedWeeks[currentWeek].includes(s.id)) return;
+    // Skip if absent this week (requested absence covering this lesson's date)
+    const slot = effectiveSlot(s);
+    if (!slot.day) return;
+    const lessonDate = dateForDayInWeek(slot.day);
+    const lessonDateStr = lessonDate.toISOString().slice(0,10);
+    const isAbsent = (s.absences||[]).some(function(a) { return a.date === lessonDateStr; });
+    if (isAbsent) return;
+
+    const duration = parseInt(s.duration) || 30;
+    const dtStart = fmtIcsDateTime(lessonDate, slot.time);
+    const endDate = new Date(lessonDate);
+    const [hh, mm] = (slot.time||'00:00').split(':').map(Number);
+    endDate.setHours(hh, mm + duration, 0, 0);
+    const dtEnd = fmtIcsDateTime(endDate, endDate.getHours() + ':' + String(endDate.getMinutes()).padStart(2,'0'));
+    const wasMoved = oneOffMoves[s.id] && oneOffMoves[s.id].week === currentWeek;
+
+    ics += 'BEGIN:VEVENT\r\n'
+      + 'UID:' + s.id + '-' + currentWeek + '-lesson@studio-notebook\r\n'
+      + 'DTSTAMP:' + fmtIcsDateTime(new Date(todayStamp), '00:00') + '\r\n'
+      + 'DTSTART:' + dtStart + '\r\n'
+      + 'DTEND:' + dtEnd + '\r\n'
+      + 'SUMMARY:' + (s.name || 'Lesson') + ' — ' + (s.instrument || '') + (wasMoved ? ' (moved)' : '') + '\r\n'
+      + 'DESCRIPTION:' + (s.level || '') + ' lesson, ' + duration + ' minutes' + (wasMoved ? ' — moved from usual slot' : '') + '\r\n'
+      + 'END:VEVENT\r\n';
+    count++;
+  });
+
+  // Extra lessons this week (e.g. moved-in slots, fill slots)
+  (extraLessons[currentWeek] || []).forEach(function(ex) {
+    const s = getStudent(ex.studentId); if (!s) return;
+    const lessonDate = dateForDayInWeek(ex.day);
+    const duration = parseInt(s.duration) || 30;
+    const dtStart = fmtIcsDateTime(lessonDate, ex.time);
+    const endDate = new Date(lessonDate);
+    const [hh, mm] = (ex.time||'00:00').split(':').map(Number);
+    endDate.setHours(hh, mm + duration, 0, 0);
+    const dtEnd = fmtIcsDateTime(endDate, endDate.getHours() + ':' + String(endDate.getMinutes()).padStart(2,'0'));
+
+    ics += 'BEGIN:VEVENT\r\n'
+      + 'UID:' + s.id + '-' + currentWeek + '-extra-' + ex.day + ex.time + '@studio-notebook\r\n'
+      + 'DTSTAMP:' + fmtIcsDateTime(new Date(todayStamp), '00:00') + '\r\n'
+      + 'DTSTART:' + dtStart + '\r\n'
+      + 'DTEND:' + dtEnd + '\r\n'
+      + 'SUMMARY:' + (s.name || 'Lesson') + ' — ' + (s.instrument || '') + ' (extra)\r\n'
+      + 'DESCRIPTION:' + (s.level || '') + ' lesson, ' + duration + ' minutes — extra/fill slot\r\n'
+      + 'END:VEVENT\r\n';
+    count++;
+  });
+
+  ics += 'END:VCALENDAR\r\n';
+
+  if (count === 0) { alert('No lessons found for this week to export.'); return; }
+
+  const blob = new Blob([ics], {type: 'text/calendar'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const wkLabel = weekStart.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}).replace(/\s/g,'-');
+  a.download = 'Studio-Notebook-Week-' + wkLabel + '.ics';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function exportTimetableIcs() {
+  const dayToIcsCode = { Sunday:'SU', Monday:'MO', Tuesday:'TU', Wednesday:'WE', Thursday:'TH', Friday:'FR', Saturday:'SA' };
+  const dayToJsNum = { Sunday:0, Monday:1, Tuesday:2, Wednesday:3, Thursday:4, Friday:5, Saturday:6 };
+
+  function nextDateForDay(dayName) {
+    const today = new Date();
+    const targetDow = dayToJsNum[dayName];
+    const d = new Date(today);
+    let diff = (targetDow - today.getDay() + 7) % 7;
+    d.setDate(today.getDate() + diff);
+    return d;
+  }
+
+  function fmtIcsDateTime(date, timeStr) {
+    const [hh, mm] = (timeStr || '00:00').split(':').map(Number);
+    const d = new Date(date);
+    d.setHours(hh || 0, mm || 0, 0, 0);
+    const pad = function(n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + '00';
+  }
+
+  let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Studio Notebook//EN\r\nCALSCALE:GREGORIAN\r\n';
+
+  students.forEach(function(s) {
+    if (!s.lessonDay || !s.lessonTime) return;
+    const startDate = nextDateForDay(s.lessonDay);
+    const duration = parseInt(s.duration) || 30;
+    const dtStart = fmtIcsDateTime(startDate, s.lessonTime);
+    const endDate = new Date(startDate);
+    const [hh, mm] = s.lessonTime.split(':').map(Number);
+    endDate.setHours(hh, mm + duration, 0, 0);
+    const dtEnd = fmtIcsDateTime(endDate, endDate.getHours() + ':' + String(endDate.getMinutes()).padStart(2,'0'));
+    const icsDay = dayToIcsCode[s.lessonDay];
+    const freq = s.frequency === 'fortnightly' ? 'WEEKLY;INTERVAL=2' : 'WEEKLY';
+
+    ics += 'BEGIN:VEVENT\r\n'
+      + 'UID:' + s.id + '-lesson@studio-notebook\r\n'
+      + 'DTSTART:' + dtStart + '\r\n'
+      + 'DTEND:' + dtEnd + '\r\n'
+      + 'RRULE:FREQ=' + freq + ';BYDAY=' + icsDay + '\r\n'
+      + 'SUMMARY:' + (s.name || 'Lesson') + ' — ' + (s.instrument || '') + '\r\n'
+      + 'DESCRIPTION:' + (s.level || '') + ' lesson, ' + duration + ' minutes\r\n'
+      + 'END:VEVENT\r\n';
+  });
+
+  ics += 'END:VCALENDAR\r\n';
+
+  const blob = new Blob([ics], {type: 'text/calendar'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Studio-Notebook-Timetable.ics';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 
 function handleIcsUpload(event) {
   const file = event.target.files[0];
@@ -6186,11 +6429,21 @@ function renderCoverEod() {
   const unchecked = data.items.filter(function(_, i) { return !data.checked.includes(i); });
   const reminder = document.getElementById('cover-eod-reminder');
   const itemsEl = document.getElementById('cover-eod-items');
+  const box = document.getElementById('cover-eod-box');
+  const label = document.getElementById('cover-eod-label');
   if (!reminder || !itemsEl) return;
   if (unchecked.length === 0) {
     reminder.style.display = 'none';
     return;
   }
+  // Pick a random accent colour each time so it doesn't fade into the background
+  const accents = ['#8AB640', '#46C6E5', '#e67e22', '#C9B8E8', '#E8B8C4'];
+  const accent = accents[Math.floor(Math.random() * accents.length)];
+  if (box) {
+    box.style.borderColor = accent + 'aa';
+    box.style.background = accent + '55';
+  }
+  if (label) label.style.color = '#fff';
   itemsEl.innerHTML = unchecked.map(function(item) {
     return '• ' + esc(item);
   }).join('<br>');
@@ -6307,17 +6560,16 @@ function copyLastLesson(id) {
   const s = getStudent(id); if (!s) return;
   const lastNote = [...(s.log||[])].filter(e=>e.text).pop();
   if (!lastNote) return;
-  // The saved note may itself have been built by buildCumulativeNote() and so
-  // can already contain "📌 Plan:" / "🎻 Scales this week:" / "📝 During lesson:"
-  // section headers. Strip those out so copying it as a fresh plan doesn't
-  // duplicate them when buildCumulativeNote wraps it again next time.
   let text = lastNote.text;
   text = text.replace(/^📌 Plan:\n?/m, '');
   text = text.replace(/\n*🎻 Scales this week:.*$/m, '');
+  text = text.replace(/\n*✅ Scales done this lesson:[\s\S]*?(?=\n\n|\n📝|$)/m, '');
   text = text.replace(/\n*📝 During lesson:\n?/m, '\n\n');
-  s.nextLesson = text.trim();
+  text = text.trim();
+  // If stripping left nothing useful, use the raw text instead
+  if (!text) text = lastNote.text.trim();
+  s.nextLesson = text;
   save(); renderDetail(s);
-
 }
 
 // ── LESSON COUNT ──────────────────────────────────────────────────────────
@@ -6524,6 +6776,37 @@ function markReturned(idx) {
 
 function removeLendingEntry(idx) {
   lendingLog.splice(idx,1); save(); renderLendingLog();
+}
+
+function renderSpeechReplacements() {
+  const el = document.getElementById('speech-replacements-list'); if (!el) return;
+  if (speechReplacements.length === 0) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No corrections yet.</p>';
+    return;
+  }
+  el.innerHTML = speechReplacements.map(function(r, i) {
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--warm)">'
+      + '<span style="font-size:0.85rem;flex:1"><span style="color:#c0392b">' + esc(r.from) + '</span>'
+      + ' → <span style="color:#2F5C1A">' + (r.to ? esc(r.to) : '<em style="color:var(--muted)">deleted</em>') + '</span></span>'
+      + '<button onclick="removeSpeechReplacement(' + i + ')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 4px">×</button>'
+      + '</div>';
+  }).join('');
+}
+
+function addSpeechReplacement() {
+  const from = document.getElementById('new-replace-from').value.trim().toLowerCase();
+  const to   = document.getElementById('new-replace-to').value.trim();
+  if (!from) return;
+  speechReplacements = speechReplacements.filter(function(r){ return r.from !== from; });
+  speechReplacements.push({ from, to });
+  document.getElementById('new-replace-from').value = '';
+  document.getElementById('new-replace-to').value = '';
+  save(); renderSpeechReplacements();
+}
+
+function removeSpeechReplacement(idx) {
+  speechReplacements.splice(idx, 1);
+  save(); renderSpeechReplacements();
 }
 
 function renderLendingLog() {
