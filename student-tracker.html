@@ -3364,15 +3364,13 @@ function deleteLogEntry(id, idx) {
   const s = getStudent(id); if (!s || !s.log) return;
   s.log.splice(idx, 1);
   save();
-  const afterTab = document.querySelectorAll('.moment-tab')[2];
-  renderDetail(s);
-  if (afterTab) afterTab.click();
+  renderDetail(s, true);
 }
 
 function deleteLogSketch(id, logIdx, sketchIdx) {
   const s = getStudent(id); if (!s || !s.log[logIdx]) return;
   s.log[logIdx].sketches.splice(sketchIdx, 1);
-  save(); renderDetail(s);
+  save(); renderDetail(s, true);
   document.querySelectorAll('.moment-tab')[6].click(); // History tab
 }
 
