@@ -2283,12 +2283,16 @@ function switchMoment(tab, panel) {
 // Tracks which <details> sections are open per student, persists across renderDetail calls
 const openDetailSections = {};
 
-function renderDetail(s) {
+function renderDetail(s, preserveTab = false) {
   const el = document.getElementById('detail-content');
   const slot = effectiveSlot(s);
 
-  // Stop any active mic recognition before the DOM is rebuilt, to avoid
-  // stale element references causing problems in the speech callbacks
+  // 1. Check which tab is active BEFORE wiping the DOM (Gemini's fix)
+  const activeTabBtn = el.querySelector('.moment-tab.active');
+  const activePanelId = activeTabBtn ? (activeTabBtn.getAttribute('onclick')||'').match(/panel-\w+/)?.[0] : null;
+  const wasAfterTab = activePanelId === 'panel-after';
+
+  // Stop any active mic recognition before the DOM is rebuilt
   el.querySelectorAll('button[id^="mic-"]').forEach(function(b) {
     if (b._recognition) { try { b._recognition.stop(); } catch(e) {} b._recognition = null; }
   });
@@ -2821,6 +2825,18 @@ function renderDetail(s) {
         if (sum && saved.has(sum.textContent.trim().slice(0, 40))) {
           det.open = true;
         }
+      });
+    }
+    // 3. Pure classList tab restoration — no function calls (Gemini's fix)
+    if (preserveTab && activePanelId && activePanelId !== 'panel-before') {
+      // Remove active from all tabs and panels
+      document.querySelectorAll('.moment-tab').forEach(function(t) { t.classList.remove('active'); });
+      document.querySelectorAll('.moment-panel').forEach(function(p) { p.classList.remove('active'); });
+      // Add active to the correct tab and panel
+      const targetPanel = document.getElementById(activePanelId);
+      if (targetPanel) targetPanel.classList.add('active');
+      document.querySelectorAll('.moment-tab').forEach(function(t) {
+        if ((t.getAttribute('onclick')||'').includes(activePanelId)) t.classList.add('active');
       });
     }
   }, 50);
@@ -3453,7 +3469,7 @@ function saveLog(id) {
   if(!s.log)s.log=[];
   s.log.push({date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),text});
   s.duringScratch=''; save(); el.value='';
-  showToast('toast-after-'+id); renderDetail(s);
+  showToast('toast-after-'+id); renderDetail(s, true);
 }
 
 function updateLittleDetail(id, field, value) {
@@ -6598,7 +6614,7 @@ function setAttendance(id, status) {
   let entry = s.log.find(e => e.date === today);
   if (!entry) { entry = { date: today, text: '', attendance: status }; s.log.push(entry); }
   else { entry.attendance = status; }
-  save(); showToast('toast-attendance-' + id); renderDetail(s);
+  save(); showToast('toast-attendance-' + id); renderDetail(s, true);
 }
 
 function clearAttendance(id) {
