@@ -1872,8 +1872,8 @@ function renderToday() {
     const slot = { time: s._extraTime || _slot.time, day: _slot.day };
     const isNext = s.id === nextId;
     const isImminent = s.id === imminentId;
-    const lastLog = (s.log||[]).slice(-1)[0];
     const todayStr = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    const lastLog = (s.log||[]).filter(e => e.text && e.date !== todayStr).slice(-1)[0];
     const todayLog = (s.log||[]).find(e => e.date === todayStr);
     const markedAbsentToday = todayLog && todayLog.attendance && todayLog.attendance !== 'present';
     const pieces = piecesDisplay(s);
@@ -1933,15 +1933,9 @@ function renderToday() {
           <div class="summary-icon">📝</div>
           <div class="summary-content">
             <div class="summary-label">Last lesson (${lastLog.date})</div>
-            <div class="summary-text">${esc(lastLog.text.slice(0,120))}${lastLog.text.length>120?'…':''}</div>
+            <div class="summary-text">${lastLog.text.split('\n').filter(l=>l.trim()).slice(0,3).map(l=>'• '+esc(l.trim())).join('<br>')}${lastLog.text.split('\n').filter(l=>l.trim()).length>3?'<br><span style="color:var(--muted);font-size:0.78rem">…more</span>':''}</div>
           </div>
-        </div>` : `<div class="summary-row">
-          <div class="summary-icon">📝</div>
-          <div class="summary-content">
-            <div class="summary-label">Last lesson</div>
-            <div class="summary-text muted">No notes yet</div>
-          </div>
-        </div>`}
+        </div>` : ''}
         ${!plan && !pieces.length && !tech.length && !lastLog ? `
           <p style="color:var(--muted);font-size:0.85rem;margin-top:10px">No notes yet — open full notes to add some.</p>
         ` : ''}
@@ -1994,30 +1988,9 @@ function renderWeek() {
         <span style="margin-left:auto;font-weight:400;letter-spacing:0">${totalActive?totalActive+' lesson'+(totalActive!==1?'s':'')+(dayHrsLabel?' · '+dayHrsLabel:''):'no lessons'}${skippedStudents.length?' · '+skippedStudents.length+' skipped':''}</span>
       </div>`;
 
-    // Helper functions for gap detection
-    function timeToMins(t) { const [h,m]=(t||'00:00').split(':').map(Number); return h*60+(m||0); }
-    function minsToTime(m) { return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); }
-    function gapHTML(fromTime, toTime) {
-      const gap = timeToMins(toTime) - timeToMins(fromTime);
-      if (gap < 30) return '';
-      const label = gap >= 60 ? Math.floor(gap/60)+'h'+(gap%60?' '+gap%60+'m':'')+ ' free' : gap+' min free';
-      return `<div style="display:flex;align-items:center;gap:8px;padding:4px 14px;opacity:0.5">
-        <div style="font-size:0.72rem;color:var(--muted);white-space:nowrap;min-width:36px">${fromTime}</div>
-        <div style="flex:1;border-top:1px dashed #c8d8c8"></div>
-        <div style="font-size:0.7rem;color:var(--muted);white-space:nowrap">${label}</div>
-        <div style="flex:1;border-top:1px dashed #c8d8c8"></div>
-      </div>`;
-    }
-
     // Active slots
-    let prevEndMins = null;
     for (const s of activeStudents) {
       const slot = effectiveSlot(s);
-      const slotStart = timeToMins(slot.time);
-      if (prevEndMins !== null && slotStart - prevEndMins >= 30) {
-        html += gapHTML(minsToTime(prevEndMins), slot.time||'');
-      }
-      prevEndMins = slotStart + parseInt(s.duration||60);
       const moved = oneOffMoves[s.id] && oneOffMoves[s.id].week === currentWeek;
       // Find attendance for this pupil in the current teaching week
       // (match any log entry whose date falls within Sat–Wed of this week)
@@ -2061,11 +2034,6 @@ function renderWeek() {
     for (const ex of sortByTime(dayExtras.map(e => ({...e, lessonDay: e.day, lessonTime: e.time})))) {
       const s = getStudent(ex.studentId);
       if (!s) continue;
-      const exStart = timeToMins(ex.time);
-      if (prevEndMins !== null && exStart - prevEndMins >= 30) {
-        html += gapHTML(minsToTime(prevEndMins), ex.time||'');
-      }
-      prevEndMins = exStart + parseInt(s.duration||60);
       const exIdx = (extraLessons[currentWeek] || []).findIndex(e => e.studentId === ex.studentId && e.day === ex.day && e.time === ex.time);
       html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer;border-style:dashed;">
         <div class="slot-time">${ex.time||'—'}</div>
@@ -2389,7 +2357,11 @@ function renderDetail(s) {
             style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #f5c99a;font-family:'Special Elite',cursive;font-size:0.85rem;background:#fffaf5;color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:50px">${esc((s.littleDetails||{}).followUpNote||'')}</textarea>
         </div>
         <div style="grid-column:1/-1">
-          <div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">📝 Free notes</div>
+          <div style="font-size:0.68rem;font-weight:700;color:#29789E;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">👁 Observations</div>
+            <textarea placeholder="Things you've noticed… learning style, what works, patterns, moments…"
+              oninput="autoGrow(this);updateLittleDetail('${s.id}','observations',this.value)"
+              style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #c8dce8;font-family:'Special Elite',cursive;font-size:0.85rem;background:#f5f9fc;color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:60px">${esc((s.littleDetails||{}).observations||'')}</textarea>
+          <div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;margin-top:10px">📝 Free notes</div>
           <textarea placeholder="Anything else to remember…"
             oninput="autoGrow(this);updateLittleDetail('${s.id}','freeNotes',this.value)"
             style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:70px">${esc((s.littleDetails||{}).freeNotes||'')}</textarea>
