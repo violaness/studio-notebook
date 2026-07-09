@@ -17,10 +17,7 @@
     --viola:    #2F5C1A;
     --violin:   #29789E;
     --string:   #8AB640;
-    --sage:     #2F5C1A;
     --muted:    #6b8a6b;
-    --beginner: #2F5C1A;
-    --inter:    #29789E;
     --advanced: #123A5E;
     --card-bg:  #ffffff;
     --shadow:   0 2px 12px rgba(5,39,11,0.08);
@@ -223,7 +220,7 @@
     white-space: nowrap;
   }
   .slot-btn:hover { border-color: var(--viola); color: var(--viola); }
-  .slot-btn.move-btn:hover { border-color: var(--inter); color: var(--inter); }
+  .slot-btn.move-btn:hover { border-color: var(--violin); color: var(--violin); }
 
   .add-slot-btn {
     width: 100%; background: none; border: 1.5px dashed #d0ccc6;
@@ -412,13 +409,13 @@
   /* ── BUTTONS ── */
   .save-btn {
     display: block; width: auto; margin: 10px auto 0;
-    background: var(--sage); color: #fff; border: none;
+    background: var(--viola); color: #fff; border: none;
     border-radius: var(--radius); padding: 9px 28px;
     font-family: 'Special Elite', cursive; font-size: 0.85rem; font-weight: 600;
     cursor: pointer;
   }
   .save-btn:hover { background: #2F5C1A; }
-  .save-toast { text-align: center; color: var(--sage); font-weight: 600; font-size: 0.88rem; margin-top: 7px; opacity: 0; transition: opacity 0.3s; }
+  .save-toast { text-align: center; color: var(--viola); font-weight: 600; font-size: 0.88rem; margin-top: 7px; opacity: 0; transition: opacity 0.3s; }
   .save-toast.show { opacity: 1; }
 
   /* ── MODALS ── */
@@ -863,7 +860,7 @@
   <div style="display:flex;gap:10px;margin-bottom:10px">
     <button id="add-btn" style="margin-bottom:0;flex:1;height:50px;font-size:0.9rem" onclick="openAddModal()">+ Add Pupil</button>
     <button onclick="toggleSearch()" style="background:var(--violin);color:#fff;border:none;border-radius:var(--radius);flex:1;height:50px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer">🔍</button>
-    <button onclick="openExportModal()" style="background:var(--sage);color:#fff;border:none;border-radius:var(--radius);flex:1;height:50px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer">↓</button>
+    <button onclick="openExportModal()" style="background:var(--viola);color:#fff;border:none;border-radius:var(--radius);flex:1;height:50px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer">↓</button>
     <button onclick="openBackupModal()" style="background:#8a7a3a;color:#fff;border:none;border-radius:var(--radius);flex:1;height:50px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer" title="Back up / restore data">🗄</button>
   </div>
   <!-- TERM DATES -->
@@ -913,7 +910,7 @@
   <div class="modal">
     <h2>New Pupil</h2>
     <div class="field-group">
-      <label class="field-label">Name</label>
+      <label class="field-label" for="new-name">Name</label>
       <input type="text" id="new-name" placeholder="Pupil's name">
     </div>
     <div class="field-group">
@@ -939,7 +936,7 @@
       </div>
     </div>
     <div class="field-group">
-      <label class="field-label">Lesson day</label>
+      <label class="field-label" for="new-day">Lesson day</label>
       <select id="new-day">
         <option value="">— not set —</option>
         <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
@@ -947,7 +944,7 @@
       </select>
     </div>
     <div class="field-group">
-      <label class="field-label">Lesson time</label>
+      <label class="field-label" for="new-time">Lesson time</label>
       <input type="time" id="new-time">
     </div>
     <div class="field-group">
@@ -967,11 +964,11 @@
       </div>
     </div>
     <div class="field-group">
-      <label class="field-label">Birthday (optional)</label>
+      <label class="field-label" for="new-dob">Birthday (optional)</label>
       <input type="date" id="new-dob">
     </div>
     <div class="field-group" id="new-schoolyear-group">
-      <label class="field-label">School year (optional)</label>
+      <label class="field-label" for="new-schoolyear">School year (optional)</label>
       <select id="new-schoolyear">
         <option value="">— not set —</option>
         <option>Reception</option>
@@ -983,7 +980,7 @@
       </select>
     </div>
     <div class="field-group">
-      <label class="field-label">Parent / contact email (optional)</label>
+      <label class="field-label" for="new-email">Parent / contact email (optional)</label>
       <input type="text" id="new-email" placeholder="email@example.com">
     </div>
     <div class="modal-actions">
@@ -999,18 +996,18 @@
     <h2>Move lesson</h2>
     <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px">Move <strong id="move-pupil-name"></strong> to a different slot.</p>
     <div class="field-group">
-      <label class="field-label">Date</label>
+      <label class="field-label" for="move-date">Date</label>
       <input type="date" id="move-date">
     </div>
     <div class="field-group">
-      <label class="field-label">New day</label>
+      <label class="field-label" for="move-day">New day</label>
       <select id="move-day">
         <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
         <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
       </select>
     </div>
     <div class="field-group">
-      <label class="field-label">New time</label>
+      <label class="field-label" for="move-time">New time</label>
       <input type="time" id="move-time">
     </div>
     <div class="modal-actions">
@@ -1251,11 +1248,11 @@
     <input type="hidden" id="edit-log-student-id">
     <input type="hidden" id="edit-log-entry-idx">
     <div class="field-group">
-      <label class="field-label">Date</label>
+      <label class="field-label" for="edit-log-date">Date</label>
       <input type="text" id="edit-log-date" placeholder="e.g. 14 Jun 2026" style="font-family:'Special Elite',cursive">
     </div>
     <div class="field-group">
-      <label class="field-label">Attendance</label>
+      <label class="field-label" for="edit-log-attendance">Attendance</label>
       <select id="edit-log-attendance" style="font-family:'Special Elite',cursive">
         <option value="">— not recorded —</option>
         <option value="present">✓ Present</option>
@@ -1265,7 +1262,7 @@
       </select>
     </div>
     <div class="field-group">
-      <label class="field-label">Notes</label>
+      <label class="field-label" for="edit-log-text">Notes</label>
       <textarea id="edit-log-text" rows="6" placeholder="Lesson notes…"></textarea>
     </div>
     <div class="modal-actions">
@@ -2040,7 +2037,7 @@ function renderWeek() {
         <div class="slot-time">${slot.time||'—'}</div>
         <div class="slot-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
         <div class="slot-info">
-          <div class="slot-name">${s.name}${attBadge}${s.followUp?` <span style="font-size:0.85rem" title="Follow up">🚩</span>`:''}${moved?` <span style="font-size:0.68rem;color:var(--inter);font-weight:700">MOVED</span>`:''}${s.frequency==='fortnightly'?' <span style="font-size:0.68rem;color:var(--muted);font-weight:600">fortnightly</span>':''}
+          <div class="slot-name">${s.name}${attBadge}${s.followUp?` <span style="font-size:0.85rem" title="Follow up">🚩</span>`:''}${moved?` <span style="font-size:0.68rem;color:var(--violin);font-weight:700">MOVED</span>`:''}${s.frequency==='fortnightly'?' <span style="font-size:0.68rem;color:var(--muted);font-weight:600">fortnightly</span>':''}
           </div>
           <div class="slot-meta">${instrDot(s.instrument)}${s.instrument} · ${s.level}</div>
         </div>
