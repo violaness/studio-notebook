@@ -3059,13 +3059,14 @@ function openFillSlotModal(absentStudentId, absenceIdx, date, time, dayName) {
   document.getElementById('fill-slot-day').value  = dayName;
   document.getElementById('fill-slot-time-input').value = time;
 
-  // Populate pupil picker — everyone except the absent pupil, sorted by name
+  // Populate pupil picker — new pupil option first, then everyone except the absent pupil
   const select = document.getElementById('fill-slot-pupil');
-  select.innerHTML = students
-    .filter(s => s.id !== absentStudentId)
-    .sort((a,b) => a.name.localeCompare(b.name))
-    .map(s => `<option value="${s.id}">${s.name} (${s.instrument} · ${s.level})</option>`)
-    .join('');
+  select.innerHTML = '<option value="__new__">+ New pupil…</option>' +
+    students
+      .filter(s => s.id !== absentStudentId)
+      .sort((a,b) => a.name.localeCompare(b.name))
+      .map(s => `<option value="${s.id}">${s.name} (${s.instrument} · ${s.level})</option>`)
+      .join('');
 
   document.getElementById('fill-slot-modal').classList.add('open');
 }
@@ -3079,15 +3080,28 @@ function confirmFillSlot() {
   const day  = document.getElementById('fill-slot-day').value;
   const time = document.getElementById('fill-slot-time-input').value;
   if (!studentId) return;
+
+  // If "new pupil" selected, close this modal and open the add pupil modal
+  if (studentId === '__new__') {
+    closeFillSlotModal();
+    // Pre-fill the day and time in the add modal after it opens
+    openAddModal();
+    setTimeout(function() {
+      const dayEl = document.getElementById('new-day');
+      const timeEl = document.getElementById('new-time');
+      if (dayEl) dayEl.value = day;
+      if (timeEl) timeEl.value = time;
+    }, 100);
+    return;
+  }
+
   if (!extraLessons[currentWeek]) extraLessons[currentWeek] = [];
-  // Don't add exact duplicate (same pupil, day AND time)
   const alreadyExists = extraLessons[currentWeek].some(e => e.studentId === studentId && e.day === day && e.time === time);
   if (!alreadyExists) {
     extraLessons[currentWeek].push({ studentId, day, time });
     save();
   }
   closeFillSlotModal();
-  // Go to week view so they can see the slot
   showView('week');
 }
 
