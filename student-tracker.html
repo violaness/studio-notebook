@@ -1089,6 +1089,26 @@
   </div>
 </div>
 
+<!-- ADD STUDY BOOK MODAL -->
+<div class="modal-overlay" id="add-study-book-modal">
+  <div class="modal">
+    <h2>Add study book</h2>
+    <input type="hidden" id="study-book-student-id">
+    <div class="field-group">
+      <label class="field-label" for="study-book-name">Book name</label>
+      <input type="text" id="study-book-name" placeholder="e.g. Wohlfahrt Op. 45">
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="study-book-count">Number of studies</label>
+      <input type="number" id="study-book-count" min="1" max="100" placeholder="—" style="font-family:'Special Elite',cursive;font-size:1.2rem;padding:12px;text-align:center">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="document.getElementById('add-study-book-modal').classList.remove('open')">Cancel</button>
+      <button class="btn-primary" onclick="confirmAddStudyBook()">Add book</button>
+    </div>
+  </div>
+</div>
+
 <!-- EXTRA LESSON MODAL -->
 <div class="modal-overlay" id="extra-lesson-modal">
   <div class="modal">
@@ -2708,6 +2728,13 @@ function renderDetail(s, preserveTab = false) {
           <div id="sevcik-list-${s.id}">${sevcikHTML(s)}</div>
         </div>
       </details>
+
+      <!-- CUSTOM STUDY BOOKS -->
+      <div id="study-books-${s.id}">${studyBooksHTML(s)}</div>
+      <button onclick="openAddStudyBookModal('${s.id}')"
+        style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
+        ＋ Add study book
+      </button>
     </div>
 
     <!-- CONTACTS -->
@@ -4871,6 +4898,83 @@ function sevcikHTML(s) {
     + '<div style="display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch">'
     + cols.map(col => '<div style="flex-shrink:0">' + buildRows(col) + '</div>').join('')
     + '</div>';
+}
+
+// ── CUSTOM STUDY BOOKS ────────────────────────────────────────────────────────
+function studyBooksHTML(s) {
+  const books = s.studyBooks || [];
+  if (books.length === 0) return '';
+  return books.map(function(book, bIdx) {
+    const ticks = book.ticks || {};
+    const count = parseInt(book.count) || 12;
+    const done = Object.values(ticks).filter(Boolean).length;
+    const items = Array.from({length: count}, function(_, i) { return String(i + 1); });
+    // Build columns of 5 like Sevcik
+    const cols = [];
+    for (let i = 0; i < Math.ceil(count / 5); i++) cols.push(items.slice(i*5, i*5+5));
+    const ticksHTML = '<div style="display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch">'
+      + cols.map(function(col) {
+          return '<div style="flex-shrink:0">' + col.map(function(it) {
+            const isDone = !!ticks[it];
+            return '<div style="display:flex;align-items:center;gap:5px;padding:2px 0">'
+              + '<span style="font-size:0.72rem;color:var(--ink);min-width:14px">' + it + '</span>'
+              + '<button onclick="studyBookTick(\'' + s.id + '\',' + bIdx + ',\'' + it + '\')" '
+              + 'style="width:20px;height:20px;border-radius:5px;border:1.5px solid ' + (isDone ? 'var(--violin)' : '#e0ddd8') + ';'
+              + 'background:' + (isDone ? 'var(--violin)' : 'transparent') + ';'
+              + 'color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.62rem;font-weight:700;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0">'
+              + (isDone ? '✓' : '') + '</button></div>';
+          }).join('') + '</div>';
+        }).join('')
+      + '</div>';
+    return '<details style="margin-top:10px">'
+      + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
+      + '<span>' + esc(book.name) + '</span>'
+      + '<span style="display:flex;align-items:center;gap:10px">'
+      + '<span style="font-size:0.7rem;font-weight:400">' + done + ' / ' + count + '</span>'
+      + '<button onclick="event.stopPropagation();removeStudyBook(\'' + s.id + '\',' + bIdx + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:0 4px">×</button>'
+      + '</span></summary>'
+      + '<div class="section-card" style="margin-top:6px">'
+      + '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">' + done + ' of ' + count + ' studied</div>'
+      + ticksHTML
+      + '</div></details>';
+  }).join('');
+}
+
+function openAddStudyBookModal(studentId) {
+  document.getElementById('study-book-student-id').value = studentId;
+  document.getElementById('study-book-name').value = '';
+  document.getElementById('study-book-count').value = '';
+  document.getElementById('add-study-book-modal').classList.add('open');
+}
+
+function confirmAddStudyBook() {
+  const id = document.getElementById('study-book-student-id').value;
+  const name = document.getElementById('study-book-name').value.trim();
+  const count = parseInt(document.getElementById('study-book-count').value);
+  if (!name || !count || count < 1) return;
+  const s = getStudent(id); if (!s) return;
+  if (!s.studyBooks) s.studyBooks = [];
+  s.studyBooks.push({ id: Date.now().toString(), name, count, ticks: {} });
+  save();
+  document.getElementById('add-study-book-modal').classList.remove('open');
+  document.getElementById('study-books-' + id).innerHTML = studyBooksHTML(s);
+}
+
+function studyBookTick(studentId, bookIdx, item) {
+  const s = getStudent(studentId); if (!s || !s.studyBooks) return;
+  const book = s.studyBooks[bookIdx]; if (!book) return;
+  if (!book.ticks) book.ticks = {};
+  book.ticks[item] = !book.ticks[item];
+  save();
+  document.getElementById('study-books-' + studentId).innerHTML = studyBooksHTML(s);
+}
+
+function removeStudyBook(studentId, bookIdx) {
+  const s = getStudent(studentId); if (!s || !s.studyBooks) return;
+  if (!confirm('Remove "' + s.studyBooks[bookIdx].name + '"? Ticks will be lost.')) return;
+  s.studyBooks.splice(bookIdx, 1);
+  save();
+  document.getElementById('study-books-' + studentId).innerHTML = studyBooksHTML(s);
 }
 
 function sevcikCheck(studentId, item) {
