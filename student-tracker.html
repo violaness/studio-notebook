@@ -2408,6 +2408,10 @@ function renderDetail(s, preserveTab = false) {
             <textarea placeholder="Things you've noticed… learning style, what works, patterns, moments…"
               oninput="autoGrow(this);updateLittleDetail('${s.id}','observations',this.value)"
               style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #c8dce8;font-family:'Special Elite',cursive;font-size:0.85rem;background:#f5f9fc;color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:60px">${esc((s.littleDetails||{}).observations||'')}</textarea>
+          <div style="font-size:0.68rem;font-weight:700;color:#c0622f;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;margin-top:10px">🎁 Gifts</div>
+            <textarea placeholder="e.g. Chocolates, end of term 2026…"
+              oninput="autoGrow(this);updateLittleDetail('${s.id}','gifts',this.value)"
+              style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #f5d5c0;font-family:'Special Elite',cursive;font-size:0.85rem;background:#fff9f7;color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:50px">${esc((s.littleDetails||{}).gifts||'')}</textarea>
           <div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;margin-top:10px">📝 Free notes</div>
           <textarea placeholder="Anything else to remember…"
             oninput="autoGrow(this);updateLittleDetail('${s.id}','freeNotes',this.value)"
@@ -3618,15 +3622,25 @@ function testMic(btnId, msgId, textareaId) {
   const btn = document.getElementById(btnId);
   const textarea = document.getElementById(textareaId);
 
-  // If already listening, stop
+  // If already listening on THIS button, stop
   if (btn._recognition) {
-    btn._recognition.stop();
+    try { btn._recognition.stop(); } catch(e) {}
     btn._recognition = null;
     btn.textContent = '🎤';
     btn.style.background = '#f0ede8';
-    msg.textContent = '';
+    if (msg) msg.textContent = '';
     return;
   }
+
+  // Stop any other active mic session across the whole page first
+  document.querySelectorAll('button[id^="mic-"]').forEach(function(b) {
+    if (b !== btn && b._recognition) {
+      try { b._recognition.stop(); } catch(e) {}
+      b._recognition = null;
+      b.textContent = '🎤';
+      b.style.background = '#f0ede8';
+    }
+  });
 
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
