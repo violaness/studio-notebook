@@ -727,6 +727,19 @@
             <span style="padding:4px 10px;border-radius:999px;background:#E8B8C4;font-size:0.75rem;font-weight:700;color:#05270B">Interpretation</span>
             <span style="padding:4px 10px;border-radius:999px;background:#B8E0C4;font-size:0.75rem;font-weight:700;color:#05270B">Technique</span>
           </div>
+          <!-- Custom categories -->
+          <div style="border-top:1px solid #e0ddd8;padding-top:10px;margin-bottom:10px">
+            <div style="font-size:0.7rem;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">My categories</div>
+            <div id="lib-custom-cat-list"></div>
+            <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+              <input type="text" id="new-tech-cat-name" placeholder="Category name…" maxlength="30"
+                style="flex:1;padding:6px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.82rem">
+              <input type="color" id="new-tech-cat-color" value="#E8E4D8"
+                style="width:36px;height:36px;border:1.5px solid #e0ddd8;border-radius:8px;cursor:pointer;padding:2px">
+              <button onclick="addCustomTechCat()"
+                style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;white-space:nowrap">＋ Add</button>
+            </div>
+          </div>
           <div id="lib-category-editor"></div>
         </div>
       </details>
@@ -1310,15 +1323,18 @@
 <div class="modal-overlay" id="waiting-modal">
   <div class="modal">
     <h2>Add to waiting list</h2>
-    <div class="field-group"><label class="field-label">Name</label><input type="text" id="wait-name" placeholder="Name"></div>
+    <div class="field-group"><label class="field-label" for="wait-name">Pupil's name</label><input type="text" id="wait-name" placeholder="Pupil's name"></div>
+    <div class="field-group"><label class="field-label" for="wait-parent">Parent / carer name</label><input type="text" id="wait-parent" placeholder="Parent or carer's name"></div>
     <div class="field-group"><label class="field-label">Instrument</label>
       <div class="radio-group">
         <div class="radio-opt"><input type="radio" name="wait-inst" id="wait-viola" value="Viola" checked><label for="wait-viola"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2F5C1A;margin-right:5px;vertical-align:middle"></span>Viola</label></div>
         <div class="radio-opt"><input type="radio" name="wait-inst" id="wait-violin" value="Violin"><label for="wait-violin"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#29789E;margin-right:5px;vertical-align:middle"></span>Violin</label></div>
       </div>
     </div>
-    <div class="field-group"><label class="field-label">Contact email / phone</label><input type="text" id="wait-contact" placeholder="Email or phone number"></div>
-    <div class="field-group"><label class="field-label">Notes (optional)</label><textarea rows="2" id="wait-notes" placeholder="Any extra info…"></textarea></div>
+    <div class="field-group"><label class="field-label" for="wait-email">Email</label><input type="text" id="wait-email" placeholder="Email address"></div>
+    <div class="field-group"><label class="field-label" for="wait-phone">Phone</label><input type="text" id="wait-phone" placeholder="Phone number"></div>
+    <div class="field-group"><label class="field-label" for="wait-lesson-time">Potential lesson time</label><input type="text" id="wait-lesson-time" placeholder="e.g. Saturday mornings, after school…"></div>
+    <div class="field-group"><label class="field-label" for="wait-notes">Notes (optional)</label><textarea rows="2" id="wait-notes" placeholder="Any extra info…"></textarea></div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeAddWaitingModal()">Cancel</button>
       <button class="btn-primary" onclick="addToWaitingList()">Add</button>
@@ -1679,6 +1695,7 @@ let students     = JSON.parse(localStorage.getItem('studio_students')      || '[
 let customChips      = JSON.parse(localStorage.getItem('studio_custom_chips')      || '[]');
 let deletedBuiltins  = JSON.parse(localStorage.getItem('studio_deleted_builtins')  || '[]');
 let techCategoryMap  = JSON.parse(localStorage.getItem('studio_tech_categories')   || 'null') || Object.assign({}, TECH_CATEGORY_DEFAULTS);
+let customTechCats   = JSON.parse(localStorage.getItem('studio_custom_tech_cats')   || '[]');
 let customPieces = JSON.parse(localStorage.getItem('studio_custom_pieces') || '[]');
 let oneOffMoves  = JSON.parse(localStorage.getItem('studio_one_off_moves') || '{}');
 let waitingList      = JSON.parse(localStorage.getItem('studio_waiting_list')      || '[]');
@@ -1696,6 +1713,7 @@ function save() {
   localStorage.setItem('studio_custom_chips',      JSON.stringify(customChips));
   localStorage.setItem('studio_deleted_builtins',  JSON.stringify(deletedBuiltins));
   localStorage.setItem('studio_tech_categories',   JSON.stringify(techCategoryMap));
+  localStorage.setItem('studio_custom_tech_cats',  JSON.stringify(customTechCats));
   localStorage.setItem('studio_custom_pieces',     JSON.stringify(customPieces));
   localStorage.setItem('studio_one_off_moves',     JSON.stringify(oneOffMoves));
   localStorage.setItem('studio_waiting_list',      JSON.stringify(waitingList));
@@ -2217,7 +2235,15 @@ function addStudent() {
     goals: {longTerm:'',medium:'',shortTerm:''},
     nextLesson: '', duringScratch: '', log: []
   });
-  save(); closeAddModal(); renderRoster();
+  save();
+  // If opened from the waiting list, remove that entry
+  const modal = document.getElementById('add-modal');
+  if (modal.dataset.fromWaiting !== undefined && modal.dataset.fromWaiting !== '') {
+    const wIdx = parseInt(modal.dataset.fromWaiting);
+    if (!isNaN(wIdx)) { waitingList.splice(wIdx, 1); save(); }
+    delete modal.dataset.fromWaiting;
+  }
+  closeAddModal(); renderRoster();
 }
 
 // ── MOVE MODAL ────────────────────────────────────────────────────────────
@@ -3765,10 +3791,14 @@ function buildPiecesHTML(s) {
   }).join('');
 }
 
+function allTechCategories() {
+  return [...TECH_CATEGORIES, ...customTechCats.map(c => ({ id: 'custom_' + c.name, label: c.name, color: c.color }))];
+}
+
 function techChipColor(word) {
   const catId = techCategoryMap[word];
   if (!catId) return null;
-  const cat = TECH_CATEGORIES.find(c => c.id === catId);
+  const cat = allTechCategories().find(c => c.id === catId);
   return cat ? cat.color : null;
 }
 
@@ -6043,6 +6073,7 @@ function renderCategoryEditor() {
   const el = document.getElementById('lib-category-editor');
   if (!el) return;
   const allWords = [...new Set([...TECH_OPTIONS.filter(t => !deletedBuiltins.includes(t)), ...customChips])].sort((a,b) => a.localeCompare(b));
+  const allCats = allTechCategories();
   el.innerHTML = allWords.map(t => {
     const currentCat = techCategoryMap[t] || '';
     const color = techChipColor(t);
@@ -6051,10 +6082,47 @@ function renderCategoryEditor() {
       <select onchange="setTechCategory('${esc(t)}',this.value)"
         style="flex:1;font-size:0.78rem;padding:4px 6px;border-radius:6px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;background:${color||'#fff'};color:#05270B">
         <option value="" ${!currentCat?'selected':''}>— none —</option>
-        ${TECH_CATEGORIES.map(c => `<option value="${c.id}" ${currentCat===c.id?'selected':''} style="background:${c.color}">${c.label}</option>`).join('')}
+        ${allCats.map(c => `<option value="${c.id}" ${currentCat===c.id?'selected':''} style="background:${c.color}">${c.label}</option>`).join('')}
       </select>
     </div>`;
   }).join('');
+
+  // Custom categories management
+  const mgr = document.getElementById('lib-custom-cat-list');
+  if (mgr) {
+    mgr.innerHTML = customTechCats.length === 0
+      ? '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No custom categories yet.</p>'
+      : customTechCats.map((c, i) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="width:14px;height:14px;border-radius:3px;background:${c.color};flex-shrink:0;display:inline-block"></span>
+          <span style="flex:1;font-size:0.85rem">${esc(c.name)}</span>
+          <button onclick="removeCustomTechCat(${i})" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;padding:2px 4px">×</button>
+        </div>`).join('');
+  }
+}
+
+function addCustomTechCat() {
+  const nameEl = document.getElementById('new-tech-cat-name');
+  const colorEl = document.getElementById('new-tech-cat-color');
+  const name = nameEl.value.trim();
+  if (!name) return;
+  if (allTechCategories().some(c => c.label.toLowerCase() === name.toLowerCase())) { nameEl.value = ''; return; }
+  customTechCats.push({ name, color: colorEl.value || '#E8E4D8' });
+  nameEl.value = '';
+  save();
+  renderCategoryEditor();
+  renderLibChips();
+}
+
+function removeCustomTechCat(idx) {
+  const cat = customTechCats[idx];
+  if (!cat) return;
+  const catId = 'custom_' + cat.name;
+  // Remove assignments using this category
+  Object.keys(techCategoryMap).forEach(function(w) { if (techCategoryMap[w] === catId) delete techCategoryMap[w]; });
+  customTechCats.splice(idx, 1);
+  save();
+  renderCategoryEditor();
+  renderLibChips();
 }
 
 function setTechCategory(word, catId) {
@@ -6910,31 +6978,65 @@ function renderWaiting() {
     <div class="section-card" style="margin-bottom:10px">
       <div style="display:flex;align-items:flex-start;gap:12px">
         <div style="flex:1">
-          <div style="font-weight:700;font-size:1rem;margin-bottom:4px">${esc(w.name)}</div>
+          <div style="font-weight:700;font-size:1rem;margin-bottom:2px">${esc(w.name)}</div>
+          ${w.parent ? `<div style="font-size:0.8rem;color:var(--muted);margin-bottom:2px">Parent: ${esc(w.parent)}</div>` : ''}
           <div style="font-size:0.8rem;color:var(--muted);margin-bottom:4px">${instrDot(w.instrument.toLowerCase())}${w.instrument} · Added ${w.date}</div>
+          ${w.email ? `<div style="font-size:0.8rem;color:var(--muted)">✉ ${esc(w.email)}</div>` : ''}
+          ${w.phone ? `<div style="font-size:0.8rem;color:var(--muted)">📞 ${esc(w.phone)}</div>` : ''}
           ${w.contact ? `<div style="font-size:0.8rem;color:var(--muted)">✉ ${esc(w.contact)}</div>` : ''}
+          ${w.lessonTime ? `<div style="font-size:0.8rem;color:var(--muted)">🕐 ${esc(w.lessonTime)}</div>` : ''}
           ${w.notes ? `<div style="font-size:0.85rem;margin-top:6px">${esc(w.notes)}</div>` : ''}
         </div>
-        <button onclick="removeFromWaiting(${i})" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px">×</button>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+          <button onclick="moveWaitingToPupils(${i})"
+            style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:5px 10px;font-family:'Special Elite',cursive;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap">
+            ✓ Add to pupils
+          </button>
+          <button onclick="removeFromWaiting(${i})" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px">×</button>
+        </div>
       </div>
     </div>`).join('');
 }
+
 function openAddWaitingModal() {
   document.getElementById('wait-name').value = '';
-  document.getElementById('wait-contact').value = '';
+  document.getElementById('wait-parent').value = '';
+  document.getElementById('wait-email').value = '';
+  document.getElementById('wait-phone').value = '';
+  document.getElementById('wait-lesson-time').value = '';
   document.getElementById('wait-notes').value = '';
   document.getElementById('waiting-modal').classList.add('open');
 }
+
 function closeAddWaitingModal() { document.getElementById('waiting-modal').classList.remove('open'); }
+
 function addToWaitingList() {
   const name = document.getElementById('wait-name').value.trim(); if (!name) return;
   const instrument = document.querySelector('input[name="wait-inst"]:checked').value;
-  const contact = document.getElementById('wait-contact').value.trim();
+  const parent = document.getElementById('wait-parent').value.trim();
+  const email = document.getElementById('wait-email').value.trim();
+  const phone = document.getElementById('wait-phone').value.trim();
+  const lessonTime = document.getElementById('wait-lesson-time').value.trim();
   const notes = document.getElementById('wait-notes').value.trim();
-  waitingList.push({ name, instrument, contact, notes, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) });
+  waitingList.push({ name, parent, instrument, email, phone, lessonTime, notes, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) });
   save(); closeAddWaitingModal(); renderWaiting();
 }
+
 function removeFromWaiting(idx) { waitingList.splice(idx,1); save(); renderWaiting(); }
+
+function moveWaitingToPupils(idx) {
+  const w = waitingList[idx]; if (!w) return;
+  // Pre-fill the add pupil modal with waiting list data
+  openAddModal();
+  setTimeout(function() {
+    document.getElementById('new-name').value = w.name || '';
+    document.getElementById('new-email').value = w.email || w.contact || '';
+    if (w.instrument === 'Viola') document.getElementById('inst-viola').checked = true;
+    else document.getElementById('inst-violin').checked = true;
+    // Store the waiting list index so we can remove after adding
+    document.getElementById('add-modal').dataset.fromWaiting = idx;
+  }, 100);
+}
 
 // ── LENDING LOG ───────────────────────────────────────────────────────────────
 function toggleLendingForm() {
@@ -7713,6 +7815,7 @@ function restoreData(event) {
       customChips     = JSON.parse(localStorage.getItem('studio_custom_chips')     || '[]');
       deletedBuiltins = JSON.parse(localStorage.getItem('studio_deleted_builtins') || '[]');
       techCategoryMap = JSON.parse(localStorage.getItem('studio_tech_categories')  || 'null') || Object.assign({}, TECH_CATEGORY_DEFAULTS);
+      customTechCats  = JSON.parse(localStorage.getItem('studio_custom_tech_cats') || '[]');
       customPieces    = JSON.parse(localStorage.getItem('studio_custom_pieces')    || '[]');
       oneOffMoves     = JSON.parse(localStorage.getItem('studio_one_off_moves')    || '{}');
       waitingList     = JSON.parse(localStorage.getItem('studio_waiting_list')     || '[]');
