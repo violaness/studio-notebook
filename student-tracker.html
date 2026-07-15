@@ -3652,12 +3652,16 @@ function exportLessonHistory(id) {
     + '</div>'
     + '<table><tbody>' + entries + '</tbody></table>'
     + '</body></html>';
-  const blob = new Blob([html], {type:'text/html'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = s.name.replace(/\s+/g,'-') + '-lesson-history.html';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(a.href);
+  const win = window.open('', '_blank');
+  if (win) { win.document.write(html); win.document.close(); }
+  else {
+    const blob = new Blob([html], {type:'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = s.name.replace(/\s+/g,'-') + '-lesson-history.html';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  }
 }
 
 function toggleFollowUp(id) {
@@ -7646,12 +7650,16 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
     + practicePages
     + '</body></html>';
 
-  const blob = new Blob([html], {type:'text/html'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'Practice-Plan.html';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(a.href);
+  const win = window.open('', '_blank');
+  if (win) { win.document.write(html); win.document.close(); }
+  else {
+    const blob = new Blob([html], {type:'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'Practice-Plan.html';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  }
 }
 
 function exportAll() {
@@ -7722,12 +7730,16 @@ function exportAll() {
     + '<script>function saveNextWeekNote(el){var id=el.dataset.sid;var text=el.innerText.trim();fetch&&console.log("note for",id,text);}<\/script>'
     + '</body></html>';
 
-  const blob = new Blob([html], {type:'text/html'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'Studio-Overview-' + new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-') + '.html';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(a.href);
+  const win = window.open('', '_blank');
+  if (win) { win.document.write(html); win.document.close(); }
+  else {
+    const blob = new Blob([html], {type:'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'Studio-Overview-' + new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-') + '.html';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  }
   closeExportModal();
 }
 
