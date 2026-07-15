@@ -1939,7 +1939,7 @@ function renderToday() {
       <div class="lesson-summary-header" onclick="toggleSummary('${s.id}')">
         <div class="ls-avatar avatar-${s.instrument}" style="${markedAbsentToday?'opacity:0.4;':''}">${getInitials(s.name)}</div>
         <div class="ls-info">
-          <div class="ls-name" style="${markedAbsentToday?'color:var(--muted);text-decoration:line-through;':''}">${s.name}${isNext?`<span class="next-badge${isImminent?' imminent':''}">Next</span>`:''}${s.followUp?'<span style="font-size:0.85rem;margin-left:6px" title="Follow up">🚩</span>':''}</div>
+          <div class="ls-name" style="${markedAbsentToday?'color:var(--muted);text-decoration:line-through;':''}">${s.name}${isNext?`<span class="next-badge${isImminent?' imminent':''}">Next</span>`:''}${s.followUp?'<span style="font-size:0.85rem;margin-left:6px" title="Follow up">🚩</span>':''}${markedAbsentToday?'<span style="font-size:0.68rem;color:#c0392b;font-weight:700;margin-left:6px;text-decoration:none;display:inline-block">absent</span>':''}</div>
           <div class="ls-time">${slot.time || 'time not set'} · ${instrDot(s.instrument)}${s.instrument} · ${s.level}</div>
         </div>
         <div class="ls-chevron">›</div>
