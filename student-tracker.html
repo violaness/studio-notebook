@@ -761,8 +761,11 @@
   </details>
 
   <!-- PIECES BY CATEGORY -->
-  <div class="section-card" style="margin-bottom:14px">
-    <div class="section-label">My piece library</div>
+  <details style="margin-bottom:14px">
+    <summary style="font-size:0.82rem;font-weight:700;color:var(--muted);cursor:pointer;padding:12px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between">
+      <span>📚 My piece library</span><span style="font-weight:400;font-size:0.7rem">tap to expand</span>
+    </summary>
+    <div class="section-card" style="margin-top:6px">
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <select id="lib-cat-filter" onchange="renderLibPieces()" style="flex:1">
         <option value="">All categories</option>
@@ -802,7 +805,7 @@
         <button onclick="addLibPiece()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">Add to library</button>
       </div>
     </div>
-  </div>
+  </details>
 
   <!-- WAITING LIST -->
   <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
@@ -836,16 +839,20 @@
   </div>
 
   <!-- SPEECH REPLACEMENTS -->
-  <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
-    <div style="font-size:0.72rem;font-weight:800;color:var(--muted);margin-bottom:4px">🎤 Voice text — auto-corrections</div>
-    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Words or phrases that get replaced automatically after dictation.</div>
-    <div id="speech-replacements-list"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
-      <input type="text" id="new-replace-from" placeholder="Replace this…" style="font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
-      <input type="text" id="new-replace-to" placeholder="With this (blank to delete)…" style="font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
+  <details style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
+    <summary style="font-size:0.72rem;font-weight:800;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+      <span>🎤 Voice text — auto-corrections</span><span style="font-weight:400">tap to expand</span>
+    </summary>
+    <div style="margin-top:10px">
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Words or phrases that get replaced automatically after dictation.</div>
+      <div id="speech-replacements-list"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        <input type="text" id="new-replace-from" placeholder="Replace this…" style="font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
+        <input type="text" id="new-replace-to" placeholder="With this (blank to delete)…" style="font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
+      </div>
+      <button onclick="addSpeechReplacement()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:10px auto 0;min-width:160px">+ Add correction</button>
     </div>
-    <button onclick="addSpeechReplacement()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:10px auto 0;min-width:160px">+ Add correction</button>
-  </div>
+  </details>
 </div>
 
 <!-- PERSISTENT TEACHING NOTES BAR -->
@@ -1337,7 +1344,7 @@
     <div class="field-group"><label class="field-label" for="wait-notes">Notes (optional)</label><textarea rows="2" id="wait-notes" placeholder="Any extra info…"></textarea></div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeAddWaitingModal()">Cancel</button>
-      <button class="btn-primary" onclick="addToWaitingList()">Add</button>
+      <button class="btn-primary" onclick="addToWaitingList()">Save</button>
     </div>
   </div>
 </div>
@@ -1896,11 +1903,17 @@ function renderToday() {
   }
   sub.textContent = sorted.length + ' lesson' + (sorted.length!==1?'s':'') + ' today';
   // Calculate teaching hours for today
-  const todayMins = sorted.reduce((sum, s) => sum + parseInt(s.duration||60), 0);
+  const todayStr2 = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const presentToday = sorted.filter(s => {
+    const entry = (s.log||[]).find(e => e.date === todayStr2);
+    return !entry || !entry.attendance || entry.attendance === 'present';
+  });
+  const todayMins = presentToday.reduce((sum, s) => sum + parseInt(s.duration||60), 0);
   const todayHrs = Math.floor(todayMins/60);
   const todayRemMins = todayMins % 60;
   const todayHrsLabel = todayHrs > 0 ? todayHrs + 'h' + (todayRemMins>0?' '+todayRemMins+'m':'') : todayRemMins+'m';
-  sub.textContent = sorted.length + ' lesson' + (sorted.length!==1?'s':'') + ' · ' + todayHrsLabel + ' teaching';
+  const absentCount = sorted.length - presentToday.length;
+  sub.textContent = sorted.length + ' lesson' + (sorted.length!==1?'s':'') + ' · ' + todayHrsLabel + ' teaching' + (absentCount > 0 ? ' · ' + absentCount + ' absent' : '');
 
   document.getElementById('today-list').innerHTML = sorted.map(s => {
     const _slot = effectiveSlot(s);
@@ -1926,7 +1939,7 @@ function renderToday() {
       <div class="lesson-summary-header" onclick="toggleSummary('${s.id}')">
         <div class="ls-avatar avatar-${s.instrument}" style="${markedAbsentToday?'opacity:0.4;':''}">${getInitials(s.name)}</div>
         <div class="ls-info">
-          <div class="ls-name" style="${markedAbsentToday?'color:var(--muted);text-decoration:line-through;':''}">${s.name}${isNext?`<span class="next-badge${isImminent?' imminent':''}">Next</span>`:''}${s.followUp?'<span style="font-size:0.85rem;margin-left:6px" title="Follow up">🚩</span>':''}${markedAbsentToday?'<span style="font-size:0.68rem;color:#c0392b;font-weight:700;margin-left:6px;text-decoration:none;display:inline-block">absent</span>':''}</div>
+          <div class="ls-name" style="${markedAbsentToday?'color:var(--muted);text-decoration:line-through;':''}">${s.name}${isNext?`<span class="next-badge${isImminent?' imminent':''}">Next</span>`:''}${s.followUp?'<span style="font-size:0.85rem;margin-left:6px" title="Follow up">🚩</span>':''}</div>
           <div class="ls-time">${slot.time || 'time not set'} · ${instrDot(s.instrument)}${s.instrument} · ${s.level}</div>
         </div>
         <div class="ls-chevron">›</div>
@@ -2009,8 +2022,20 @@ function renderWeek() {
     const skippedStudents = dayStudents.filter(s => isSkipped(s.id));
     const dayExtras = (extraLessons[currentWeek] || []).filter(e => e.day === day);
     const totalActive = activeStudents.length + dayExtras.length;
-    // Hours for this day
-    const dayMins = activeStudents.reduce((sum, s) => sum + parseInt(s.duration||60), 0)
+    // Hours for this day — exclude absent pupils
+    const months2 = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+    function isAbsentThisWeek(s) {
+      const att = (s.log||[]).find(e => {
+        const parts = (e.date||'').split(' '); if (parts.length < 3) return false;
+        const d = new Date(parseInt(parts[2]), months2[parts[1]], parseInt(parts[0]));
+        const [wy2,wm2,wd2] = currentWeek.split('-').map(Number);
+        const ws = new Date(wy2,wm2-1,wd2); const we = new Date(ws); we.setDate(ws.getDate()+6);
+        return d >= ws && d <= we;
+      });
+      return att && att.attendance && att.attendance !== 'present';
+    }
+    const presentStudents = activeStudents.filter(s => !isAbsentThisWeek(s));
+    const dayMins = presentStudents.reduce((sum, s) => sum + parseInt(s.duration||60), 0)
                   + dayExtras.reduce((sum, e) => { const st = getStudent(e.studentId); return sum + parseInt((st&&st.duration)||60); }, 0);
     weekTotalMins += dayMins;
     const dayHrs = Math.floor(dayMins/60), dayRem = dayMins%60;
@@ -6992,6 +7017,10 @@ function renderWaiting() {
             style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:5px 10px;font-family:'Special Elite',cursive;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap">
             ✓ Add to pupils
           </button>
+          <button onclick="editWaiting(${i})"
+            style="background:#f0ede8;border:none;border-radius:8px;padding:5px 10px;font-family:'Special Elite',cursive;font-size:0.72rem;color:var(--viola);cursor:pointer;white-space:nowrap">
+            ✏️ Edit
+          </button>
           <button onclick="removeFromWaiting(${i})" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px">×</button>
         </div>
       </div>
@@ -7008,7 +7037,28 @@ function openAddWaitingModal() {
   document.getElementById('waiting-modal').classList.add('open');
 }
 
-function closeAddWaitingModal() { document.getElementById('waiting-modal').classList.remove('open'); }
+function closeAddWaitingModal() {
+  const modal = document.getElementById('waiting-modal');
+  modal.classList.remove('open');
+  delete modal.dataset.editIdx;
+  document.querySelector('#waiting-modal h2').textContent = 'Add to waiting list';
+}
+
+function editWaiting(idx) {
+  const w = waitingList[idx]; if (!w) return;
+  document.getElementById('wait-name').value = w.name || '';
+  document.getElementById('wait-parent').value = w.parent || '';
+  document.getElementById('wait-email').value = w.email || w.contact || '';
+  document.getElementById('wait-phone').value = w.phone || '';
+  document.getElementById('wait-lesson-time').value = w.lessonTime || '';
+  document.getElementById('wait-notes').value = w.notes || '';
+  if (w.instrument === 'Viola') document.getElementById('wait-viola').checked = true;
+  else document.getElementById('wait-violin').checked = true;
+  const modal = document.getElementById('waiting-modal');
+  modal.dataset.editIdx = idx;
+  document.querySelector('#waiting-modal h2').textContent = 'Edit waiting list entry';
+  modal.classList.add('open');
+}
 
 function addToWaitingList() {
   const name = document.getElementById('wait-name').value.trim(); if (!name) return;
@@ -7018,7 +7068,13 @@ function addToWaitingList() {
   const phone = document.getElementById('wait-phone').value.trim();
   const lessonTime = document.getElementById('wait-lesson-time').value.trim();
   const notes = document.getElementById('wait-notes').value.trim();
-  waitingList.push({ name, parent, instrument, email, phone, lessonTime, notes, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) });
+  const modal = document.getElementById('waiting-modal');
+  const editIdx = modal.dataset.editIdx !== undefined ? parseInt(modal.dataset.editIdx) : -1;
+  if (editIdx >= 0) {
+    waitingList[editIdx] = { ...waitingList[editIdx], name, parent, instrument, email, phone, lessonTime, notes };
+  } else {
+    waitingList.push({ name, parent, instrument, email, phone, lessonTime, notes, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) });
+  }
   save(); closeAddWaitingModal(); renderWaiting();
 }
 
