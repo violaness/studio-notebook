@@ -860,14 +860,14 @@
       </div>
       <input type="text" id="td-label" placeholder="e.g. Autumn Term 2026 or Summer Holidays"
         style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:'Special Elite',cursive;font-size:0.85rem;margin-bottom:8px;box-sizing:border-box">
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px">
+      <div style="display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:8px">
         <div>
-          <div style="font-size:0.68rem;color:var(--muted);margin-bottom:3px">Start date</div>
-          <input type="date" id="td-start" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none">
+          <label for="td-start" style="display:block;font-size:0.68rem;color:var(--muted);margin-bottom:3px">Start date</label>
+          <input type="date" id="td-start" style="width:auto;min-width:11em;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none">
         </div>
         <div>
-          <div style="font-size:0.68rem;color:var(--muted);margin-bottom:3px">End date</div>
-          <input type="date" id="td-end" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none">
+          <label for="td-end" style="display:block;font-size:0.68rem;color:var(--muted);margin-bottom:3px">End date</label>
+          <input type="date" id="td-end" style="width:auto;min-width:11em;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none">
         </div>
       </div>
       <button onclick="addTermDate()" style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">+ Add</button>
