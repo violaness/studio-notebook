@@ -751,8 +751,11 @@
   </details>
 
   <!-- PIECES BY CATEGORY -->
-  <div class="section-card" style="margin-bottom:14px">
-    <div class="section-label">My piece library</div>
+  <details style="margin-bottom:14px">
+    <summary style="font-size:0.82rem;font-weight:700;color:var(--muted);cursor:pointer;padding:12px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between">
+      <span>📚 My piece library</span><span style="font-weight:400;font-size:0.7rem">tap to expand</span>
+    </summary>
+    <div class="section-card" style="margin-top:6px">
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <select id="lib-cat-filter" onchange="renderLibPieces()" style="flex:1">
         <option value="">All categories</option>
@@ -792,7 +795,7 @@
         <button onclick="addLibPiece()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">Add to library</button>
       </div>
     </div>
-  </div>
+  </details>
 
   <!-- WAITING LIST -->
   <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
@@ -826,16 +829,20 @@
   </div>
 
   <!-- SPEECH REPLACEMENTS -->
-  <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
-    <div style="font-size:0.72rem;font-weight:800;color:var(--muted);margin-bottom:4px">🎤 Voice text — auto-corrections</div>
-    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Words or phrases that get replaced automatically after dictation.</div>
-    <div id="speech-replacements-list"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
-      <input type="text" id="new-replace-from" placeholder="Replace this…" style="font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
-      <input type="text" id="new-replace-to" placeholder="With this (blank to delete)…" style="font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
+  <details style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
+    <summary style="font-size:0.72rem;font-weight:800;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+      <span>🎤 Voice text — auto-corrections</span><span style="font-weight:400">tap to expand</span>
+    </summary>
+    <div style="margin-top:10px">
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Words or phrases that get replaced automatically after dictation.</div>
+      <div id="speech-replacements-list"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        <input type="text" id="new-replace-from" placeholder="Replace this…" style="font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
+        <input type="text" id="new-replace-to" placeholder="With this (blank to delete)…" style="font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
+      </div>
+      <button onclick="addSpeechReplacement()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:10px auto 0;min-width:160px">+ Add correction</button>
     </div>
-    <button onclick="addSpeechReplacement()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:10px auto 0;min-width:160px">+ Add correction</button>
-  </div>
+  </details>
 
   <!-- TERM DATES -->
   <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
