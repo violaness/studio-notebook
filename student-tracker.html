@@ -17,10 +17,7 @@
     --viola:    #2F5C1A;
     --violin:   #29789E;
     --string:   #8AB640;
-    --sage:     #2F5C1A;
     --muted:    #6b8a6b;
-    --beginner: #2F5C1A;
-    --inter:    #29789E;
     --advanced: #123A5E;
     --card-bg:  #ffffff;
     --shadow:   0 2px 12px rgba(5,39,11,0.08);
@@ -223,7 +220,7 @@
     white-space: nowrap;
   }
   .slot-btn:hover { border-color: var(--viola); color: var(--viola); }
-  .slot-btn.move-btn:hover { border-color: var(--inter); color: var(--inter); }
+  .slot-btn.move-btn:hover { border-color: var(--violin); color: var(--violin); }
 
   .add-slot-btn {
     width: 100%; background: none; border: 1.5px dashed #d0ccc6;
@@ -412,13 +409,13 @@
   /* ── BUTTONS ── */
   .save-btn {
     display: block; width: auto; margin: 10px auto 0;
-    background: var(--sage); color: #fff; border: none;
+    background: var(--viola); color: #fff; border: none;
     border-radius: var(--radius); padding: 9px 28px;
     font-family: 'Special Elite', cursive; font-size: 0.85rem; font-weight: 600;
     cursor: pointer;
   }
   .save-btn:hover { background: #2F5C1A; }
-  .save-toast { text-align: center; color: var(--sage); font-weight: 600; font-size: 0.88rem; margin-top: 7px; opacity: 0; transition: opacity 0.3s; }
+  .save-toast { text-align: center; color: var(--viola); font-weight: 600; font-size: 0.88rem; margin-top: 7px; opacity: 0; transition: opacity 0.3s; }
   .save-toast.show { opacity: 1; }
 
   /* ── MODALS ── */
@@ -730,6 +727,19 @@
             <span style="padding:4px 10px;border-radius:999px;background:#E8B8C4;font-size:0.75rem;font-weight:700;color:#05270B">Interpretation</span>
             <span style="padding:4px 10px;border-radius:999px;background:#B8E0C4;font-size:0.75rem;font-weight:700;color:#05270B">Technique</span>
           </div>
+          <!-- Custom categories -->
+          <div style="border-top:1px solid #e0ddd8;padding-top:10px;margin-bottom:10px">
+            <div style="font-size:0.7rem;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">My categories</div>
+            <div id="lib-custom-cat-list"></div>
+            <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+              <input type="text" id="new-tech-cat-name" placeholder="Category name…" maxlength="30"
+                style="flex:1;padding:6px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.82rem">
+              <input type="color" id="new-tech-cat-color" value="#E8E4D8"
+                style="width:36px;height:36px;border:1.5px solid #e0ddd8;border-radius:8px;cursor:pointer;padding:2px">
+              <button onclick="addCustomTechCat()"
+                style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;white-space:nowrap">＋ Add</button>
+            </div>
+          </div>
           <div id="lib-category-editor"></div>
         </div>
       </details>
@@ -904,7 +914,7 @@
   <div style="display:flex;gap:10px;margin-bottom:10px">
     <button id="add-btn" style="margin-bottom:0;flex:1;height:50px;font-size:0.9rem" onclick="openAddModal()">+ Add Pupil</button>
     <button onclick="toggleSearch()" style="background:var(--violin);color:#fff;border:none;border-radius:var(--radius);flex:1;height:50px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer">🔍</button>
-    <button onclick="openExportModal()" style="background:var(--sage);color:#fff;border:none;border-radius:var(--radius);flex:1;height:50px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer">↓</button>
+    <button onclick="openExportModal()" style="background:var(--viola);color:#fff;border:none;border-radius:var(--radius);flex:1;height:50px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer">↓</button>
     <button onclick="openBackupModal()" style="background:#8a7a3a;color:#fff;border:none;border-radius:var(--radius);flex:1;height:50px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer" title="Back up / restore data">🗄</button>
   </div>
   <!-- TERM DATES -->
@@ -954,7 +964,7 @@
   <div class="modal">
     <h2>New Pupil</h2>
     <div class="field-group">
-      <label class="field-label">Name</label>
+      <label class="field-label" for="new-name">Name</label>
       <input type="text" id="new-name" placeholder="Pupil's name">
     </div>
     <div class="field-group">
@@ -980,7 +990,7 @@
       </div>
     </div>
     <div class="field-group">
-      <label class="field-label">Lesson day</label>
+      <label class="field-label" for="new-day">Lesson day</label>
       <select id="new-day">
         <option value="">— not set —</option>
         <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
@@ -988,7 +998,7 @@
       </select>
     </div>
     <div class="field-group">
-      <label class="field-label">Lesson time</label>
+      <label class="field-label" for="new-time">Lesson time</label>
       <input type="time" id="new-time">
     </div>
     <div class="field-group">
@@ -1008,11 +1018,11 @@
       </div>
     </div>
     <div class="field-group">
-      <label class="field-label">Birthday (optional)</label>
+      <label class="field-label" for="new-dob">Birthday (optional)</label>
       <input type="date" id="new-dob">
     </div>
     <div class="field-group" id="new-schoolyear-group">
-      <label class="field-label">School year (optional)</label>
+      <label class="field-label" for="new-schoolyear">School year (optional)</label>
       <select id="new-schoolyear">
         <option value="">— not set —</option>
         <option>Reception</option>
@@ -1024,7 +1034,7 @@
       </select>
     </div>
     <div class="field-group">
-      <label class="field-label">Parent / contact email (optional)</label>
+      <label class="field-label" for="new-email">Parent / contact email (optional)</label>
       <input type="text" id="new-email" placeholder="email@example.com">
     </div>
     <div class="modal-actions">
@@ -1040,18 +1050,18 @@
     <h2>Move lesson</h2>
     <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px">Move <strong id="move-pupil-name"></strong> to a different slot.</p>
     <div class="field-group">
-      <label class="field-label">Date</label>
+      <label class="field-label" for="move-date">Date</label>
       <input type="date" id="move-date">
     </div>
     <div class="field-group">
-      <label class="field-label">New day</label>
+      <label class="field-label" for="move-day">New day</label>
       <select id="move-day">
         <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
         <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
       </select>
     </div>
     <div class="field-group">
-      <label class="field-label">New time</label>
+      <label class="field-label" for="move-time">New time</label>
       <input type="time" id="move-time">
     </div>
     <div class="modal-actions">
@@ -1129,6 +1139,26 @@
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeFillSlotModal()">Cancel</button>
       <button class="btn-primary" onclick="confirmFillSlot()">Add extra lesson</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD STUDY BOOK MODAL -->
+<div class="modal-overlay" id="add-study-book-modal">
+  <div class="modal">
+    <h2>Add study book</h2>
+    <input type="hidden" id="study-book-student-id">
+    <div class="field-group">
+      <label class="field-label" for="study-book-name">Book name</label>
+      <input type="text" id="study-book-name" placeholder="e.g. Wohlfahrt Op. 45">
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="study-book-count">Number of studies</label>
+      <input type="number" id="study-book-count" min="1" max="100" placeholder="—" style="font-family:'Special Elite',cursive;font-size:1.2rem;padding:12px;text-align:center">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="document.getElementById('add-study-book-modal').classList.remove('open')">Cancel</button>
+      <button class="btn-primary" onclick="confirmAddStudyBook()">Add book</button>
     </div>
   </div>
 </div>
@@ -1292,11 +1322,11 @@
     <input type="hidden" id="edit-log-student-id">
     <input type="hidden" id="edit-log-entry-idx">
     <div class="field-group">
-      <label class="field-label">Date</label>
+      <label class="field-label" for="edit-log-date">Date</label>
       <input type="text" id="edit-log-date" placeholder="e.g. 14 Jun 2026" style="font-family:'Special Elite',cursive">
     </div>
     <div class="field-group">
-      <label class="field-label">Attendance</label>
+      <label class="field-label" for="edit-log-attendance">Attendance</label>
       <select id="edit-log-attendance" style="font-family:'Special Elite',cursive">
         <option value="">— not recorded —</option>
         <option value="present">✓ Present</option>
@@ -1306,7 +1336,7 @@
       </select>
     </div>
     <div class="field-group">
-      <label class="field-label">Notes</label>
+      <label class="field-label" for="edit-log-text">Notes</label>
       <textarea id="edit-log-text" rows="6" placeholder="Lesson notes…"></textarea>
     </div>
     <div class="modal-actions">
@@ -1334,18 +1364,21 @@
 <div class="modal-overlay" id="waiting-modal">
   <div class="modal">
     <h2>Add to waiting list</h2>
-    <div class="field-group"><label class="field-label">Name</label><input type="text" id="wait-name" placeholder="Name"></div>
+    <div class="field-group"><label class="field-label" for="wait-name">Pupil's name</label><input type="text" id="wait-name" placeholder="Pupil's name"></div>
+    <div class="field-group"><label class="field-label" for="wait-parent">Parent / carer name</label><input type="text" id="wait-parent" placeholder="Parent or carer's name"></div>
     <div class="field-group"><label class="field-label">Instrument</label>
       <div class="radio-group">
         <div class="radio-opt"><input type="radio" name="wait-inst" id="wait-viola" value="Viola" checked><label for="wait-viola"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2F5C1A;margin-right:5px;vertical-align:middle"></span>Viola</label></div>
         <div class="radio-opt"><input type="radio" name="wait-inst" id="wait-violin" value="Violin"><label for="wait-violin"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#29789E;margin-right:5px;vertical-align:middle"></span>Violin</label></div>
       </div>
     </div>
-    <div class="field-group"><label class="field-label">Contact email / phone</label><input type="text" id="wait-contact" placeholder="Email or phone number"></div>
-    <div class="field-group"><label class="field-label">Notes (optional)</label><textarea rows="2" id="wait-notes" placeholder="Any extra info…"></textarea></div>
+    <div class="field-group"><label class="field-label" for="wait-email">Email</label><input type="text" id="wait-email" placeholder="Email address"></div>
+    <div class="field-group"><label class="field-label" for="wait-phone">Phone</label><input type="text" id="wait-phone" placeholder="Phone number"></div>
+    <div class="field-group"><label class="field-label" for="wait-lesson-time">Potential lesson time</label><input type="text" id="wait-lesson-time" placeholder="e.g. Saturday mornings, after school…"></div>
+    <div class="field-group"><label class="field-label" for="wait-notes">Notes (optional)</label><textarea rows="2" id="wait-notes" placeholder="Any extra info…"></textarea></div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeAddWaitingModal()">Cancel</button>
-      <button class="btn-primary" onclick="addToWaitingList()">Add</button>
+      <button class="btn-primary" onclick="addToWaitingList()">Save</button>
     </div>
   </div>
 </div>
@@ -1621,137 +1654,7 @@
 </div>
 
 <script>
-// ── TERM DATES ────────────────────────────────────────────────────────────────
-function getCurrentWeekDate() {
-  const [y,m,d] = currentWeek.split('-').map(Number);
-  return new Date(y, m-1, d);
-}
-
-function isHolidayWeek() {
-  const weekStart = getCurrentWeekDate();
-  const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
-  return termDates.some(function(t) {
-    if (!t.holidayStart || !t.holidayEnd) return false;
-    const hs = new Date(t.holidayStart); const he = new Date(t.holidayEnd);
-    return weekStart <= he && weekEnd >= hs;
-  });
-}
-
-function getHolidayLabel() {
-  const weekStart = getCurrentWeekDate();
-  const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
-  const h = termDates.find(function(t) {
-    if (!t.holidayStart || !t.holidayEnd) return false;
-    const hs = new Date(t.holidayStart); const he = new Date(t.holidayEnd);
-    return weekStart <= he && weekEnd >= hs;
-  });
-  return h ? (h.label || 'Holiday') : null;
-}
-
-function getTermInfo() {
-  const weekStart = getCurrentWeekDate();
-  // Find the most recent term start that we're currently in
-  const terms = termDates.filter(function(t) { return t.termStart && t.termEnd; })
-    .sort(function(a,b) { return a.termStart.localeCompare(b.termStart); });
-  for (const t of terms) {
-    const ts = new Date(t.termStart); const te = new Date(t.termEnd);
-    if (weekStart >= ts && weekStart <= te) {
-      // Calculate week number within term
-      let weekNum = 1;
-      const d = new Date(ts);
-      while (d < weekStart) { d.setDate(d.getDate() + 7); weekNum++; }
-      return { label: t.label || 'Term', week: weekNum };
-    }
-  }
-  return null;
-}
-
-let editingTermIdx = -1;
-
-function renderTermDates() {
-  const el = document.getElementById('term-dates-list'); if (!el) return;
-  if (termDates.length === 0) {
-    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No terms added yet.</p>';
-    return;
-  }
-  el.innerHTML = termDates.map(function(t, i) {
-    const fmt = function(d) { return d ? new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—'; };
-    if (i === editingTermIdx) {
-      const isHol = !!t.holidayStart;
-      const start = t.termStart || t.holidayStart || '';
-      const end = t.termEnd || t.holidayEnd || '';
-      return '<div style="background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:12px;margin-bottom:8px">'
-        + '<div style="display:flex;gap:16px;margin-bottom:10px">'
-        + '<label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer">'
-        + '<input type="radio" name="ted-type" value="term"' + (isHol ? '' : ' checked') + '> Term</label>'
-        + '<label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer">'
-        + '<input type="radio" name="ted-type" value="holiday"' + (isHol ? ' checked' : '') + '> Holiday</label>'
-        + '</div>'
-        + '<input type="text" id="ted-label" value="' + esc(t.label || '') + '" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:\'Special Elite\',cursive;font-size:0.85rem;margin-bottom:8px;box-sizing:border-box">'
-        + '<div style="display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:10px">'
-        + '<div><label for="ted-start" style="display:block;font-size:0.68rem;color:var(--muted);margin-bottom:3px">Start date</label>'
-        + '<input type="date" id="ted-start" value="' + start + '" style="width:auto;min-width:11em;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:\'Special Elite\',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>'
-        + '<div><label for="ted-end" style="display:block;font-size:0.68rem;color:var(--muted);margin-bottom:3px">End date</label>'
-        + '<input type="date" id="ted-end" value="' + end + '" style="width:auto;min-width:11em;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:\'Special Elite\',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>'
-        + '</div>'
-        + '<div style="display:flex;gap:8px;justify-content:center">'
-        + '<button onclick="saveTermDateEdit(' + i + ')" style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:8px 20px;font-family:\'Special Elite\',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">✓ Save</button>'
-        + '<button onclick="cancelTermDateEdit()" style="background:#f0ede8;color:var(--muted);border:none;border-radius:8px;padding:8px 20px;font-family:\'Special Elite\',cursive;font-size:0.82rem;cursor:pointer">Cancel</button>'
-        + '</div>'
-        + '</div>';
-    }
-    return '<div style="background:var(--card-bg);border-radius:10px;padding:10px 14px;margin-bottom:8px;box-shadow:var(--shadow)">'
-      + '<div style="display:flex;align-items:center;justify-content:space-between">'
-      + '<div style="font-weight:700;font-size:0.9rem">' + esc(t.label || 'Term') + '</div>'
-      + '<div style="display:flex;align-items:center;gap:4px">'
-      + '<button onclick="editTermDate(' + i + ')" style="background:#f0ede8;border:none;border-radius:6px;color:var(--muted);cursor:pointer;font-size:0.75rem;padding:4px 10px;font-family:\'Special Elite\',cursive">✏️ Edit</button>'
-      + '<button onclick="removeTermDate(' + i + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;padding:2px 4px">×</button>'
-      + '</div>'
-      + '</div>'
-      + (t.termStart ? '<div style="font-size:0.78rem;color:var(--muted);margin-top:2px">📅 Term: ' + fmt(t.termStart) + ' – ' + fmt(t.termEnd) + '</div>' : '')
-      + (t.holidayStart ? '<div style="font-size:0.78rem;color:#e67e22;margin-top:2px">🌴 Holiday: ' + fmt(t.holidayStart) + ' – ' + fmt(t.holidayEnd) + '</div>' : '')
-      + '</div>';
-  }).join('');
-}
-
-function editTermDate(idx) { editingTermIdx = idx; renderTermDates(); }
-function cancelTermDateEdit() { editingTermIdx = -1; renderTermDates(); }
-
-function saveTermDateEdit(idx) {
-  const label = document.getElementById('ted-label').value.trim();
-  const type = document.querySelector('input[name="ted-type"]:checked').value;
-  const start = document.getElementById('ted-start').value;
-  const end = document.getElementById('ted-end').value;
-  if (!label || !start || !end) return;
-  if (type === 'term') {
-    termDates[idx] = { label, termStart: start, termEnd: end };
-  } else {
-    termDates[idx] = { label, holidayStart: start, holidayEnd: end };
-  }
-  termDates.sort(function(a,b) { return (a.termStart||a.holidayStart).localeCompare(b.termStart||b.holidayStart); });
-  editingTermIdx = -1;
-  save(); renderTermDates(); renderWeek();
-}
-
-function addTermDate() {
-  const label = document.getElementById('td-label').value.trim();
-  const type = document.querySelector('input[name="td-type"]:checked').value;
-  const start = document.getElementById('td-start').value;
-  const end = document.getElementById('td-end').value;
-  if (!label || !start || !end) return;
-  if (type === 'term') {
-    termDates.push({ label, termStart: start, termEnd: end });
-  } else {
-    termDates.push({ label, holidayStart: start, holidayEnd: end });
-  }
-  termDates.sort(function(a,b) { return (a.termStart||a.holidayStart).localeCompare(b.termStart||b.holidayStart); });
-  document.getElementById('td-label').value = '';
-  document.getElementById('td-start').value = '';
-  document.getElementById('td-end').value = '';
-  save(); renderTermDates(); renderWeek();
-}
-
-function removeTermDate(idx) { editingTermIdx = -1; termDates.splice(idx,1); save(); renderTermDates(); renderWeek(); }
+// ── SCREEN WAKE LOCK (keep screen awake during lessons) ─────────────────────
 let wakeLockSentinel = null;
 
 async function toggleWakeLock() {
@@ -1833,6 +1736,7 @@ let students     = JSON.parse(localStorage.getItem('studio_students')      || '[
 let customChips      = JSON.parse(localStorage.getItem('studio_custom_chips')      || '[]');
 let deletedBuiltins  = JSON.parse(localStorage.getItem('studio_deleted_builtins')  || '[]');
 let techCategoryMap  = JSON.parse(localStorage.getItem('studio_tech_categories')   || 'null') || Object.assign({}, TECH_CATEGORY_DEFAULTS);
+let customTechCats   = JSON.parse(localStorage.getItem('studio_custom_tech_cats')   || '[]');
 let customPieces = JSON.parse(localStorage.getItem('studio_custom_pieces') || '[]');
 let oneOffMoves  = JSON.parse(localStorage.getItem('studio_one_off_moves') || '{}');
 let waitingList      = JSON.parse(localStorage.getItem('studio_waiting_list')      || '[]');
@@ -1851,6 +1755,7 @@ function save() {
   localStorage.setItem('studio_custom_chips',      JSON.stringify(customChips));
   localStorage.setItem('studio_deleted_builtins',  JSON.stringify(deletedBuiltins));
   localStorage.setItem('studio_tech_categories',   JSON.stringify(techCategoryMap));
+  localStorage.setItem('studio_custom_tech_cats',  JSON.stringify(customTechCats));
   localStorage.setItem('studio_custom_pieces',     JSON.stringify(customPieces));
   localStorage.setItem('studio_one_off_moves',     JSON.stringify(oneOffMoves));
   localStorage.setItem('studio_waiting_list',      JSON.stringify(waitingList));
@@ -2034,11 +1939,17 @@ function renderToday() {
   }
   sub.textContent = sorted.length + ' lesson' + (sorted.length!==1?'s':'') + ' today';
   // Calculate teaching hours for today
-  const todayMins = sorted.reduce((sum, s) => sum + parseInt(s.duration||60), 0);
+  const todayStr2 = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const presentToday = sorted.filter(s => {
+    const entry = (s.log||[]).find(e => e.date === todayStr2);
+    return !entry || !entry.attendance || entry.attendance === 'present';
+  });
+  const todayMins = presentToday.reduce((sum, s) => sum + parseInt(s.duration||60), 0);
   const todayHrs = Math.floor(todayMins/60);
   const todayRemMins = todayMins % 60;
   const todayHrsLabel = todayHrs > 0 ? todayHrs + 'h' + (todayRemMins>0?' '+todayRemMins+'m':'') : todayRemMins+'m';
-  sub.textContent = sorted.length + ' lesson' + (sorted.length!==1?'s':'') + ' · ' + todayHrsLabel + ' teaching';
+  const absentCount = sorted.length - presentToday.length;
+  sub.textContent = sorted.length + ' lesson' + (sorted.length!==1?'s':'') + ' · ' + todayHrsLabel + ' teaching' + (absentCount > 0 ? ' · ' + absentCount + ' absent' : '');
 
   document.getElementById('today-list').innerHTML = sorted.map(s => {
     const _slot = effectiveSlot(s);
@@ -2158,12 +2069,24 @@ function renderWeek() {
   for (const day of DAYS) {
     const isToday = day === todayName;
     const dayStudents = sortByTime(students.filter(s => effectiveSlot(s).day === day));
-    const activeStudents = onHoliday ? dayStudents : dayStudents.filter(s => !isSkipped(s.id));
-    const skippedStudents = onHoliday ? [] : dayStudents.filter(s => isSkipped(s.id));
-    const dayExtras = onHoliday ? [] : (extraLessons[currentWeek] || []).filter(e => e.day === day);
+    const activeStudents = dayStudents.filter(s => !isSkipped(s.id));
+    const skippedStudents = dayStudents.filter(s => isSkipped(s.id));
+    const dayExtras = (extraLessons[currentWeek] || []).filter(e => e.day === day);
     const totalActive = activeStudents.length + dayExtras.length;
-    // Hours for this day — zero during holidays
-    const dayMins = onHoliday ? 0 : (activeStudents.reduce((sum, s) => sum + parseInt(s.duration||60), 0)
+    // Hours for this day — exclude absent pupils
+    const months2 = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+    function isAbsentThisWeek(s) {
+      const att = (s.log||[]).find(e => {
+        const parts = (e.date||'').split(' '); if (parts.length < 3) return false;
+        const d = new Date(parseInt(parts[2]), months2[parts[1]], parseInt(parts[0]));
+        const [wy2,wm2,wd2] = currentWeek.split('-').map(Number);
+        const ws = new Date(wy2,wm2-1,wd2); const we = new Date(ws); we.setDate(ws.getDate()+6);
+        return d >= ws && d <= we;
+      });
+      return att && att.attendance && att.attendance !== 'present';
+    }
+    const presentStudents = activeStudents.filter(s => !isAbsentThisWeek(s));
+    const dayMins = onHoliday ? 0 : (presentStudents.reduce((sum, s) => sum + parseInt(s.duration||60), 0)
                   + dayExtras.reduce((sum, e) => { const st = getStudent(e.studentId); return sum + parseInt((st&&st.duration)||60); }, 0));
     weekTotalMins += dayMins;
     const dayHrs = Math.floor(dayMins/60), dayRem = dayMins%60;
@@ -2176,9 +2099,30 @@ function renderWeek() {
         <span style="margin-left:auto;font-weight:400;letter-spacing:0">${totalActive?totalActive+' lesson'+(totalActive!==1?'s':'')+(dayHrsLabel?' · '+dayHrsLabel:''):'no lessons'}${skippedStudents.length?' · '+skippedStudents.length+' skipped':''}</span>
       </div>`;
 
+    // Gap detection helpers
+    function timeToMins(t) { const [h,m]=(t||'00:00').split(':').map(Number); return h*60+(m||0); }
+    function minsToTime(m) { return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); }
+    function gapHTML(fromTime, toTime) {
+      const gap = timeToMins(toTime) - timeToMins(fromTime);
+      if (gap < 30) return '';
+      const label = gap >= 60 ? Math.floor(gap/60)+'h'+(gap%60?' '+gap%60+'m':'')+ ' free' : gap+' min free';
+      return `<div style="display:flex;align-items:center;gap:8px;padding:4px 14px;opacity:0.5">
+        <div style="font-size:0.72rem;color:var(--muted);white-space:nowrap;min-width:36px">${fromTime}</div>
+        <div style="flex:1;border-top:1px dashed #c8d8c8"></div>
+        <div style="font-size:0.7rem;color:var(--muted);white-space:nowrap">${label}</div>
+        <div style="flex:1;border-top:1px dashed #c8d8c8"></div>
+      </div>`;
+    }
+
     // Active slots
+    let prevEndMins = null;
     for (const s of activeStudents) {
       const slot = effectiveSlot(s);
+      const slotStart = timeToMins(slot.time);
+      if (prevEndMins !== null && slotStart - prevEndMins >= 30) {
+        html += gapHTML(minsToTime(prevEndMins), slot.time||'');
+      }
+      prevEndMins = slotStart + parseInt(s.duration||60);
       const moved = oneOffMoves[s.id] && oneOffMoves[s.id].week === currentWeek;
       // Find attendance for this pupil in the current teaching week
       // (match any log entry whose date falls within Sat–Wed of this week)
@@ -2207,7 +2151,7 @@ function renderWeek() {
         <div class="slot-time">${slot.time||'—'}</div>
         <div class="slot-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
         <div class="slot-info">
-          <div class="slot-name">${s.name}${attBadge}${s.followUp?` <span style="font-size:0.85rem" title="Follow up">🚩</span>`:''}${moved?` <span style="font-size:0.68rem;color:var(--inter);font-weight:700">MOVED</span>`:''}${s.frequency==='fortnightly'?' <span style="font-size:0.68rem;color:var(--muted);font-weight:600">fortnightly</span>':''}
+          <div class="slot-name">${s.name}${attBadge}${s.followUp?` <span style="font-size:0.85rem" title="Follow up">🚩</span>`:''}${moved?` <span style="font-size:0.68rem;color:var(--violin);font-weight:700">MOVED</span>`:''}${s.frequency==='fortnightly'?' <span style="font-size:0.68rem;color:var(--muted);font-weight:600">fortnightly</span>':''}
           </div>
           <div class="slot-meta">${instrDot(s.instrument)}${s.instrument} · ${s.level}</div>
         </div>
@@ -2222,6 +2166,11 @@ function renderWeek() {
     for (const ex of sortByTime(dayExtras.map(e => ({...e, lessonDay: e.day, lessonTime: e.time})))) {
       const s = getStudent(ex.studentId);
       if (!s) continue;
+      const exStart = timeToMins(ex.time);
+      if (prevEndMins !== null && exStart - prevEndMins >= 30) {
+        html += gapHTML(minsToTime(prevEndMins), ex.time||'');
+      }
+      prevEndMins = exStart + parseInt(s.duration||60);
       const exIdx = (extraLessons[currentWeek] || []).findIndex(e => e.studentId === ex.studentId && e.day === ex.day && e.time === ex.time);
       html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer;border-style:dashed;">
         <div class="slot-time">${ex.time||'—'}</div>
@@ -2366,7 +2315,15 @@ function addStudent() {
     goals: {longTerm:'',medium:'',shortTerm:''},
     nextLesson: '', duringScratch: '', log: []
   });
-  save(); closeAddModal(); renderRoster();
+  save();
+  // If opened from the waiting list, remove that entry
+  const modal = document.getElementById('add-modal');
+  if (modal.dataset.fromWaiting !== undefined && modal.dataset.fromWaiting !== '') {
+    const wIdx = parseInt(modal.dataset.fromWaiting);
+    if (!isNaN(wIdx)) { waitingList.splice(wIdx, 1); save(); }
+    delete modal.dataset.fromWaiting;
+  }
+  closeAddModal(); renderRoster();
 }
 
 // ── MOVE MODAL ────────────────────────────────────────────────────────────
@@ -2547,20 +2504,44 @@ function renderDetail(s, preserveTab = false) {
           </div>
         `).join('')}
         <div style="grid-column:1/-1">
-          <div style="font-size:0.68rem;font-weight:700;color:#e67e22;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">🚩 Follow-up note</div>
-          <textarea placeholder="Reason for flag…"
-            oninput="autoGrow(this);updateLittleDetail('${s.id}','followUpNote',this.value)"
-            style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #f5c99a;font-family:'Special Elite',cursive;font-size:0.85rem;background:#fffaf5;color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:50px">${esc((s.littleDetails||{}).followUpNote||'')}</textarea>
-        </div>
-        <div style="grid-column:1/-1">
-          <div style="font-size:0.68rem;font-weight:700;color:#29789E;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">👁 Observations</div>
+          <details>
+            <summary style="font-size:0.68rem;font-weight:700;color:#e67e22;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+              <span>🚩 Follow-up note</span><span style="font-weight:400;font-size:0.65rem">tap to expand</span>
+            </summary>
+            <textarea placeholder="Reason for flag…"
+              oninput="autoGrow(this);updateLittleDetail('${s.id}','followUpNote',this.value)"
+              style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #f5c99a;font-family:'Special Elite',cursive;font-size:0.85rem;background:#fffaf5;color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:50px;margin-top:4px">${esc((s.littleDetails||{}).followUpNote||'')}</textarea>
+          </details>
+          <details style="margin-top:8px">
+            <summary style="font-size:0.68rem;font-weight:700;color:#29789E;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+              <span>👁 Observations</span><span style="font-weight:400;font-size:0.65rem">tap to expand</span>
+            </summary>
             <textarea placeholder="Things you've noticed… learning style, what works, patterns, moments…"
               oninput="autoGrow(this);updateLittleDetail('${s.id}','observations',this.value)"
-              style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #c8dce8;font-family:'Special Elite',cursive;font-size:0.85rem;background:#f5f9fc;color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:60px">${esc((s.littleDetails||{}).observations||'')}</textarea>
-          <div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;margin-top:10px">📝 Free notes</div>
-          <textarea placeholder="Anything else to remember…"
-            oninput="autoGrow(this);updateLittleDetail('${s.id}','freeNotes',this.value)"
-            style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:70px">${esc((s.littleDetails||{}).freeNotes||'')}</textarea>
+              style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #c8dce8;font-family:'Special Elite',cursive;font-size:0.85rem;background:#f5f9fc;color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:60px;margin-top:4px">${esc((s.littleDetails||{}).observations||'')}</textarea>
+          </details>
+          <details style="margin-top:8px">
+            <summary style="font-size:0.68rem;font-weight:700;color:#c0622f;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+              <span>🎁 Gifts</span><span style="font-weight:400;font-size:0.65rem">tap to expand</span>
+            </summary>
+            <textarea placeholder="e.g. Chocolates, end of term 2026…"
+              oninput="autoGrow(this);updateLittleDetail('${s.id}','gifts',this.value)"
+              style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #f5d5c0;font-family:'Special Elite',cursive;font-size:0.85rem;background:#fff9f7;color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:50px;margin-top:4px">${esc((s.littleDetails||{}).gifts||'')}</textarea>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer;font-size:0.82rem;color:${(s.littleDetails||{}).thankYouSent ? '#2F5C1A' : 'var(--muted)'}">
+              <input type="checkbox" ${(s.littleDetails||{}).thankYouSent ? 'checked' : ''}
+                onchange="updateLittleDetail('${s.id}','thankYouSent',this.checked);this.closest('label').style.color=this.checked?'#2F5C1A':'var(--muted)'"
+                style="width:18px;height:18px;cursor:pointer;accent-color:#2F5C1A">
+              Thank you sent
+            </label>
+          </details>
+          <details style="margin-top:8px">
+            <summary style="font-size:0.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+              <span>📝 Free notes</span><span style="font-weight:400;font-size:0.65rem">tap to expand</span>
+            </summary>
+            <textarea placeholder="Anything else to remember…"
+              oninput="autoGrow(this);updateLittleDetail('${s.id}','freeNotes',this.value)"
+              style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:70px;margin-top:4px">${esc((s.littleDetails||{}).freeNotes||'')}</textarea>
+          </details>
         </div>
       </div>
     </details>
@@ -2877,6 +2858,13 @@ function renderDetail(s, preserveTab = false) {
           <div id="sevcik-list-${s.id}">${sevcikHTML(s)}</div>
         </div>
       </details>
+
+      <!-- CUSTOM STUDY BOOKS -->
+      <div id="study-books-${s.id}">${studyBooksHTML(s)}</div>
+      <button onclick="openAddStudyBookModal('${s.id}')"
+        style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
+        ＋ Add study book
+      </button>
     </div>
 
     <!-- CONTACTS -->
@@ -3228,13 +3216,14 @@ function openFillSlotModal(absentStudentId, absenceIdx, date, time, dayName) {
   document.getElementById('fill-slot-day').value  = dayName;
   document.getElementById('fill-slot-time-input').value = time;
 
-  // Populate pupil picker — everyone except the absent pupil, sorted by name
+  // Populate pupil picker — new pupil option first, then everyone except the absent pupil
   const select = document.getElementById('fill-slot-pupil');
-  select.innerHTML = students
-    .filter(s => s.id !== absentStudentId)
-    .sort((a,b) => a.name.localeCompare(b.name))
-    .map(s => `<option value="${s.id}">${s.name} (${s.instrument} · ${s.level})</option>`)
-    .join('');
+  select.innerHTML = '<option value="__new__">+ New pupil…</option>' +
+    students
+      .filter(s => s.id !== absentStudentId)
+      .sort((a,b) => a.name.localeCompare(b.name))
+      .map(s => `<option value="${s.id}">${s.name} (${s.instrument} · ${s.level})</option>`)
+      .join('');
 
   document.getElementById('fill-slot-modal').classList.add('open');
 }
@@ -3248,15 +3237,28 @@ function confirmFillSlot() {
   const day  = document.getElementById('fill-slot-day').value;
   const time = document.getElementById('fill-slot-time-input').value;
   if (!studentId) return;
+
+  // If "new pupil" selected, close this modal and open the add pupil modal
+  if (studentId === '__new__') {
+    closeFillSlotModal();
+    // Pre-fill the day and time in the add modal after it opens
+    openAddModal();
+    setTimeout(function() {
+      const dayEl = document.getElementById('new-day');
+      const timeEl = document.getElementById('new-time');
+      if (dayEl) dayEl.value = day;
+      if (timeEl) timeEl.value = time;
+    }, 100);
+    return;
+  }
+
   if (!extraLessons[currentWeek]) extraLessons[currentWeek] = [];
-  // Don't add exact duplicate (same pupil, day AND time)
   const alreadyExists = extraLessons[currentWeek].some(e => e.studentId === studentId && e.day === day && e.time === time);
   if (!alreadyExists) {
     extraLessons[currentWeek].push({ studentId, day, time });
     save();
   }
   closeFillSlotModal();
-  // Go to week view so they can see the slot
   showView('week');
 }
 
@@ -3746,15 +3748,25 @@ function testMic(btnId, msgId, textareaId) {
   const btn = document.getElementById(btnId);
   const textarea = document.getElementById(textareaId);
 
-  // If already listening, stop
+  // If already listening on THIS button, stop
   if (btn._recognition) {
-    btn._recognition.stop();
+    try { btn._recognition.stop(); } catch(e) {}
     btn._recognition = null;
     btn.textContent = '🎤';
     btn.style.background = '#f0ede8';
-    msg.textContent = '';
+    if (msg) msg.textContent = '';
     return;
   }
+
+  // Stop any other active mic session across the whole page first
+  document.querySelectorAll('button[id^="mic-"]').forEach(function(b) {
+    if (b !== btn && b._recognition) {
+      try { b._recognition.stop(); } catch(e) {}
+      b._recognition = null;
+      b.textContent = '🎤';
+      b.style.background = '#f0ede8';
+    }
+  });
 
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
@@ -3859,10 +3871,14 @@ function buildPiecesHTML(s) {
   }).join('');
 }
 
+function allTechCategories() {
+  return [...TECH_CATEGORIES, ...customTechCats.map(c => ({ id: 'custom_' + c.name, label: c.name, color: c.color }))];
+}
+
 function techChipColor(word) {
   const catId = techCategoryMap[word];
   if (!catId) return null;
-  const cat = TECH_CATEGORIES.find(c => c.id === catId);
+  const cat = allTechCategories().find(c => c.id === catId);
   return cat ? cat.color : null;
 }
 
@@ -5028,6 +5044,83 @@ function sevcikHTML(s) {
     + '</div>';
 }
 
+// ── CUSTOM STUDY BOOKS ────────────────────────────────────────────────────────
+function studyBooksHTML(s) {
+  const books = s.studyBooks || [];
+  if (books.length === 0) return '';
+  return books.map(function(book, bIdx) {
+    const ticks = book.ticks || {};
+    const count = parseInt(book.count) || 12;
+    const done = Object.values(ticks).filter(Boolean).length;
+    const items = Array.from({length: count}, function(_, i) { return String(i + 1); });
+    // Build columns of 5 like Sevcik
+    const cols = [];
+    for (let i = 0; i < Math.ceil(count / 5); i++) cols.push(items.slice(i*5, i*5+5));
+    const ticksHTML = '<div style="display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch">'
+      + cols.map(function(col) {
+          return '<div style="flex-shrink:0">' + col.map(function(it) {
+            const isDone = !!ticks[it];
+            return '<div style="display:flex;align-items:center;gap:5px;padding:2px 0">'
+              + '<span style="font-size:0.72rem;color:var(--ink);min-width:14px">' + it + '</span>'
+              + '<button onclick="studyBookTick(\'' + s.id + '\',' + bIdx + ',\'' + it + '\')" '
+              + 'style="width:20px;height:20px;border-radius:5px;border:1.5px solid ' + (isDone ? 'var(--violin)' : '#e0ddd8') + ';'
+              + 'background:' + (isDone ? 'var(--violin)' : 'transparent') + ';'
+              + 'color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.62rem;font-weight:700;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0">'
+              + (isDone ? '✓' : '') + '</button></div>';
+          }).join('') + '</div>';
+        }).join('')
+      + '</div>';
+    return '<details style="margin-top:10px">'
+      + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
+      + '<span>' + esc(book.name) + '</span>'
+      + '<span style="display:flex;align-items:center;gap:10px">'
+      + '<span style="font-size:0.7rem;font-weight:400">' + done + ' / ' + count + '</span>'
+      + '<button onclick="event.stopPropagation();removeStudyBook(\'' + s.id + '\',' + bIdx + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:0 4px">×</button>'
+      + '</span></summary>'
+      + '<div class="section-card" style="margin-top:6px">'
+      + '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">' + done + ' of ' + count + ' studied</div>'
+      + ticksHTML
+      + '</div></details>';
+  }).join('');
+}
+
+function openAddStudyBookModal(studentId) {
+  document.getElementById('study-book-student-id').value = studentId;
+  document.getElementById('study-book-name').value = '';
+  document.getElementById('study-book-count').value = '';
+  document.getElementById('add-study-book-modal').classList.add('open');
+}
+
+function confirmAddStudyBook() {
+  const id = document.getElementById('study-book-student-id').value;
+  const name = document.getElementById('study-book-name').value.trim();
+  const count = parseInt(document.getElementById('study-book-count').value);
+  if (!name || !count || count < 1) return;
+  const s = getStudent(id); if (!s) return;
+  if (!s.studyBooks) s.studyBooks = [];
+  s.studyBooks.push({ id: Date.now().toString(), name, count, ticks: {} });
+  save();
+  document.getElementById('add-study-book-modal').classList.remove('open');
+  document.getElementById('study-books-' + id).innerHTML = studyBooksHTML(s);
+}
+
+function studyBookTick(studentId, bookIdx, item) {
+  const s = getStudent(studentId); if (!s || !s.studyBooks) return;
+  const book = s.studyBooks[bookIdx]; if (!book) return;
+  if (!book.ticks) book.ticks = {};
+  book.ticks[item] = !book.ticks[item];
+  save();
+  document.getElementById('study-books-' + studentId).innerHTML = studyBooksHTML(s);
+}
+
+function removeStudyBook(studentId, bookIdx) {
+  const s = getStudent(studentId); if (!s || !s.studyBooks) return;
+  if (!confirm('Remove "' + s.studyBooks[bookIdx].name + '"? Ticks will be lost.')) return;
+  s.studyBooks.splice(bookIdx, 1);
+  save();
+  document.getElementById('study-books-' + studentId).innerHTML = studyBooksHTML(s);
+}
+
 function sevcikCheck(studentId, item) {
   const s = getStudent(studentId); if (!s) return;
   if (!s.sevcikOp3) s.sevcikOp3 = {};
@@ -6000,6 +6093,7 @@ function renderLibrary() {
   renderLibChips();
   renderLibPieces();
   renderStudioAttendance();
+  renderTermDates();
 }
 
 // Built-in categories present in both filter dropdowns by default
@@ -6060,6 +6154,7 @@ function renderCategoryEditor() {
   const el = document.getElementById('lib-category-editor');
   if (!el) return;
   const allWords = [...new Set([...TECH_OPTIONS.filter(t => !deletedBuiltins.includes(t)), ...customChips])].sort((a,b) => a.localeCompare(b));
+  const allCats = allTechCategories();
   el.innerHTML = allWords.map(t => {
     const currentCat = techCategoryMap[t] || '';
     const color = techChipColor(t);
@@ -6068,10 +6163,47 @@ function renderCategoryEditor() {
       <select onchange="setTechCategory('${esc(t)}',this.value)"
         style="flex:1;font-size:0.78rem;padding:4px 6px;border-radius:6px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;background:${color||'#fff'};color:#05270B">
         <option value="" ${!currentCat?'selected':''}>— none —</option>
-        ${TECH_CATEGORIES.map(c => `<option value="${c.id}" ${currentCat===c.id?'selected':''} style="background:${c.color}">${c.label}</option>`).join('')}
+        ${allCats.map(c => `<option value="${c.id}" ${currentCat===c.id?'selected':''} style="background:${c.color}">${c.label}</option>`).join('')}
       </select>
     </div>`;
   }).join('');
+
+  // Custom categories management
+  const mgr = document.getElementById('lib-custom-cat-list');
+  if (mgr) {
+    mgr.innerHTML = customTechCats.length === 0
+      ? '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No custom categories yet.</p>'
+      : customTechCats.map((c, i) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="width:14px;height:14px;border-radius:3px;background:${c.color};flex-shrink:0;display:inline-block"></span>
+          <span style="flex:1;font-size:0.85rem">${esc(c.name)}</span>
+          <button onclick="removeCustomTechCat(${i})" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;padding:2px 4px">×</button>
+        </div>`).join('');
+  }
+}
+
+function addCustomTechCat() {
+  const nameEl = document.getElementById('new-tech-cat-name');
+  const colorEl = document.getElementById('new-tech-cat-color');
+  const name = nameEl.value.trim();
+  if (!name) return;
+  if (allTechCategories().some(c => c.label.toLowerCase() === name.toLowerCase())) { nameEl.value = ''; return; }
+  customTechCats.push({ name, color: colorEl.value || '#E8E4D8' });
+  nameEl.value = '';
+  save();
+  renderCategoryEditor();
+  renderLibChips();
+}
+
+function removeCustomTechCat(idx) {
+  const cat = customTechCats[idx];
+  if (!cat) return;
+  const catId = 'custom_' + cat.name;
+  // Remove assignments using this category
+  Object.keys(techCategoryMap).forEach(function(w) { if (techCategoryMap[w] === catId) delete techCategoryMap[w]; });
+  customTechCats.splice(idx, 1);
+  save();
+  renderCategoryEditor();
+  renderLibChips();
 }
 
 function setTechCategory(word, catId) {
@@ -6732,6 +6864,136 @@ function filterRosterBySearch() {
   renderRosterList(filtered);
 }
 
+// ── TERM DATES & HOLIDAYS (multi-entry) ───────────────────────────────────
+function getCurrentWeekDate() {
+  const [y,m,d] = currentWeek.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+
+function isHolidayWeek() {
+  const weekStart = getCurrentWeekDate();
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
+  return termDates.some(function(t) {
+    if (!t.holidayStart || !t.holidayEnd) return false;
+    const hs = new Date(t.holidayStart); const he = new Date(t.holidayEnd);
+    return weekStart <= he && weekEnd >= hs;
+  });
+}
+
+function getHolidayLabel() {
+  const weekStart = getCurrentWeekDate();
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
+  const h = termDates.find(function(t) {
+    if (!t.holidayStart || !t.holidayEnd) return false;
+    const hs = new Date(t.holidayStart); const he = new Date(t.holidayEnd);
+    return weekStart <= he && weekEnd >= hs;
+  });
+  return h ? (h.label || 'Holiday') : null;
+}
+
+function getTermInfo() {
+  const weekStart = getCurrentWeekDate();
+  const terms = termDates.filter(function(t) { return t.termStart && t.termEnd; })
+    .sort(function(a,b) { return a.termStart.localeCompare(b.termStart); });
+  for (const t of terms) {
+    const ts = new Date(t.termStart); const te = new Date(t.termEnd);
+    if (weekStart >= ts && weekStart <= te) {
+      let weekNum = 1;
+      const d = new Date(ts);
+      while (d < weekStart) { d.setDate(d.getDate() + 7); weekNum++; }
+      return { label: t.label || 'Term', week: weekNum };
+    }
+  }
+  return null;
+}
+
+let editingTermIdx = -1;
+
+function renderTermDates() {
+  const el = document.getElementById('term-dates-list'); if (!el) return;
+  if (termDates.length === 0) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No terms added yet.</p>';
+    return;
+  }
+  el.innerHTML = termDates.map(function(t, i) {
+    const fmt = function(d) { return d ? new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—'; };
+    if (i === editingTermIdx) {
+      const isHol = !!t.holidayStart;
+      const start = t.termStart || t.holidayStart || '';
+      const end = t.termEnd || t.holidayEnd || '';
+      return '<div style="background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:12px;margin-bottom:8px">'
+        + '<div style="display:flex;gap:16px;margin-bottom:10px">'
+        + '<label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer">'
+        + '<input type="radio" name="ted-type" value="term"' + (isHol ? '' : ' checked') + '> Term</label>'
+        + '<label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer">'
+        + '<input type="radio" name="ted-type" value="holiday"' + (isHol ? ' checked' : '') + '> Holiday</label>'
+        + '</div>'
+        + '<input type="text" id="ted-label" value="' + esc(t.label || '') + '" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:\'Special Elite\',cursive;font-size:0.85rem;margin-bottom:8px;box-sizing:border-box">'
+        + '<div style="display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:10px">'
+        + '<div><label for="ted-start" style="display:block;font-size:0.68rem;color:var(--muted);margin-bottom:3px">Start date</label>'
+        + '<input type="date" id="ted-start" value="' + start + '" style="width:auto;min-width:11em;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:\'Special Elite\',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>'
+        + '<div><label for="ted-end" style="display:block;font-size:0.68rem;color:var(--muted);margin-bottom:3px">End date</label>'
+        + '<input type="date" id="ted-end" value="' + end + '" style="width:auto;min-width:11em;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:\'Special Elite\',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>'
+        + '</div>'
+        + '<div style="display:flex;gap:8px;justify-content:center">'
+        + '<button onclick="saveTermDateEdit(' + i + ')" style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:8px 20px;font-family:\'Special Elite\',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">✓ Save</button>'
+        + '<button onclick="cancelTermDateEdit()" style="background:#f0ede8;color:var(--muted);border:none;border-radius:8px;padding:8px 20px;font-family:\'Special Elite\',cursive;font-size:0.82rem;cursor:pointer">Cancel</button>'
+        + '</div>'
+        + '</div>';
+    }
+    return '<div style="background:var(--card-bg);border-radius:10px;padding:10px 14px;margin-bottom:8px;box-shadow:var(--shadow)">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between">'
+      + '<div style="font-weight:700;font-size:0.9rem">' + esc(t.label || 'Term') + '</div>'
+      + '<div style="display:flex;align-items:center;gap:4px">'
+      + '<button onclick="editTermDate(' + i + ')" style="background:#f0ede8;border:none;border-radius:6px;color:var(--muted);cursor:pointer;font-size:0.75rem;padding:4px 10px;font-family:\'Special Elite\',cursive">✏️ Edit</button>'
+      + '<button onclick="removeTermDate(' + i + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;padding:2px 4px">×</button>'
+      + '</div>'
+      + '</div>'
+      + (t.termStart ? '<div style="font-size:0.78rem;color:var(--muted);margin-top:2px">📅 Term: ' + fmt(t.termStart) + ' – ' + fmt(t.termEnd) + '</div>' : '')
+      + (t.holidayStart ? '<div style="font-size:0.78rem;color:#e67e22;margin-top:2px">🌴 Holiday: ' + fmt(t.holidayStart) + ' – ' + fmt(t.holidayEnd) + '</div>' : '')
+      + '</div>';
+  }).join('');
+}
+
+function editTermDate(idx) { editingTermIdx = idx; renderTermDates(); }
+function cancelTermDateEdit() { editingTermIdx = -1; renderTermDates(); }
+
+function saveTermDateEdit(idx) {
+  const label = document.getElementById('ted-label').value.trim();
+  const type = document.querySelector('input[name="ted-type"]:checked').value;
+  const start = document.getElementById('ted-start').value;
+  const end = document.getElementById('ted-end').value;
+  if (!label || !start || !end) return;
+  if (type === 'term') {
+    termDates[idx] = { label, termStart: start, termEnd: end };
+  } else {
+    termDates[idx] = { label, holidayStart: start, holidayEnd: end };
+  }
+  termDates.sort(function(a,b) { return (a.termStart||a.holidayStart).localeCompare(b.termStart||b.holidayStart); });
+  editingTermIdx = -1;
+  save(); renderTermDates(); renderWeek();
+}
+
+function addTermDate() {
+  const label = document.getElementById('td-label').value.trim();
+  const type = document.querySelector('input[name="td-type"]:checked').value;
+  const start = document.getElementById('td-start').value;
+  const end = document.getElementById('td-end').value;
+  if (!label || !start || !end) return;
+  if (type === 'term') {
+    termDates.push({ label, termStart: start, termEnd: end });
+  } else {
+    termDates.push({ label, holidayStart: start, holidayEnd: end });
+  }
+  termDates.sort(function(a,b) { return (a.termStart||a.holidayStart).localeCompare(b.termStart||b.holidayStart); });
+  document.getElementById('td-label').value = '';
+  document.getElementById('td-start').value = '';
+  document.getElementById('td-end').value = '';
+  save(); renderTermDates(); renderWeek();
+}
+
+function removeTermDate(idx) { editingTermIdx = -1; termDates.splice(idx,1); save(); renderTermDates(); renderWeek(); }
+
 // ── TERM DATES ────────────────────────────────────────────────────────────
 function saveTermDates() {
   const name  = document.getElementById('term-name').value;
@@ -6927,31 +7189,96 @@ function renderWaiting() {
     <div class="section-card" style="margin-bottom:10px">
       <div style="display:flex;align-items:flex-start;gap:12px">
         <div style="flex:1">
-          <div style="font-weight:700;font-size:1rem;margin-bottom:4px">${esc(w.name)}</div>
+          <div style="font-weight:700;font-size:1rem;margin-bottom:2px">${esc(w.name)}</div>
+          ${w.parent ? `<div style="font-size:0.8rem;color:var(--muted);margin-bottom:2px">Parent: ${esc(w.parent)}</div>` : ''}
           <div style="font-size:0.8rem;color:var(--muted);margin-bottom:4px">${instrDot(w.instrument.toLowerCase())}${w.instrument} · Added ${w.date}</div>
+          ${w.email ? `<div style="font-size:0.8rem;color:var(--muted)">✉ ${esc(w.email)}</div>` : ''}
+          ${w.phone ? `<div style="font-size:0.8rem;color:var(--muted)">📞 ${esc(w.phone)}</div>` : ''}
           ${w.contact ? `<div style="font-size:0.8rem;color:var(--muted)">✉ ${esc(w.contact)}</div>` : ''}
+          ${w.lessonTime ? `<div style="font-size:0.8rem;color:var(--muted)">🕐 ${esc(w.lessonTime)}</div>` : ''}
           ${w.notes ? `<div style="font-size:0.85rem;margin-top:6px">${esc(w.notes)}</div>` : ''}
         </div>
-        <button onclick="removeFromWaiting(${i})" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px">×</button>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+          <button onclick="moveWaitingToPupils(${i})"
+            style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:5px 10px;font-family:'Special Elite',cursive;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap">
+            ✓ Add to pupils
+          </button>
+          <button onclick="editWaiting(${i})"
+            style="background:#f0ede8;border:none;border-radius:8px;padding:5px 10px;font-family:'Special Elite',cursive;font-size:0.72rem;color:var(--viola);cursor:pointer;white-space:nowrap">
+            ✏️ Edit
+          </button>
+          <button onclick="removeFromWaiting(${i})" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px">×</button>
+        </div>
       </div>
     </div>`).join('');
 }
+
 function openAddWaitingModal() {
   document.getElementById('wait-name').value = '';
-  document.getElementById('wait-contact').value = '';
+  document.getElementById('wait-parent').value = '';
+  document.getElementById('wait-email').value = '';
+  document.getElementById('wait-phone').value = '';
+  document.getElementById('wait-lesson-time').value = '';
   document.getElementById('wait-notes').value = '';
   document.getElementById('waiting-modal').classList.add('open');
 }
-function closeAddWaitingModal() { document.getElementById('waiting-modal').classList.remove('open'); }
+
+function closeAddWaitingModal() {
+  const modal = document.getElementById('waiting-modal');
+  modal.classList.remove('open');
+  delete modal.dataset.editIdx;
+  document.querySelector('#waiting-modal h2').textContent = 'Add to waiting list';
+}
+
+function editWaiting(idx) {
+  const w = waitingList[idx]; if (!w) return;
+  document.getElementById('wait-name').value = w.name || '';
+  document.getElementById('wait-parent').value = w.parent || '';
+  document.getElementById('wait-email').value = w.email || w.contact || '';
+  document.getElementById('wait-phone').value = w.phone || '';
+  document.getElementById('wait-lesson-time').value = w.lessonTime || '';
+  document.getElementById('wait-notes').value = w.notes || '';
+  if (w.instrument === 'Viola') document.getElementById('wait-viola').checked = true;
+  else document.getElementById('wait-violin').checked = true;
+  const modal = document.getElementById('waiting-modal');
+  modal.dataset.editIdx = idx;
+  document.querySelector('#waiting-modal h2').textContent = 'Edit waiting list entry';
+  modal.classList.add('open');
+}
+
 function addToWaitingList() {
   const name = document.getElementById('wait-name').value.trim(); if (!name) return;
   const instrument = document.querySelector('input[name="wait-inst"]:checked').value;
-  const contact = document.getElementById('wait-contact').value.trim();
+  const parent = document.getElementById('wait-parent').value.trim();
+  const email = document.getElementById('wait-email').value.trim();
+  const phone = document.getElementById('wait-phone').value.trim();
+  const lessonTime = document.getElementById('wait-lesson-time').value.trim();
   const notes = document.getElementById('wait-notes').value.trim();
-  waitingList.push({ name, instrument, contact, notes, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) });
+  const modal = document.getElementById('waiting-modal');
+  const editIdx = modal.dataset.editIdx !== undefined ? parseInt(modal.dataset.editIdx) : -1;
+  if (editIdx >= 0) {
+    waitingList[editIdx] = { ...waitingList[editIdx], name, parent, instrument, email, phone, lessonTime, notes };
+  } else {
+    waitingList.push({ name, parent, instrument, email, phone, lessonTime, notes, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) });
+  }
   save(); closeAddWaitingModal(); renderWaiting();
 }
+
 function removeFromWaiting(idx) { waitingList.splice(idx,1); save(); renderWaiting(); }
+
+function moveWaitingToPupils(idx) {
+  const w = waitingList[idx]; if (!w) return;
+  // Pre-fill the add pupil modal with waiting list data
+  openAddModal();
+  setTimeout(function() {
+    document.getElementById('new-name').value = w.name || '';
+    document.getElementById('new-email').value = w.email || w.contact || '';
+    if (w.instrument === 'Viola') document.getElementById('inst-viola').checked = true;
+    else document.getElementById('inst-violin').checked = true;
+    // Store the waiting list index so we can remove after adding
+    document.getElementById('add-modal').dataset.fromWaiting = idx;
+  }, 100);
+}
 
 // ── LENDING LOG ───────────────────────────────────────────────────────────────
 function toggleLendingForm() {
@@ -7692,6 +8019,7 @@ function backupData() {
     studio_waiting_list:  localStorage.getItem('studio_waiting_list')  || '[]',
     studio_daily_notes:   localStorage.getItem('studio_daily_notes')   || '{}',
     studio_term:          localStorage.getItem('studio_term')          || '{}',
+    studio_term_dates:    localStorage.getItem('studio_term_dates')    || '[]',
     studio_eod:           localStorage.getItem('studio_eod')           || '{}',
     studio_skipped_weeks: localStorage.getItem('studio_skipped_weeks') || '{}',
     studio_extra_lessons: localStorage.getItem('studio_extra_lessons') || '{}',
@@ -7722,7 +8050,7 @@ function restoreData(event) {
 
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
-        'studio_term','studio_eod','studio_skipped_weeks','studio_extra_lessons','studio_cal_url','studio_dark_mode_REMOVED'];
+        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_extra_lessons','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
 
       // Reload state
@@ -7730,9 +8058,11 @@ function restoreData(event) {
       customChips     = JSON.parse(localStorage.getItem('studio_custom_chips')     || '[]');
       deletedBuiltins = JSON.parse(localStorage.getItem('studio_deleted_builtins') || '[]');
       techCategoryMap = JSON.parse(localStorage.getItem('studio_tech_categories')  || 'null') || Object.assign({}, TECH_CATEGORY_DEFAULTS);
+      customTechCats  = JSON.parse(localStorage.getItem('studio_custom_tech_cats') || '[]');
       customPieces    = JSON.parse(localStorage.getItem('studio_custom_pieces')    || '[]');
       oneOffMoves     = JSON.parse(localStorage.getItem('studio_one_off_moves')    || '{}');
       waitingList     = JSON.parse(localStorage.getItem('studio_waiting_list')     || '[]');
+      termDates       = JSON.parse(localStorage.getItem('studio_term_dates')       || '[]');
       skippedWeeks    = JSON.parse(localStorage.getItem('studio_skipped_weeks')    || '{}');
       extraLessons    = JSON.parse(localStorage.getItem('studio_extra_lessons')    || '{}');
       repairStudentIDs();
