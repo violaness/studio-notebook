@@ -3839,13 +3839,61 @@ function testMic(btnId, msgId, textareaId) {
   }
 }
 
+// Applies the Library's voice auto-corrections to a dictated transcript.
+//
+// Dictation makes this harder than a plain find-and-replace:
+//   • iOS produces curly apostrophes (’), so a correction typed with a
+//     straight one (') would never match. Both sides are normalised first.
+//   • Dictation sprinkles in punctuation, so "viola ness" can arrive as
+//     "viola, ness". Spaces in a correction therefore match any punctuation
+//     and/or whitespace between the words.
+//   • \b only works next to word characters, so a correction starting or
+//     ending with a symbol (e.g. "#1") needs the boundary omitting at that
+//     end, or it can never fire.
 function applyReplacements(text) {
+  // Treat curly and straight apostrophes as the same character throughout
+  const normalise = function(str) { return String(str||'').replace(/[\u2018\u2019\u02BC]/g, "'"); };
+  text = normalise(text);
+
+  let matchedAny = false;
+
   speechReplacements.forEach(function(r) {
     if (!r.from) return;
-    const regex = new RegExp('\\b' + r.from.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b', 'gi');
-    text = text.replace(regex, r.to || '');
+    const from = normalise(r.from).trim();
+    if (!from) return;
+
+    // Escape regex metacharacters, then let any run of spaces in the
+    // correction match punctuation and/or whitespace in the transcript.
+    const escaped = from
+      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/\s+/g, '[\\s,.;:!?\u2014\u2013-]+');
+
+    // \b only means anything next to a word character — adding it beside a
+    // symbol makes the pattern unmatchable, so only apply it where it fits.
+    const openBoundary  = /^\w/.test(from) ? '\\b' : '';
+    const closeBoundary = /\w$/.test(from) ? '\\b' : '';
+
+    let regex;
+    try {
+      regex = new RegExp(openBoundary + escaped + closeBoundary, 'gi');
+    } catch(e) {
+      return; // malformed correction — skip rather than break dictation
+    }
+
+    if (regex.test(text)) {
+      matchedAny = true;
+      regex.lastIndex = 0;
+      text = text.replace(regex, r.to || '');
+    }
   });
-  return text.replace(/\s{2,}/g,' ').trim();
+
+  // Only tidy whitespace if a correction actually fired — deleting a word
+  // leaves a double space behind. Otherwise leave the transcript untouched,
+  // so ordinary dictation isn't silently reformatted.
+  if (matchedAny) {
+    text = text.replace(/[ \t]{2,}/g, ' ').replace(/[ \t]+([,.;:!?])/g, '$1').trim();
+  }
+  return text;
 }
 
 function autoSaveNextLesson(id, value) {
