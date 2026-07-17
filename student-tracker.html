@@ -838,6 +838,17 @@
     <div id="lending-list"></div>
   </div>
 
+  <!-- GIFTS RECEIVED -->
+  <details style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
+    <summary style="font-size:0.72rem;font-weight:800;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+      <span>🎁 Gifts received</span><span style="font-weight:400" id="gifts-summary-count"></span>
+    </summary>
+    <div style="margin-top:10px">
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Gifts still to thank someone for. Tick one off and it clears from here — it stays on the pupil's page as a record.</div>
+      <div id="gifts-list"></div>
+    </div>
+  </details>
+
   <!-- SPEECH REPLACEMENTS -->
   <details style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
     <summary style="font-size:0.72rem;font-weight:800;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
@@ -2245,6 +2256,7 @@ function renderRoster() {
   renderLendingLog();
   renderSpeechReplacements();
   renderTermDates();
+  renderGiftsList();
 }
 
 function renderRosterList(filtered) {
@@ -2363,7 +2375,7 @@ function openStudentFrom(id, from) {
   prevView = from;
   const s = getStudent(id); if (!s) return;
   document.getElementById('back-btn').textContent =
-    from==='today' ? '← Back to today' : from==='week' ? '← Back to week' : '← Back to all pupils';
+    from==='today' ? '← Back to today' : from==='week' ? '← Back to week' : from==='library' ? '← Back to library' : '← Back to all pupils';
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-detail').classList.add('active');
   renderDetail(s);
@@ -2524,15 +2536,13 @@ function renderDetail(s, preserveTab = false) {
             <summary style="font-size:0.68rem;font-weight:700;color:#c0622f;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
               <span>🎁 Gifts</span><span style="font-weight:400;font-size:0.65rem">tap to expand</span>
             </summary>
-            <textarea placeholder="e.g. Chocolates, end of term 2026…"
-              oninput="autoGrow(this);updateLittleDetail('${s.id}','gifts',this.value)"
-              style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #f5d5c0;font-family:'Special Elite',cursive;font-size:0.85rem;background:#fff9f7;color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:50px;margin-top:4px">${esc((s.littleDetails||{}).gifts||'')}</textarea>
-            <label style="display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer;font-size:0.82rem;color:${(s.littleDetails||{}).thankYouSent ? '#2F5C1A' : 'var(--muted)'}">
-              <input type="checkbox" ${(s.littleDetails||{}).thankYouSent ? 'checked' : ''}
-                onchange="updateLittleDetail('${s.id}','thankYouSent',this.checked);this.closest('label').style.color=this.checked?'#2F5C1A':'var(--muted)'"
-                style="width:18px;height:18px;cursor:pointer;accent-color:#2F5C1A">
-              Thank you sent
-            </label>
+            <div id="gift-list-${s.id}">${giftListHTML(s)}</div>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <input type="text" id="new-gift-${s.id}" placeholder="e.g. Chocolates…" maxlength="120"
+                onkeydown="if(event.key==='Enter')addGift('${s.id}')"
+                style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #f5d5c0;font-family:'Special Elite',cursive;font-size:0.85rem;background:#fff9f7;color:var(--ink);box-sizing:border-box">
+              <button onclick="addGift('${s.id}')" style="background:#c0622f;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:'Special Elite',cursive;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap">+ Add</button>
+            </div>
           </details>
           <details style="margin-top:8px">
             <summary style="font-size:0.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
@@ -6094,6 +6104,7 @@ function renderLibrary() {
   renderLibPieces();
   renderStudioAttendance();
   renderTermDates();
+  renderGiftsList();
 }
 
 // Built-in categories present in both filter dropdowns by default
@@ -7343,6 +7354,166 @@ function removeSpeechReplacement(idx) {
   save(); renderSpeechReplacements();
 }
 
+// ── GIFTS ─────────────────────────────────────────────────────────────────
+// littleDetails.giftList = [{text, date, done}]
+//   text — what it was, e.g. "Bottle of wine"
+//   date — when it was noted, e.g. "17 Jul 2026"
+//   done — ticked off the Library to-do list. The gift STAYS on the pupil's
+//          page as a permanent record; `done` only controls whether it still
+//          shows in the Library's outstanding list.
+
+function getGiftList(s) {
+  const ld = s.littleDetails || {};
+  return Array.isArray(ld.giftList) ? ld.giftList : [];
+}
+
+// The running list shown on a pupil's own page — full history, no tick boxes.
+function giftListHTML(s) {
+  const gifts = getGiftList(s);
+  if (gifts.length === 0) {
+    return '<p style="color:var(--muted);font-size:0.8rem;font-style:italic;margin:4px 0">Nothing noted yet.</p>';
+  }
+  return gifts.map(function(g, i) {
+    return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f5e5dc">'
+      + '<span style="flex:1;font-size:0.85rem;color:var(--ink)">' + esc(g.text || '')
+      + (g.date ? '<span style="font-size:0.7rem;color:var(--muted);margin-left:8px">' + esc(g.date) + '</span>' : '')
+      + (g.done ? '<span style="font-size:0.65rem;color:#2F5C1A;margin-left:6px" title="Thank you sent">\u2713</span>' : '')
+      + '</span>'
+      + '<button onclick="removeGift(\'' + s.id + '\',' + i + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1;flex-shrink:0">\u00d7</button>'
+      + '</div>';
+  }).join('');
+}
+
+// Add a gift from the pupil's own page. Auto-stamps today's date.
+function addGift(id) {
+  const s = getStudent(id); if (!s) return;
+  const input = document.getElementById('new-gift-' + id);
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+  if (!s.littleDetails) s.littleDetails = {};
+  if (!Array.isArray(s.littleDetails.giftList)) s.littleDetails.giftList = [];
+  s.littleDetails.giftList.push({
+    text: text,
+    date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),
+    done: false
+  });
+  input.value = '';
+  save();
+  const listEl = document.getElementById('gift-list-' + id);
+  if (listEl) listEl.innerHTML = giftListHTML(s);
+  renderGiftsList();
+}
+
+function removeGift(id, idx) {
+  const s = getStudent(id); if (!s) return;
+  const gifts = getGiftList(s);
+  if (!gifts[idx]) return;
+  gifts.splice(idx, 1);
+  save();
+  const listEl = document.getElementById('gift-list-' + id);
+  if (listEl) listEl.innerHTML = giftListHTML(s);
+  renderGiftsList();
+}
+
+// ── GIFTS RECEIVED (Library to-do list) ───────────────────────────────────
+// Shows only gifts NOT yet ticked off. Ticking one clears it from this list
+// but leaves it on the pupil's page. Also allows adding a gift for any pupil
+// without opening their page — useful at end of term.
+function renderGiftsList() {
+  const el = document.getElementById('gifts-list'); if (!el) return;
+  const countEl = document.getElementById('gifts-summary-count');
+
+  // Flatten to {student, gift, idx} for every outstanding gift
+  const outstanding = [];
+  students.forEach(function(s) {
+    getGiftList(s).forEach(function(g, i) {
+      if (!g.done) outstanding.push({ s: s, g: g, idx: i });
+    });
+  });
+  outstanding.sort(function(a, b) { return a.s.name.localeCompare(b.s.name); });
+
+  if (countEl) {
+    countEl.textContent = outstanding.length > 0
+      ? outstanding.length + ' to thank'
+      : 'all done \u2713';
+    countEl.style.color = outstanding.length > 0 ? '#e67e22' : '#2F5C1A';
+  }
+
+  const pupilOptions = [...students]
+    .sort(function(a,b) { return a.name.localeCompare(b.name); })
+    .map(function(s) { return '<option value="' + s.id + '">' + esc(s.name) + '</option>'; })
+    .join('');
+
+  const addRow = '<div style="background:#fff9f7;border:1.5px solid #f5d5c0;border-radius:10px;padding:10px 12px;margin-top:10px">'
+    + '<div style="font-size:0.68rem;font-weight:700;color:#c0622f;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Add a gift</div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:6px">'
+    + '<select id="gift-add-pupil" style="flex:1;min-width:110px;padding:7px 10px;border-radius:8px;border:1.5px solid #f5d5c0;font-family:\'Special Elite\',cursive;font-size:0.82rem;background:#fff;color:var(--ink)">' + pupilOptions + '</select>'
+    + '<input type="text" id="gift-add-text" placeholder="e.g. Bottle of wine…" maxlength="120"'
+    + ' onkeydown="if(event.key===\'Enter\')addGiftFromLibrary()"'
+    + ' style="flex:2;min-width:130px;padding:7px 10px;border-radius:8px;border:1.5px solid #f5d5c0;font-family:\'Special Elite\',cursive;font-size:0.82rem;background:#fff;color:var(--ink);box-sizing:border-box">'
+    + '<button onclick="addGiftFromLibrary()" style="background:#c0622f;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:\'Special Elite\',cursive;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap">+ Add</button>'
+    + '</div></div>';
+
+  if (outstanding.length === 0) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">Nothing outstanding \u2014 all thank yous sent. \ud83c\udf89</p>' + addRow;
+    return;
+  }
+
+  el.innerHTML = outstanding.map(function(o) {
+    return '<div style="background:#fff9f7;border:1.5px solid #f5d5c0;border-radius:10px;padding:10px 14px;margin-bottom:8px">'
+      + '<div style="display:flex;align-items:flex-start;gap:10px">'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-weight:700;font-size:0.9rem;cursor:pointer" onclick="openStudentFrom(\'' + o.s.id + '\',\'library\')">'
+      + instrDot(o.s.instrument) + esc(o.s.name) + '</div>'
+      + '<div style="font-size:0.82rem;color:var(--ink);margin-top:3px">' + esc(o.g.text || '')
+      + (o.g.date ? '<span style="font-size:0.7rem;color:var(--muted);margin-left:8px">' + esc(o.g.date) + '</span>' : '')
+      + '</div>'
+      + '</div>'
+      + '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.75rem;flex-shrink:0;white-space:nowrap;color:var(--muted)">'
+      + '<input type="checkbox" onchange="markGiftDone(\'' + o.s.id + '\',' + o.idx + ')" '
+      + 'style="width:18px;height:18px;cursor:pointer;accent-color:#2F5C1A">'
+      + 'Thank you sent</label>'
+      + '</div></div>';
+  }).join('') + addRow;
+}
+
+// Tick off — clears from the Library list, stays on the pupil's page.
+function markGiftDone(id, idx) {
+  const s = getStudent(id); if (!s) return;
+  const gifts = getGiftList(s);
+  if (!gifts[idx]) return;
+  gifts[idx].done = true;
+  save();
+  renderGiftsList();
+}
+
+// Add a gift for any pupil straight from the Library page.
+function addGiftFromLibrary() {
+  const sel = document.getElementById('gift-add-pupil');
+  const txt = document.getElementById('gift-add-text');
+  if (!sel || !txt) return;
+  const id = sel.value;
+  const text = txt.value.trim();
+  if (!id || !text) { if (txt) txt.focus(); return; }
+  const s = getStudent(id); if (!s) return;
+  if (!s.littleDetails) s.littleDetails = {};
+  if (!Array.isArray(s.littleDetails.giftList)) s.littleDetails.giftList = [];
+  s.littleDetails.giftList.push({
+    text: text,
+    date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),
+    done: false
+  });
+  save();
+  txt.value = '';
+  renderGiftsList();
+  // Keep the same pupil selected — often several gifts land at once
+  const selAfter = document.getElementById('gift-add-pupil');
+  if (selAfter) selAfter.value = id;
+  const txtAfter = document.getElementById('gift-add-text');
+  if (txtAfter) txtAfter.focus();
+}
+
 function renderLendingLog() {
   const el = document.getElementById('lending-list'); if (!el) return;
   if (lendingLog.length === 0) {
@@ -8066,6 +8237,7 @@ function restoreData(event) {
       skippedWeeks    = JSON.parse(localStorage.getItem('studio_skipped_weeks')    || '{}');
       extraLessons    = JSON.parse(localStorage.getItem('studio_extra_lessons')    || '{}');
       repairStudentIDs();
+      migrateGiftsToList();
             closeBackupModal();
       renderToday();
       renderRoster();
@@ -8101,6 +8273,34 @@ function repairStudentIDs() {
 // the "Copy last lesson notes as plan" button, which copied an already-built
 // note — header and all — straight into the plan field). Strips just the
 // header text; leaves the actual plan content untouched.
+// One-time migration: gifts used to be a single free-text field
+// (littleDetails.gifts) with one shared thank-you flag (littleDetails.thankYouSent).
+// It's now a list — littleDetails.giftList = [{text, date, done}] — so each gift
+// can be ticked off the Library to-do list independently while the full history
+// stays on the pupil's page. Any existing text becomes a single entry, carrying
+// its old thankYouSent value across as that entry's `done`. The original fields
+// are left untouched so older backups still restore cleanly.
+function migrateGiftsToList() {
+  let changed = false;
+  students.forEach(function(s) {
+    const ld = s.littleDetails;
+    if (!ld) return;
+    if (Array.isArray(ld.giftList)) return; // already migrated
+    const oldText = (ld.gifts || '').trim();
+    if (oldText) {
+      ld.giftList = [{
+        text: oldText,
+        date: '',
+        done: !!ld.thankYouSent
+      }];
+    } else {
+      ld.giftList = [];
+    }
+    changed = true;
+  });
+  if (changed) save();
+}
+
 function cleanDuplicatedPlanHeaders() {
   let changed = false;
   students.forEach(s => {
@@ -8227,6 +8427,7 @@ if (window.location.search.includes('reset=1')) {
 
 repairStudentIDs();
 cleanDuplicatedPlanHeaders();
+migrateGiftsToList();
 syncRequestedAbsencesToLog();
 syncRequestedMovesToWeek();
 renderToday();
