@@ -845,8 +845,11 @@
   </details>
 
   <!-- TERM DATES -->
-  <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
-    <div style="font-size:0.72rem;font-weight:800;color:var(--muted);margin-bottom:4px">📅 Term dates & holidays</div>
+  <details style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
+    <summary style="font-size:0.72rem;font-weight:800;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+      <span>📅 Term dates &amp; holidays</span><span style="font-weight:400">tap to expand</span>
+    </summary>
+    <div style="margin-top:10px">
     <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Add your terms and holidays — the week view will show term week numbers and grey out pupils during holidays.</div>
     <div id="term-dates-list"></div>
     <div style="background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:12px;margin-top:10px">
@@ -872,7 +875,8 @@
       </div>
       <button onclick="addTermDate()" style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">+ Add</button>
     </div>
-  </div>
+    </div>
+  </details>
 </div>
 
 <!-- PERSISTENT TEACHING NOTES BAR -->
@@ -1662,6 +1666,8 @@ function getTermInfo() {
   return null;
 }
 
+let editingTermIdx = -1;
+
 function renderTermDates() {
   const el = document.getElementById('term-dates-list'); if (!el) return;
   if (termDates.length === 0) {
@@ -1670,15 +1676,61 @@ function renderTermDates() {
   }
   el.innerHTML = termDates.map(function(t, i) {
     const fmt = function(d) { return d ? new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—'; };
+    if (i === editingTermIdx) {
+      const isHol = !!t.holidayStart;
+      const start = t.termStart || t.holidayStart || '';
+      const end = t.termEnd || t.holidayEnd || '';
+      return '<div style="background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:12px;margin-bottom:8px">'
+        + '<div style="display:flex;gap:16px;margin-bottom:10px">'
+        + '<label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer">'
+        + '<input type="radio" name="ted-type" value="term"' + (isHol ? '' : ' checked') + '> Term</label>'
+        + '<label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer">'
+        + '<input type="radio" name="ted-type" value="holiday"' + (isHol ? ' checked' : '') + '> Holiday</label>'
+        + '</div>'
+        + '<input type="text" id="ted-label" value="' + esc(t.label || '') + '" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:\'Special Elite\',cursive;font-size:0.85rem;margin-bottom:8px;box-sizing:border-box">'
+        + '<div style="display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:10px">'
+        + '<div><label for="ted-start" style="display:block;font-size:0.68rem;color:var(--muted);margin-bottom:3px">Start date</label>'
+        + '<input type="date" id="ted-start" value="' + start + '" style="width:auto;min-width:11em;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:\'Special Elite\',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>'
+        + '<div><label for="ted-end" style="display:block;font-size:0.68rem;color:var(--muted);margin-bottom:3px">End date</label>'
+        + '<input type="date" id="ted-end" value="' + end + '" style="width:auto;min-width:11em;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:\'Special Elite\',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>'
+        + '</div>'
+        + '<div style="display:flex;gap:8px;justify-content:center">'
+        + '<button onclick="saveTermDateEdit(' + i + ')" style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:8px 20px;font-family:\'Special Elite\',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">✓ Save</button>'
+        + '<button onclick="cancelTermDateEdit()" style="background:#f0ede8;color:var(--muted);border:none;border-radius:8px;padding:8px 20px;font-family:\'Special Elite\',cursive;font-size:0.82rem;cursor:pointer">Cancel</button>'
+        + '</div>'
+        + '</div>';
+    }
     return '<div style="background:var(--card-bg);border-radius:10px;padding:10px 14px;margin-bottom:8px;box-shadow:var(--shadow)">'
       + '<div style="display:flex;align-items:center;justify-content:space-between">'
       + '<div style="font-weight:700;font-size:0.9rem">' + esc(t.label || 'Term') + '</div>'
+      + '<div style="display:flex;align-items:center;gap:4px">'
+      + '<button onclick="editTermDate(' + i + ')" style="background:#f0ede8;border:none;border-radius:6px;color:var(--muted);cursor:pointer;font-size:0.75rem;padding:4px 10px;font-family:\'Special Elite\',cursive">✏️ Edit</button>'
       + '<button onclick="removeTermDate(' + i + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;padding:2px 4px">×</button>'
+      + '</div>'
       + '</div>'
       + (t.termStart ? '<div style="font-size:0.78rem;color:var(--muted);margin-top:2px">📅 Term: ' + fmt(t.termStart) + ' – ' + fmt(t.termEnd) + '</div>' : '')
       + (t.holidayStart ? '<div style="font-size:0.78rem;color:#e67e22;margin-top:2px">🌴 Holiday: ' + fmt(t.holidayStart) + ' – ' + fmt(t.holidayEnd) + '</div>' : '')
       + '</div>';
   }).join('');
+}
+
+function editTermDate(idx) { editingTermIdx = idx; renderTermDates(); }
+function cancelTermDateEdit() { editingTermIdx = -1; renderTermDates(); }
+
+function saveTermDateEdit(idx) {
+  const label = document.getElementById('ted-label').value.trim();
+  const type = document.querySelector('input[name="ted-type"]:checked').value;
+  const start = document.getElementById('ted-start').value;
+  const end = document.getElementById('ted-end').value;
+  if (!label || !start || !end) return;
+  if (type === 'term') {
+    termDates[idx] = { label, termStart: start, termEnd: end };
+  } else {
+    termDates[idx] = { label, holidayStart: start, holidayEnd: end };
+  }
+  termDates.sort(function(a,b) { return (a.termStart||a.holidayStart).localeCompare(b.termStart||b.holidayStart); });
+  editingTermIdx = -1;
+  save(); renderTermDates(); renderWeek();
 }
 
 function addTermDate() {
@@ -1699,7 +1751,7 @@ function addTermDate() {
   save(); renderTermDates(); renderWeek();
 }
 
-function removeTermDate(idx) { termDates.splice(idx,1); save(); renderTermDates(); renderWeek(); }
+function removeTermDate(idx) { editingTermIdx = -1; termDates.splice(idx,1); save(); renderTermDates(); renderWeek(); }
 let wakeLockSentinel = null;
 
 async function toggleWakeLock() {
