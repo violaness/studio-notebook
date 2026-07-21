@@ -2092,6 +2092,20 @@ function renderWeek() {
   }
 
   let weekTotalMins = 0;
+
+  // Birthday banner — any pupil whose birthday falls within this teaching week
+  const birthdaysThisWeek = pupilsWithBirthdayThisWeek();
+  if (birthdaysThisWeek.length > 0) {
+    html += `<div style="background:#fdf0f5;border:1.5px solid #e8b8c4;border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:flex-start;gap:10px">
+      <span style="font-size:1.4rem">🎂</span>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:0.9rem;color:#a03a5e;margin-bottom:2px">Birthday${birthdaysThisWeek.length>1?'s':''} this week</div>
+        <div style="font-size:0.82rem;color:#8a4a60">${birthdaysThisWeek.map(function(b){
+          return esc(b.name) + ' — ' + esc(b.label);
+        }).join('<br>')}</div>
+      </div>
+    </div>`;
+  }
   for (const day of DAYS) {
     const isToday = day === todayName;
     const dayStudents = sortByTime(students.filter(s => effectiveSlot(s).day === day));
@@ -4286,6 +4300,90 @@ function removeBookPurchased(id, category, idx) {
   save();
   renderDetail(s);
   document.querySelectorAll('.moment-tab').forEach(t => { if (t.textContent === 'History') t.click(); });
+}
+
+// Pupils whose birthday (day + month, any year) falls within the current
+// teaching week (the 7 days from this week's Saturday). Handles the year
+// boundary — a week spanning 28 Dec–3 Jan matches both December and January
+// birthdays. Returns each pupil's name and a friendly date label.
+function pupilsWithBirthdayThisWeek() {
+  const [wy, wm, wd] = currentWeek.split('-').map(Number);
+  const weekStart = new Date(wy, wm - 1, wd); weekStart.setHours(0,0,0,0);
+  const out = [];
+  students.forEach(function(s) {
+    if (!s.dob) return;
+    const dob = new Date(s.dob);
+    if (isNaN(dob)) return;
+    const bMonth = dob.getMonth();
+    const bDay = dob.getDate();
+    // Walk the 7 days of this teaching week and see if any is the birthday
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart); d.setDate(weekStart.getDate() + i);
+      if (d.getMonth() === bMonth && d.getDate() === bDay) {
+        const label = d.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
+        out.push({ name: s.name, label: label, sortDay: i });
+        break;
+      }
+    }
+  });
+  out.sort(function(a,b) { return a.sortDay - b.sortDay; });
+  return out;
+}
+
+// Advances every pupil's School year by one rung each new academic year.
+// The UK school year starts in September, so the "academic year" a date
+// belongs to is its calendar year if we're in Sept–Dec, or the previous
+// calendar year if we're in Jan–Aug.
+//
+// SAFETY: this must only ever advance a pupil ONCE per academic year, no
+// matter how many times the app is opened. We store the academic year of the
+// last bump in localStorage ('studio_schoolyear_bumped'); if it already
+// matches the current academic year, we do nothing. There is no birth-year to
+// recompute from, so an accidental double-bump could not be undone — hence the
+// guard is deliberately strict.
+const SCHOOL_YEAR_LADDER = [
+  'Reception','Year 1','Year 2','Year 3','Year 4','Year 5','Year 6',
+  'Year 7','Year 8','Year 9','Year 10','Year 11','Sixth Form / College'
+];
+
+function currentAcademicYear() {
+  const now = new Date();
+  // Sept (month 8) onwards belongs to this calendar year's academic year;
+  // Jan–Aug belongs to the previous calendar year's.
+  return now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+}
+
+function autoAdvanceSchoolYears() {
+  const acadYear = currentAcademicYear();
+  const lastBumped = parseInt(localStorage.getItem('studio_schoolyear_bumped') || '0', 10);
+
+  // First ever run: record where we are and advance nobody. This stops a brand
+  // new install (or a fresh restore) from immediately bumping everyone.
+  if (!lastBumped) {
+    localStorage.setItem('studio_schoolyear_bumped', String(acadYear));
+    return;
+  }
+
+  // Already advanced for this academic year — nothing to do.
+  if (lastBumped >= acadYear) return;
+
+  // Advance each pupil exactly one rung, for each academic year missed
+  // (so if the app wasn't opened for a whole year, it still catches up right).
+  const steps = acadYear - lastBumped;
+  let changed = false;
+  students.forEach(function(s) {
+    if (!s.schoolYear) return; // not set — leave alone
+    let idx = SCHOOL_YEAR_LADDER.indexOf(s.schoolYear);
+    if (idx === -1) return; // unrecognised value — don't touch it
+    const newIdx = Math.min(idx + steps, SCHOOL_YEAR_LADDER.length - 1);
+    if (newIdx !== idx) {
+      s.schoolYear = SCHOOL_YEAR_LADDER[newIdx];
+      changed = true;
+    }
+  });
+
+  localStorage.setItem('studio_schoolyear_bumped', String(acadYear));
+  if (changed) save();
 }
 
 function birthdayDisplay(dob) {
@@ -8259,6 +8357,7 @@ function backupData() {
     studio_term_dates:    localStorage.getItem('studio_term_dates')    || '[]',
     studio_eod:           localStorage.getItem('studio_eod')           || '{}',
     studio_skipped_weeks: localStorage.getItem('studio_skipped_weeks') || '{}',
+    studio_schoolyear_bumped: localStorage.getItem('studio_schoolyear_bumped') || '',
     studio_extra_lessons: localStorage.getItem('studio_extra_lessons') || '{}',
     studio_cal_url:       localStorage.getItem('studio_cal_url')       || '',
   };
@@ -8288,7 +8387,7 @@ function restoreData(event) {
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
         'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
-        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_extra_lessons','studio_cal_url','studio_dark_mode_REMOVED'];
+        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_extra_lessons','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
 
       // Reload state
@@ -8497,6 +8596,7 @@ if (window.location.search.includes('reset=1')) {
 repairStudentIDs();
 cleanDuplicatedPlanHeaders();
 migrateGiftsToList();
+autoAdvanceSchoolYears();
 syncRequestedAbsencesToLog();
 syncRequestedMovesToWeek();
 renderToday();
