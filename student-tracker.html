@@ -604,10 +604,10 @@
     border: 1.5px solid #e0ddd8; background: var(--paper); color: var(--ink); flex: 1; min-width: 160px;
   }
   .idea-canvas-wrap {
-    flex: 1; overflow: auto; margin: 8px 12px 12px; border-radius: 10px;
-    background: #fdfcf8; border: 1px solid #e0ddd8; -webkit-overflow-scrolling: touch;
+    flex: 1; overflow: hidden; margin: 8px 12px 12px; border-radius: 10px;
+    background: #fdfcf8; border: 1px solid #e0ddd8; min-height: 0;
   }
-  .idea-canvas { position: relative; width: 1500px; height: 1100px; }
+  .idea-canvas { position: relative; width: 100%; height: 100%; }
   .idea-note {
     position: absolute; border-radius: 8px; padding: 10px 10px 8px;
     box-shadow: 0 3px 8px rgba(5,39,11,0.18); cursor: grab; touch-action: none;
@@ -990,7 +990,7 @@
       <button class="idea-btn-sm blue" onclick="addIdeaNote('drawing')">✏️ Drawing idea</button>
       <button class="idea-btn-sm green" onclick="addIdeaNote('stave')">🎼 Stave idea</button>
     </div>
-    <p style="padding:0 16px;font-size:0.75rem;color:var(--muted);margin:0 0 6px">Drop ideas anywhere, drag them wherever feels right, colour them however makes sense to you. Nothing here needs ordering.</p>
+    <p style="padding:0 16px;font-size:0.75rem;color:var(--muted);margin:0 0 6px">Drag ideas wherever feels right, colour them however makes sense to you. Nothing here needs ordering.</p>
     <div class="idea-canvas-wrap" id="ideaCanvasWrap">
       <div class="idea-canvas" id="ideaCanvas"></div>
     </div>
@@ -6816,6 +6816,36 @@ function saveQuickCapture() {
 
 const IDEA_COLORS = ['#F9E79F', '#A9DFBF', '#AED6F1', '#F5B7B1', '#D7BDE2'];
 const IDEA_DPR = Math.min(window.devicePixelRatio || 1, 3);
+const IDEA_DEFAULT_SIZE = 110;
+const IDEA_MIN_SIZE = 80;
+const IDEA_MAX_SIZE = 400;
+
+// The board is a fixed, non-scrolling area that fits the screen. These give
+// its current pixel size so notes can be kept inside it.
+function ideaBoardBounds() {
+  const canvas = document.getElementById('ideaCanvas');
+  if (!canvas) return { w: 600, h: 400 };
+  const r = canvas.getBoundingClientRect();
+  return { w: Math.max(120, Math.round(r.width)), h: Math.max(120, Math.round(r.height)) };
+}
+
+// Keeps a note fully inside the board. Returns true if it had to move, so the
+// caller knows whether anything needs saving. Also shrinks a note that is
+// somehow larger than the board itself (e.g. after rotating to portrait).
+function clampIdeaNote(note, bounds) {
+  const b = bounds || ideaBoardBounds();
+  let moved = false;
+  const maxSize = Math.max(IDEA_MIN_SIZE, Math.min(IDEA_MAX_SIZE, Math.min(b.w, b.h)));
+  if ((note.width || IDEA_DEFAULT_SIZE) > maxSize) {
+    note.width = maxSize; note.height = maxSize; moved = true;
+  }
+  const w = note.width || IDEA_DEFAULT_SIZE;
+  const h = note.height || IDEA_DEFAULT_SIZE;
+  const x = Math.max(0, Math.min(b.w - w, note.x || 0));
+  const y = Math.max(0, Math.min(b.h - h, note.y || 0));
+  if (x !== note.x || y !== note.y) { note.x = x; note.y = y; moved = true; }
+  return moved;
+}
 const ideaRedoStacks = new Map();
 
 function saveIdeaBoards() {
@@ -6928,8 +6958,16 @@ function deleteCurrentIdeaBoard() {
 function openIdeaBoard() {
   document.getElementById('ideaOverlay').style.display = 'flex';
   renderIdeaBoardSelector();
-  renderIdeaBoard();
+  // Wait a frame so the board has real dimensions before notes are clamped
+  requestAnimationFrame(function() { renderIdeaBoard(); });
 }
+
+// Rotating the iPad changes the board size, so re-render (which re-clamps)
+// to keep every note on screen.
+window.addEventListener('resize', function() {
+  const overlay = document.getElementById('ideaOverlay');
+  if (overlay && overlay.style.display === 'flex') renderIdeaBoard();
+});
 
 function closeIdeaBoard() {
   document.getElementById('ideaOverlay').style.display = 'none';
@@ -6955,17 +6993,22 @@ function redoIdeaDrawing(note) {
 }
 
 function addIdeaNote(type) {
-  const wrap = document.getElementById('ideaCanvasWrap');
   const notes = getIdeaNotes();
-  const x = wrap.scrollLeft + 60 + Math.random() * 80;
-  const y = wrap.scrollTop + 60 + Math.random() * 80;
+  const bounds = ideaBoardBounds();
+  const size = IDEA_DEFAULT_SIZE;
+  // Drop it somewhere in the upper-left area of the visible board, with a
+  // little scatter so notes don't stack exactly on top of each other.
+  const maxX = Math.max(0, bounds.w - size);
+  const maxY = Math.max(0, bounds.h - size);
+  const x = Math.min(maxX, 20 + Math.random() * Math.min(160, maxX));
+  const y = Math.min(maxY, 20 + Math.random() * Math.min(160, maxY));
   const note = {
     id: 'n' + Date.now() + Math.floor(Math.random() * 1000),
     type: (type === 'drawing' || type === 'stave') ? type : 'text',
     text: '',
     strokes: [],
     x: x, y: y,
-    width: 140, height: 140,
+    width: size, height: size,
     color: IDEA_COLORS[Math.floor(Math.random() * IDEA_COLORS.length)],
     rot: Math.round((Math.random() * 6 - 3) * 10) / 10
   };
@@ -7103,7 +7146,12 @@ function makeIdeaNoteResizable(el, handle, note, canvasEl) {
   handle.addEventListener('pointermove', function(e) {
     if (!resizing) return;
     const delta = ((e.clientX - startX) + (e.clientY - startY)) / 2;
-    const newSize = Math.min(400, Math.max(100, Math.round(origSize + delta)));
+    const b = ideaBoardBounds();
+    // Can't grow bigger than the board, or past its right/bottom edge
+    const roomX = b.w - (note.x || 0);
+    const roomY = b.h - (note.y || 0);
+    const cap = Math.max(IDEA_MIN_SIZE, Math.min(IDEA_MAX_SIZE, roomX, roomY));
+    const newSize = Math.min(cap, Math.max(IDEA_MIN_SIZE, Math.round(origSize + delta)));
     note.width = newSize;
     note.height = newSize;
     el.style.width = newSize + 'px';
@@ -7136,8 +7184,12 @@ function makeIdeaNoteDraggable(el, note) {
 
   el.addEventListener('pointermove', function(e) {
     if (!dragging) return;
-    note.x = origX + (e.clientX - startX);
-    note.y = origY + (e.clientY - startY);
+    const b = ideaBoardBounds();
+    const w = note.width || IDEA_DEFAULT_SIZE;
+    const h = note.height || IDEA_DEFAULT_SIZE;
+    // Clamp as you drag so a note can never be pushed off the board
+    note.x = Math.max(0, Math.min(b.w - w, origX + (e.clientX - startX)));
+    note.y = Math.max(0, Math.min(b.h - h, origY + (e.clientY - startY)));
     el.style.left = note.x + 'px';
     el.style.top = note.y + 'px';
   });
@@ -7165,12 +7217,23 @@ function renderIdeaBoard() {
     return;
   }
 
+  // Rescue anything sitting outside the board (e.g. notes created when the
+  // board still scrolled, or after rotating the iPad). Saves only if something
+  // actually moved, so this is a no-op on a tidy board.
+  const bounds = ideaBoardBounds();
+  let anyMoved = false;
   notes.forEach(function(note) {
     if (!note.width || !note.height || note.width !== note.height) {
-      const size = Math.max(note.width || 140, note.height || 140);
+      const size = Math.max(note.width || IDEA_DEFAULT_SIZE, note.height || IDEA_DEFAULT_SIZE);
       note.width = size;
       note.height = size;
+      anyMoved = true;
     }
+    if (clampIdeaNote(note, bounds)) anyMoved = true;
+  });
+  if (anyMoved) saveIdeaBoards();
+
+  notes.forEach(function(note) {
     const el = document.createElement('div');
     el.className = 'idea-note';
     el.dataset.noteId = note.id;
