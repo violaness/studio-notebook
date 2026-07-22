@@ -981,6 +981,7 @@
     </div>
     <div class="idea-board-selector-row">
       <select id="ideaBoardSelect" class="idea-board-select" onchange="switchIdeaBoard(this.value)"></select>
+      <button class="idea-btn-sm" onclick="renameCurrentIdeaBoard()">✏️ Rename</button>
       <button class="idea-btn-sm dark" onclick="promptNewIdeaBoard()">+ New board</button>
       <button class="idea-btn-sm" onclick="deleteCurrentIdeaBoard()">✕ Delete this board</button>
     </div>
@@ -6895,6 +6896,18 @@ function promptNewIdeaBoard() {
   saveIdeaBoards();
   renderIdeaBoardSelector();
   renderIdeaBoard();
+}
+
+function renameCurrentIdeaBoard() {
+  const board = getCurrentIdeaBoard();
+  if (!board) return;
+  const name = window.prompt('Rename this board:', board.name || '');
+  if (name === null) return; // cancelled
+  const trimmed = name.trim();
+  if (!trimmed) return;      // blank — keep the existing name rather than wipe it
+  board.name = trimmed;
+  saveIdeaBoards();
+  renderIdeaBoardSelector();
 }
 
 function deleteCurrentIdeaBoard() {
