@@ -573,14 +573,19 @@
   }
 
   /* ── IDEA BOARD ─────────────────────────────────────────────────────── */
-  .idea-overlay { align-items: stretch; justify-content: stretch; padding: 12px; }
+  .idea-overlay {
+    align-items: stretch; justify-content: stretch;
+    padding: 12px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
   .idea-board-card {
     background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow);
     width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden;
   }
   .idea-board-header {
     display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
-    padding: 14px 16px 6px;
+    padding: 16px 16px 8px;
   }
   .idea-board-header h3 { margin: 0; font-size: 1.05rem; font-family: 'DM Serif Display', serif; }
   .idea-header-btns { display: flex; gap: 8px; flex-wrap: wrap; }
