@@ -609,9 +609,13 @@
   }
   .idea-canvas { position: relative; width: 100%; height: 100%; }
   .idea-note {
-    position: absolute; border-radius: 8px; padding: 10px 10px 8px;
-    box-shadow: 0 3px 8px rgba(5,39,11,0.18); cursor: grab; touch-action: none;
+    position: absolute; top: 0; left: 0; border-radius: 8px; padding: 10px 10px 8px;
+    box-shadow: 0 3px 8px rgba(5,39,11,0.18); cursor: grab;
     display: flex; flex-direction: column; overflow: hidden;
+    /* none = iOS won't try to scroll/pan while you're dragging a note */
+    touch-action: none;
+    -webkit-user-select: none; user-select: none;
+    will-change: transform;
   }
   .idea-note.is-dragging { cursor: grabbing; z-index: 20; box-shadow: 0 8px 18px rgba(5,39,11,0.3); }
   .idea-resize-handle {
@@ -631,6 +635,7 @@
   .idea-note textarea {
     flex: 1; width: 100%; border: none; background: transparent; resize: none; padding: 0;
     font-family: 'Special Elite', cursive; font-size: 0.8rem; color: var(--ink); line-height: 1.4em;
+    touch-action: auto; -webkit-user-select: text; user-select: text;
   }
   .idea-note-canvas {
     flex: 1; width: 100%; height: 100%; touch-action: none; cursor: crosshair;
@@ -7133,73 +7138,117 @@ function setupIdeaDrawingCanvas(canvasEl, note) {
 // threw whenever a drawing/stave note was resized. The canvas is now passed
 // in explicitly so resizing redraws correctly.
 function makeIdeaNoteResizable(el, handle, note, canvasEl) {
-  let startX, startY, origSize, resizing = false;
+  let startX, startY, origSize, cap = IDEA_MAX_SIZE;
+  let activePointerId = null;
+  let pending = null, frame = null;
+
+  function applyFrame() {
+    frame = null;
+    if (pending === null) return;
+    const size = pending;
+    note.width = size;
+    note.height = size;
+    el.style.width = size + 'px';
+    el.style.height = size + 'px';
+    if ((note.type === 'drawing' || note.type === 'stave') && canvasEl) {
+      canvasEl.width = Math.round(size * IDEA_DPR);
+      canvasEl.height = Math.round(size * 0.8 * IDEA_DPR);
+      redrawIdeaCanvas(canvasEl, note);
+    }
+  }
 
   handle.addEventListener('pointerdown', function(e) {
     e.stopPropagation();
-    resizing = true;
+    if (activePointerId !== null) return;
+    activePointerId = e.pointerId;
     startX = e.clientX; startY = e.clientY;
-    origSize = note.width || 140;
+    origSize = note.width || IDEA_DEFAULT_SIZE;
+    // Measure once, not on every move — keeps resizing smooth
+    const b = ideaBoardBounds();
+    cap = Math.max(IDEA_MIN_SIZE, Math.min(IDEA_MAX_SIZE, b.w - (note.x || 0), b.h - (note.y || 0)));
     handle.setPointerCapture(e.pointerId);
   });
 
   handle.addEventListener('pointermove', function(e) {
-    if (!resizing) return;
+    if (e.pointerId !== activePointerId) return;
+    e.preventDefault();
     const delta = ((e.clientX - startX) + (e.clientY - startY)) / 2;
-    const b = ideaBoardBounds();
-    // Can't grow bigger than the board, or past its right/bottom edge
-    const roomX = b.w - (note.x || 0);
-    const roomY = b.h - (note.y || 0);
-    const cap = Math.max(IDEA_MIN_SIZE, Math.min(IDEA_MAX_SIZE, roomX, roomY));
-    const newSize = Math.min(cap, Math.max(IDEA_MIN_SIZE, Math.round(origSize + delta)));
-    note.width = newSize;
-    note.height = newSize;
-    el.style.width = newSize + 'px';
-    el.style.height = newSize + 'px';
-    if ((note.type === 'drawing' || note.type === 'stave') && canvasEl) {
-      canvasEl.width = Math.round(newSize * IDEA_DPR);
-      canvasEl.height = Math.round(newSize * 0.8 * IDEA_DPR);
-      redrawIdeaCanvas(canvasEl, note);
-    }
+    pending = Math.min(cap, Math.max(IDEA_MIN_SIZE, Math.round(origSize + delta)));
+    if (frame === null) frame = requestAnimationFrame(applyFrame);
   });
 
-  handle.addEventListener('pointerup', function() {
-    if (!resizing) return;
-    resizing = false;
+  function endResize(e) {
+    if (e && e.pointerId !== activePointerId) return;
+    if (activePointerId === null) return;
+    activePointerId = null;
+    if (frame !== null) { cancelAnimationFrame(frame); frame = null; }
+    applyFrame();
+    pending = null;
     saveIdeaBoards();
-  });
+  }
+
+  handle.addEventListener('pointerup', endResize);
+  handle.addEventListener('pointercancel', endResize);
 }
 
 function makeIdeaNoteDraggable(el, note) {
-  let startX, startY, origX, origY, dragging = false;
+  let startX, startY, origX, origY;
+  let activePointerId = null;
+  let bounds = null;      // measured once per drag, not per move
+  let maxX = 0, maxY = 0;
+  let pending = null;     // latest position, applied on the next frame
+  let frame = null;
+
+  function applyFrame() {
+    frame = null;
+    if (!pending) return;
+    note.x = pending.x;
+    note.y = pending.y;
+    el.style.transform = 'translate(' + pending.x + 'px,' + pending.y + 'px) rotate(' + note.rot + 'deg)';
+  }
 
   el.addEventListener('pointerdown', function(e) {
-    if (e.target.tagName === 'TEXTAREA' || e.target.classList.contains('idea-color-dot') || e.target.classList.contains('idea-note-del')) return;
-    dragging = true;
+    if (e.target.tagName === 'TEXTAREA'
+      || e.target.classList.contains('idea-color-dot')
+      || e.target.classList.contains('idea-note-del')
+      || e.target.classList.contains('idea-resize-handle')
+      || e.target.tagName === 'CANVAS') return;
+    if (activePointerId !== null) return;   // ignore a second finger / palm
+    activePointerId = e.pointerId;
     el.classList.add('is-dragging');
     startX = e.clientX; startY = e.clientY;
     origX = note.x; origY = note.y;
+    // Measure the board ONCE here — calling getBoundingClientRect on every
+    // move forces a layout recalculation and makes dragging stutter.
+    bounds = ideaBoardBounds();
+    maxX = bounds.w - (note.width || IDEA_DEFAULT_SIZE);
+    maxY = bounds.h - (note.height || IDEA_DEFAULT_SIZE);
     el.setPointerCapture(e.pointerId);
   });
 
   el.addEventListener('pointermove', function(e) {
-    if (!dragging) return;
-    const b = ideaBoardBounds();
-    const w = note.width || IDEA_DEFAULT_SIZE;
-    const h = note.height || IDEA_DEFAULT_SIZE;
-    // Clamp as you drag so a note can never be pushed off the board
-    note.x = Math.max(0, Math.min(b.w - w, origX + (e.clientX - startX)));
-    note.y = Math.max(0, Math.min(b.h - h, origY + (e.clientY - startY)));
-    el.style.left = note.x + 'px';
-    el.style.top = note.y + 'px';
+    if (e.pointerId !== activePointerId) return;
+    e.preventDefault();
+    const x = Math.max(0, Math.min(maxX, origX + (e.clientX - startX)));
+    const y = Math.max(0, Math.min(maxY, origY + (e.clientY - startY)));
+    pending = { x: x, y: y };
+    // Paint at most once per frame, in step with the screen refresh
+    if (frame === null) frame = requestAnimationFrame(applyFrame);
   });
 
-  el.addEventListener('pointerup', function() {
-    if (!dragging) return;
-    dragging = false;
+  function endDrag(e) {
+    if (e && e.pointerId !== activePointerId) return;
+    if (activePointerId === null) return;
+    activePointerId = null;
+    if (frame !== null) { cancelAnimationFrame(frame); frame = null; }
+    applyFrame();
+    pending = null;
     el.classList.remove('is-dragging');
     saveIdeaBoards();
-  });
+  }
+
+  el.addEventListener('pointerup', endDrag);
+  el.addEventListener('pointercancel', endDrag);
 }
 
 function renderIdeaBoard() {
@@ -7237,12 +7286,14 @@ function renderIdeaBoard() {
     const el = document.createElement('div');
     el.className = 'idea-note';
     el.dataset.noteId = note.id;
-    el.style.left = note.x + 'px';
-    el.style.top = note.y + 'px';
+    el.style.left = '0px';
+    el.style.top = '0px';
     el.style.width = note.width + 'px';
     el.style.height = note.height + 'px';
     el.style.background = note.color;
-    el.style.transform = 'rotate(' + note.rot + 'deg)';
+    // Positioned with transform (not left/top) so dragging stays smooth —
+    // transforms are composited and don't trigger a layout on every move.
+    el.style.transform = 'translate(' + note.x + 'px,' + note.y + 'px) rotate(' + note.rot + 'deg)';
 
     const top = document.createElement('div');
     top.className = 'idea-note-top';
