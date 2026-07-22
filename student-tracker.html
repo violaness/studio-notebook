@@ -571,6 +571,70 @@
     #notebook-cover.opening { transform: none; }
     #notebook-cover .cover-tap-hint { animation: none; }
   }
+
+  /* ── IDEA BOARD ─────────────────────────────────────────────────────── */
+  .idea-overlay { align-items: stretch; justify-content: stretch; padding: 12px; }
+  .idea-board-card {
+    background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow);
+    width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden;
+  }
+  .idea-board-header {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    padding: 14px 16px 6px;
+  }
+  .idea-board-header h3 { margin: 0; font-size: 1.05rem; font-family: 'DM Serif Display', serif; }
+  .idea-header-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .idea-btn-sm {
+    background: #f0ede8; border: none; border-radius: 8px; padding: 0 14px; height: 36px;
+    font-family: 'Special Elite', cursive; font-size: 0.8rem; color: var(--ink); cursor: pointer;
+  }
+  .idea-btn-sm.dark { background: var(--ink); color: #fff; }
+  .idea-btn-sm.blue { background: var(--violin); color: #fff; }
+  .idea-btn-sm.green { background: var(--string); color: #05270B; }
+  .idea-board-selector-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 0 16px 10px;
+  }
+  .idea-board-select {
+    font-family: 'Special Elite', cursive; font-size: 0.82rem; padding: 8px 10px; border-radius: 8px;
+    border: 1.5px solid #e0ddd8; background: var(--paper); color: var(--ink); flex: 1; min-width: 160px;
+  }
+  .idea-canvas-wrap {
+    flex: 1; overflow: auto; margin: 8px 12px 12px; border-radius: 10px;
+    background: #fdfcf8; border: 1px solid #e0ddd8; -webkit-overflow-scrolling: touch;
+  }
+  .idea-canvas { position: relative; width: 1500px; height: 1100px; }
+  .idea-note {
+    position: absolute; border-radius: 8px; padding: 10px 10px 8px;
+    box-shadow: 0 3px 8px rgba(5,39,11,0.18); cursor: grab; touch-action: none;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .idea-note.is-dragging { cursor: grabbing; z-index: 20; box-shadow: 0 8px 18px rgba(5,39,11,0.3); }
+  .idea-resize-handle {
+    position: absolute; right: 2px; bottom: 2px; width: 20px; height: 20px; cursor: nwse-resize;
+    touch-action: none; opacity: 0.55;
+  }
+  .idea-resize-handle::before {
+    content: ''; position: absolute; right: 3px; bottom: 3px; width: 10px; height: 10px;
+    border-right: 2px solid rgba(0,0,0,0.45); border-bottom: 2px solid rgba(0,0,0,0.45); border-radius: 0 0 3px 0;
+  }
+  .idea-note-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 4px; margin-bottom: 4px; flex-wrap: wrap; }
+  .idea-note-colors { display: flex; gap: 3px; }
+  .idea-color-dot {
+    width: 13px; height: 13px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.15); cursor: pointer; flex-shrink: 0;
+  }
+  .idea-note-del { background: none; border: none; color: rgba(0,0,0,0.4); font-size: 0.85rem; cursor: pointer; padding: 0 2px; flex-shrink: 0; }
+  .idea-note textarea {
+    flex: 1; width: 100%; border: none; background: transparent; resize: none; padding: 0;
+    font-family: 'Special Elite', cursive; font-size: 0.8rem; color: var(--ink); line-height: 1.4em;
+  }
+  .idea-note-canvas {
+    flex: 1; width: 100%; height: 100%; touch-action: none; cursor: crosshair;
+    border-radius: 4px; background: rgba(255,255,255,0.4);
+  }
+  .idea-canvas-empty {
+    position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+    color: var(--muted); font-size: 0.85rem; font-style: italic; text-align: center; width: 260px;
+  }
 </style>
 </head>
 <body>
@@ -901,24 +965,35 @@
   </details>
 </div>
 
-<!-- PERSISTENT TEACHING NOTES BAR -->
-<div id="teaching-notes-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:#fffef0;border-top:1.5px dashed #c9a84c;padding:10px 16px">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-    <div style="font-size:0.7rem;font-weight:700;color:#8a7a3a">📝 Teaching day notes</div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <span style="font-size:0.7rem;color:#b8a050" id="notes-bar-date"></span>
-      <button onclick="toggleNotesBar()" style="background:none;border:none;color:#b8a050;font-size:1.1rem;cursor:pointer;padding:0">⌄</button>
+<!-- IDEA BOARD -->
+<div id="ideaOverlay" class="modal-overlay idea-overlay" style="display:none">
+  <div class="idea-board-card">
+    <div class="idea-board-header">
+      <h3>💭 Idea Board</h3>
+      <div class="idea-header-btns">
+        <button class="idea-btn-sm" onclick="closeIdeaBoard()">Close</button>
+      </div>
+    </div>
+    <div class="idea-board-selector-row">
+      <select id="ideaBoardSelect" class="idea-board-select" onchange="switchIdeaBoard(this.value)"></select>
+      <button class="idea-btn-sm dark" onclick="promptNewIdeaBoard()">+ New board</button>
+      <button class="idea-btn-sm" onclick="deleteCurrentIdeaBoard()">✕ Delete this board</button>
+    </div>
+    <div class="idea-header-btns" style="padding:0 16px 10px">
+      <button class="idea-btn-sm dark" onclick="addIdeaNote('text')">+ Text idea</button>
+      <button class="idea-btn-sm blue" onclick="addIdeaNote('drawing')">✏️ Drawing idea</button>
+      <button class="idea-btn-sm green" onclick="addIdeaNote('stave')">🎼 Stave idea</button>
+    </div>
+    <p style="padding:0 16px;font-size:0.75rem;color:var(--muted);margin:0 0 6px">Drop ideas anywhere, drag them wherever feels right, colour them however makes sense to you. Nothing here needs ordering.</p>
+    <div class="idea-canvas-wrap" id="ideaCanvasWrap">
+      <div class="idea-canvas" id="ideaCanvas"></div>
     </div>
   </div>
-  <textarea id="daily-notes-bar" rows="8"
-    placeholder="Things to remember, follow up, sort out…"
-    oninput="saveDailyNotesBar()"
-    style="background:transparent;border:none;padding:0;font-size:0.93rem;width:100%;resize:none;line-height:1.5;font-family:'Special Elite',cursive;color:#3a3000;outline:none"></textarea>
 </div>
 
-<!-- TEACHING NOTES TOGGLE BUTTON -->
-<div id="notes-toggle-btn" style="position:fixed;bottom:16px;right:16px;z-index:149;display:none">
-  <button onclick="toggleNotesBar()" style="background:#c9a84c;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)" title="Teaching notes">📝</button>
+<!-- IDEA BOARD FLOATING BUTTON -->
+<div style="position:fixed;bottom:16px;right:16px;z-index:149">
+  <button onclick="openIdeaBoard()" title="Idea board" style="background:#9ed8ee;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">💭</button>
 </div>
 
 <!-- ROSTER VIEW -->
@@ -1754,6 +1829,8 @@ let oneOffMoves  = JSON.parse(localStorage.getItem('studio_one_off_moves') || '{
 let waitingList      = JSON.parse(localStorage.getItem('studio_waiting_list')      || '[]');
 let lendingLog       = JSON.parse(localStorage.getItem('studio_lending_log')       || '[]');
 let termDates        = JSON.parse(localStorage.getItem('studio_term_dates')        || '[]');
+let ideaBoards       = JSON.parse(localStorage.getItem('studio_idea_boards')       || '[]');
+let currentIdeaBoardId = localStorage.getItem('studio_idea_current') || '';
 let speechReplacements = JSON.parse(localStorage.getItem('studio_speech_replacements') || '[{"from":"gonna","to":"going to"},{"from":"wanna","to":"want to"},{"from":"kinda","to":"kind of"}]');
 let extraLessons = JSON.parse(localStorage.getItem('studio_extra_lessons') || '{}');
 
@@ -1894,12 +1971,6 @@ function showView(name) {
   if (name === 'week')    renderWeek();
   if (name === 'roster')  renderRoster();
   if (name === 'library') renderLibrary();
-  // Show notes bar on all tabs except detail view
-  const bar = document.getElementById('teaching-notes-bar');
-  const btn = document.getElementById('notes-toggle-btn');
-  if (bar && name !== 'detail') {
-    btn.style.display = 'block';
-  }
 }
 
 function goBack() {
@@ -5060,9 +5131,8 @@ function refSummary(s) {
 }
 
 function saveDailyNotes() {
-  const text = document.getElementById('daily-notes') ?
-    document.getElementById('daily-notes').value :
-    (document.getElementById('daily-notes-bar') ? document.getElementById('daily-notes-bar').value : '');
+  const el0 = document.getElementById('daily-notes');
+  const text = el0 ? el0.value : '';
   const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
   const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
   if (text.trim()) allNotes[today] = text;
@@ -5074,10 +5144,6 @@ function saveDailyNotes() {
 function loadDailyNotes() {
   const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
   const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
-  const barEl   = document.getElementById('daily-notes-bar');
-  const barDate = document.getElementById('notes-bar-date');
-  if (barEl)   barEl.value        = allNotes[today] || '';
-  if (barDate) barDate.textContent = today;
   const el     = document.getElementById('daily-notes');
   const dateEl = document.getElementById('daily-notes-date');
   if (el)     el.value          = allNotes[today] || '';
@@ -6522,44 +6588,6 @@ function removeLibPiece(idx) {
   renderLibPieces();
 }
 
-// ── PERSISTENT NOTES BAR ──────────────────────────────────────────────────
-let notesBarOpen = false;
-
-function toggleNotesBar() {
-  notesBarOpen = !notesBarOpen;
-  const bar = document.getElementById('teaching-notes-bar');
-  const btn = document.getElementById('notes-toggle-btn');
-  if (notesBarOpen) {
-    bar.style.display = 'block';
-    btn.style.display = 'none';
-    loadNotesBar();
-    setTimeout(() => { document.body.style.paddingBottom = (bar.offsetHeight + 16) + 'px'; }, 50);
-  } else {
-    bar.style.display = 'none';
-    btn.style.display = 'block';
-    document.body.style.paddingBottom = '0';
-  }
-}
-
-function loadNotesBar() {
-  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-  const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
-  const el = document.getElementById('daily-notes-bar');
-  const dateEl = document.getElementById('notes-bar-date');
-  if (el) el.value = allNotes[today] || '';
-  if (dateEl) dateEl.textContent = today;
-}
-
-function saveDailyNotesBar() {
-  const text = document.getElementById('daily-notes-bar').value;
-  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-  const allNotes = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
-  if (text.trim()) allNotes[today] = text;
-  else delete allNotes[today];
-  localStorage.setItem('studio_daily_notes', JSON.stringify(allNotes));
-}
-
-
 let skippedWeeks = JSON.parse(localStorage.getItem('studio_skipped_weeks') || '{}');
 
 function skipWeek(id) {
@@ -6765,10 +6793,453 @@ function saveQuickCapture() {
   allNotes[today] = existing ? existing + '\n' + text : text;
   localStorage.setItem('studio_daily_notes', JSON.stringify(allNotes));
   closeQuickCapture();
-  if (notesBarOpen) loadNotesBar();
 }
 
 // ── END OF DAY CHECKLIST ──────────────────────────────────────────────────
+// ── IDEA BOARD ─────────────────────────────────────────────────────────────
+// Ported from the Weekly Plan app. Adapted to Studio Notebook's storage
+// pattern: its own top-level variable + localStorage key (studio_idea_boards),
+// rather than the other app's single `state` object.
+//
+// Data shape:
+//   ideaBoards = [{ id, name, createdOn, notes: [...] }]
+//   note       = { id, type:'text'|'drawing'|'stave', text, strokes,
+//                  x, y, width, height, color, rot }
+// Stroke points are stored as fractions (0–1) of the note size, so a note
+// keeps its drawing correctly when resized.
+
+const IDEA_COLORS = ['#F9E79F', '#A9DFBF', '#AED6F1', '#F5B7B1', '#D7BDE2'];
+const IDEA_DPR = Math.min(window.devicePixelRatio || 1, 3);
+const ideaRedoStacks = new Map();
+
+function saveIdeaBoards() {
+  localStorage.setItem('studio_idea_boards', JSON.stringify(ideaBoards));
+  localStorage.setItem('studio_idea_current', currentIdeaBoardId || '');
+}
+
+function ideaToISO(d) {
+  const dt = new Date(d);
+  return dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+}
+function ideaFmtShort(d) {
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+function ensureIdeaBoard() {
+  if (!Array.isArray(ideaBoards)) ideaBoards = [];
+  if (ideaBoards.length === 0) {
+    ideaBoards.push({
+      id: 'b' + Date.now(),
+      name: 'Board 1',
+      createdOn: ideaToISO(new Date()),
+      notes: []
+    });
+    currentIdeaBoardId = ideaBoards[0].id;
+    saveIdeaBoards();
+  }
+  if (!currentIdeaBoardId || !ideaBoards.find(function(b){ return b.id === currentIdeaBoardId; })) {
+    currentIdeaBoardId = ideaBoards[0].id;
+    saveIdeaBoards();
+  }
+}
+
+function getCurrentIdeaBoard() {
+  ensureIdeaBoard();
+  return ideaBoards.find(function(b){ return b.id === currentIdeaBoardId; });
+}
+
+function getIdeaNotes() {
+  const b = getCurrentIdeaBoard();
+  if (!Array.isArray(b.notes)) b.notes = [];
+  return b.notes;
+}
+
+function renderIdeaBoardSelector() {
+  ensureIdeaBoard();
+  const select = document.getElementById('ideaBoardSelect');
+  if (!select) return;
+  select.innerHTML = '';
+  ideaBoards.forEach(function(board) {
+    const opt = document.createElement('option');
+    opt.value = board.id;
+    const dateObj = new Date(board.createdOn + 'T00:00:00');
+    opt.textContent = board.name + ' — ' + (isNaN(dateObj) ? '' : ideaFmtShort(dateObj));
+    if (board.id === currentIdeaBoardId) opt.selected = true;
+    select.appendChild(opt);
+  });
+}
+
+function switchIdeaBoard(id) {
+  currentIdeaBoardId = id;
+  saveIdeaBoards();
+  renderIdeaBoard();
+}
+
+function promptNewIdeaBoard() {
+  const name = window.prompt('Name this board:', '');
+  if (name === null) return;
+  const trimmed = name.trim() || ('Board ' + (ideaBoards.length + 1));
+  const board = {
+    id: 'b' + Date.now(),
+    name: trimmed,
+    createdOn: ideaToISO(new Date()),
+    notes: []
+  };
+  ideaBoards.push(board);
+  currentIdeaBoardId = board.id;
+  saveIdeaBoards();
+  renderIdeaBoardSelector();
+  renderIdeaBoard();
+}
+
+function deleteCurrentIdeaBoard() {
+  ensureIdeaBoard();
+  if (ideaBoards.length <= 1) {
+    alert('This is your only board, so it can\'t be deleted — clear its notes individually instead if you\'d like.');
+    return;
+  }
+  const board = getCurrentIdeaBoard();
+  if (!window.confirm('Delete "' + board.name + '" and everything on it? This can\'t be undone.')) return;
+  ideaBoards = ideaBoards.filter(function(b){ return b.id !== board.id; });
+  currentIdeaBoardId = ideaBoards[0].id;
+  saveIdeaBoards();
+  renderIdeaBoardSelector();
+  renderIdeaBoard();
+}
+
+function openIdeaBoard() {
+  document.getElementById('ideaOverlay').style.display = 'flex';
+  renderIdeaBoardSelector();
+  renderIdeaBoard();
+}
+
+function closeIdeaBoard() {
+  document.getElementById('ideaOverlay').style.display = 'none';
+}
+
+function undoIdeaDrawing(note) {
+  if (!note.strokes || !note.strokes.length) return;
+  const removed = note.strokes.pop();
+  if (!ideaRedoStacks.has(note.id)) ideaRedoStacks.set(note.id, []);
+  ideaRedoStacks.get(note.id).push(removed);
+  saveIdeaBoards();
+  renderIdeaBoard();
+}
+
+function redoIdeaDrawing(note) {
+  const stack = ideaRedoStacks.get(note.id);
+  if (!stack || !stack.length) return;
+  const restored = stack.pop();
+  if (!note.strokes) note.strokes = [];
+  note.strokes.push(restored);
+  saveIdeaBoards();
+  renderIdeaBoard();
+}
+
+function addIdeaNote(type) {
+  const wrap = document.getElementById('ideaCanvasWrap');
+  const notes = getIdeaNotes();
+  const x = wrap.scrollLeft + 60 + Math.random() * 80;
+  const y = wrap.scrollTop + 60 + Math.random() * 80;
+  const note = {
+    id: 'n' + Date.now() + Math.floor(Math.random() * 1000),
+    type: (type === 'drawing' || type === 'stave') ? type : 'text',
+    text: '',
+    strokes: [],
+    x: x, y: y,
+    width: 140, height: 140,
+    color: IDEA_COLORS[Math.floor(Math.random() * IDEA_COLORS.length)],
+    rot: Math.round((Math.random() * 6 - 3) * 10) / 10
+  };
+  notes.push(note);
+  saveIdeaBoards();
+  renderIdeaBoard();
+  setTimeout(function() {
+    const ta = document.querySelector('[data-note-id="' + note.id + '"] textarea');
+    if (ta) ta.focus();
+  }, 30);
+}
+
+function cycleIdeaNoteColor(note) {
+  const idx = IDEA_COLORS.indexOf(note.color);
+  note.color = IDEA_COLORS[(idx + 1) % IDEA_COLORS.length];
+  saveIdeaBoards();
+  renderIdeaBoard();
+}
+
+function deleteIdeaNote(id) {
+  const notes = getIdeaNotes();
+  const idx = notes.findIndex(function(n){ return n.id === id; });
+  if (idx > -1) notes.splice(idx, 1);
+  saveIdeaBoards();
+  renderIdeaBoard();
+}
+
+function redrawIdeaCanvas(canvasEl, note) {
+  const ctx = canvasEl.getContext('2d');
+  ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+  if (note.type === 'stave') {
+    ctx.strokeStyle = 'rgba(43,43,43,0.5)';
+    ctx.lineWidth = 1 * IDEA_DPR;
+    const margin = canvasEl.width * 0.08;
+    const top = canvasEl.height * 0.3;
+    const spacing = (canvasEl.height * 0.4) / 4;
+    for (let i = 0; i < 5; i++) {
+      const y = top + i * spacing;
+      ctx.beginPath();
+      ctx.moveTo(margin, y);
+      ctx.lineTo(canvasEl.width - margin, y);
+      ctx.stroke();
+    }
+  }
+
+  ctx.strokeStyle = '#2b2b2b';
+  ctx.lineWidth = 2.5 * IDEA_DPR;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  (note.strokes || []).forEach(function(stroke) {
+    if (stroke.length < 2) return;
+    ctx.beginPath();
+    ctx.moveTo(stroke[0].x * canvasEl.width, stroke[0].y * canvasEl.height);
+    for (let i = 1; i < stroke.length; i++) {
+      ctx.lineTo(stroke[i].x * canvasEl.width, stroke[i].y * canvasEl.height);
+    }
+    ctx.stroke();
+  });
+}
+
+function setupIdeaDrawingCanvas(canvasEl, note) {
+  canvasEl.width = Math.round(note.width * IDEA_DPR);
+  canvasEl.height = Math.round(note.height * 0.8 * IDEA_DPR);
+  redrawIdeaCanvas(canvasEl, note);
+
+  let currentStroke = null;
+  let activePointerId = null;
+
+  function endStroke() {
+    if (currentStroke && currentStroke.length > 1) {
+      if (!note.strokes) note.strokes = [];
+      note.strokes.push(currentStroke);
+      ideaRedoStacks.set(note.id, []);
+      saveIdeaBoards();
+    }
+    currentStroke = null;
+    activePointerId = null;
+  }
+
+  canvasEl.addEventListener('pointerdown', function(e) {
+    e.stopPropagation();
+    if (activePointerId !== null) return; // ignore extra fingers / palm
+    activePointerId = e.pointerId;
+    currentStroke = [];
+    const rect = canvasEl.getBoundingClientRect();
+    currentStroke.push({ x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height });
+    canvasEl.setPointerCapture(e.pointerId);
+  });
+
+  canvasEl.addEventListener('pointermove', function(e) {
+    if (e.pointerId !== activePointerId) return;
+    const rect = canvasEl.getBoundingClientRect();
+    currentStroke.push({ x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height });
+    redrawIdeaCanvas(canvasEl, note);
+    const ctx = canvasEl.getContext('2d');
+    ctx.strokeStyle = '#2b2b2b';
+    ctx.lineWidth = 2.5 * IDEA_DPR;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(currentStroke[0].x * canvasEl.width, currentStroke[0].y * canvasEl.height);
+    for (let i = 1; i < currentStroke.length; i++) {
+      ctx.lineTo(currentStroke[i].x * canvasEl.width, currentStroke[i].y * canvasEl.height);
+    }
+    ctx.stroke();
+  });
+
+  canvasEl.addEventListener('pointerup', function(e) {
+    if (e.pointerId !== activePointerId) return;
+    endStroke();
+  });
+
+  canvasEl.addEventListener('pointercancel', function(e) {
+    if (e.pointerId !== activePointerId) return;
+    currentStroke = null;
+    activePointerId = null;
+  });
+}
+
+// NOTE: the original version referenced an undefined `canvasEl` here, which
+// threw whenever a drawing/stave note was resized. The canvas is now passed
+// in explicitly so resizing redraws correctly.
+function makeIdeaNoteResizable(el, handle, note, canvasEl) {
+  let startX, startY, origSize, resizing = false;
+
+  handle.addEventListener('pointerdown', function(e) {
+    e.stopPropagation();
+    resizing = true;
+    startX = e.clientX; startY = e.clientY;
+    origSize = note.width || 140;
+    handle.setPointerCapture(e.pointerId);
+  });
+
+  handle.addEventListener('pointermove', function(e) {
+    if (!resizing) return;
+    const delta = ((e.clientX - startX) + (e.clientY - startY)) / 2;
+    const newSize = Math.min(400, Math.max(100, Math.round(origSize + delta)));
+    note.width = newSize;
+    note.height = newSize;
+    el.style.width = newSize + 'px';
+    el.style.height = newSize + 'px';
+    if ((note.type === 'drawing' || note.type === 'stave') && canvasEl) {
+      canvasEl.width = Math.round(newSize * IDEA_DPR);
+      canvasEl.height = Math.round(newSize * 0.8 * IDEA_DPR);
+      redrawIdeaCanvas(canvasEl, note);
+    }
+  });
+
+  handle.addEventListener('pointerup', function() {
+    if (!resizing) return;
+    resizing = false;
+    saveIdeaBoards();
+  });
+}
+
+function makeIdeaNoteDraggable(el, note) {
+  let startX, startY, origX, origY, dragging = false;
+
+  el.addEventListener('pointerdown', function(e) {
+    if (e.target.tagName === 'TEXTAREA' || e.target.classList.contains('idea-color-dot') || e.target.classList.contains('idea-note-del')) return;
+    dragging = true;
+    el.classList.add('is-dragging');
+    startX = e.clientX; startY = e.clientY;
+    origX = note.x; origY = note.y;
+    el.setPointerCapture(e.pointerId);
+  });
+
+  el.addEventListener('pointermove', function(e) {
+    if (!dragging) return;
+    note.x = origX + (e.clientX - startX);
+    note.y = origY + (e.clientY - startY);
+    el.style.left = note.x + 'px';
+    el.style.top = note.y + 'px';
+  });
+
+  el.addEventListener('pointerup', function() {
+    if (!dragging) return;
+    dragging = false;
+    el.classList.remove('is-dragging');
+    saveIdeaBoards();
+  });
+}
+
+function renderIdeaBoard() {
+  const canvas = document.getElementById('ideaCanvas');
+  if (!canvas) return;
+  renderIdeaBoardSelector();
+  const notes = getIdeaNotes();
+  canvas.innerHTML = '';
+
+  if (!notes.length) {
+    const empty = document.createElement('div');
+    empty.className = 'idea-canvas-empty';
+    empty.textContent = 'Nothing here yet — tap "+ Text idea" or "✏️ Drawing idea" to drop the first one.';
+    canvas.appendChild(empty);
+    return;
+  }
+
+  notes.forEach(function(note) {
+    if (!note.width || !note.height || note.width !== note.height) {
+      const size = Math.max(note.width || 140, note.height || 140);
+      note.width = size;
+      note.height = size;
+    }
+    const el = document.createElement('div');
+    el.className = 'idea-note';
+    el.dataset.noteId = note.id;
+    el.style.left = note.x + 'px';
+    el.style.top = note.y + 'px';
+    el.style.width = note.width + 'px';
+    el.style.height = note.height + 'px';
+    el.style.background = note.color;
+    el.style.transform = 'rotate(' + note.rot + 'deg)';
+
+    const top = document.createElement('div');
+    top.className = 'idea-note-top';
+
+    const colors = document.createElement('div');
+    colors.className = 'idea-note-colors';
+    const dot = document.createElement('div');
+    dot.className = 'idea-color-dot';
+    dot.style.background = IDEA_COLORS[(IDEA_COLORS.indexOf(note.color) + 1) % IDEA_COLORS.length];
+    dot.title = 'Change colour';
+    dot.addEventListener('click', function(e) { e.stopPropagation(); cycleIdeaNoteColor(note); });
+    colors.appendChild(dot);
+    top.appendChild(colors);
+
+    const del = document.createElement('button');
+    del.className = 'idea-note-del';
+    del.textContent = '✕';
+    del.title = 'Delete this idea';
+    del.addEventListener('click', function(e) { e.stopPropagation(); deleteIdeaNote(note.id); });
+    top.appendChild(del);
+
+    if (note.type === 'drawing' || note.type === 'stave') {
+      const undo = document.createElement('button');
+      undo.className = 'idea-note-del';
+      undo.textContent = '↶';
+      undo.title = 'Undo last stroke';
+      undo.addEventListener('click', function(e) { e.stopPropagation(); undoIdeaDrawing(note); });
+      top.appendChild(undo);
+
+      const redo = document.createElement('button');
+      redo.className = 'idea-note-del';
+      redo.textContent = '↷';
+      redo.title = 'Redo';
+      redo.addEventListener('click', function(e) { e.stopPropagation(); redoIdeaDrawing(note); });
+      top.appendChild(redo);
+
+      const clear = document.createElement('button');
+      clear.className = 'idea-note-del';
+      clear.textContent = '⟲';
+      clear.title = 'Clear drawing';
+      clear.addEventListener('click', function(e) {
+        e.stopPropagation();
+        note.strokes = [];
+        ideaRedoStacks.set(note.id, []);
+        saveIdeaBoards();
+        renderIdeaBoard();
+      });
+      top.appendChild(clear);
+    }
+
+    el.appendChild(top);
+
+    let noteCanvas = null;
+    if (note.type === 'drawing' || note.type === 'stave') {
+      noteCanvas = document.createElement('canvas');
+      noteCanvas.className = 'idea-note-canvas';
+      el.appendChild(noteCanvas);
+      setupIdeaDrawingCanvas(noteCanvas, note);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = note.text || '';
+      ta.placeholder = 'an idea…';
+      ta.addEventListener('change', function() { note.text = ta.value; saveIdeaBoards(); });
+      ta.addEventListener('pointerdown', function(e) { e.stopPropagation(); });
+      el.appendChild(ta);
+    }
+
+    const handle = document.createElement('div');
+    handle.className = 'idea-resize-handle';
+    handle.title = 'Drag to resize';
+    el.appendChild(handle);
+
+    makeIdeaNoteDraggable(el, note);
+    makeIdeaNoteResizable(el, handle, note, noteCanvas);
+    canvas.appendChild(el);
+  });
+}
+
 // ── PENCIL KEYBOARD ────────────────────────────────────────────────────────
 let _lastFocusedEl = null;
 const _textHistory = new WeakMap(); // per element undo stack
@@ -8358,6 +8829,8 @@ function backupData() {
     studio_eod:           localStorage.getItem('studio_eod')           || '{}',
     studio_skipped_weeks: localStorage.getItem('studio_skipped_weeks') || '{}',
     studio_schoolyear_bumped: localStorage.getItem('studio_schoolyear_bumped') || '',
+    studio_idea_boards:   localStorage.getItem('studio_idea_boards')   || '[]',
+    studio_idea_current:  localStorage.getItem('studio_idea_current')  || '',
     studio_extra_lessons: localStorage.getItem('studio_extra_lessons') || '{}',
     studio_cal_url:       localStorage.getItem('studio_cal_url')       || '',
   };
@@ -8387,7 +8860,7 @@ function restoreData(event) {
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
         'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
-        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_extra_lessons','studio_cal_url','studio_dark_mode_REMOVED'];
+        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
 
       // Reload state
@@ -8400,6 +8873,8 @@ function restoreData(event) {
       oneOffMoves     = JSON.parse(localStorage.getItem('studio_one_off_moves')    || '{}');
       waitingList     = JSON.parse(localStorage.getItem('studio_waiting_list')     || '[]');
       termDates       = JSON.parse(localStorage.getItem('studio_term_dates')       || '[]');
+      ideaBoards      = JSON.parse(localStorage.getItem('studio_idea_boards')      || '[]');
+      currentIdeaBoardId = localStorage.getItem('studio_idea_current') || '';
       lendingLog      = JSON.parse(localStorage.getItem('studio_lending_log')      || '[]');
       speechReplacements = JSON.parse(localStorage.getItem('studio_speech_replacements') || '[]');
       skippedWeeks    = JSON.parse(localStorage.getItem('studio_skipped_weeks')    || '{}');
@@ -8623,8 +9098,6 @@ setInterval(function() {
     }
   }
 }, 30000);
-// Show the notes toggle button
-document.getElementById('notes-toggle-btn').style.display = 'block';
 
 // Shows once per browser session (so it doesn't get in the way every time
 // you switch views, but reappears fresh next time you actually reopen the
