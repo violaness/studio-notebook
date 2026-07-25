@@ -904,12 +904,17 @@
       <input type="text" id="vid-search" placeholder="Search…" oninput="renderVideoLibrary()"
         style="flex:1;padding:8px 12px;border-radius:8px;font-size:0.88rem;min-width:100px">
     </div>
-    <div id="vid-list" style="max-height:400px;overflow-y:auto"></div>
+    <div id="vid-list" style="max-height:420px;overflow-y:auto;-webkit-overflow-scrolling:touch;border:1px solid #eee;border-radius:8px;padding:8px"></div>
+    <details style="margin-top:10px">
+      <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;padding:4px 0">👩‍🏫 Manage teacher list</summary>
+      <div id="vid-teacher-manage" style="margin-top:6px"></div>
+    </details>
     <div style="border-top:1px solid var(--warm);margin-top:14px;padding-top:14px">
       <div class="section-label" style="margin-bottom:8px">Add a video</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <input type="text" id="vid-new-title" placeholder="What it shows, e.g. Slow vibrato exercise" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
-        <input type="text" id="vid-new-presenter" placeholder="Teacher (optional), e.g. Pinchas Zukerman" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
+        <select id="vid-new-teacher" onchange="toggleNewVidTeacherInput(this.value)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem"></select>
+        <input type="text" id="vid-new-teacher-custom" placeholder="New teacher name, e.g. Pinchas Zukerman" style="display:none;padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <input type="text" id="vid-new-url" placeholder="Paste the link" inputmode="url" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <select id="vid-new-cat" onchange="toggleNewVidCatInput(this.value)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem"></select>
         <input type="text" id="vid-new-cat-custom" placeholder="New category name" style="display:none;padding:8px 12px;border-radius:8px;font-size:0.88rem">
@@ -1875,6 +1880,7 @@ let customTechCats   = JSON.parse(localStorage.getItem('studio_custom_tech_cats'
 let customPieces = JSON.parse(localStorage.getItem('studio_custom_pieces') || '[]');
 let videoLinks   = JSON.parse(localStorage.getItem('studio_video_links')   || '[]');
 let videoCatsRemoved = JSON.parse(localStorage.getItem('studio_video_cats_removed') || '[]');
+let videoTeachers = JSON.parse(localStorage.getItem('studio_video_teachers') || '[]');
 let oneOffMoves  = JSON.parse(localStorage.getItem('studio_one_off_moves') || '{}');
 let waitingList      = JSON.parse(localStorage.getItem('studio_waiting_list')      || '[]');
 let lendingLog       = JSON.parse(localStorage.getItem('studio_lending_log')       || '[]');
@@ -1898,6 +1904,7 @@ function save() {
   localStorage.setItem('studio_custom_pieces',     JSON.stringify(customPieces));
   localStorage.setItem('studio_video_links',       JSON.stringify(videoLinks));
   localStorage.setItem('studio_video_cats_removed', JSON.stringify(videoCatsRemoved));
+  localStorage.setItem('studio_video_teachers',     JSON.stringify(videoTeachers));
   localStorage.setItem('studio_one_off_moves',     JSON.stringify(oneOffMoves));
   localStorage.setItem('studio_waiting_list',      JSON.stringify(waitingList));
   localStorage.setItem('studio_lending_log',           JSON.stringify(lendingLog));
@@ -6431,8 +6438,54 @@ function deleteVideoCategory(name) {
 }
 
 function getVideoPresenters() {
+  // Explicitly-added teachers, merged with any that videos already reference,
+  // so the list builds itself but can also be curated.
   const used = videoLinks.map(function(v){ return (v.presenter || '').trim(); }).filter(Boolean);
-  return [...new Set(used)].sort(function(a,b){ return a.localeCompare(b); });
+  return [...new Set(videoTeachers.concat(used))].sort(function(a,b){ return a.localeCompare(b); });
+}
+
+function addVideoTeacher(name) {
+  const t = (name || '').trim();
+  if (!t) return;
+  if (videoTeachers.indexOf(t) === -1) { videoTeachers.push(t); save(); }
+}
+
+function renameVideoTeacher(oldName) {
+  if (!oldName) return;
+  const newName = window.prompt('Rename teacher "' + oldName + '" to:', oldName);
+  if (newName === null) return;
+  const trimmed = newName.trim();
+  if (!trimmed || trimmed === oldName) return;
+  // Carry the rename across every video using them
+  videoLinks.forEach(function(v){ if ((v.presenter || '') === oldName) v.presenter = trimmed; });
+  const oi = videoTeachers.indexOf(oldName);
+  if (oi > -1) videoTeachers.splice(oi, 1);
+  if (videoTeachers.indexOf(trimmed) === -1) videoTeachers.push(trimmed);
+  save();
+  renderVideoLibrary();
+}
+
+function removeVideoTeacher(name) {
+  if (!name) return;
+  const count = videoLinks.filter(function(v){ return (v.presenter || '') === name; }).length;
+  const msg = count > 0
+    ? 'Remove teacher "' + name + '"? Their ' + count + ' video' + (count !== 1 ? 's' : '') + ' will keep the name but they\'ll drop off the teacher list.'
+    : 'Remove "' + name + '" from the teacher list?';
+  if (!window.confirm(msg)) return;
+  const i = videoTeachers.indexOf(name);
+  if (i > -1) videoTeachers.splice(i, 1);
+  // If a video still uses the name it will reappear via getVideoPresenters —
+  // that's intended: a name in use is never fully hidden. To drop it entirely,
+  // edit those videos' teacher field.
+  save();
+  renderVideoLibrary();
+}
+
+function toggleNewVidTeacherInput(val) {
+  const input = document.getElementById('vid-new-teacher-custom');
+  if (!input) return;
+  input.style.display = (val === '__new__') ? 'block' : 'none';
+  if (val === '__new__') input.focus();
 }
 
 function normaliseUrl(url) {
@@ -6468,6 +6521,16 @@ function populateVideoCatDropdowns() {
       + presenters.map(function(p){ return '<option value="' + esc(p) + '">' + esc(p) + '</option>'; }).join('');
     presFilter.value = cur;
   }
+
+  // Teacher dropdown in the add form
+  const addTeacher = document.getElementById('vid-new-teacher');
+  if (addTeacher) {
+    const cur = addTeacher.value;
+    addTeacher.innerHTML = '<option value="">Teacher (optional)</option>'
+      + getVideoPresenters().map(function(p){ return '<option value="' + esc(p) + '">' + esc(p) + '</option>'; }).join('')
+      + '<option value="__new__">+ New teacher…</option>';
+    if (cur) addTeacher.value = cur;
+  }
 }
 
 function toggleNewVidCatInput(val) {
@@ -6477,8 +6540,26 @@ function toggleNewVidCatInput(val) {
   if (val === '__new__') input.focus();
 }
 
+function renderTeacherManageList() {
+  const el = document.getElementById('vid-teacher-manage');
+  if (!el) return;
+  const teachers = getVideoPresenters();
+  if (teachers.length === 0) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.78rem;font-style:italic;margin:2px 0">No teachers yet — add one when you save a video.</p>';
+    return;
+  }
+  el.innerHTML = teachers.map(function(t){
+    return '<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #f0ede8">'
+      + '<span style="flex:1;font-size:0.82rem">' + esc(t) + '</span>'
+      + '<button onclick="renameVideoTeacher(\'' + escJs(t) + '\')" title="Rename" style="background:#f0ede8;border:none;border-radius:6px;color:var(--muted);cursor:pointer;font-size:0.7rem;padding:3px 8px;font-family:\'Special Elite\',cursive">✏️</button>'
+      + '<button onclick="removeVideoTeacher(\'' + escJs(t) + '\')" title="Remove" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:2px 4px">×</button>'
+      + '</div>';
+  }).join('');
+}
+
 function renderVideoLibrary() {
   populateVideoCatDropdowns();
+  renderTeacherManageList();
   const list = document.getElementById('vid-list');
   if (!list) return;
 
@@ -6519,9 +6600,16 @@ function renderVideoLibrary() {
         const catOpts = getVideoCategories().map(function(c){
           return '<option value="' + esc(c) + '"' + (c === o.v.category ? ' selected' : '') + '>' + esc(c) + '</option>';
         }).join('');
+        const curTeacher = o.v.presenter || '';
+        const teacherOpts = '<option value="">Teacher (optional)</option>'
+          + getVideoPresenters().map(function(p){
+              return '<option value="' + esc(p) + '"' + (p === curTeacher ? ' selected' : '') + '>' + esc(p) + '</option>';
+            }).join('')
+          + '<option value="__new__">+ New teacher…</option>';
         return '<div style="background:#f8fbfd;border:1.5px solid #bcdcea;border-radius:8px;padding:10px;margin-bottom:6px">'
           + '<input type="text" id="vid-edit-title" value="' + esc(o.v.title || '') + '" placeholder="What it shows" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #bcdcea;font-family:\'Special Elite\',cursive;font-size:0.85rem;margin-bottom:6px;box-sizing:border-box">'
-          + '<input type="text" id="vid-edit-presenter" value="' + esc(o.v.presenter || '') + '" placeholder="Teacher (optional)" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #bcdcea;font-family:\'Special Elite\',cursive;font-size:0.85rem;margin-bottom:6px;box-sizing:border-box">'
+          + '<select id="vid-edit-teacher" onchange="if(this.value===\'__new__\'){document.getElementById(\'vid-edit-teacher-custom\').style.display=\'block\';document.getElementById(\'vid-edit-teacher-custom\').focus();}else{document.getElementById(\'vid-edit-teacher-custom\').style.display=\'none\';}" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #bcdcea;font-family:\'Special Elite\',cursive;font-size:0.85rem;margin-bottom:6px;box-sizing:border-box">' + teacherOpts + '</select>'
+          + '<input type="text" id="vid-edit-teacher-custom" placeholder="New teacher name" style="display:none;width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #bcdcea;font-family:\'Special Elite\',cursive;font-size:0.85rem;margin-bottom:6px;box-sizing:border-box">'
           + '<input type="text" id="vid-edit-url" value="' + esc(o.v.url || '') + '" placeholder="Link" inputmode="url" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #bcdcea;font-family:\'Special Elite\',cursive;font-size:0.85rem;margin-bottom:6px;box-sizing:border-box">'
           + '<select id="vid-edit-cat" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #bcdcea;font-family:\'Special Elite\',cursive;font-size:0.85rem;margin-bottom:8px;box-sizing:border-box">' + catOpts + '</select>'
           + '<div style="display:flex;gap:8px;justify-content:center">'
@@ -6559,11 +6647,16 @@ function cancelVideoEdit() { editingVideoIdx = -1; renderVideoLibrary(); }
 function saveVideoEdit(idx) {
   if (idx < 0 || idx >= videoLinks.length) return;
   const title = (document.getElementById('vid-edit-title').value || '').trim();
-  const presenter = (document.getElementById('vid-edit-presenter').value || '').trim();
+  const teacherSel = document.getElementById('vid-edit-teacher').value;
+  let presenter = teacherSel;
+  if (teacherSel === '__new__') {
+    presenter = (document.getElementById('vid-edit-teacher-custom').value || '').trim();
+  }
   const urlRaw = (document.getElementById('vid-edit-url').value || '').trim();
   const category = document.getElementById('vid-edit-cat').value || 'Other';
   const url = normaliseUrl(urlRaw);
   if (!url) { document.getElementById('vid-edit-url').focus(); return; } // link is the one required field
+  if (presenter) addVideoTeacher(presenter);
   videoLinks[idx].title = title || urlRaw;
   videoLinks[idx].presenter = presenter;
   videoLinks[idx].url = url;
@@ -6584,7 +6677,11 @@ function openVideoLink(url) {
 
 function addVideoLink() {
   const title = (document.getElementById('vid-new-title').value || '').trim();
-  const presenter = (document.getElementById('vid-new-presenter').value || '').trim();
+  const teacherSel = document.getElementById('vid-new-teacher').value;
+  let presenter = teacherSel;
+  if (teacherSel === '__new__') {
+    presenter = (document.getElementById('vid-new-teacher-custom').value || '').trim();
+  }
   const urlRaw = (document.getElementById('vid-new-url').value || '').trim();
   const catSel = document.getElementById('vid-new-cat').value;
   let category = catSel;
@@ -6595,6 +6692,7 @@ function addVideoLink() {
   if (!url) { document.getElementById('vid-new-url').focus(); return; }
   if (!category) category = 'Other';
 
+  if (presenter) addVideoTeacher(presenter); // remember it for next time
   videoLinks.push({ title: title || urlRaw, url: url, category: category, presenter: presenter });
   videoLinks.sort(function(a,b){
     const c = (a.category||'').localeCompare(b.category||'');
@@ -6603,7 +6701,9 @@ function addVideoLink() {
   save();
 
   document.getElementById('vid-new-title').value = '';
-  document.getElementById('vid-new-presenter').value = '';
+  document.getElementById('vid-new-teacher').value = '';
+  const tCustom = document.getElementById('vid-new-teacher-custom');
+  if (tCustom) { tCustom.value = ''; tCustom.style.display = 'none'; }
   document.getElementById('vid-new-url').value = '';
   const customEl = document.getElementById('vid-new-cat-custom');
   if (customEl) { customEl.value = ''; customEl.style.display = 'none'; }
@@ -9236,6 +9336,7 @@ function backupData() {
     studio_custom_pieces: localStorage.getItem('studio_custom_pieces') || '[]',
     studio_video_links:   localStorage.getItem('studio_video_links')   || '[]',
     studio_video_cats_removed: localStorage.getItem('studio_video_cats_removed') || '[]',
+    studio_video_teachers: localStorage.getItem('studio_video_teachers') || '[]',
     studio_one_off_moves: localStorage.getItem('studio_one_off_moves') || '{}',
     studio_waiting_list:  localStorage.getItem('studio_waiting_list')  || '[]',
     studio_lending_log:   localStorage.getItem('studio_lending_log')   || '[]',
@@ -9275,7 +9376,7 @@ function restoreData(event) {
       if (!confirm(`Restore backup from ${payload._exported ? new Date(payload._exported).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : 'unknown date'}?\n\nThis will replace all current data.`)) return;
 
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
-        'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links','studio_video_cats_removed',
+        'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links','studio_video_cats_removed','studio_video_teachers',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
         'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
@@ -9292,6 +9393,7 @@ function restoreData(event) {
       termDates       = JSON.parse(localStorage.getItem('studio_term_dates')       || '[]');
       videoLinks      = JSON.parse(localStorage.getItem('studio_video_links')      || '[]');
       videoCatsRemoved = JSON.parse(localStorage.getItem('studio_video_cats_removed') || '[]');
+      videoTeachers = JSON.parse(localStorage.getItem('studio_video_teachers') || '[]');
       ideaBoards      = JSON.parse(localStorage.getItem('studio_idea_boards')      || '[]');
       currentIdeaBoardId = localStorage.getItem('studio_idea_current') || '';
       lendingLog      = JSON.parse(localStorage.getItem('studio_lending_log')      || '[]');
