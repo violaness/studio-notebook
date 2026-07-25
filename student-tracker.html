@@ -7205,6 +7205,8 @@ function saveQuickCapture() {
 const IDEA_COLORS = ['#F9E79F', '#A9DFBF', '#AED6F1', '#F5B7B1', '#D7BDE2'];
 const IDEA_DPR = Math.min(window.devicePixelRatio || 1, 3);
 const IDEA_DEFAULT_SIZE = 110;
+const IDEA_FONT_SIZES = [0.7, 0.8, 0.95, 1.15, 1.4, 1.7];  // rem steps for note text
+const IDEA_DEFAULT_FONT = 0.8;  // matches the original fixed size
 const IDEA_MIN_SIZE = 80;
 const IDEA_MAX_SIZE = 400;
 
@@ -7634,6 +7636,25 @@ function makeIdeaNoteDraggable(el, note) {
   el.addEventListener('pointercancel', endDrag);
 }
 
+// Steps a text note's font size up (+1) or down (-1) through IDEA_FONT_SIZES.
+// Updates the textarea directly so the note doesn't re-render and lose focus.
+function stepNoteFont(note, dir) {
+  const cur = note.fontSize || IDEA_DEFAULT_FONT;
+  // Find the nearest step to the current size, then move one along
+  let idx = IDEA_FONT_SIZES.indexOf(cur);
+  if (idx === -1) {
+    idx = 0;
+    for (let i = 0; i < IDEA_FONT_SIZES.length; i++) {
+      if (Math.abs(IDEA_FONT_SIZES[i] - cur) < Math.abs(IDEA_FONT_SIZES[idx] - cur)) idx = i;
+    }
+  }
+  const next = Math.max(0, Math.min(IDEA_FONT_SIZES.length - 1, idx + dir));
+  note.fontSize = IDEA_FONT_SIZES[next];
+  saveIdeaBoards();
+  const el = document.querySelector('[data-note-id="' + note.id + '"] textarea');
+  if (el) el.style.fontSize = note.fontSize + 'rem';
+}
+
 function renderIdeaBoard() {
   const canvas = document.getElementById('ideaCanvas');
   if (!canvas) return;
@@ -7725,6 +7746,23 @@ function renderIdeaBoard() {
         renderIdeaBoard();
       });
       top.appendChild(clear);
+    } else {
+      // Text note: A− / A+ buttons to step its own font size
+      const fontDown = document.createElement('button');
+      fontDown.className = 'idea-note-del';
+      fontDown.textContent = 'A−';
+      fontDown.title = 'Smaller text';
+      fontDown.style.fontWeight = '700';
+      fontDown.addEventListener('click', function(e) { e.stopPropagation(); stepNoteFont(note, -1); });
+      top.appendChild(fontDown);
+
+      const fontUp = document.createElement('button');
+      fontUp.className = 'idea-note-del';
+      fontUp.textContent = 'A+';
+      fontUp.title = 'Bigger text';
+      fontUp.style.fontWeight = '700';
+      fontUp.addEventListener('click', function(e) { e.stopPropagation(); stepNoteFont(note, 1); });
+      top.appendChild(fontUp);
     }
 
     el.appendChild(top);
@@ -7739,6 +7777,7 @@ function renderIdeaBoard() {
       const ta = document.createElement('textarea');
       ta.value = note.text || '';
       ta.placeholder = 'an idea…';
+      ta.style.fontSize = (note.fontSize || IDEA_DEFAULT_FONT) + 'rem';
       ta.addEventListener('change', function() { note.text = ta.value; saveIdeaBoards(); });
       ta.addEventListener('pointerdown', function(e) { e.stopPropagation(); });
       el.appendChild(ta);
