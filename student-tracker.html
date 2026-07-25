@@ -900,6 +900,7 @@
     <div class="section-card" style="margin-top:6px">
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <select id="vid-cat-filter" onchange="renderVideoLibrary()" style="flex:1"></select>
+      <select id="vid-presenter-filter" onchange="renderVideoLibrary()" style="flex:1"></select>
       <input type="text" id="vid-search" placeholder="Search…" oninput="renderVideoLibrary()"
         style="flex:1;padding:8px 12px;border-radius:8px;font-size:0.88rem;min-width:100px">
     </div>
@@ -908,6 +909,7 @@
       <div class="section-label" style="margin-bottom:8px">Add a video</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <input type="text" id="vid-new-title" placeholder="What it shows, e.g. Slow vibrato exercise" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
+        <input type="text" id="vid-new-presenter" placeholder="Teacher (optional), e.g. Pinchas Zukerman" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <input type="text" id="vid-new-url" placeholder="Paste the link" inputmode="url" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <select id="vid-new-cat" onchange="toggleNewVidCatInput(this.value)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem"></select>
         <input type="text" id="vid-new-cat-custom" placeholder="New category name" style="display:none;padding:8px 12px;border-radius:8px;font-size:0.88rem">
@@ -1872,6 +1874,7 @@ let techCategoryMap  = JSON.parse(localStorage.getItem('studio_tech_categories')
 let customTechCats   = JSON.parse(localStorage.getItem('studio_custom_tech_cats')   || '[]');
 let customPieces = JSON.parse(localStorage.getItem('studio_custom_pieces') || '[]');
 let videoLinks   = JSON.parse(localStorage.getItem('studio_video_links')   || '[]');
+let videoCatsRemoved = JSON.parse(localStorage.getItem('studio_video_cats_removed') || '[]');
 let oneOffMoves  = JSON.parse(localStorage.getItem('studio_one_off_moves') || '{}');
 let waitingList      = JSON.parse(localStorage.getItem('studio_waiting_list')      || '[]');
 let lendingLog       = JSON.parse(localStorage.getItem('studio_lending_log')       || '[]');
@@ -1894,6 +1897,7 @@ function save() {
   localStorage.setItem('studio_custom_tech_cats',  JSON.stringify(customTechCats));
   localStorage.setItem('studio_custom_pieces',     JSON.stringify(customPieces));
   localStorage.setItem('studio_video_links',       JSON.stringify(videoLinks));
+  localStorage.setItem('studio_video_cats_removed', JSON.stringify(videoCatsRemoved));
   localStorage.setItem('studio_one_off_moves',     JSON.stringify(oneOffMoves));
   localStorage.setItem('studio_waiting_list',      JSON.stringify(waitingList));
   localStorage.setItem('studio_lending_log',           JSON.stringify(lendingLog));
@@ -6381,8 +6385,54 @@ function exportStudioAttendancePDF() {
 const VIDEO_STARTER_CATS = ['Vibrato','Bow hold','Bowing','Left hand','Posture','Shifting','Tone','Intonation','Rhythm','Other'];
 
 function getVideoCategories() {
+  // Starters minus any the user has hidden, plus every category actually in
+  // use. A category in use always shows, even if its starter was hidden — so
+  // a video can never end up filed under an invisible category.
+  const starters = VIDEO_STARTER_CATS.filter(function(c){ return videoCatsRemoved.indexOf(c) === -1; });
   const used = videoLinks.map(function(v){ return v.category; }).filter(Boolean);
-  return [...new Set(VIDEO_STARTER_CATS.concat(used))].sort(function(a,b){ return a.localeCompare(b); });
+  return [...new Set(starters.concat(used))].sort(function(a,b){ return a.localeCompare(b); });
+}
+
+// Rename a category everywhere it's used, and carry it across the starter/
+// hidden lists so the rename sticks even for a coded-in category.
+function renameVideoCategory(oldName) {
+  if (!oldName) return;
+  const newName = window.prompt('Rename category "' + oldName + '" to:', oldName);
+  if (newName === null) return;
+  const trimmed = newName.trim();
+  if (!trimmed || trimmed === oldName) return;
+  videoLinks.forEach(function(v){ if (v.category === oldName) v.category = trimmed; });
+  // If it was a starter, hide the old name and keep the new one visible
+  if (VIDEO_STARTER_CATS.indexOf(oldName) > -1 && videoCatsRemoved.indexOf(oldName) === -1) {
+    videoCatsRemoved.push(oldName);
+  }
+  // If the new name was previously hidden, un-hide it
+  const ri = videoCatsRemoved.indexOf(trimmed);
+  if (ri > -1) videoCatsRemoved.splice(ri, 1);
+  save();
+  renderVideoLibrary();
+}
+
+// Delete a category: any videos using it move to "Other", and if it was a
+// coded-in starter it's remembered as hidden so it doesn't reappear.
+function deleteVideoCategory(name) {
+  if (!name) return;
+  const count = videoLinks.filter(function(v){ return v.category === name; }).length;
+  const msg = count > 0
+    ? 'Delete "' + name + '"? Its ' + count + ' video' + (count !== 1 ? 's' : '') + ' will move to "Other".'
+    : 'Delete the category "' + name + '"?';
+  if (!window.confirm(msg)) return;
+  videoLinks.forEach(function(v){ if (v.category === name) v.category = 'Other'; });
+  if (VIDEO_STARTER_CATS.indexOf(name) > -1 && videoCatsRemoved.indexOf(name) === -1) {
+    videoCatsRemoved.push(name);
+  }
+  save();
+  renderVideoLibrary();
+}
+
+function getVideoPresenters() {
+  const used = videoLinks.map(function(v){ return (v.presenter || '').trim(); }).filter(Boolean);
+  return [...new Set(used)].sort(function(a,b){ return a.localeCompare(b); });
 }
 
 function normaliseUrl(url) {
@@ -6408,6 +6458,16 @@ function populateVideoCatDropdowns() {
       + '<option value="__new__">+ New category…</option>';
     if (cur) addSel.value = cur;
   }
+
+  // Presenter filter — only shows presenters that actually exist
+  const presFilter = document.getElementById('vid-presenter-filter');
+  if (presFilter) {
+    const cur = presFilter.value;
+    const presenters = getVideoPresenters();
+    presFilter.innerHTML = '<option value="">All teachers</option>'
+      + presenters.map(function(p){ return '<option value="' + esc(p) + '">' + esc(p) + '</option>'; }).join('');
+    presFilter.value = cur;
+  }
 }
 
 function toggleNewVidCatInput(val) {
@@ -6423,13 +6483,16 @@ function renderVideoLibrary() {
   if (!list) return;
 
   const catFilter = (document.getElementById('vid-cat-filter') || {}).value || '';
+  const presFilter = (document.getElementById('vid-presenter-filter') || {}).value || '';
   const search = ((document.getElementById('vid-search') || {}).value || '').toLowerCase().trim();
 
   let items = videoLinks.map(function(v, i){ return { v: v, i: i }; });
   if (catFilter) items = items.filter(function(o){ return o.v.category === catFilter; });
+  if (presFilter) items = items.filter(function(o){ return (o.v.presenter || '') === presFilter; });
   if (search) items = items.filter(function(o){
     return (o.v.title || '').toLowerCase().indexOf(search) > -1
-        || (o.v.category || '').toLowerCase().indexOf(search) > -1;
+        || (o.v.category || '').toLowerCase().indexOf(search) > -1
+        || (o.v.presenter || '').toLowerCase().indexOf(search) > -1;
   });
 
   if (items.length === 0) {
@@ -6450,18 +6513,68 @@ function renderVideoLibrary() {
 
   list.innerHTML = cats.map(function(cat){
     const rows = byCat[cat].map(function(o){
+      if (o.i === editingVideoIdx) {
+        // Inline edit form — reuses the current category list plus a "new"
+        // option, so a video can be recategorised (and its text fixed) in place.
+        const catOpts = getVideoCategories().map(function(c){
+          return '<option value="' + esc(c) + '"' + (c === o.v.category ? ' selected' : '') + '>' + esc(c) + '</option>';
+        }).join('');
+        return '<div style="background:#f8fbfd;border:1.5px solid #bcdcea;border-radius:8px;padding:10px;margin-bottom:6px">'
+          + '<input type="text" id="vid-edit-title" value="' + esc(o.v.title || '') + '" placeholder="What it shows" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #bcdcea;font-family:\'Special Elite\',cursive;font-size:0.85rem;margin-bottom:6px;box-sizing:border-box">'
+          + '<input type="text" id="vid-edit-presenter" value="' + esc(o.v.presenter || '') + '" placeholder="Teacher (optional)" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #bcdcea;font-family:\'Special Elite\',cursive;font-size:0.85rem;margin-bottom:6px;box-sizing:border-box">'
+          + '<input type="text" id="vid-edit-url" value="' + esc(o.v.url || '') + '" placeholder="Link" inputmode="url" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #bcdcea;font-family:\'Special Elite\',cursive;font-size:0.85rem;margin-bottom:6px;box-sizing:border-box">'
+          + '<select id="vid-edit-cat" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #bcdcea;font-family:\'Special Elite\',cursive;font-size:0.85rem;margin-bottom:8px;box-sizing:border-box">' + catOpts + '</select>'
+          + '<div style="display:flex;gap:8px;justify-content:center">'
+          + '<button onclick="saveVideoEdit(' + o.i + ')" style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:7px 18px;font-family:\'Special Elite\',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">✓ Save</button>'
+          + '<button onclick="cancelVideoEdit()" style="background:#f0ede8;color:var(--muted);border:none;border-radius:8px;padding:7px 18px;font-family:\'Special Elite\',cursive;font-size:0.82rem;cursor:pointer">Cancel</button>'
+          + '</div></div>';
+      }
       const url = escJs(normaliseUrl(o.v.url));
       return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--card-bg);border-radius:8px;margin-bottom:6px;box-shadow:var(--shadow)">'
         + '<span style="font-size:1rem;flex-shrink:0">▶️</span>'
-        + '<button onclick="openVideoLink(\'' + url + '\')" style="flex:1;text-align:left;background:none;border:none;font-family:\'Special Elite\',cursive;font-size:0.85rem;color:var(--violin);cursor:pointer;padding:0;text-decoration:underline;min-width:0;word-break:break-word">'
+        + '<div style="flex:1;min-width:0">'
+        + '<button onclick="openVideoLink(\'' + url + '\')" style="text-align:left;background:none;border:none;font-family:\'Special Elite\',cursive;font-size:0.85rem;color:var(--violin);cursor:pointer;padding:0;text-decoration:underline;word-break:break-word;display:block">'
         + esc(o.v.title || o.v.url) + '</button>'
+        + (o.v.presenter ? '<div style="font-size:0.72rem;color:var(--muted);margin-top:2px">' + esc(o.v.presenter) + '</div>' : '')
+        + '</div>'
+        + '<button onclick="editVideoLink(' + o.i + ')" title="Edit" style="background:#f0ede8;border:none;border-radius:6px;color:var(--muted);cursor:pointer;font-size:0.72rem;padding:3px 8px;flex-shrink:0;font-family:\'Special Elite\',cursive">✏️</button>'
         + '<button onclick="removeVideoLink(' + o.i + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;padding:2px 4px;flex-shrink:0">×</button>'
         + '</div>';
     }).join('');
     return '<div style="margin-bottom:12px">'
-      + '<div style="font-size:0.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">' + esc(cat) + '</div>'
+      + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'
+      + '<span style="font-size:0.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;flex:1">' + esc(cat) + '</span>'
+      + '<button onclick="renameVideoCategory(\'' + escJs(cat) + '\')" title="Rename category" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.72rem;padding:2px 4px;font-family:\'Special Elite\',cursive">✏️</button>'
+      + '<button onclick="deleteVideoCategory(\'' + escJs(cat) + '\')" title="Delete category" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.85rem;padding:2px 4px">🗑</button>'
+      + '</div>'
       + rows + '</div>';
   }).join('');
+}
+
+let editingVideoIdx = -1;
+
+function editVideoLink(idx) { editingVideoIdx = idx; renderVideoLibrary(); }
+function cancelVideoEdit() { editingVideoIdx = -1; renderVideoLibrary(); }
+
+function saveVideoEdit(idx) {
+  if (idx < 0 || idx >= videoLinks.length) return;
+  const title = (document.getElementById('vid-edit-title').value || '').trim();
+  const presenter = (document.getElementById('vid-edit-presenter').value || '').trim();
+  const urlRaw = (document.getElementById('vid-edit-url').value || '').trim();
+  const category = document.getElementById('vid-edit-cat').value || 'Other';
+  const url = normaliseUrl(urlRaw);
+  if (!url) { document.getElementById('vid-edit-url').focus(); return; } // link is the one required field
+  videoLinks[idx].title = title || urlRaw;
+  videoLinks[idx].presenter = presenter;
+  videoLinks[idx].url = url;
+  videoLinks[idx].category = category;
+  videoLinks.sort(function(a,b){
+    const c = (a.category||'').localeCompare(b.category||'');
+    return c !== 0 ? c : (a.title||'').localeCompare(b.title||'');
+  });
+  editingVideoIdx = -1;
+  save();
+  renderVideoLibrary();
 }
 
 function openVideoLink(url) {
@@ -6471,6 +6584,7 @@ function openVideoLink(url) {
 
 function addVideoLink() {
   const title = (document.getElementById('vid-new-title').value || '').trim();
+  const presenter = (document.getElementById('vid-new-presenter').value || '').trim();
   const urlRaw = (document.getElementById('vid-new-url').value || '').trim();
   const catSel = document.getElementById('vid-new-cat').value;
   let category = catSel;
@@ -6481,7 +6595,7 @@ function addVideoLink() {
   if (!url) { document.getElementById('vid-new-url').focus(); return; }
   if (!category) category = 'Other';
 
-  videoLinks.push({ title: title || urlRaw, url: url, category: category });
+  videoLinks.push({ title: title || urlRaw, url: url, category: category, presenter: presenter });
   videoLinks.sort(function(a,b){
     const c = (a.category||'').localeCompare(b.category||'');
     return c !== 0 ? c : (a.title||'').localeCompare(b.title||'');
@@ -6489,6 +6603,7 @@ function addVideoLink() {
   save();
 
   document.getElementById('vid-new-title').value = '';
+  document.getElementById('vid-new-presenter').value = '';
   document.getElementById('vid-new-url').value = '';
   const customEl = document.getElementById('vid-new-cat-custom');
   if (customEl) { customEl.value = ''; customEl.style.display = 'none'; }
@@ -6497,6 +6612,7 @@ function addVideoLink() {
 
 function removeVideoLink(idx) {
   if (idx < 0 || idx >= videoLinks.length) return;
+  editingVideoIdx = -1;
   videoLinks.splice(idx, 1);
   save();
   renderVideoLibrary();
@@ -9119,6 +9235,7 @@ function backupData() {
     studio_custom_tech_cats:  localStorage.getItem('studio_custom_tech_cats')  || '[]',
     studio_custom_pieces: localStorage.getItem('studio_custom_pieces') || '[]',
     studio_video_links:   localStorage.getItem('studio_video_links')   || '[]',
+    studio_video_cats_removed: localStorage.getItem('studio_video_cats_removed') || '[]',
     studio_one_off_moves: localStorage.getItem('studio_one_off_moves') || '{}',
     studio_waiting_list:  localStorage.getItem('studio_waiting_list')  || '[]',
     studio_lending_log:   localStorage.getItem('studio_lending_log')   || '[]',
@@ -9158,7 +9275,7 @@ function restoreData(event) {
       if (!confirm(`Restore backup from ${payload._exported ? new Date(payload._exported).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : 'unknown date'}?\n\nThis will replace all current data.`)) return;
 
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
-        'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links',
+        'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links','studio_video_cats_removed',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
         'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
@@ -9174,6 +9291,7 @@ function restoreData(event) {
       waitingList     = JSON.parse(localStorage.getItem('studio_waiting_list')     || '[]');
       termDates       = JSON.parse(localStorage.getItem('studio_term_dates')       || '[]');
       videoLinks      = JSON.parse(localStorage.getItem('studio_video_links')      || '[]');
+      videoCatsRemoved = JSON.parse(localStorage.getItem('studio_video_cats_removed') || '[]');
       ideaBoards      = JSON.parse(localStorage.getItem('studio_idea_boards')      || '[]');
       currentIdeaBoardId = localStorage.getItem('studio_idea_current') || '';
       lendingLog      = JSON.parse(localStorage.getItem('studio_lending_log')      || '[]');
