@@ -609,25 +609,16 @@
   }
   .idea-canvas { position: relative; width: 100%; height: 100%; }
   .idea-note {
-    position: absolute; top: 0; left: 0; border-radius: 8px; padding: 10px 10px 8px;
+    position: absolute; border-radius: 8px; padding: 10px 10px 8px;
     box-shadow: 0 3px 8px rgba(5,39,11,0.18); cursor: grab;
     display: flex; flex-direction: column; overflow: hidden;
     /* none = iOS won't try to scroll/pan while you're dragging a note */
     touch-action: none;
     -webkit-user-select: none; user-select: none;
-    /* NOTE: will-change is deliberately NOT set here. Applying it permanently
-       to every note promotes them all to compositor layers, which made iOS
-       Safari leave a grey ghost of the note at its layout position while
-       dragging. It's applied only during a drag (.is-dragging) instead. */
   }
   .idea-note.is-dragging {
     cursor: grabbing; z-index: 20; box-shadow: 0 8px 18px rgba(5,39,11,0.3);
-    will-change: transform;
-    -webkit-backface-visibility: hidden; backface-visibility: hidden;
   }
-  /* The board itself gets the stacking context, so a dragged note composites
-     against a stable background instead of the page behind it. */
-  .idea-canvas { isolation: isolate; }
   .idea-resize-handle {
     position: absolute; right: 2px; bottom: 2px; width: 20px; height: 20px; cursor: nwse-resize;
     touch-action: none; opacity: 0.55;
@@ -7467,6 +7458,7 @@ function setupIdeaDrawingCanvas(canvasEl, note) {
 
   let currentStroke = null;
   let activePointerId = null;
+  let rect = null;  // measured once per stroke, not per move
 
   function endStroke() {
     if (currentStroke && currentStroke.length > 1) {
@@ -7477,33 +7469,34 @@ function setupIdeaDrawingCanvas(canvasEl, note) {
     }
     currentStroke = null;
     activePointerId = null;
+    rect = null;
   }
 
   canvasEl.addEventListener('pointerdown', function(e) {
     e.stopPropagation();
-    if (activePointerId !== null) return; // ignore extra fingers / palm
+    if (activePointerId !== null) return;
     activePointerId = e.pointerId;
     currentStroke = [];
-    const rect = canvasEl.getBoundingClientRect();
+    rect = canvasEl.getBoundingClientRect();  // measure ONCE for this stroke
     currentStroke.push({ x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height });
     canvasEl.setPointerCapture(e.pointerId);
   });
 
   canvasEl.addEventListener('pointermove', function(e) {
-    if (e.pointerId !== activePointerId) return;
-    const rect = canvasEl.getBoundingClientRect();
-    currentStroke.push({ x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height });
-    redrawIdeaCanvas(canvasEl, note);
+    if (e.pointerId !== activePointerId || !rect) return;
+    const p = { x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height };
+    const prev = currentStroke[currentStroke.length - 1];
+    currentStroke.push(p);
+    // Draw ONLY the new segment, not the whole canvas — full redraws on every
+    // move are quadratic and were freezing the board on long strokes.
     const ctx = canvasEl.getContext('2d');
     ctx.strokeStyle = '#2b2b2b';
     ctx.lineWidth = 2.5 * IDEA_DPR;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(currentStroke[0].x * canvasEl.width, currentStroke[0].y * canvasEl.height);
-    for (let i = 1; i < currentStroke.length; i++) {
-      ctx.lineTo(currentStroke[i].x * canvasEl.width, currentStroke[i].y * canvasEl.height);
-    }
+    ctx.moveTo(prev.x * canvasEl.width, prev.y * canvasEl.height);
+    ctx.lineTo(p.x * canvasEl.width, p.y * canvasEl.height);
     ctx.stroke();
   });
 
@@ -7514,8 +7507,13 @@ function setupIdeaDrawingCanvas(canvasEl, note) {
 
   canvasEl.addEventListener('pointercancel', function(e) {
     if (e.pointerId !== activePointerId) return;
-    currentStroke = null;
-    activePointerId = null;
+    endStroke();  // save what was drawn rather than discarding, and reset state
+  });
+
+  // Safety net: if a pointer is lost without up/cancel (a known iOS quirk that
+  // can leave the board unresponsive), end the stroke on leave too.
+  canvasEl.addEventListener('lostpointercapture', function(e) {
+    if (e.pointerId === activePointerId) endStroke();
   });
 }
 
@@ -7579,9 +7577,8 @@ function makeIdeaNoteResizable(el, handle, note, canvasEl) {
 function makeIdeaNoteDraggable(el, note) {
   let startX, startY, origX, origY;
   let activePointerId = null;
-  let bounds = null;      // measured once per drag, not per move
   let maxX = 0, maxY = 0;
-  let pending = null;     // latest position, applied on the next frame
+  let pending = null;
   let frame = null;
 
   function applyFrame() {
@@ -7589,7 +7586,12 @@ function makeIdeaNoteDraggable(el, note) {
     if (!pending) return;
     note.x = pending.x;
     note.y = pending.y;
-    el.style.transform = 'translate(' + pending.x + 'px,' + pending.y + 'px) rotate(' + note.rot + 'deg)';
+    // Position with left/top. Rotation is a SEPARATE, static transform set in
+    // the render and never touched here — a constant transform doesn't cause
+    // the repaint churn that a changing one does, which was leaving grey ghost
+    // squares and stray lines on iOS Safari.
+    el.style.left = pending.x + 'px';
+    el.style.top = pending.y + 'px';
   }
 
   el.addEventListener('pointerdown', function(e) {
@@ -7598,14 +7600,12 @@ function makeIdeaNoteDraggable(el, note) {
       || e.target.classList.contains('idea-note-del')
       || e.target.classList.contains('idea-resize-handle')
       || e.target.tagName === 'CANVAS') return;
-    if (activePointerId !== null) return;   // ignore a second finger / palm
+    if (activePointerId !== null) return;
     activePointerId = e.pointerId;
     el.classList.add('is-dragging');
     startX = e.clientX; startY = e.clientY;
     origX = note.x; origY = note.y;
-    // Measure the board ONCE here — calling getBoundingClientRect on every
-    // move forces a layout recalculation and makes dragging stutter.
-    bounds = ideaBoardBounds();
+    const bounds = ideaBoardBounds();
     maxX = bounds.w - (note.width || IDEA_DEFAULT_SIZE);
     maxY = bounds.h - (note.height || IDEA_DEFAULT_SIZE);
     el.setPointerCapture(e.pointerId);
@@ -7617,7 +7617,6 @@ function makeIdeaNoteDraggable(el, note) {
     const x = Math.max(0, Math.min(maxX, origX + (e.clientX - startX)));
     const y = Math.max(0, Math.min(maxY, origY + (e.clientY - startY)));
     pending = { x: x, y: y };
-    // Paint at most once per frame, in step with the screen refresh
     if (frame === null) frame = requestAnimationFrame(applyFrame);
   });
 
@@ -7690,14 +7689,13 @@ function renderIdeaBoard() {
     const el = document.createElement('div');
     el.className = 'idea-note';
     el.dataset.noteId = note.id;
-    el.style.left = '0px';
-    el.style.top = '0px';
+    el.style.left = note.x + 'px';
+    el.style.top = note.y + 'px';
     el.style.width = note.width + 'px';
     el.style.height = note.height + 'px';
     el.style.background = note.color;
-    // Positioned with transform (not left/top) so dragging stays smooth —
-    // transforms are composited and don't trigger a layout on every move.
-    el.style.transform = 'translate(' + note.x + 'px,' + note.y + 'px) rotate(' + note.rot + 'deg)';
+    // Rotation only — a constant transform, never changed during drag.
+    el.style.transform = 'rotate(' + note.rot + 'deg)';
 
     const top = document.createElement('div');
     top.className = 'idea-note-top';
