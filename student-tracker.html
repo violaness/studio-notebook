@@ -892,6 +892,31 @@
     </div>
   </details>
 
+  <!-- VIDEO LIBRARY -->
+  <details style="margin-bottom:14px">
+    <summary style="font-size:0.82rem;font-weight:700;color:var(--muted);cursor:pointer;padding:12px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between">
+      <span>🎬 Video library</span><span style="font-weight:400;font-size:0.7rem">tap to expand</span>
+    </summary>
+    <div class="section-card" style="margin-top:6px">
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <select id="vid-cat-filter" onchange="renderVideoLibrary()" style="flex:1"></select>
+      <input type="text" id="vid-search" placeholder="Search…" oninput="renderVideoLibrary()"
+        style="flex:1;padding:8px 12px;border-radius:8px;font-size:0.88rem;min-width:100px">
+    </div>
+    <div id="vid-list" style="max-height:400px;overflow-y:auto"></div>
+    <div style="border-top:1px solid var(--warm);margin-top:14px;padding-top:14px">
+      <div class="section-label" style="margin-bottom:8px">Add a video</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input type="text" id="vid-new-title" placeholder="What it shows, e.g. Slow vibrato exercise" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
+        <input type="text" id="vid-new-url" placeholder="Paste the link" inputmode="url" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
+        <select id="vid-new-cat" onchange="toggleNewVidCatInput(this.value)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem"></select>
+        <input type="text" id="vid-new-cat-custom" placeholder="New category name" style="display:none;padding:8px 12px;border-radius:8px;font-size:0.88rem">
+        <button onclick="addVideoLink()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">Add video</button>
+      </div>
+    </div>
+    </div>
+  </details>
+
   <!-- WAITING LIST -->
   <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -1846,6 +1871,7 @@ let deletedBuiltins  = JSON.parse(localStorage.getItem('studio_deleted_builtins'
 let techCategoryMap  = JSON.parse(localStorage.getItem('studio_tech_categories')   || 'null') || Object.assign({}, TECH_CATEGORY_DEFAULTS);
 let customTechCats   = JSON.parse(localStorage.getItem('studio_custom_tech_cats')   || '[]');
 let customPieces = JSON.parse(localStorage.getItem('studio_custom_pieces') || '[]');
+let videoLinks   = JSON.parse(localStorage.getItem('studio_video_links')   || '[]');
 let oneOffMoves  = JSON.parse(localStorage.getItem('studio_one_off_moves') || '{}');
 let waitingList      = JSON.parse(localStorage.getItem('studio_waiting_list')      || '[]');
 let lendingLog       = JSON.parse(localStorage.getItem('studio_lending_log')       || '[]');
@@ -1867,6 +1893,7 @@ function save() {
   localStorage.setItem('studio_tech_categories',   JSON.stringify(techCategoryMap));
   localStorage.setItem('studio_custom_tech_cats',  JSON.stringify(customTechCats));
   localStorage.setItem('studio_custom_pieces',     JSON.stringify(customPieces));
+  localStorage.setItem('studio_video_links',       JSON.stringify(videoLinks));
   localStorage.setItem('studio_one_off_moves',     JSON.stringify(oneOffMoves));
   localStorage.setItem('studio_waiting_list',      JSON.stringify(waitingList));
   localStorage.setItem('studio_lending_log',           JSON.stringify(lendingLog));
@@ -6346,6 +6373,135 @@ function exportStudioAttendancePDF() {
   w.document.close();
 }
 
+// ── VIDEO LIBRARY ──────────────────────────────────────────────────────────
+// Catalogued YouTube (or any) links, grouped by technique. Stored as
+// studio_video_links = [{ title, url, category }]. Categories are freeform,
+// like the technical-focus chips — a starter list is offered, and new ones
+// can be typed in.
+const VIDEO_STARTER_CATS = ['Vibrato','Bow hold','Bowing','Left hand','Posture','Shifting','Tone','Intonation','Rhythm','Other'];
+
+function getVideoCategories() {
+  const used = videoLinks.map(function(v){ return v.category; }).filter(Boolean);
+  return [...new Set(VIDEO_STARTER_CATS.concat(used))].sort(function(a,b){ return a.localeCompare(b); });
+}
+
+function normaliseUrl(url) {
+  const u = (url || '').trim();
+  if (!u) return '';
+  if (/^https?:\/\//i.test(u)) return u;
+  return 'https://' + u; // tolerate a pasted link with no scheme
+}
+
+function populateVideoCatDropdowns() {
+  const cats = getVideoCategories();
+  const filter = document.getElementById('vid-cat-filter');
+  const addSel = document.getElementById('vid-new-cat');
+  if (filter) {
+    const cur = filter.value;
+    filter.innerHTML = '<option value="">All categories</option>'
+      + cats.map(function(c){ return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
+    filter.value = cur;
+  }
+  if (addSel) {
+    const cur = addSel.value;
+    addSel.innerHTML = cats.map(function(c){ return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('')
+      + '<option value="__new__">+ New category…</option>';
+    if (cur) addSel.value = cur;
+  }
+}
+
+function toggleNewVidCatInput(val) {
+  const input = document.getElementById('vid-new-cat-custom');
+  if (!input) return;
+  input.style.display = (val === '__new__') ? 'block' : 'none';
+  if (val === '__new__') input.focus();
+}
+
+function renderVideoLibrary() {
+  populateVideoCatDropdowns();
+  const list = document.getElementById('vid-list');
+  if (!list) return;
+
+  const catFilter = (document.getElementById('vid-cat-filter') || {}).value || '';
+  const search = ((document.getElementById('vid-search') || {}).value || '').toLowerCase().trim();
+
+  let items = videoLinks.map(function(v, i){ return { v: v, i: i }; });
+  if (catFilter) items = items.filter(function(o){ return o.v.category === catFilter; });
+  if (search) items = items.filter(function(o){
+    return (o.v.title || '').toLowerCase().indexOf(search) > -1
+        || (o.v.category || '').toLowerCase().indexOf(search) > -1;
+  });
+
+  if (items.length === 0) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;padding:4px 0">'
+      + (videoLinks.length === 0 ? 'No videos saved yet. Add one below.' : 'No videos match.')
+      + '</p>';
+    return;
+  }
+
+  // Group by category for easy scanning
+  const byCat = {};
+  items.forEach(function(o){
+    const c = o.v.category || 'Other';
+    if (!byCat[c]) byCat[c] = [];
+    byCat[c].push(o);
+  });
+  const cats = Object.keys(byCat).sort(function(a,b){ return a.localeCompare(b); });
+
+  list.innerHTML = cats.map(function(cat){
+    const rows = byCat[cat].map(function(o){
+      const url = escJs(normaliseUrl(o.v.url));
+      return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--card-bg);border-radius:8px;margin-bottom:6px;box-shadow:var(--shadow)">'
+        + '<span style="font-size:1rem;flex-shrink:0">▶️</span>'
+        + '<button onclick="openVideoLink(\'' + url + '\')" style="flex:1;text-align:left;background:none;border:none;font-family:\'Special Elite\',cursive;font-size:0.85rem;color:var(--violin);cursor:pointer;padding:0;text-decoration:underline;min-width:0;word-break:break-word">'
+        + esc(o.v.title || o.v.url) + '</button>'
+        + '<button onclick="removeVideoLink(' + o.i + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;padding:2px 4px;flex-shrink:0">×</button>'
+        + '</div>';
+    }).join('');
+    return '<div style="margin-bottom:12px">'
+      + '<div style="font-size:0.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">' + esc(cat) + '</div>'
+      + rows + '</div>';
+  }).join('');
+}
+
+function openVideoLink(url) {
+  if (!url) return;
+  window.open(url, '_blank');
+}
+
+function addVideoLink() {
+  const title = (document.getElementById('vid-new-title').value || '').trim();
+  const urlRaw = (document.getElementById('vid-new-url').value || '').trim();
+  const catSel = document.getElementById('vid-new-cat').value;
+  let category = catSel;
+  if (catSel === '__new__') {
+    category = (document.getElementById('vid-new-cat-custom').value || '').trim();
+  }
+  const url = normaliseUrl(urlRaw);
+  if (!url) { document.getElementById('vid-new-url').focus(); return; }
+  if (!category) category = 'Other';
+
+  videoLinks.push({ title: title || urlRaw, url: url, category: category });
+  videoLinks.sort(function(a,b){
+    const c = (a.category||'').localeCompare(b.category||'');
+    return c !== 0 ? c : (a.title||'').localeCompare(b.title||'');
+  });
+  save();
+
+  document.getElementById('vid-new-title').value = '';
+  document.getElementById('vid-new-url').value = '';
+  const customEl = document.getElementById('vid-new-cat-custom');
+  if (customEl) { customEl.value = ''; customEl.style.display = 'none'; }
+  renderVideoLibrary();
+}
+
+function removeVideoLink(idx) {
+  if (idx < 0 || idx >= videoLinks.length) return;
+  videoLinks.splice(idx, 1);
+  save();
+  renderVideoLibrary();
+}
+
 function renderLibrary() {
   populateCatFilters();
   renderLibChips();
@@ -6353,6 +6509,7 @@ function renderLibrary() {
   renderStudioAttendance();
   renderTermDates();
   renderGiftsList();
+  renderVideoLibrary();
 }
 
 // Built-in categories present in both filter dropdowns by default
@@ -8961,6 +9118,7 @@ function backupData() {
     studio_tech_categories:   localStorage.getItem('studio_tech_categories')   || 'null',
     studio_custom_tech_cats:  localStorage.getItem('studio_custom_tech_cats')  || '[]',
     studio_custom_pieces: localStorage.getItem('studio_custom_pieces') || '[]',
+    studio_video_links:   localStorage.getItem('studio_video_links')   || '[]',
     studio_one_off_moves: localStorage.getItem('studio_one_off_moves') || '{}',
     studio_waiting_list:  localStorage.getItem('studio_waiting_list')  || '[]',
     studio_lending_log:   localStorage.getItem('studio_lending_log')   || '[]',
@@ -9000,7 +9158,7 @@ function restoreData(event) {
       if (!confirm(`Restore backup from ${payload._exported ? new Date(payload._exported).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : 'unknown date'}?\n\nThis will replace all current data.`)) return;
 
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
-        'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements',
+        'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
         'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
@@ -9015,6 +9173,7 @@ function restoreData(event) {
       oneOffMoves     = JSON.parse(localStorage.getItem('studio_one_off_moves')    || '{}');
       waitingList     = JSON.parse(localStorage.getItem('studio_waiting_list')     || '[]');
       termDates       = JSON.parse(localStorage.getItem('studio_term_dates')       || '[]');
+      videoLinks      = JSON.parse(localStorage.getItem('studio_video_links')      || '[]');
       ideaBoards      = JSON.parse(localStorage.getItem('studio_idea_boards')      || '[]');
       currentIdeaBoardId = localStorage.getItem('studio_idea_current') || '';
       lendingLog      = JSON.parse(localStorage.getItem('studio_lending_log')      || '[]');
