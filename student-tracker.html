@@ -607,7 +607,7 @@
     flex: 1; overflow: hidden; margin: 8px 12px 12px; border-radius: 10px;
     background: #fdfcf8; border: 1px solid #e0ddd8; min-height: 0;
   }
-  .idea-canvas { position: relative; width: 100%; height: 100%; }
+  .idea-canvas { position: relative; width: 100%; height: 100%; touch-action: none; }
   .idea-note {
     position: absolute; border-radius: 8px; padding: 10px 10px 8px;
     box-shadow: 0 3px 8px rgba(5,39,11,0.18); cursor: grab;
@@ -617,7 +617,7 @@
     -webkit-user-select: none; user-select: none;
   }
   .idea-note.is-dragging {
-    cursor: grabbing; z-index: 20; box-shadow: 0 8px 18px rgba(5,39,11,0.3);
+    cursor: grabbing; box-shadow: 0 8px 18px rgba(5,39,11,0.3);
   }
   .idea-resize-handle {
     position: absolute; right: 2px; bottom: 2px; width: 20px; height: 20px; cursor: nwse-resize;
@@ -7228,6 +7228,7 @@ function clampIdeaNote(note, bounds) {
   return moved;
 }
 const ideaRedoStacks = new Map();
+let ideaHighestZ = 1;  // bumps each time a note is brought to front
 
 function saveIdeaBoards() {
   localStorage.setItem('studio_idea_boards', JSON.stringify(ideaBoards));
@@ -7418,7 +7419,7 @@ function deleteIdeaNote(id) {
 }
 
 function redrawIdeaCanvas(canvasEl, note) {
-  const ctx = canvasEl.getContext('2d');
+  const ctx = canvasEl.getContext('2d', { alpha: true, desynchronized: true });
   ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
 
   if (note.type === 'stave') {
@@ -7474,6 +7475,7 @@ function setupIdeaDrawingCanvas(canvasEl, note) {
 
   canvasEl.addEventListener('pointerdown', function(e) {
     e.stopPropagation();
+    e.preventDefault();  // stop iOS waiting ~100ms for a system gesture
     if (activePointerId !== null) return;
     activePointerId = e.pointerId;
     currentStroke = [];
@@ -7484,20 +7486,27 @@ function setupIdeaDrawingCanvas(canvasEl, note) {
 
   canvasEl.addEventListener('pointermove', function(e) {
     if (e.pointerId !== activePointerId || !rect) return;
-    const p = { x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height };
-    const prev = currentStroke[currentStroke.length - 1];
-    currentStroke.push(p);
-    // Draw ONLY the new segment, not the whole canvas — full redraws on every
-    // move are quadratic and were freezing the board on long strokes.
-    const ctx = canvasEl.getContext('2d');
+    e.preventDefault();
+    const ctx = canvasEl.getContext('2d', { alpha: true, desynchronized: true });
     ctx.strokeStyle = '#2b2b2b';
     ctx.lineWidth = 2.5 * IDEA_DPR;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(prev.x * canvasEl.width, prev.y * canvasEl.height);
-    ctx.lineTo(p.x * canvasEl.width, p.y * canvasEl.height);
-    ctx.stroke();
+    // iOS batches several Pencil samples into one pointermove. getCoalescedEvents
+    // recovers them so fast strokes keep all their points and don't look angular.
+    const events = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : [e];
+    for (let k = 0; k < events.length; k++) {
+      const ev = events[k];
+      const p = { x: (ev.clientX - rect.left) / rect.width, y: (ev.clientY - rect.top) / rect.height };
+      const prev = currentStroke[currentStroke.length - 1];
+      currentStroke.push(p);
+      // Draw ONLY the new segment — full redraws every move are quadratic and
+      // were freezing the board on long strokes.
+      ctx.beginPath();
+      ctx.moveTo(prev.x * canvasEl.width, prev.y * canvasEl.height);
+      ctx.lineTo(p.x * canvasEl.width, p.y * canvasEl.height);
+      ctx.stroke();
+    }
   });
 
   canvasEl.addEventListener('pointerup', function(e) {
@@ -7574,6 +7583,14 @@ function makeIdeaNoteResizable(el, handle, note, canvasEl) {
   handle.addEventListener('pointercancel', endResize);
 }
 
+// Brings a note to the top of the stack and remembers it, so it stays there
+// after a re-render rather than dropping behind its neighbours.
+function bringIdeaNoteToFront(el, note) {
+  ideaHighestZ += 1;
+  note.z = ideaHighestZ;
+  el.style.zIndex = ideaHighestZ;
+}
+
 function makeIdeaNoteDraggable(el, note) {
   let startX, startY, origX, origY;
   let activePointerId = null;
@@ -7595,12 +7612,16 @@ function makeIdeaNoteDraggable(el, note) {
   }
 
   el.addEventListener('pointerdown', function(e) {
+    // Raise on any tap — even if it's on the textarea or a button — so the
+    // note you're working with is always on top.
+    bringIdeaNoteToFront(el, note);
     if (e.target.tagName === 'TEXTAREA'
       || e.target.classList.contains('idea-color-dot')
       || e.target.classList.contains('idea-note-del')
       || e.target.classList.contains('idea-resize-handle')
       || e.target.tagName === 'CANVAS') return;
     if (activePointerId !== null) return;
+    e.preventDefault();  // only once we know this is a drag, not a tap on a control
     activePointerId = e.pointerId;
     el.classList.add('is-dragging');
     startX = e.clientX; startY = e.clientY;
@@ -7685,6 +7706,9 @@ function renderIdeaBoard() {
   });
   if (anyMoved) saveIdeaBoards();
 
+  // Seed the z-counter above the highest z already saved on this board.
+  notes.forEach(function(n){ if (n.z && n.z > ideaHighestZ) ideaHighestZ = n.z; });
+
   notes.forEach(function(note) {
     const el = document.createElement('div');
     el.className = 'idea-note';
@@ -7694,6 +7718,7 @@ function renderIdeaBoard() {
     el.style.width = note.width + 'px';
     el.style.height = note.height + 'px';
     el.style.background = note.color;
+    if (note.z) el.style.zIndex = note.z;
     // Rotation only — a constant transform, never changed during drag.
     el.style.transform = 'rotate(' + note.rot + 'deg)';
 
