@@ -7599,6 +7599,18 @@ function bringIdeaNoteToFront(el, note) {
   el.style.zIndex = ideaHighestZ;
 }
 
+// Forces iOS Safari to repaint the whole board, clearing any ghost rectangle
+// left behind when a note is dragged. Toggling a zero-effect transform for one
+// frame invalidates the board's paint without moving anything visibly.
+function nudgeIdeaBoardRepaint() {
+  const canvas = document.getElementById('ideaCanvas');
+  if (!canvas) return;
+  canvas.style.transform = 'translateZ(0)';
+  requestAnimationFrame(function() {
+    canvas.style.transform = '';
+  });
+}
+
 function makeIdeaNoteDraggable(el, note) {
   let startX, startY, origX, origY;
   let activePointerId = null;
@@ -7659,6 +7671,10 @@ function makeIdeaNoteDraggable(el, note) {
     pending = null;
     el.classList.remove('is-dragging');
     saveIdeaBoards();
+    // Release the capture explicitly (rather than relying on the implicit
+    // release), then nudge a repaint — the capture is what leaves the ghost.
+    try { if (e && el.hasPointerCapture && el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId); } catch (err) {}
+    nudgeIdeaBoardRepaint();
   }
 
   el.addEventListener('pointerup', endDrag);
