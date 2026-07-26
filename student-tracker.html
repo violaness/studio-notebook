@@ -628,6 +628,14 @@
     border-right: 2px solid rgba(0,0,0,0.45); border-bottom: 2px solid rgba(0,0,0,0.45); border-radius: 0 0 3px 0;
   }
   .idea-note-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 4px; margin-bottom: 4px; flex-wrap: wrap; }
+  .idea-font-group { display: inline-flex; gap: 2px; }
+  .idea-font-btn {
+    border: 1px solid rgba(0,0,0,0.18); background: rgba(255,255,255,0.55);
+    border-radius: 5px; font-family: 'Special Elite', cursive; font-weight: 700;
+    font-size: 0.72rem; line-height: 1; color: rgba(0,0,0,0.6);
+    padding: 3px 6px; cursor: pointer; min-width: 24px; text-align: center;
+  }
+  .idea-font-btn:active { background: rgba(0,0,0,0.1); }
   .idea-note-colors { display: flex; gap: 3px; }
   .idea-color-dot {
     width: 13px; height: 13px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.15); cursor: pointer; flex-shrink: 0;
@@ -7199,7 +7207,7 @@ const IDEA_DEFAULT_SIZE = 110;
 const IDEA_FONT_SIZES = [0.7, 0.8, 0.95, 1.15, 1.4, 1.7];  // rem steps for note text
 const IDEA_DEFAULT_FONT = 0.8;  // matches the original fixed size
 const IDEA_MIN_SIZE = 80;
-const IDEA_MAX_SIZE = 400;
+const IDEA_MAX_SIZE = 600;
 
 // The board is a fixed, non-scrolling area that fits the screen. These give
 // its current pixel size so notes can be kept inside it.
@@ -7618,6 +7626,7 @@ function makeIdeaNoteDraggable(el, note) {
     if (e.target.tagName === 'TEXTAREA'
       || e.target.classList.contains('idea-color-dot')
       || e.target.classList.contains('idea-note-del')
+      || e.target.classList.contains('idea-font-btn')
       || e.target.classList.contains('idea-resize-handle')
       || e.target.tagName === 'CANVAS') return;
     if (activePointerId !== null) return;
@@ -7770,22 +7779,25 @@ function renderIdeaBoard() {
       });
       top.appendChild(clear);
     } else {
-      // Text note: A− / A+ buttons to step its own font size
+      // Text note: A− / A+ as a tight paired button group to step font size
+      const fontGroup = document.createElement('div');
+      fontGroup.className = 'idea-font-group';
+
       const fontDown = document.createElement('button');
-      fontDown.className = 'idea-note-del';
+      fontDown.className = 'idea-font-btn';
       fontDown.textContent = 'A−';
       fontDown.title = 'Smaller text';
-      fontDown.style.fontWeight = '700';
       fontDown.addEventListener('click', function(e) { e.stopPropagation(); stepNoteFont(note, -1); });
-      top.appendChild(fontDown);
+      fontGroup.appendChild(fontDown);
 
       const fontUp = document.createElement('button');
-      fontUp.className = 'idea-note-del';
+      fontUp.className = 'idea-font-btn';
       fontUp.textContent = 'A+';
       fontUp.title = 'Bigger text';
-      fontUp.style.fontWeight = '700';
       fontUp.addEventListener('click', function(e) { e.stopPropagation(); stepNoteFont(note, 1); });
-      top.appendChild(fontUp);
+      fontGroup.appendChild(fontUp);
+
+      top.appendChild(fontGroup);
     }
 
     el.appendChild(top);
