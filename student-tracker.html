@@ -2751,12 +2751,9 @@ function renderDetail(s, preserveTab = false) {
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span>📌 Plan for today's lesson</span>
           <span style="display:flex;gap:6px;align-items:center">
-            <button id="mic-test-btn-${s.id}" onclick="testMic('mic-test-btn-${s.id}','mic-test-msg-${s.id}','nextlesson-${s.id}')"
-              style="background:#f0ede8;border:none;border-radius:8px;padding:3px 8px;font-family:'Special Elite',cursive;font-size:0.75rem;color:var(--muted);cursor:pointer">🎤</button>
             ${s.nextLesson ? `<button onclick="clearNextLessonPlan('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>` : ''}
           </span>
         </div>
-        <div id="mic-test-msg-${s.id}" style="font-size:0.72rem;color:var(--muted);margin-bottom:4px;min-height:1em"></div>
         <textarea rows="14" placeholder="What you want to cover today…" class="lined-note"
           id="nextlesson-${s.id}"
           oninput="updateField('${s.id}','nextLesson',this.value)">${esc(s.nextLesson||'')}</textarea>
@@ -2866,10 +2863,7 @@ function renderDetail(s, preserveTab = false) {
       <div class="section-card">
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span>Quick notes — right now</span>
-          <button id="mic-during-btn-${s.id}" onclick="testMic('mic-during-btn-${s.id}','mic-test-msg-during-${s.id}','during-scratch-${s.id}')"
-            style="background:#f0ede8;border:none;border-radius:8px;padding:3px 8px;font-family:'Special Elite',cursive;font-size:0.75rem;color:var(--muted);cursor:pointer">🎤</button>
         </div>
-        <div id="mic-test-msg-during-${s.id}" style="font-size:0.72rem;color:var(--muted);min-height:1em"></div>
         <textarea class="quick-note"
           placeholder="Jot anything — key words, reminders, 'try this'…"
           id="during-scratch-${s.id}"
@@ -2935,12 +2929,9 @@ function renderDetail(s, preserveTab = false) {
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span>Lesson notes</span>
           <span style="display:flex;gap:6px;align-items:center">
-            <button id="mic-after-btn-${s.id}" onclick="testMic('mic-after-btn-${s.id}','mic-test-msg-after-${s.id}','after-note-${s.id}')"
-              style="background:#f0ede8;border:none;border-radius:8px;padding:3px 8px;font-family:'Special Elite',cursive;font-size:0.75rem;color:var(--muted);cursor:pointer">🎤</button>
             <button onclick="document.getElementById('after-note-${s.id}').value='';document.getElementById('after-note-${s.id}').dataset.edited='1';autoGrow(document.getElementById('after-note-${s.id}'))" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
           </span>
         </div>
-        <div id="mic-test-msg-after-${s.id}" style="font-size:0.72rem;color:var(--muted);min-height:1em"></div>
         <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">Built from your plan and during-lesson notes — edit freely before saving to the log.</div>
         <textarea class="quick-note" placeholder="What went well, what to remember for next time…"
           id="after-note-${s.id}"
