@@ -904,6 +904,11 @@
         style="flex:1;padding:8px 12px;border-radius:8px;font-size:0.88rem;min-width:100px">
     </div>
     <div id="vid-list" style="max-height:420px;overflow-y:auto;-webkit-overflow-scrolling:touch;border:1px solid #eee;border-radius:8px;padding:8px"></div>
+    <div id="vid-email-bar" style="display:none;align-items:center;gap:10px;margin-top:8px;padding:8px 12px;background:#eef6ee;border:1.5px solid #cfe4cf;border-radius:8px">
+      <span id="vid-email-count" style="flex:1;font-size:0.8rem;color:var(--sage)"></span>
+      <button onclick="clearVideoSelection()" style="background:none;border:none;color:var(--muted);font-size:0.78rem;cursor:pointer;font-family:'Special Elite',cursive;text-decoration:underline">Clear</button>
+      <button onclick="emailSelectedVideos()" style="background:var(--sage);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap">✉️ Email selected</button>
+    </div>
     <details style="margin-top:10px">
       <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;padding:4px 0">👩‍🏫 Manage teacher list</summary>
       <div id="vid-teacher-manage" style="margin-top:6px"></div>
@@ -6550,6 +6555,9 @@ function renderTeacherManageList() {
 function renderVideoLibrary() {
   populateVideoCatDropdowns();
   renderTeacherManageList();
+  // Drop any selected indexes that no longer point at a real video (e.g. after
+  // a delete), so the count and the email never include a phantom.
+  selectedVideoIdxs.forEach(function(i){ if (i < 0 || i >= videoLinks.length) selectedVideoIdxs.delete(i); });
   const list = document.getElementById('vid-list');
   if (!list) return;
 
@@ -6609,6 +6617,7 @@ function renderVideoLibrary() {
       }
       const url = escJs(normaliseUrl(o.v.url));
       return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--card-bg);border-radius:8px;margin-bottom:6px;box-shadow:var(--shadow)">'
+        + '<input type="checkbox" class="vid-select" data-idx="' + o.i + '" ' + (selectedVideoIdxs.has(o.i) ? 'checked ' : '') + 'onchange="toggleVideoSelect(' + o.i + ',this.checked)" style="width:18px;height:18px;flex-shrink:0;accent-color:#2F5C1A;cursor:pointer" title="Select to email">'
         + '<span style="font-size:1rem;flex-shrink:0">▶️</span>'
         + '<div style="flex:1;min-width:0">'
         + '<button onclick="openVideoLink(\'' + url + '\')" style="text-align:left;background:none;border:none;font-family:\'Special Elite\',cursive;font-size:0.85rem;color:var(--violin);cursor:pointer;padding:0;text-decoration:underline;word-break:break-word;display:block">'
@@ -6627,6 +6636,7 @@ function renderVideoLibrary() {
       + '</div>'
       + rows + '</div>';
   }).join('');
+  updateVideoEmailBar();
 }
 
 let editingVideoIdx = -1;
@@ -6658,6 +6668,59 @@ function saveVideoEdit(idx) {
   editingVideoIdx = -1;
   save();
   renderVideoLibrary();
+}
+
+// Videos ticked for emailing. This is a transient selection (not saved to
+// data) — it clears when you leave or send. Indexes match videoLinks.
+let selectedVideoIdxs = new Set();
+
+function toggleVideoSelect(idx, checked) {
+  if (checked) selectedVideoIdxs.add(idx);
+  else selectedVideoIdxs.delete(idx);
+  updateVideoEmailBar();
+}
+
+function clearVideoSelection() {
+  selectedVideoIdxs.clear();
+  renderVideoLibrary();
+}
+
+function updateVideoEmailBar() {
+  const bar = document.getElementById('vid-email-bar');
+  const count = document.getElementById('vid-email-count');
+  if (!bar) return;
+  const n = selectedVideoIdxs.size;
+  if (n === 0) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  if (count) count.textContent = n + ' video' + (n !== 1 ? 's' : '') + ' selected';
+}
+
+// Opens the Mail app with the selected videos listed in the body, ready to
+// address and send. Uses a mailto: link, which works from the home-screen web
+// app without any setup. Recipient is left blank — you pick the pupil in Mail.
+function emailSelectedVideos() {
+  if (selectedVideoIdxs.size === 0) return;
+  const chosen = [...selectedVideoIdxs].sort(function(a,b){ return a-b; })
+    .map(function(i){ return videoLinks[i]; })
+    .filter(Boolean);
+  if (chosen.length === 0) return;
+
+  const subject = chosen.length === 1
+    ? 'A video to watch: ' + (chosen[0].title || 'practice video')
+    : 'Some videos to watch';
+
+  let body = chosen.length === 1
+    ? 'Here\'s a video for you to watch:\n\n'
+    : 'Here are some videos for you to watch:\n\n';
+  chosen.forEach(function(v){
+    body += '• ' + (v.title || 'Video');
+    if (v.presenter) body += ' (' + v.presenter + ')';
+    body += '\n' + normaliseUrl(v.url) + '\n\n';
+  });
+
+  const href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+  window.location.href = href;
+  // Leave the selection as-is so a mis-tap on Mail's cancel doesn't lose it.
 }
 
 function openVideoLink(url) {
