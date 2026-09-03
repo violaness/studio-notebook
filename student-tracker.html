@@ -9744,7 +9744,27 @@ renderRoster();
 renderCoverEod();
 // Refresh Today view every 30 seconds so the "Next" badge colour updates
 // automatically (e.g. turns amber when a lesson is 5 minutes away).
+// If the app is left open across the Thursday-midnight teaching-week rollover,
+// `currentWeek` (computed once at load) goes stale — the week view, holiday
+// greying, term counter etc. keep using yesterday's week until a reload. This
+// guard notices when the real week has moved on and reloads once, so the app
+// self-corrects without you having to close and reopen it.
+let _weekRolloverReloading = false;
+function checkWeekRollover() {
+  if (_weekRolloverReloading) return;
+  if (teachingWeekKey(new Date()) !== currentWeek) {
+    _weekRolloverReloading = true;
+    location.reload();
+  }
+}
+// Check when the app is brought back to the foreground (covers being left in
+// the background overnight — the commonest case).
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible') checkWeekRollover();
+});
+
 setInterval(function() {
+  checkWeekRollover();
   if (document.getElementById('today-list') &&
       document.querySelector('.tab-btn[data-tab="today"].active')) {
     renderToday();
