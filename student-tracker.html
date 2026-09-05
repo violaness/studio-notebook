@@ -2596,7 +2596,11 @@ function switchMoment(tab, panel) {
         const duringEl = document.getElementById('during-scratch-' + id);
         if (duringEl) { s.duringScratch = duringEl.value; save(); }
         if (!el.dataset.edited) {
-          el.value = buildCumulativeNote(s);
+          // Prefer a saved draft (unsaved After-tab text) over rebuilding from
+          // scratch, so notes typed but not yet saved to the log survive.
+          el.value = (typeof s.afterDraft === 'string' && s.afterDraft.length)
+            ? s.afterDraft
+            : buildCumulativeNote(s);
           autoGrow(el);
         }
       }
@@ -2934,14 +2938,14 @@ function renderDetail(s, preserveTab = false) {
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span>Lesson notes</span>
           <span style="display:flex;gap:6px;align-items:center">
-            <button onclick="document.getElementById('after-note-${s.id}').value='';document.getElementById('after-note-${s.id}').dataset.edited='1';autoGrow(document.getElementById('after-note-${s.id}'))" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
+            <button onclick="document.getElementById('after-note-${s.id}').value='';document.getElementById('after-note-${s.id}').dataset.edited='1';saveAfterDraft('${s.id}','');autoGrow(document.getElementById('after-note-${s.id}'))" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
           </span>
         </div>
         <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">Built from your plan and during-lesson notes — edit freely before saving to the log.</div>
         <textarea class="quick-note" placeholder="What went well, what to remember for next time…"
           id="after-note-${s.id}"
-          oninput="autoGrow(this);fixupListContinuation('after-note-${s.id}');this.dataset.edited='1'"
-          onkeydown="if(event.key==='Enter')handleListEnter(event)">${buildCumulativeNote(s)}</textarea>
+          oninput="autoGrow(this);fixupListContinuation('after-note-${s.id}');this.dataset.edited='1';saveAfterDraft('${s.id}',this.value)"
+          onkeydown="if(event.key==='Enter')handleListEnter(event)">${(typeof s.afterDraft === 'string' && s.afterDraft.length) ? esc(s.afterDraft) : buildCumulativeNote(s)}</textarea>
         <div style="display:flex;gap:6px;margin-top:6px">
           <button type="button" onclick="insertLinePrefix('after-note-${s.id}','•')" title="Bullet point" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;color:var(--muted)">• Bullet</button>
           <button type="button" onclick="insertLinePrefix('after-note-${s.id}','☐')" title="Tick box" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;color:var(--muted)">☐ Tick box</button>
@@ -3817,6 +3821,12 @@ function saveDuring(id) {
     if (afterEl) delete afterEl.dataset.edited;
   }, 800);
 }
+function saveAfterDraft(id, value) {
+  const s = getStudent(id); if (!s) return;
+  s.afterDraft = value;
+  save();
+}
+
 function saveLog(id) {
   const s=getStudent(id); if(!s)return;
   const el=document.getElementById('after-note-'+id);
@@ -3824,7 +3834,7 @@ function saveLog(id) {
   const text=el.value.trim(); if(!text)return;
   if(!s.log)s.log=[];
   s.log.push({date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),text});
-  s.duringScratch=''; save(); el.value='';
+  s.duringScratch=''; s.afterDraft=''; save(); el.value=''; delete el.dataset.edited;
   showToast('toast-after-'+id); renderDetail(s, true);
 }
 
