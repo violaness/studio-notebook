@@ -3833,7 +3833,19 @@ function saveLog(id) {
   if(!el)return;
   const text=el.value.trim(); if(!text)return;
   if(!s.log)s.log=[];
-  s.log.push({date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),text});
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  // If an entry for today already exists (e.g. you tapped an attendance button
+  // first), merge the notes into it rather than creating a duplicate. Otherwise
+  // make a new entry. Either way, default attendance to Present when nothing has
+  // been chosen — a logged note means the lesson happened — but never override
+  // a status you've already set (absent / cancelled).
+  let entry = s.log.find(e => e.date === today);
+  if (entry) {
+    entry.text = text;
+    if (!entry.attendance) entry.attendance = 'present';
+  } else {
+    s.log.push({ date: today, text: text, attendance: 'present' });
+  }
   s.duringScratch=''; s.afterDraft=''; save(); el.value=''; delete el.dataset.edited;
   showToast('toast-after-'+id); renderDetail(s, true);
 }
