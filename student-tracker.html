@@ -1094,6 +1094,7 @@
     <button class="filter-chip" data-filter="intermediate" onclick="setFilter(this,'intermediate')">Intermediate</button>
     <button class="filter-chip" data-filter="advanced" onclick="setFilter(this,'advanced')">Advanced</button>
   </div>
+  <div id="retired-toggle" style="margin-bottom:10px"></div>
   <div id="roster-list"></div>
 </div>
 
@@ -1454,7 +1455,11 @@
       <button class="btn-primary" onclick="saveEditModal()">Save changes</button>
     </div>
     <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e0ddd8;text-align:center">
-      <button onclick="var pid=document.getElementById('edit-modal').dataset.pupilId;closeEditModal();setTimeout(function(){if(confirm('Remove this pupil? This cannot be undone.'))deletePupil(pid);},100)" style="background:none;border:none;color:#ccc;font-family:'Special Elite',cursive;font-size:0.75rem;cursor:pointer">🗑 Remove this pupil</button>
+      <button onclick="toggleRetirePupil(document.getElementById('edit-modal').dataset.pupilId)" style="background:#f0ede8;border:none;border-radius:8px;padding:8px 18px;font-family:'Special Elite',cursive;font-size:0.82rem;color:var(--muted);cursor:pointer" id="retire-btn">💤 Retire pupil</button>
+      <div style="font-size:0.68rem;color:var(--muted);margin-top:6px;line-height:1.4">Keeps all their notes and history, but hides them from Today, Week and All Pupils. You can bring them back any time.</div>
+      <div style="margin-top:14px">
+        <button onclick="var pid=document.getElementById('edit-modal').dataset.pupilId;closeEditModal();setTimeout(function(){if(confirm('Remove this pupil? This cannot be undone.'))deletePupil(pid);},100)" style="background:none;border:none;color:#ccc;font-family:'Special Elite',cursive;font-size:0.75rem;cursor:pointer">🗑 Remove this pupil</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2055,7 +2060,7 @@ function renderToday() {
     wedReminder.style.display = (isWedEvening && !dismissedToday) ? 'flex' : 'none';
   }
   // Also include pupils with an extra lesson today
-  const todayStudents = students.filter(s => effectiveSlot(s).day === dayName && !isSkipped(s.id));
+  const todayStudents = students.filter(s => effectiveSlot(s).day === dayName && !isSkipped(s.id) && !s.retired);
   const todayExtras = (extraLessons[currentWeek] || [])
     .filter(e => e.day === dayName)
     .map(e => { const s = getStudent(e.studentId); return s ? {...s, _extraTime: e.time} : null; })
@@ -2242,7 +2247,7 @@ function renderWeek() {
   }
   for (const day of DAYS) {
     const isToday = day === todayName;
-    const dayStudents = sortByTime(students.filter(s => effectiveSlot(s).day === day));
+    const dayStudents = sortByTime(students.filter(s => effectiveSlot(s).day === day && !s.retired));
     const activeStudents = dayStudents.filter(s => !isSkipped(s.id));
     const skippedStudents = dayStudents.filter(s => isSkipped(s.id));
     const dayExtras = (extraLessons[currentWeek] || []).filter(e => e.day === day);
@@ -2408,12 +2413,31 @@ function setFilter(btn, f) {
   renderRoster();
 }
 
+let showRetiredPupils = false;
+
+function renderRetiredToggle() {
+  const el = document.getElementById('retired-toggle');
+  if (!el) return;
+  const retiredCount = students.filter(s => s.retired).length;
+  if (retiredCount === 0 && !showRetiredPupils) { el.innerHTML = ''; return; }
+  if (showRetiredPupils) {
+    el.innerHTML = '<button onclick="showRetiredPupils=false;renderRoster()" style="background:var(--muted);color:#fff;border:none;border-radius:999px;padding:6px 14px;font-family:\'Special Elite\',cursive;font-size:0.78rem;cursor:pointer">← Back to active pupils</button>'
+      + '<span style="font-size:0.78rem;color:var(--muted);margin-left:10px">Showing ' + retiredCount + ' retired pupil' + (retiredCount!==1?'s':'') + ' — open one to read their notes or bring them back.</span>';
+  } else {
+    el.innerHTML = '<button onclick="showRetiredPupils=true;renderRoster()" style="background:none;border:1.5px solid var(--warm);border-radius:999px;padding:6px 14px;font-family:\'Special Elite\',cursive;font-size:0.78rem;color:var(--muted);cursor:pointer">💤 Show retired (' + retiredCount + ')</button>';
+  }
+}
+
 function renderRoster() {
+  const activeCount = students.filter(s => !s.retired).length;
   document.getElementById('header-count').textContent =
-    students.length + ' pupil' + (students.length!==1?'s':'');
-  let filtered = currentFilter === 'all' ? students
-    : students.filter(s => s.instrument===currentFilter || s.level===currentFilter || (s.pupilType||'child')===currentFilter);
+    activeCount + ' pupil' + (activeCount!==1?'s':'');
+  // Hide retired pupils unless the toggle is on
+  let base = showRetiredPupils ? students.filter(s => s.retired) : students.filter(s => !s.retired);
+  let filtered = currentFilter === 'all' ? base
+    : base.filter(s => s.instrument===currentFilter || s.level===currentFilter || (s.pupilType||'child')===currentFilter);
   renderRosterList(filtered);
+  renderRetiredToggle();
   loadTermDates();
   renderWaiting();
   renderLendingLog();
@@ -4570,6 +4594,8 @@ function openEditModal(id) {
   document.getElementById('edit-schoolyear').value = s.schoolYear || '';
   document.getElementById('edit-email').value      = s.email      || '';
   document.getElementById('edit-rate').value       = s.rate       || '';
+  const retireBtn = document.getElementById('retire-btn');
+  if (retireBtn) retireBtn.textContent = s.retired ? '↩ Bring pupil back' : '💤 Retire pupil';
   document.getElementById('edit-modal').classList.add('open');
 }
 function closeEditModal() {
@@ -4595,6 +4621,24 @@ function saveEditModal() {
   renderDetail(s);
 }
 
+
+// Retiring keeps a pupil and all their history but flags them as inactive, so
+// they drop out of Today, Week and the normal All Pupils list. Reversible.
+function toggleRetirePupil(id) {
+  const s = getStudent(id); if (!s) return;
+  s.retired = !s.retired;
+  s.retiredDate = s.retired ? new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
+  save();
+  closeEditModal();
+  // If we're on a pupil's detail page, go back — a just-retired pupil shouldn't
+  // sit open in the active view. Otherwise just refresh the roster.
+  const detailView = document.getElementById('view-detail');
+  if (detailView && detailView.classList.contains('active')) {
+    showView(prevView || 'roster');
+  } else {
+    renderRoster();
+  }
+}
 
 function deletePupil(id) {
   const s = getStudent(id); if (!s) return;
@@ -8183,7 +8227,8 @@ function toggleSearch() {
 }
 function filterRosterBySearch() {
   const q = document.getElementById('search-input').value.toLowerCase();
-  let filtered = q ? students.filter(s => s.name.toLowerCase().includes(q)) : students;
+  const base = showRetiredPupils ? students.filter(s => s.retired) : students.filter(s => !s.retired);
+  let filtered = q ? base.filter(s => s.name.toLowerCase().includes(q)) : base;
   if (currentFilter !== 'all') filtered = filtered.filter(s => s.instrument===currentFilter||s.level===currentFilter||(s.pupilType||'child')===currentFilter);
   renderRosterList(filtered);
 }
