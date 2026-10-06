@@ -1472,7 +1472,7 @@
     <input type="hidden" id="edit-log-entry-idx">
     <div class="field-group">
       <label class="field-label" for="edit-log-date">Date</label>
-      <input type="text" id="edit-log-date" placeholder="e.g. 14 Jun 2026" style="font-family:'Special Elite',cursive">
+      <input type="date" id="edit-log-date" style="font-family:'Special Elite',cursive;-webkit-appearance:none;appearance:none">
     </div>
     <div class="field-group">
       <label class="field-label" for="edit-log-attendance">Attendance</label>
@@ -3760,12 +3760,40 @@ function deleteLogSketch(id, logIdx, sketchIdx) {
   document.querySelectorAll('.moment-tab')[6].click(); // History tab
 }
 
+// Convert a stored lesson date ("14 Jun 2026") to the YYYY-MM-DD a date input
+// needs. Returns '' if it can't be parsed, so a bad old value just shows blank
+// rather than breaking the picker.
+function logDateToInput(str) {
+  if (!str) return '';
+  const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11,
+    January:0,February:1,March:2,April:3,May_:4,June:5,July:6,August:7,September:8,October:9,November:10,December:11};
+  const parts = str.trim().split(/\s+/);
+  if (parts.length < 3) return '';
+  const day = parseInt(parts[0]);
+  const mon = months[parts[1]];
+  const yr = parseInt(parts[2]);
+  if (isNaN(day) || mon === undefined || isNaN(yr)) return '';
+  return yr + '-' + String(mon+1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+}
+
+// Convert a date input's YYYY-MM-DD back to the stored display format "14 Jun 2026".
+function inputToLogDate(val) {
+  if (!val) return '';
+  const [y,m,d] = val.split('-').map(Number);
+  if (!y || !m || !d) return '';
+  // Fixed month names so the stored format is always "14 Jun 2026" regardless
+  // of device locale (some render September as "Sept", which would break the
+  // date parser used by the attendance overview).
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d + ' ' + MON[m-1] + ' ' + y;
+}
+
 function openEditLogModal(id, idx) {
   const s = getStudent(id); if (!s || !s.log[idx]) return;
   const e = s.log[idx];
   document.getElementById('edit-log-student-id').value = id;
   document.getElementById('edit-log-entry-idx').value = idx;
-  document.getElementById('edit-log-date').value = e.date || '';
+  document.getElementById('edit-log-date').value = logDateToInput(e.date);
   document.getElementById('edit-log-attendance').value = e.attendance || '';
   document.getElementById('edit-log-text').value = e.text || '';
   document.getElementById('edit-log-modal').classList.add('open');
@@ -3777,7 +3805,7 @@ function saveEditLogModal() {
   const id  = document.getElementById('edit-log-student-id').value;
   const idx = parseInt(document.getElementById('edit-log-entry-idx').value);
   const s   = getStudent(id); if (!s || !s.log[idx]) return;
-  s.log[idx].date       = document.getElementById('edit-log-date').value.trim() || s.log[idx].date;
+  s.log[idx].date       = inputToLogDate(document.getElementById('edit-log-date').value) || s.log[idx].date;
   s.log[idx].attendance = document.getElementById('edit-log-attendance').value || '';
   s.log[idx].text       = document.getElementById('edit-log-text').value.trim();
   save();
@@ -6166,6 +6194,7 @@ function renderStudioAttendance() {
     (s.log||[]).forEach(e => {
       if (!e.attendance) return;
       const d = parseDate(e.date);
+      if (isNaN(d)) return; // unparseable date — skip rather than make a NaN column
       if (fromDate && d < fromDate) return;
       if (toDate   && d > toDate)   return;
       const wk = weekKey(d);
@@ -6348,6 +6377,7 @@ function exportStudioAttendancePDF() {
     (s.log||[]).forEach(e => {
       if (!e.attendance) return;
       const d = parseDate(e.date);
+      if (isNaN(d)) return; // unparseable date — skip rather than make a NaN column
       if (fromDate && d < fromDate) return;
       if (toDate   && d > toDate)   return;
       const wk = weekKey(d);
