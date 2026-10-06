@@ -1966,9 +1966,26 @@ function linkify(str) {
 function getStudent(id) { return students.find(x => x.id === id); }
 
 // Returns Monday-based day name for today
-function todayDayName() {
+// "Effective now" for the Today view: before 1am, treat it as still the
+// previous day, so late-night logging after midnight still shows the lessons
+// you actually taught that evening. One place so Today's day name and heading
+// always agree.
+function effectiveNow() {
   const d = new Date();
+  if (d.getHours() < 1) d.setDate(d.getDate() - 1);
+  return d;
+}
+
+function todayDayName() {
+  const d = effectiveNow();
   return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()];
+}
+
+// The date string a lesson is logged/matched against. Uses effectiveNow() so a
+// note or attendance saved after midnight (before 1am) is dated to the lesson
+// you actually taught, not the new calendar day — important for billing.
+function todayLogDate() {
+  return effectiveNow().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
 }
 
 // ISO week string e.g. "2025-W23"
@@ -2047,7 +2064,7 @@ function goBack() {
 
 // ── TODAY VIEW ────────────────────────────────────────────────────────────
 function renderToday() {
-  const now = new Date();
+  const now = effectiveNow();
   const dayName = todayDayName();
   document.getElementById('today-heading').textContent =
     now.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
@@ -2104,7 +2121,7 @@ function renderToday() {
   }
   sub.textContent = sorted.length + ' lesson' + (sorted.length!==1?'s':'') + ' today';
   // Calculate teaching hours for today
-  const todayStr2 = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const todayStr2 = todayLogDate();
   const presentToday = sorted.filter(s => {
     const entry = (s.log||[]).find(e => e.date === todayStr2);
     return !entry || !entry.attendance || entry.attendance === 'present';
@@ -2121,7 +2138,7 @@ function renderToday() {
     const slot = { time: s._extraTime || _slot.time, day: _slot.day };
     const isNext = s.id === nextId;
     const isImminent = s.id === imminentId;
-    const todayStr = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    const todayStr = todayLogDate();
     const lastLog = (s.log||[]).filter(e => e.text && e.date !== todayStr).slice(-1)[0];
     const todayLog = (s.log||[]).find(e => e.date === todayStr);
     const markedAbsentToday = todayLog && todayLog.attendance && todayLog.attendance !== 'present';
@@ -2975,7 +2992,7 @@ function renderDetail(s, preserveTab = false) {
           <button type="button" onclick="insertLinePrefix('after-note-${s.id}','☐')" title="Tick box" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;color:var(--muted)">☐ Tick box</button>
         </div>
         ${(()=>{
-          const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+          const today = todayLogDate();
           const todayEntry = (s.log||[]).find(e => e.date === today);
           const sketches = todayEntry && todayEntry.sketches || s.canvasSaves && s.canvasSaves.filter(sv => sv.date === today).map(sv => sv.img) || [];
           if (!sketches.length) return '';
@@ -3885,7 +3902,7 @@ function saveLog(id) {
   if(!el)return;
   const text=el.value.trim(); if(!text)return;
   if(!s.log)s.log=[];
-  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const today = todayLogDate();
   // If an entry for today already exists (e.g. you tapped an attendance button
   // first), merge the notes into it rather than creating a duplicate. Otherwise
   // make a new entry. Either way, default attendance to Present when nothing has
@@ -6157,8 +6174,19 @@ function renderStudioAttendance() {
   const el = document.getElementById('studio-attendance'); if (!el) return;
   const fromVal = document.getElementById('studio-att-from') ? document.getElementById('studio-att-from').value : '';
   const toVal   = document.getElementById('studio-att-to')   ? document.getElementById('studio-att-to').value   : '';
-  const fromDate = fromVal ? new Date(fromVal) : null;
-  const toDate   = toVal   ? new Date(toVal)   : null;
+  // Parse From/To as LOCAL midnight, matching how lesson dates are parsed. Using
+  // new Date('YYYY-MM-DD') gives UTC midnight, which in BST sits an hour off and
+  // wrongly dropped a lesson falling exactly on the boundary date — critical for
+  // billing. The To date is pushed to end-of-day so its own lessons count too.
+  function parseInput(v) {
+    if (!v) return null;
+    const [y,m,d] = v.split('-').map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(y, m-1, d);
+  }
+  const fromDate = parseInput(fromVal);
+  const toDate   = parseInput(toVal);
+  if (toDate) toDate.setHours(23,59,59,999);
 
   function parseDate(str) {
     const parts = str.split(' ');
@@ -6348,8 +6376,19 @@ function renderStudioAttendance() {
 function exportStudioAttendancePDF() {
   const fromVal = document.getElementById('studio-att-from') ? document.getElementById('studio-att-from').value : '';
   const toVal   = document.getElementById('studio-att-to')   ? document.getElementById('studio-att-to').value   : '';
-  const fromDate = fromVal ? new Date(fromVal) : null;
-  const toDate   = toVal   ? new Date(toVal)   : null;
+  // Parse From/To as LOCAL midnight, matching how lesson dates are parsed. Using
+  // new Date('YYYY-MM-DD') gives UTC midnight, which in BST sits an hour off and
+  // wrongly dropped a lesson falling exactly on the boundary date — critical for
+  // billing. The To date is pushed to end-of-day so its own lessons count too.
+  function parseInput(v) {
+    if (!v) return null;
+    const [y,m,d] = v.split('-').map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(y, m-1, d);
+  }
+  const fromDate = parseInput(fromVal);
+  const toDate   = parseInput(toVal);
+  if (toDate) toDate.setHours(23,59,59,999);
 
   function parseDate(str) {
     const parts = str.split(' ');
@@ -8481,7 +8520,7 @@ function lessonCount(s) {
 function setAttendance(id, status) {
   const s = getStudent(id); if (!s) return;
   if (!s.log) s.log = [];
-  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const today = todayLogDate();
   let entry = s.log.find(e => e.date === today);
   if (!entry) { entry = { date: today, text: '', attendance: status }; s.log.push(entry); }
   else { entry.attendance = status; }
