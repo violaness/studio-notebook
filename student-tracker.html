@@ -952,20 +952,26 @@
     <div id="studio-attendance"></div>
   </details>
   <!-- WAITING LIST -->
-  <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div style="font-size:0.72rem;font-weight:800;color:var(--muted)">Waiting list</div>
-      <button onclick="openAddWaitingModal()" style="background:var(--violin);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;min-width:160px">＋ Add</button>
-    </div>
+  <details style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
+    <summary style="font-size:0.72rem;font-weight:800;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0;margin-bottom:12px">
+      <span>📝 Waiting list</span>
+      <span style="display:flex;align-items:center;gap:10px">
+        <span style="font-weight:400" id="waiting-summary-count"></span>
+        <span onclick="event.preventDefault();event.stopPropagation();openAddWaitingModal()" style="background:var(--violin);color:#fff;border-radius:8px;padding:6px 16px;font-size:0.8rem;font-weight:600;cursor:pointer">＋ Add</span>
+      </span>
+    </summary>
     <div id="waiting-list"></div>
-  </div>
+  </details>
 
   <!-- LENDING LOG -->
-  <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div style="font-size:0.72rem;font-weight:800;color:var(--muted)">📚 Books on loan</div>
-      <button onclick="toggleLendingForm()" style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;min-width:160px">＋ Log a loan</button>
-    </div>
+  <details style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
+    <summary style="font-size:0.72rem;font-weight:800;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0;margin-bottom:12px">
+      <span>📚 Books on loan</span>
+      <span style="display:flex;align-items:center;gap:10px">
+        <span style="font-weight:400" id="lending-summary-count"></span>
+        <span onclick="event.preventDefault();event.stopPropagation();toggleLendingForm()" style="background:var(--string);color:#05270B;border-radius:8px;padding:6px 16px;font-size:0.8rem;font-weight:600;cursor:pointer">＋ Log a loan</span>
+      </span>
+    </summary>
     <div id="lending-form" style="display:none;background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:12px;margin-bottom:12px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
         <div>
@@ -980,7 +986,7 @@
       <button onclick="addLendingEntry()" style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">✓ Save loan</button>
     </div>
     <div id="lending-list"></div>
-  </div>
+  </details>
 
   <!-- GIFTS RECEIVED -->
   <details style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
@@ -1024,6 +1030,21 @@
       </div>
       <button onclick="addTermDate()" style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">+ Add</button>
     </div>
+    </div>
+  </details>
+
+  <!-- BACKUP & RESTORE -->
+  <details style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
+    <summary style="font-size:0.72rem;font-weight:800;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+      <span>🗄 Backup &amp; restore</span><span style="font-weight:400">tap to expand</span>
+    </summary>
+    <div style="margin-top:10px">
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Back up saves a JSON file to your Files / Downloads. Keep it in iCloud Drive for safety. Restore loads a backup back in.</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn-primary" onclick="backupData()" style="min-height:48px">💾&nbsp; Back up all data</button>
+        <button class="btn-primary" style="background:var(--violin);min-height:48px" onclick="document.getElementById('admin-restore-file-input').click()">📂&nbsp; Restore from backup</button>
+        <input type="file" id="admin-restore-file-input" accept=".json" style="display:none;opacity:0;position:absolute;width:1px;height:1px" onchange="restoreData(event)">
+      </div>
     </div>
   </details>
 </div>
@@ -8671,6 +8692,8 @@ function restorePiece(id, idx) {
 function renderWaiting() {
   const list = document.getElementById('waiting-list');
   if (!list) return;
+  const wCount = document.getElementById('waiting-summary-count');
+  if (wCount) wCount.textContent = waitingList.length ? waitingList.length + ' waiting' : '';
   if (waitingList.length === 0) {
     list.innerHTML = `<div class="empty-state"><div class="big">📋</div><p>No one on the waiting list yet.</p></div>`;
     return;
@@ -8995,6 +9018,11 @@ function addGiftFromLibrary() {
 
 function renderLendingLog() {
   const el = document.getElementById('lending-list'); if (!el) return;
+  const lCount = document.getElementById('lending-summary-count');
+  if (lCount) {
+    const out = lendingLog.filter(e => !e.returned).length;
+    lCount.textContent = out ? out + ' out' : '';
+  }
   if (lendingLog.length === 0) {
     el.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">No books currently on loan.</p>';
     return;
