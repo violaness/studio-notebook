@@ -54,6 +54,25 @@
   .admin-panel-close { background: var(--warm); color: var(--muted); border: none; border-radius: 8px; padding: 6px 12px; font-family: 'Special Elite', cursive; font-size: 0.78rem; cursor: pointer; white-space: nowrap; }
   .admin-panel-close:active { background: #dbe6d6; }
 
+  /* Chunky tile row for the three expanders at the foot of the Before tab */
+  .before-tiles { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 10px 0 4px; }
+  .before-tiles > details { margin: 0; }
+  /* An open expander spans the full row so its form isn't squashed into one column */
+  .before-tiles > details[open] { grid-column: 1 / -1; }
+  .before-tile-summary {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    min-height: 92px; padding: 14px 8px; border: none; border-radius: 16px; color: #fff; cursor: pointer;
+    list-style: none; text-align: center; font-family: 'Special Elite', cursive;
+    box-shadow: 0 3px 10px rgba(5,39,11,0.14); transition: transform 0.08s ease, box-shadow 0.08s ease;
+  }
+  .before-tile-summary::-webkit-details-marker { display: none; }
+  .before-tiles > details[open] .before-tile-summary { border-radius: 16px 16px 0 0; }
+  .before-tiles > details > .before-tile-summary:active { transform: translateY(2px); box-shadow: 0 1px 6px rgba(5,39,11,0.18); }
+  .before-tile-icon { font-size: 1.5rem; line-height: 1; }
+  .before-tile-label { font-size: 0.8rem; font-weight: 600; line-height: 1.2; }
+  .before-tile-badge { display: inline-block; min-width: 20px; padding: 0 6px; border-radius: 999px; background: rgba(255,255,255,0.3); color: #fff; font-size: 0.72rem; font-weight: 700; margin-top: 2px; }
+  .before-tile-body { border-radius: 0 0 14px 14px; }
+
   /* ── NAV / FOLDER HEADER ── */
 
   /* ── FOLDER HEADER — Oxford tab style ─────────────────────────────────── */
@@ -2907,24 +2926,26 @@ function renderDetail(s, preserveTab = false) {
           oninput="updateField('${s.id}','nextWeekNote',this.value)"
           style="background:transparent;border-color:rgba(0,80,140,0.15)">${esc(s.nextWeekNote||'')}</textarea>
       </div>
+      <div class="before-tiles">
       <details>
-        <summary style="cursor:pointer;padding:10px 14px;background:#f5f0fb;border:1.5px solid var(--viola);border-radius:10px;list-style:none;display:flex;align-items:center;justify-content:space-between;font-size:0.82rem;font-weight:600;color:var(--viola)">
-          <span>🔒 Teacher notes — private</span>
-          <span style="font-size:0.7rem;font-weight:400;opacity:0.7">tap to expand</span>
+        <summary class="before-tile-summary" style="background:var(--viola)">
+          <span class="before-tile-icon">🔒</span>
+          <span class="before-tile-label">Teacher notes<br><span style="font-weight:400;font-size:0.68rem;opacity:0.85">private</span></span>
         </summary>
-        <div class="section-card" style="background:#f5f0fb;border:1.5px solid var(--viola);border-top:none;border-radius:0 0 10px 10px;margin-top:0">
+        <div class="section-card before-tile-body" style="background:#f5f0fb;border:1.5px solid var(--viola);border-top:none;margin-top:0">
           <div style="font-size:0.72rem;color:var(--viola);opacity:0.7;margin-bottom:6px">Not included in reports or emails</div>
           <textarea rows="5" placeholder="Sensitive or confidential notes — these never leave the app…"
             oninput="updateField('${s.id}','teacherNotes',this.value)"
             style="background:transparent;border-color:rgba(100,60,160,0.2)">${esc(s.teacherNotes||'')}</textarea>
         </div>
       </details>
-      <details style="margin-bottom:4px">
-        <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
-          <span>🔁 Requested lesson moves${(s.requestedMoves&&s.requestedMoves.filter(m=>new Date(m.fromDate)>=new Date()).length)?` <span style="background:#29789E;color:#fff;font-size:0.65rem;padding:1px 6px;border-radius:999px;margin-left:6px">${s.requestedMoves.filter(m=>new Date(m.fromDate)>=new Date()).length}</span>`:''}</span>
-          <span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+      <details>
+        <summary class="before-tile-summary" style="background:var(--violin)">
+          <span class="before-tile-icon">🔁</span>
+          <span class="before-tile-label">Lesson moves</span>
+          ${(s.requestedMoves&&s.requestedMoves.filter(m=>new Date(m.fromDate)>=new Date()).length)?`<span class="before-tile-badge">${s.requestedMoves.filter(m=>new Date(m.fromDate)>=new Date()).length}</span>`:''}
         </summary>
-        <div class="section-card" style="margin-top:6px">
+        <div class="section-card before-tile-body" style="margin-top:0;border:1.5px solid var(--violin);border-top:none">
           <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px">For a one-off lesson change on a future date — e.g. moving a lesson in 3 weeks' time. This doesn't change the pupil's regular weekly slot.</div>
           ${requestedMovesHTML(s)}
           <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
@@ -2954,12 +2975,13 @@ function renderDetail(s, preserveTab = false) {
           </div>
         </div>
       </details>
-      <details style="margin-bottom:4px">
-        <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
-          <span>📅 Requested absences${(s.absences&&s.absences.filter(a=>new Date(a.date)>=new Date()).length)?` <span style="background:#e67e22;color:#fff;font-size:0.65rem;padding:1px 6px;border-radius:999px;margin-left:6px">${s.absences.filter(a=>new Date(a.date)>=new Date()).length}</span>`:''}</span>
-          <span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+      <details>
+        <summary class="before-tile-summary" style="background:var(--advanced)">
+          <span class="before-tile-icon">📅</span>
+          <span class="before-tile-label">Absences</span>
+          ${(s.absences&&s.absences.filter(a=>new Date(a.date)>=new Date()).length)?`<span class="before-tile-badge" style="background:#e67e22">${s.absences.filter(a=>new Date(a.date)>=new Date()).length}</span>`:''}
         </summary>
-        <div class="section-card" style="margin-top:6px">
+        <div class="section-card before-tile-body" style="margin-top:0;border:1.5px solid var(--advanced);border-top:none">
           ${absencesHTML(s)}
           <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
             <div>
@@ -2978,6 +3000,7 @@ function renderDetail(s, preserveTab = false) {
           </div>
         </div>
       </details>
+      </div><!-- /before-tiles -->
     </div>
 
     <!-- DURING -->
