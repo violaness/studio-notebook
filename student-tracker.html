@@ -1001,8 +1001,8 @@
   <!-- ADMIN TILE GRID -->
   <!-- Greens flow down the left column (light→dark), blues down the right (light→dark) -->
   <div class="admin-grid">
-    <!-- LEFT COLUMN (top→bottom): Backup, Attendance, Books on loan -->
-    <button class="admin-tile" style="background:var(--ink)" onclick="showAdminSection('backup')">
+    <!-- LEFT COLUMN (top→bottom): Backup, Attendance, Books on loan — greens light→dark -->
+    <button class="admin-tile" style="background:var(--string);color:var(--ink)" onclick="showAdminSection('backup')">
       <span class="admin-tile-icon">🗄</span>
       <span class="admin-tile-label">Backup &amp; restore</span>
     </button>
@@ -1010,13 +1010,13 @@
       <span class="admin-tile-icon">📊</span>
       <span class="admin-tile-label">Attendance</span>
     </button>
-    <button class="admin-tile" style="background:var(--string);color:var(--ink)" onclick="showAdminSection('lending')">
+    <button class="admin-tile" style="background:var(--ink)" onclick="showAdminSection('lending')">
       <span class="admin-tile-icon">📚</span>
       <span class="admin-tile-label">Books on loan</span>
-      <span class="admin-tile-badge" id="tile-lending-badge" style="background:rgba(5,39,11,0.18)"></span>
+      <span class="admin-tile-badge" id="tile-lending-badge"></span>
     </button>
-    <!-- RIGHT COLUMN (top→bottom): Term dates, Waiting list, Gifts received -->
-    <button class="admin-tile" style="background:var(--advanced)" onclick="showAdminSection('terms')">
+    <!-- RIGHT COLUMN (top→bottom): Term dates, Waiting list, Gifts received — blues light→dark -->
+    <button class="admin-tile" style="background:#46C6E5;color:var(--ink)" onclick="showAdminSection('terms')">
       <span class="admin-tile-icon">📅</span>
       <span class="admin-tile-label">Term dates</span>
     </button>
@@ -1025,10 +1025,10 @@
       <span class="admin-tile-label">Waiting list</span>
       <span class="admin-tile-badge" id="tile-waiting-badge"></span>
     </button>
-    <button class="admin-tile" style="background:#46C6E5;color:var(--ink)" onclick="showAdminSection('gifts')">
+    <button class="admin-tile" style="background:var(--advanced)" onclick="showAdminSection('gifts')">
       <span class="admin-tile-icon">🎁</span>
       <span class="admin-tile-label">Gifts received</span>
-      <span class="admin-tile-badge" id="tile-gifts-badge" style="background:rgba(5,39,11,0.18)"></span>
+      <span class="admin-tile-badge" id="tile-gifts-badge"></span>
     </button>
   </div>
 
