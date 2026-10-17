@@ -1887,6 +1887,10 @@ let deletedBuiltins  = JSON.parse(localStorage.getItem('studio_deleted_builtins'
 let techCategoryMap  = JSON.parse(localStorage.getItem('studio_tech_categories')   || 'null') || Object.assign({}, TECH_CATEGORY_DEFAULTS);
 let customTechCats   = JSON.parse(localStorage.getItem('studio_custom_tech_cats')   || '[]');
 let customPieces = JSON.parse(localStorage.getItem('studio_custom_pieces') || '[]');
+// Built-in pieces the user has deleted from their view. A built-in can't be
+// removed from PIECE_DB (it's baked into the app), so we hide it instead.
+// Keyed by "title|||cat".
+let hiddenPieces = JSON.parse(localStorage.getItem('studio_hidden_pieces') || '[]');
 let videoLinks   = JSON.parse(localStorage.getItem('studio_video_links')   || '[]');
 let videoCatsRemoved = JSON.parse(localStorage.getItem('studio_video_cats_removed') || '[]');
 let videoTeachers = JSON.parse(localStorage.getItem('studio_video_teachers') || '[]');
@@ -1911,6 +1915,7 @@ function save() {
   localStorage.setItem('studio_tech_categories',   JSON.stringify(techCategoryMap));
   localStorage.setItem('studio_custom_tech_cats',  JSON.stringify(customTechCats));
   localStorage.setItem('studio_custom_pieces',     JSON.stringify(customPieces));
+  localStorage.setItem('studio_hidden_pieces',     JSON.stringify(hiddenPieces));
   localStorage.setItem('studio_video_links',       JSON.stringify(videoLinks));
   localStorage.setItem('studio_video_cats_removed', JSON.stringify(videoCatsRemoved));
   localStorage.setItem('studio_video_teachers',     JSON.stringify(videoTeachers));
@@ -2804,7 +2809,7 @@ function renderDetail(s, preserveTab = false) {
             ${s.nextLesson ? `<button onclick="clearNextLessonPlan('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>` : ''}
           </span>
         </div>
-        <textarea rows="14" placeholder="What you want to cover today…" class="lined-note"
+        <textarea autocorrect="off" autocapitalize="sentences" spellcheck="false" rows="14" placeholder="What you want to cover today…" class="lined-note"
           id="nextlesson-${s.id}"
           oninput="updateField('${s.id}','nextLesson',this.value)">${esc(s.nextLesson||'')}</textarea>
         ${(s.log||[]).filter(e=>e.text).length > 0 ? '<button onclick="copyLastLesson(\'' + s.id + '\')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-size:0.8rem;cursor:pointer;width:100%">\u2191 Copy last lesson notes as plan</button>' : ''}
@@ -2821,7 +2826,7 @@ function renderDetail(s, preserveTab = false) {
           <span>📋 Note for next week</span>
           <button onclick="clearNextWeekNote('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
         </div>
-        <textarea rows="3" placeholder="Anything to prepare or remember for next lesson…" class="lined-note"
+        <textarea autocorrect="off" autocapitalize="sentences" spellcheck="false" rows="3" placeholder="Anything to prepare or remember for next lesson…" class="lined-note"
           id="nextWeeknote-${s.id}"
           oninput="updateField('${s.id}','nextWeekNote',this.value)"
           style="background:transparent;border-color:rgba(0,80,140,0.15)">${esc(s.nextWeekNote||'')}</textarea>
@@ -2914,7 +2919,7 @@ function renderDetail(s, preserveTab = false) {
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span>Quick notes — right now</span>
         </div>
-        <textarea class="quick-note"
+        <textarea autocorrect="off" autocapitalize="sentences" spellcheck="false" class="quick-note"
           placeholder="Jot anything — key words, reminders, 'try this'…"
           id="during-scratch-${s.id}"
           oninput="autoGrow(this);fixupListContinuation('during-scratch-${s.id}');saveDuring('${s.id}')"
@@ -2983,7 +2988,7 @@ function renderDetail(s, preserveTab = false) {
           </span>
         </div>
         <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">Built from your plan and during-lesson notes — edit freely before saving to the log.</div>
-        <textarea class="quick-note" placeholder="What went well, what to remember for next time…"
+        <textarea autocorrect="off" autocapitalize="sentences" spellcheck="false" class="quick-note" placeholder="What went well, what to remember for next time…"
           id="after-note-${s.id}"
           oninput="autoGrow(this);fixupListContinuation('after-note-${s.id}');this.dataset.edited='1';saveAfterDraft('${s.id}',this.value)"
           onkeydown="if(event.key==='Enter')handleListEnter(event)">${(typeof s.afterDraft === 'string' && s.afterDraft.length) ? esc(s.afterDraft) : buildCumulativeNote(s)}</textarea>
@@ -3008,7 +3013,7 @@ function renderDetail(s, preserveTab = false) {
           <span>📌 Next lesson — what to focus on</span>
           <button onclick="clearNextLessonCapture('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
         </div>
-        <textarea class="quick-note" style="background:#f0fae8;border-color:#c8ddb8"
+        <textarea autocorrect="off" autocapitalize="sentences" spellcheck="false" class="quick-note" style="background:#f0fae8;border-color:#c8ddb8"
           placeholder="What to do next lesson…"
           id="next-lesson-capture-${s.id}"
           oninput="autoGrow(this);autoSaveNextLesson('${s.id}',this.value)">${esc(s.nextWeekNote||'')}</textarea>
@@ -7092,12 +7097,23 @@ function removeLibChip(idx) {
   renderLibChips();
 }
 
+// Key a piece by title + category, used to match overrides and hidden entries.
+function pieceKey(p) { return (p.title||'') + '|||' + (p.cat||''); }
+
+// The merged library the user sees: every built-in piece, EXCEPT ones they've
+// hidden or overridden with their own edited copy, plus all their custom pieces.
+function visibleLibraryPieces() {
+  const customKeys = new Set(customPieces.map(pieceKey));
+  const hiddenSet  = new Set(hiddenPieces);
+  const builtins = PIECE_DB.filter(p => !customKeys.has(pieceKey(p)) && !hiddenSet.has(pieceKey(p)));
+  return [...customPieces, ...builtins];
+}
+
 function renderLibPieces() {
   const list = document.getElementById('lib-pieces-list'); if (!list) return;
   const search = (document.getElementById('lib-piece-search').value || '').toLowerCase();
   const cat = document.getElementById('lib-cat-filter').value;
-  const allPieces = [...customPieces, ...PIECE_DB];
-  const filtered = allPieces.filter(p => {
+  const filtered = visibleLibraryPieces().filter(p => {
     const matchSearch = !search || p.title.toLowerCase().includes(search) || (p.composer||'').toLowerCase().includes(search) || (p.grade||'').toLowerCase().includes(search);
     const matchCat = !cat || p.cat === cat;
     return matchSearch && matchCat;
@@ -7109,17 +7125,17 @@ function renderLibPieces() {
   list.innerHTML = Object.entries(groups).map(([cat, pieces]) => `
     <div style="margin-bottom:14px">
       <div style="font-size:0.78rem;font-weight:700;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${cat.replace(' - ',' — ')}</div>
-      ${pieces.map((p,i) => {
-        const isCustom = customPieces.some(cp => cp.title === p.title && cp.cat === p.cat);
-        const customIdx = customPieces.findIndex(cp => cp.title === p.title && cp.cat === p.cat);
+      ${pieces.map((p) => {
+        // Every piece is now editable. Pass its key so the handler can find it
+        // whether it's a custom piece or a built-in being edited for the first time.
+        const key = escJs(pieceKey(p));
         return `<div style="padding:8px 0;border-bottom:1px solid var(--warm);display:flex;align-items:center;gap:8px">
           <div style="flex:1">
             <div style="font-size:0.88rem;font-weight:600">${esc(p.title)}</div>
             ${p.composer||p.grade ? `<div style="font-size:0.75rem;color:var(--muted)">${[p.composer,p.grade].filter(Boolean).join(' · ')}</div>` : ''}
           </div>
-          ${isCustom ? `
-            <button onclick="editLibPiece(${customIdx})" style="background:none;border:1.5px solid var(--viola);border-radius:6px;padding:3px 8px;color:var(--viola);cursor:pointer;font-size:0.75rem;flex-shrink:0">Edit</button>
-            <button onclick="removeLibPiece(${customIdx})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px;flex-shrink:0">×</button>` : ''}
+          <button onclick="editLibPieceByKey('${key}')" style="background:none;border:1.5px solid var(--viola);border-radius:6px;padding:3px 8px;color:var(--viola);cursor:pointer;font-size:0.75rem;flex-shrink:0">Edit</button>
+          <button onclick="removeLibPieceByKey('${key}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px;flex-shrink:0">×</button>
         </div>`;
       }).join('')}
     </div>`).join('');
@@ -7156,36 +7172,63 @@ function addLibPiece() {
   renderLibPieces();
 }
 
-function editLibPiece(idx) {
-  const p = customPieces[idx]; if (!p) return;
+// Find a piece by its title|||cat key, whether custom or built-in.
+function findLibPieceByKey(key) {
+  let p = customPieces.find(cp => pieceKey(cp) === key);
+  if (p) return p;
+  return PIECE_DB.find(bp => pieceKey(bp) === key) || null;
+}
+
+function editLibPieceByKey(key) {
+  const p = findLibPieceByKey(key); if (!p) return;
   populateCatFilters();
-  document.getElementById('edit-lib-piece-idx').value = idx;
+  // Store the ORIGINAL key so save can find the right row even if title/cat change.
+  document.getElementById('edit-lib-piece-idx').value = key;
   document.getElementById('edit-lib-piece-title').value    = p.title    || '';
   document.getElementById('edit-lib-piece-composer').value = p.composer || '';
   document.getElementById('edit-lib-piece-grade').value    = p.grade    || '';
   document.getElementById('edit-lib-piece-cat').value      = p.cat      || 'My Library';
   document.getElementById('edit-lib-piece-modal').classList.add('open');
 }
+
 function closeEditLibPiece() {
   document.getElementById('edit-lib-piece-modal').classList.remove('open');
 }
+
 function saveEditLibPiece() {
-  const idx = parseInt(document.getElementById('edit-lib-piece-idx').value);
-  if (isNaN(idx) || !customPieces[idx]) return;
-  customPieces[idx] = {
+  const origKey = document.getElementById('edit-lib-piece-idx').value;
+  const updated = {
     title:    document.getElementById('edit-lib-piece-title').value.trim(),
     composer: document.getElementById('edit-lib-piece-composer').value.trim(),
     grade:    document.getElementById('edit-lib-piece-grade').value.trim(),
     cat:      document.getElementById('edit-lib-piece-cat').value,
   };
+  if (!updated.title) return; // don't save a blank title
+
+  const existingIdx = customPieces.findIndex(cp => pieceKey(cp) === origKey);
+  if (existingIdx > -1) {
+    // Editing one of the user's own pieces — update it in place.
+    customPieces[existingIdx] = updated;
+  } else {
+    // Editing a built-in: save an override copy, and hide the original built-in
+    // so it doesn't show twice.
+    customPieces.push(updated);
+    if (hiddenPieces.indexOf(origKey) === -1) hiddenPieces.push(origKey);
+  }
   save();
   closeEditLibPiece();
   renderLibPieces();
 }
 
-
-function removeLibPiece(idx) {
-  customPieces.splice(idx, 1);
+function removeLibPieceByKey(key) {
+  const idx = customPieces.findIndex(cp => pieceKey(cp) === key);
+  if (idx > -1) {
+    // Remove the user's own piece outright.
+    customPieces.splice(idx, 1);
+  } else if (hiddenPieces.indexOf(key) === -1) {
+    // Hide a built-in from the list (can't delete from PIECE_DB itself).
+    hiddenPieces.push(key);
+  }
   save();
   renderLibPieces();
 }
@@ -8328,23 +8371,27 @@ function getCurrentWeekDate() {
   return new Date(y, m-1, d);
 }
 
+// Only the TEACHING days (Sat–Wed) decide whether a week is a holiday. The full
+// Sat–Fri span would wrongly flag a whole week as holiday when half-term starts
+// on the Thu/Fri (e.g. term to 21 Oct, half-term from 22 Oct) — even though
+// every teaching day that week is still term time.
 function isHolidayWeek() {
   const weekStart = getCurrentWeekDate();
-  const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
+  const teachEnd = new Date(weekStart); teachEnd.setDate(weekStart.getDate() + 4); // Wed
   return termDates.some(function(t) {
     if (!t.holidayStart || !t.holidayEnd) return false;
     const hs = new Date(t.holidayStart); const he = new Date(t.holidayEnd);
-    return weekStart <= he && weekEnd >= hs;
+    return weekStart <= he && teachEnd >= hs;
   });
 }
 
 function getHolidayLabel() {
   const weekStart = getCurrentWeekDate();
-  const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
+  const teachEnd = new Date(weekStart); teachEnd.setDate(weekStart.getDate() + 4); // Wed
   const h = termDates.find(function(t) {
     if (!t.holidayStart || !t.holidayEnd) return false;
     const hs = new Date(t.holidayStart); const he = new Date(t.holidayEnd);
-    return weekStart <= he && weekEnd >= hs;
+    return weekStart <= he && teachEnd >= hs;
   });
   return h ? (h.label || 'Holiday') : null;
 }
@@ -8987,7 +9034,7 @@ function openPieceDB(studentId) {
   populateCatFilters();
   document.getElementById('piece-search').value = '';
   document.getElementById('piece-cat-filter').value = '';
-  renderPieceDB([...customPieces, ...PIECE_DB]);
+  renderPieceDB(visibleLibraryPieces());
   document.getElementById('piece-db-modal').classList.add('open');
 }
 function closePieceDB() {
@@ -8997,7 +9044,7 @@ function closePieceDB() {
 function filterPieceDB() {
   const search = document.getElementById('piece-search').value.toLowerCase();
   const cat = document.getElementById('piece-cat-filter').value;
-  const allPieces = [...customPieces, ...PIECE_DB];
+  const allPieces = visibleLibraryPieces();
   const filtered = allPieces.filter(p => {
     const matchSearch = !search || p.title.toLowerCase().includes(search) || (p.composer||'').toLowerCase().includes(search) || (p.grade||'').toLowerCase().includes(search);
     const matchCat = !cat || p.cat === cat;
@@ -9634,6 +9681,7 @@ function backupData() {
     studio_tech_categories:   localStorage.getItem('studio_tech_categories')   || 'null',
     studio_custom_tech_cats:  localStorage.getItem('studio_custom_tech_cats')  || '[]',
     studio_custom_pieces: localStorage.getItem('studio_custom_pieces') || '[]',
+    studio_hidden_pieces: localStorage.getItem('studio_hidden_pieces') || '[]',
     studio_video_links:   localStorage.getItem('studio_video_links')   || '[]',
     studio_video_cats_removed: localStorage.getItem('studio_video_cats_removed') || '[]',
     studio_video_teachers: localStorage.getItem('studio_video_teachers') || '[]',
@@ -9676,7 +9724,7 @@ function restoreData(event) {
       if (!confirm(`Restore backup from ${payload._exported ? new Date(payload._exported).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : 'unknown date'}?\n\nThis will replace all current data.`)) return;
 
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
-        'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links','studio_video_cats_removed','studio_video_teachers',
+        'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links','studio_video_cats_removed','studio_video_teachers','studio_hidden_pieces',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
         'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
@@ -9688,6 +9736,7 @@ function restoreData(event) {
       techCategoryMap = JSON.parse(localStorage.getItem('studio_tech_categories')  || 'null') || Object.assign({}, TECH_CATEGORY_DEFAULTS);
       customTechCats  = JSON.parse(localStorage.getItem('studio_custom_tech_cats') || '[]');
       customPieces    = JSON.parse(localStorage.getItem('studio_custom_pieces')    || '[]');
+      hiddenPieces    = JSON.parse(localStorage.getItem('studio_hidden_pieces')    || '[]');
       oneOffMoves     = JSON.parse(localStorage.getItem('studio_one_off_moves')    || '{}');
       waitingList     = JSON.parse(localStorage.getItem('studio_waiting_list')     || '[]');
       termDates       = JSON.parse(localStorage.getItem('studio_term_dates')       || '[]');
