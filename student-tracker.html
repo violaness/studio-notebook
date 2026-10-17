@@ -340,7 +340,7 @@
   }
   .detail-avatar {
     width: 56px; height: 56px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
     font-size: 1.4rem; flex-shrink: 0; font-weight: 700;
   }
   .detail-name { font-family: 'DM Serif Display', serif; font-size: 1.5rem; margin-bottom: 5px; }
@@ -2798,7 +2798,10 @@ function renderDetail(s, preserveTab = false) {
 
   el.innerHTML = `
     <div class="detail-header">
-      <div class="detail-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
+      <div class="detail-avatar avatar-${s.instrument}" title="Chargeable lessons this half-term">
+        <span style="font-size:1.5rem;font-weight:800;line-height:1">${currentChargeableCount(s)}</span>
+        <span style="font-size:0.5rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;opacity:0.8;margin-top:1px">lessons</span>
+      </div>
       <div style="flex:1">
         <div class="detail-name">${s.name}</div>
         <div class="student-meta">
@@ -2810,6 +2813,8 @@ function renderDetail(s, preserveTab = false) {
         </div>
         ${pupilMetaHTML(s)}
       </div>
+      ${termPickerHTML(s)}
+      <button onclick="toggleLittleDetails('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Little details about this pupil">🐢 Details</button>
       <button onclick="openEditModal('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--viola);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Edit pupil">✏️ Edit</button>
       <button onclick="openMoveModal('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Move lesson">📅 Move</button>
       <button onclick="openExtraLessonModal('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;color:#2F5C1A;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Add extra lesson this week">+ Extra</button>
@@ -2817,14 +2822,10 @@ function renderDetail(s, preserveTab = false) {
       <button onclick="toggleFollowUp('${s.id}')" title="${s.followUp?'Clear follow-up flag':'Flag for follow-up'}"
         style="background:${s.followUp?'#e67e22':'#f0ede8'};color:${s.followUp?'#fff':'var(--muted)'};border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px">🚩</button>
     </div>
-    ${lessonCountHTML(s)}
     <div id="next-pupil-banner">${nextPupilHTML(s)}</div>
 
-    <details class="section-card" style="margin-bottom:8px;padding:0">
-      <summary style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
-        <span>🐢 Little Details</span>
-        <span style="font-size:0.7rem;font-weight:400">tap to expand</span>
-      </summary>
+    <details class="section-card" id="little-details-${s.id}" style="margin-bottom:8px;padding:0">
+      <summary style="display:none;list-style:none"></summary>
       <div style="padding:0 14px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
         ${[
           ['siblings',  '👨‍👩‍👧 Siblings'],
@@ -8821,11 +8822,42 @@ function lessonCountHTML(s) {
   return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;margin:2px 0 10px">${pill}${picker}</div>`;
 }
 
+// The chargeable lesson count number for the currently selected half-term,
+// for the dashboard avatar circle.
+function currentChargeableCount(s) {
+  const blocks = termBlocks();
+  if (blocks.length === 0) {
+    return (s.log || []).filter(function(e){ return e.attendance === 'present' || e.attendance === 'absent-late'; }).length;
+  }
+  let idx = (billingTermIdx !== null && blocks[billingTermIdx]) ? billingTermIdx : currentTermIdx();
+  if (idx < 0) idx = blocks.length - 1;
+  return countChargeable(s, blocks[idx]);
+}
+
+// The half-term picker <select> for the header dashboard (null if no terms set).
+function termPickerHTML(s) {
+  const blocks = termBlocks();
+  if (blocks.length === 0) return '';
+  let sel = (billingTermIdx !== null && blocks[billingTermIdx]) ? billingTermIdx : currentTermIdx();
+  if (sel < 0) sel = blocks.length - 1;
+  const opts = blocks.map(function(b, i) {
+    return `<option value="${i}"${i === sel ? ' selected' : ''}>${esc(b.label)}</option>`;
+  }).join('');
+  return `<select onchange="setBillingTerm(this.value,'${s.id}')" aria-label="Choose half-term"
+    style="height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;color:#1a4a6b;background:#eef6ff;border:1.5px solid #a8c8e8;border-radius:10px;padding:0 10px;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px">${opts}</select>`;
+}
+
 // Change which half-term the pupil page counts, then re-render the pupil.
 function setBillingTerm(idx, pupilId) {
   billingTermIdx = (idx === '' || idx === null) ? null : parseInt(idx, 10);
   const s = getStudent(pupilId);
   if (s) renderDetail(s, true);
+}
+
+// Toggle the Little Details panel open/closed from the header button.
+function toggleLittleDetails(pupilId) {
+  const d = document.getElementById('little-details-' + pupilId);
+  if (d) d.open = !d.open;
 }
 
 // The Admin billing sheet: every active pupil with their chargeable lesson
