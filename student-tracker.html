@@ -992,6 +992,12 @@
 <!-- ADMIN VIEW -->
 <div id="view-admin" class="view">
 
+  <!-- BILLING TILE (full width, the main invoicing sheet) -->
+  <button class="admin-tile" style="background:#1a4a6b;width:100%;min-height:92px;margin:6px 0 14px" onclick="showAdminSection('billing')">
+    <span class="admin-tile-icon">💷</span>
+    <span class="admin-tile-label">Billing sheet — lessons per pupil</span>
+  </button>
+
   <!-- ADMIN TILE GRID -->
   <!-- Greens flow down the left column (light→dark), blues down the right (light→dark) -->
   <div class="admin-grid">
@@ -1028,6 +1034,18 @@
 
   <!-- ADMIN PANELS -->
   <div id="admin-panels">
+
+  <!-- BILLING SHEET -->
+  <section class="admin-panel" id="panel-billing" style="display:none">
+    <div class="admin-panel-head"><span>💷 Billing sheet</span><button class="admin-panel-close" onclick="closeAdminSections()">✕ Close</button></div>
+    <div style="font-size:0.75rem;color:var(--muted);margin:4px 0 12px">Chargeable lessons per pupil for the chosen half-term (Present + last-minute absences). Pick the half-term, then read the totals down the right.</div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+      <label style="font-size:0.75rem;color:var(--muted)">Half-term:</label>
+      <select id="billing-term-select" onchange="renderBilling()"
+        style="font-family:'Special Elite',cursive;font-size:0.85rem;color:#1a4a6b;background:var(--paper);border:1.5px solid #a8c8e8;border-radius:10px;padding:8px 12px;cursor:pointer;flex:1;min-width:140px"></select>
+    </div>
+    <div id="billing-sheet"></div>
+  </section>
 
   <!-- STUDIO ATTENDANCE OVERVIEW -->
   <section class="admin-panel" id="panel-attendance" style="display:none">
@@ -2799,6 +2817,7 @@ function renderDetail(s, preserveTab = false) {
       <button onclick="toggleFollowUp('${s.id}')" title="${s.followUp?'Clear follow-up flag':'Flag for follow-up'}"
         style="background:${s.followUp?'#e67e22':'#f0ede8'};color:${s.followUp?'#fff':'var(--muted)'};border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px">🚩</button>
     </div>
+    ${lessonCountHTML(s)}
     <div id="next-pupil-banner">${nextPupilHTML(s)}</div>
 
     <details class="section-card" style="margin-bottom:8px;padding:0">
@@ -2912,9 +2931,6 @@ function renderDetail(s, preserveTab = false) {
           <div class="section-label" style="margin-bottom:8px">🎻 Scales for this week</div>
           <div id="scales-week-${s.id}">${scalesForWeekHTML(s)}</div>
         </div>
-      </div>
-      <div style="font-size:0.78rem;color:var(--muted);text-align:right;margin-bottom:8px">
-        ${lessonCount(s)}
       </div>
       <div class="section-card" style="background:#eef6ff;border:1.5px solid #a8c8e8">
         <div class="section-label" style="color:#1a4a6b;display:flex;align-items:center;justify-content:space-between">
@@ -7044,6 +7060,7 @@ function renderAdmin() {
   renderLendingLog();
   renderGiftsList();
   renderTermDates();
+  renderBilling();
   updateAdminBadges();
 }
 
@@ -8714,19 +8731,145 @@ function copyLastLesson(id) {
 }
 
 // ── LESSON COUNT ──────────────────────────────────────────────────────────
-function lessonCount(s) {
-  const log = s.log || [];
-  const t = JSON.parse(localStorage.getItem('studio_term') || '{}');
-  if (!t.start) {
-    const total = log.filter(e=>e.attendance).length;
-    const present = log.filter(e=>e.attendance==='present').length;
-    return total > 0 ? `${present} attended · ${total} recorded total` : '';
+// Parse a log entry's date string ("17 Oct 2026") to a Date, robustly.
+function parseLogDate(str) {
+  if (!str) return null;
+  const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  const parts = String(str).split(' ');
+  if (parts.length >= 3 && months[parts[1]] !== undefined) {
+    return new Date(parseInt(parts[2]), months[parts[1]], parseInt(parts[0]));
   }
-  const start = new Date(t.start);
-  const termLogs = log.filter(e => { try { const d = new Date(e.date); return d >= start; } catch(e){return false;} });
-  const termPresent = termLogs.filter(e=>e.attendance==='present').length;
-  const termTotal   = termLogs.filter(e=>e.attendance).length;
-  return termTotal > 0 ? `This term: ${termPresent} attended of ${termTotal} lessons` : '';
+  const d = new Date(str);
+  return isNaN(d) ? null : d;
+}
+
+// All term blocks (half-terms) from the Admin term dates, sorted by start date,
+// each as { label, start: Date, end: Date }. Holidays are excluded.
+function termBlocks() {
+  return (termDates || [])
+    .filter(function(t) { return t.termStart && t.termEnd; })
+    .map(function(t) {
+      const ts = new Date(t.termStart);
+      const te = new Date(t.termEnd); te.setHours(23,59,59,999);
+      return { label: t.label || 'Half-term', start: ts, end: te };
+    })
+    .sort(function(a, b) { return a.start - b.start; });
+}
+
+// Index (into termBlocks()) of the half-term that today falls within, or -1.
+function currentTermIdx() {
+  const ref = effectiveNow();
+  const blocks = termBlocks();
+  for (let i = 0; i < blocks.length; i++) {
+    if (ref >= blocks[i].start && ref <= blocks[i].end) return i;
+  }
+  return -1;
+}
+
+// Which half-term the pupil page is counting. null = follow today automatically;
+// a number locks it to that block (so you can bill last half-term late).
+let billingTermIdx = null;
+
+// Count CHARGEABLE lessons (Present + "Absent — last minute") for one pupil
+// within a given term block.
+function countChargeable(s, block) {
+  const log = s.log || [];
+  return log.filter(function(e) {
+    if (e.attendance !== 'present' && e.attendance !== 'absent-late') return false;
+    const d = parseLogDate(e.date);
+    return d && d >= block.start && d <= block.end;
+  }).length;
+}
+
+// Billing count text for the currently selected (or current) half-term.
+function lessonCount(s) {
+  const blocks = termBlocks();
+  if (blocks.length === 0) {
+    const n = (s.log || []).filter(function(e) { return e.attendance === 'present' || e.attendance === 'absent-late'; }).length;
+    return n > 0 ? `${n} chargeable lessons (add term dates in Admin for a half-term total)` : '';
+  }
+  let idx = (billingTermIdx !== null && blocks[billingTermIdx]) ? billingTermIdx : currentTermIdx();
+  if (idx < 0) idx = blocks.length - 1; // in a holiday now → show the most recent term
+  const block = blocks[idx];
+  const n = countChargeable(s, block);
+  const noun = n === 1 ? 'lesson' : 'lessons';
+  return `${block.label}: ${n} chargeable ${noun}`;
+}
+
+// The pill plus a half-term picker, shown under the pupil's header buttons.
+function lessonCountHTML(s) {
+  const blocks = termBlocks();
+  const text = lessonCount(s);
+  if (!text) return '';
+  const pill = `<div style="display:inline-block;background:#eef6ff;border:1.5px solid #a8c8e8;color:#1a4a6b;font-size:0.76rem;border-radius:999px;padding:4px 14px">💷 ${text}</div>`;
+  if (blocks.length === 0) {
+    return `<div style="margin:2px 0 10px">${pill}</div>`;
+  }
+  let sel = (billingTermIdx !== null && blocks[billingTermIdx]) ? billingTermIdx : currentTermIdx();
+  if (sel < 0) sel = blocks.length - 1;
+  const opts = blocks.map(function(b, i) {
+    return `<option value="${i}"${i === sel ? ' selected' : ''}>${esc(b.label)}</option>`;
+  }).join('');
+  const picker = `<select onchange="setBillingTerm(this.value,'${s.id}')" aria-label="Choose half-term to count"
+    style="font-family:'Special Elite',cursive;font-size:0.74rem;color:#1a4a6b;background:var(--paper);border:1.5px solid #a8c8e8;border-radius:999px;padding:4px 10px;cursor:pointer">${opts}</select>`;
+  return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 10px">${pill}${picker}</div>`;
+}
+
+// Change which half-term the pupil page counts, then re-render the pupil.
+function setBillingTerm(idx, pupilId) {
+  billingTermIdx = (idx === '' || idx === null) ? null : parseInt(idx, 10);
+  const s = getStudent(pupilId);
+  if (s) renderDetail(s, true);
+}
+
+// The Admin billing sheet: every active pupil with their chargeable lesson
+// count for the chosen half-term, totals down the right. Read-only invoicing aid.
+function renderBilling() {
+  const sheet = document.getElementById('billing-sheet');
+  const sel = document.getElementById('billing-term-select');
+  if (!sheet || !sel) return;
+  const blocks = termBlocks();
+
+  if (blocks.length === 0) {
+    sel.innerHTML = '';
+    sheet.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">Add your half-terms in Term dates first, then this sheet can total the lessons for each one.</p>';
+    return;
+  }
+
+  // Populate the half-term dropdown once (keep the current selection if valid).
+  let chosen = sel.value !== '' ? parseInt(sel.value, 10) : currentTermIdx();
+  if (isNaN(chosen) || chosen < 0 || chosen >= blocks.length) chosen = blocks.length - 1;
+  sel.innerHTML = blocks.map(function(b, i) {
+    const d = function(x){ return x.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); };
+    return '<option value="' + i + '"' + (i === chosen ? ' selected' : '') + '>' +
+      esc(b.label) + ' (' + d(b.start) + ' – ' + d(b.end) + ')</option>';
+  }).join('');
+
+  const block = blocks[chosen];
+  const roster = students.filter(function(s){ return !s.retired; })
+    .sort(function(a,b){ return a.name.localeCompare(b.name); });
+
+  if (roster.length === 0) {
+    sheet.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">No active pupils.</p>';
+    return;
+  }
+
+  let grand = 0;
+  const rows = roster.map(function(s) {
+    const n = countChargeable(s, block);
+    grand += n;
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 4px;border-bottom:1px solid var(--warm)">' +
+      '<span style="font-size:0.92rem;color:var(--ink)">' + instrDot(s.instrument) + esc(s.name) + '</span>' +
+      '<span style="font-size:0.95rem;font-weight:700;color:#1a4a6b;min-width:2.2em;text-align:right">' + n + '</span>' +
+    '</div>';
+  }).join('');
+
+  sheet.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 4px;border-bottom:2px solid var(--warm);font-size:0.68rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">' +
+      '<span>Pupil</span><span>Lessons</span></div>' +
+    rows +
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 4px;margin-top:4px;font-weight:800;color:var(--viola)">' +
+      '<span>Total chargeable lessons</span><span style="font-size:1.05rem">' + grand + '</span></div>';
 }
 
 
