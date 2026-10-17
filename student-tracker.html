@@ -96,6 +96,7 @@
   .folder-tab.tab-today.active    { background: #8AB640; }
   .folder-tab.tab-week.active     { background: #123A5E; color: #d0f0ff; }
   .folder-tab.tab-roster.active   { background: #2F5C1A; color: #d4f0a0; }
+  .folder-tab.tab-admin.active    { background: #8a6d3b; color: #fbeecb; }
   .folder-tab.tab-library.active  { background: #29789E; color: #d0f0ff; }
 
   /* ── VIEWS ── */
@@ -691,7 +692,8 @@
   <div class="folder-tabs-row">
     <button class="folder-tab tab-today active" onclick="showView('today')">📅 Today</button>
     <button class="folder-tab tab-week"         onclick="showView('week')">🗓 Week</button>
-    <button class="folder-tab tab-roster"       onclick="showView('roster')">🎻 All Pupils</button>
+    <button class="folder-tab tab-roster"       onclick="showView('roster')">🎻 Pupils</button>
+    <button class="folder-tab tab-admin"        onclick="showView('admin')">🗂 Admin</button>
     <button class="folder-tab tab-library"      onclick="showView('library')">📚 Library</button>
   </div>
 </header>
@@ -757,27 +759,6 @@
 <!-- LIBRARY VIEW -->
 <div id="view-library" class="view">
 
-  <!-- STUDIO ATTENDANCE OVERVIEW -->
-  <details style="margin-bottom:14px">
-    <summary style="font-size:0.88rem;color:var(--viola);cursor:pointer;padding:10px 0;font-weight:600;list-style:none;display:flex;align-items:center;gap:6px">
-      <span style="font-size:0.7rem">▶</span> Studio attendance overview
-    </summary>
-    <div style="display:flex;flex-direction:column;gap:8px;margin:10px 0">
-      <div>
-        <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">From</label>
-        <input type="date" id="studio-att-from" onchange="renderStudioAttendance()"
-          style="display:block;width:100%;min-height:44px;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none">
-      </div>
-      <div>
-        <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">To</label>
-        <input type="date" id="studio-att-to" onchange="renderStudioAttendance()"
-          style="display:block;width:100%;min-height:44px;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none">
-      </div>
-      <button onclick="document.getElementById('studio-att-from').value='';document.getElementById('studio-att-to').value='';renderStudioAttendance()"
-        style="background:none;border:1.5px solid var(--warm);border-radius:8px;padding:8px 10px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer">All time</button>
-    </div>
-    <div id="studio-attendance"></div>
-  </details>
   <!-- TECHNICAL FOCUS -->
   <details class="section-card" style="margin-bottom:14px;padding:0">
     <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.72rem;font-weight:700;color:var(--muted)">
@@ -928,6 +909,48 @@
     </div>
   </details>
 
+  <!-- SPEECH REPLACEMENTS -->
+  <details style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
+    <summary style="font-size:0.72rem;font-weight:800;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+      <span>🎤 Voice text — auto-corrections</span><span style="font-weight:400">tap to expand</span>
+    </summary>
+    <div style="margin-top:10px">
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Words or phrases that get replaced automatically after dictation.</div>
+      <div id="speech-replacements-list"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        <input type="text" id="new-replace-from" placeholder="Replace this…" style="font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
+        <input type="text" id="new-replace-to" placeholder="With this (blank to delete)…" style="font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
+      </div>
+      <button onclick="addSpeechReplacement()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:10px auto 0;min-width:160px">+ Add correction</button>
+    </div>
+  </details>
+
+</div>
+
+<!-- ADMIN VIEW -->
+<div id="view-admin" class="view">
+
+  <!-- STUDIO ATTENDANCE OVERVIEW -->
+  <details style="margin-bottom:14px">
+    <summary style="font-size:0.88rem;color:var(--viola);cursor:pointer;padding:10px 0;font-weight:600;list-style:none;display:flex;align-items:center;gap:6px">
+      <span style="font-size:0.7rem">▶</span> Studio attendance overview
+    </summary>
+    <div style="display:flex;flex-direction:column;gap:8px;margin:10px 0">
+      <div>
+        <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">From</label>
+        <input type="date" id="studio-att-from" onchange="renderStudioAttendance()"
+          style="display:block;width:100%;min-height:44px;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none">
+      </div>
+      <div>
+        <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">To</label>
+        <input type="date" id="studio-att-to" onchange="renderStudioAttendance()"
+          style="display:block;width:100%;min-height:44px;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none">
+      </div>
+      <button onclick="document.getElementById('studio-att-from').value='';document.getElementById('studio-att-to').value='';renderStudioAttendance()"
+        style="background:none;border:1.5px solid var(--warm);border-radius:8px;padding:8px 10px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer">All time</button>
+    </div>
+    <div id="studio-attendance"></div>
+  </details>
   <!-- WAITING LIST -->
   <div style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -967,22 +990,6 @@
     <div style="margin-top:10px">
       <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Gifts still to thank someone for. Tick one off and it clears from here — it stays on the pupil's page as a record.</div>
       <div id="gifts-list"></div>
-    </div>
-  </details>
-
-  <!-- SPEECH REPLACEMENTS -->
-  <details style="margin-top:24px;border-top:2px solid var(--warm);padding-top:16px">
-    <summary style="font-size:0.72rem;font-weight:800;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-      <span>🎤 Voice text — auto-corrections</span><span style="font-weight:400">tap to expand</span>
-    </summary>
-    <div style="margin-top:10px">
-      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Words or phrases that get replaced automatically after dictation.</div>
-      <div id="speech-replacements-list"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
-        <input type="text" id="new-replace-from" placeholder="Replace this…" style="font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
-        <input type="text" id="new-replace-to" placeholder="With this (blank to delete)…" style="font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
-      </div>
-      <button onclick="addSpeechReplacement()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:10px auto 0;min-width:160px">+ Add correction</button>
     </div>
   </details>
 
@@ -1061,29 +1068,6 @@
     <button onclick="openExportModal()" style="background:var(--viola);color:#fff;border:none;border-radius:var(--radius);flex:1;height:50px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer">↓</button>
     <button onclick="openBackupModal()" style="background:#8a7a3a;color:#fff;border:none;border-radius:var(--radius);flex:1;height:50px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer" title="Back up / restore data">🗄</button>
   </div>
-  <!-- TERM DATES -->
-  <details style="margin-bottom:14px">
-    <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:6px 0;list-style:none;display:flex;align-items:center;gap:6px">
-      <span style="font-size:0.7rem">▶</span> Term dates
-    </summary>
-    <div class="section-card" style="margin-top:8px">
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
-        <div style="flex:1;min-width:120px">
-          <label class="field-label">Term name</label>
-          <input type="text" id="term-name" placeholder="e.g. Autumn Term 2026" oninput="saveTermDates()" style="margin-top:4px">
-        </div>
-        <div style="flex:1;min-width:120px">
-          <label class="field-label">Start date</label>
-          <input type="date" id="term-start" onchange="saveTermDates()" style="margin-top:4px">
-        </div>
-        <div style="flex:1;min-width:120px">
-          <label class="field-label">End date</label>
-          <input type="date" id="term-end" onchange="saveTermDates()" style="margin-top:4px">
-        </div>
-      </div>
-      <div id="term-info" style="font-size:0.82rem;color:var(--muted);margin-top:10px"></div>
-    </div>
-  </details>
   <div class="filter-row">
     <button class="filter-chip active" data-filter="all" onclick="setFilter(this,'all')">All</button>
     <button class="filter-chip" data-filter="viola" onclick="setFilter(this,'viola')"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2F5C1A;margin-right:5px;vertical-align:middle"></span>Viola</button>
@@ -2055,11 +2039,12 @@ function showView(name) {
   document.querySelectorAll('.folder-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
   const tabs = document.querySelectorAll('.folder-tab');
-  const map = {today:0, week:1, roster:2, library:3};
+  const map = {today:0, week:1, roster:2, admin:3, library:4};
   if (map[name] !== undefined) tabs[map[name]].classList.add('active');
   if (name === 'today')   renderToday();
   if (name === 'week')    renderWeek();
   if (name === 'roster')  renderRoster();
+  if (name === 'admin')   renderAdmin();
   if (name === 'library') renderLibrary();
 }
 
@@ -2460,12 +2445,6 @@ function renderRoster() {
     : base.filter(s => s.instrument===currentFilter || s.level===currentFilter || (s.pupilType||'child')===currentFilter);
   renderRosterList(filtered);
   renderRetiredToggle();
-  loadTermDates();
-  renderWaiting();
-  renderLendingLog();
-  renderSpeechReplacements();
-  renderTermDates();
-  renderGiftsList();
 }
 
 function renderRosterList(filtered) {
@@ -6935,10 +6914,16 @@ function renderLibrary() {
   populateCatFilters();
   renderLibChips();
   renderLibPieces();
-  renderStudioAttendance();
-  renderTermDates();
-  renderGiftsList();
   renderVideoLibrary();
+  renderSpeechReplacements();
+}
+
+function renderAdmin() {
+  renderStudioAttendance();
+  renderWaiting();
+  renderLendingLog();
+  renderGiftsList();
+  renderTermDates();
 }
 
 // Built-in categories present in both filter dropdowns by default
