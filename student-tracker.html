@@ -8799,20 +8799,26 @@ function lessonCount(s) {
 // The pill plus a half-term picker, shown under the pupil's header buttons.
 function lessonCountHTML(s) {
   const blocks = termBlocks();
-  const text = lessonCount(s);
-  if (!text) return '';
-  const pill = `<div style="display:inline-block;background:#eef6ff;border:1.5px solid #a8c8e8;color:#1a4a6b;font-size:0.76rem;border-radius:999px;padding:4px 14px">💷 ${text}</div>`;
+
   if (blocks.length === 0) {
-    return `<div style="margin:2px 0 10px">${pill}</div>`;
+    const n = (s.log || []).filter(function(e) { return e.attendance === 'present' || e.attendance === 'absent-late'; }).length;
+    if (n === 0) return '';
+    return `<div style="margin:2px 0 10px"><div style="display:inline-block;background:#eef6ff;border:1.5px solid #a8c8e8;color:#1a4a6b;font-size:0.78rem;border-radius:999px;padding:4px 14px">💷 ${n} chargeable (add term dates in Admin)</div></div>`;
   }
+
   let sel = (billingTermIdx !== null && blocks[billingTermIdx]) ? billingTermIdx : currentTermIdx();
   if (sel < 0) sel = blocks.length - 1;
+  const n = countChargeable(s, blocks[sel]);
+  const noun = n === 1 ? 'lesson' : 'lessons';
+  // Count pill: just the number, so it sits neatly beside the picker
+  const pill = `<div style="display:inline-block;background:#eef6ff;border:1.5px solid #a8c8e8;color:#1a4a6b;font-size:0.82rem;font-weight:700;border-radius:999px;padding:4px 14px;white-space:nowrap">💷 ${n} ${noun}</div>`;
   const opts = blocks.map(function(b, i) {
     return `<option value="${i}"${i === sel ? ' selected' : ''}>${esc(b.label)}</option>`;
   }).join('');
+  // Picker carries the half-term name, so the pill doesn't need to repeat it
   const picker = `<select onchange="setBillingTerm(this.value,'${s.id}')" aria-label="Choose half-term to count"
-    style="font-family:'Special Elite',cursive;font-size:0.74rem;color:#1a4a6b;background:var(--paper);border:1.5px solid #a8c8e8;border-radius:999px;padding:4px 10px;cursor:pointer">${opts}</select>`;
-  return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 10px">${pill}${picker}</div>`;
+    style="font-family:'Special Elite',cursive;font-size:0.76rem;color:#1a4a6b;background:var(--paper);border:1.5px solid #a8c8e8;border-radius:999px;padding:4px 10px;cursor:pointer">${opts}</select>`;
+  return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;margin:2px 0 10px">${pill}${picker}</div>`;
 }
 
 // Change which half-term the pupil page counts, then re-render the pupil.
@@ -8858,18 +8864,20 @@ function renderBilling() {
   const rows = roster.map(function(s) {
     const n = countChargeable(s, block);
     grand += n;
-    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 4px;border-bottom:1px solid var(--warm)">' +
-      '<span style="font-size:0.92rem;color:var(--ink)">' + instrDot(s.instrument) + esc(s.name) + '</span>' +
-      '<span style="font-size:0.95rem;font-weight:700;color:#1a4a6b;min-width:2.2em;text-align:right">' + n + '</span>' +
+    // Number first (left), in a fixed-width box, so it sits right next to the name
+    return '<div style="display:flex;align-items:center;gap:14px;padding:10px 4px;border-bottom:1px solid var(--warm)">' +
+      '<span style="flex:0 0 auto;width:2em;height:2em;display:flex;align-items:center;justify-content:center;background:#eef6ff;border:1.5px solid #a8c8e8;border-radius:10px;font-size:1rem;font-weight:800;color:#1a4a6b">' + n + '</span>' +
+      '<span style="font-size:0.95rem;color:var(--ink)">' + instrDot(s.instrument) + esc(s.name) + '</span>' +
     '</div>';
   }).join('');
 
   sheet.innerHTML =
-    '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 4px;border-bottom:2px solid var(--warm);font-size:0.68rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">' +
-      '<span>Pupil</span><span>Lessons</span></div>' +
+    '<div style="display:flex;align-items:center;gap:14px;padding:6px 4px;border-bottom:2px solid var(--warm);font-size:0.68rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">' +
+      '<span style="flex:0 0 auto;width:2em;text-align:center">No.</span><span>Pupil</span></div>' +
     rows +
-    '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 4px;margin-top:4px;font-weight:800;color:var(--viola)">' +
-      '<span>Total chargeable lessons</span><span style="font-size:1.05rem">' + grand + '</span></div>';
+    '<div style="display:flex;align-items:center;gap:14px;padding:12px 4px;margin-top:4px;font-weight:800;color:var(--viola)">' +
+      '<span style="flex:0 0 auto;width:2em;height:2em;display:flex;align-items:center;justify-content:center;background:var(--viola);color:#fff;border-radius:10px;font-size:1rem">' + grand + '</span>' +
+      '<span>Total chargeable lessons</span></div>';
 }
 
 
