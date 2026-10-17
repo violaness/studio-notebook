@@ -2797,30 +2797,34 @@ function renderDetail(s, preserveTab = false) {
   const logHTML = buildLogHTML(s);
 
   el.innerHTML = `
-    <div class="detail-header">
-      <div class="detail-avatar avatar-${s.instrument}" title="Chargeable lessons this half-term">
-        <span style="font-size:1.5rem;font-weight:800;line-height:1">${currentChargeableCount(s)}</span>
-        <span style="font-size:0.5rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;opacity:0.8;margin-top:1px">lessons</span>
-      </div>
-      <div style="flex:1">
-        <div class="detail-name">${s.name}</div>
-        <div class="student-meta">
-          <span class="badge badge-${s.instrument}">${instrDot(s.instrument)}${s.instrument}</span>
-          <span class="badge badge-${s.level}">${s.level}</span>
-          <span class="badge" style="background:var(--warm);color:var(--muted)">${(s.pupilType||'child')==='adult'?'Adult':'School age'}</span>
-          ${s.rate ? `<span class="badge" style="background:#dff0d8;color:#2F5C1A">£${s.rate} per lesson</span>` : ''}
-          ${slot.day?`<span style="font-size:0.78rem;color:var(--muted)">◷ ${slot.day}${slot.time?' '+slot.time:''}${s.duration?' · '+s.duration+'min':''}</span>`:''}
+    <div class="detail-header" style="flex-direction:column;gap:12px">
+      <div style="display:flex;gap:14px;align-items:flex-start;width:100%">
+        <div class="detail-avatar avatar-${s.instrument}" title="Chargeable lessons this half-term">
+          <span style="font-size:1.5rem;font-weight:800;line-height:1">${currentChargeableCount(s)}</span>
+          <span style="font-size:0.5rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;opacity:0.8;margin-top:1px">lessons</span>
         </div>
-        ${pupilMetaHTML(s)}
+        <div style="flex:1">
+          <div class="detail-name">${s.name}</div>
+          <div class="student-meta">
+            <span class="badge badge-${s.instrument}">${instrDot(s.instrument)}${s.instrument}</span>
+            <span class="badge badge-${s.level}">${s.level}</span>
+            <span class="badge" style="background:var(--warm);color:var(--muted)">${(s.pupilType||'child')==='adult'?'Adult':'School age'}</span>
+            ${s.rate ? `<span class="badge" style="background:#dff0d8;color:#2F5C1A">£${s.rate} per lesson</span>` : ''}
+            ${slot.day?`<span style="font-size:0.78rem;color:var(--muted)">◷ ${slot.day}${slot.time?' '+slot.time:''}${s.duration?' · '+s.duration+'min':''}</span>`:''}
+          </div>
+          ${pupilMetaHTML(s)}
+        </div>
       </div>
-      ${termPickerHTML(s)}
-      <button onclick="toggleLittleDetails('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Little details about this pupil">🐢 Details</button>
-      <button onclick="openEditModal('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--viola);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Edit pupil">✏️ Edit</button>
-      <button onclick="openMoveModal('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Move lesson">📅 Move</button>
-      <button onclick="openExtraLessonModal('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;color:#2F5C1A;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Add extra lesson this week">+ Extra</button>
-      <button onclick="exportSinglePupil('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.8rem;color:#29789E;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px" title="Practice plan">✉ Plan</button>
-      <button onclick="toggleFollowUp('${s.id}')" title="${s.followUp?'Clear follow-up flag':'Flag for follow-up'}"
-        style="background:${s.followUp?'#e67e22':'#f0ede8'};color:${s.followUp?'#fff':'var(--muted)'};border:none;border-radius:10px;padding:0 12px;height:35px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-left:6px">🚩</button>
+      <div class="detail-actions" style="display:flex;flex-wrap:wrap;gap:8px;width:100%;border-top:1px solid var(--warm);padding-top:12px">
+        ${termPickerHTML(s)}
+        <button onclick="toggleLittleDetails('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 14px;height:38px;font-family:'Special Elite',cursive;font-size:0.82rem;color:var(--muted);cursor:pointer" title="Little details about this pupil">🐢 Details</button>
+        <button onclick="openEditModal('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 14px;height:38px;font-family:'Special Elite',cursive;font-size:0.82rem;color:var(--viola);cursor:pointer" title="Edit pupil">✏️ Edit</button>
+        <button onclick="openMoveModal('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 14px;height:38px;font-family:'Special Elite',cursive;font-size:0.82rem;color:var(--muted);cursor:pointer" title="Move lesson">📅 Move</button>
+        <button onclick="openExtraLessonModal('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 14px;height:38px;font-family:'Special Elite',cursive;font-size:0.82rem;color:#2F5C1A;cursor:pointer" title="Add extra lesson this week">+ Extra</button>
+        <button onclick="exportSinglePupil('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 14px;height:38px;font-family:'Special Elite',cursive;font-size:0.82rem;color:#29789E;cursor:pointer" title="Practice plan">✉ Plan</button>
+        <button onclick="toggleFollowUp('${s.id}')" title="${s.followUp?'Clear follow-up flag':'Flag for follow-up'}"
+          style="background:${s.followUp?'#e67e22':'#f0ede8'};color:${s.followUp?'#fff':'var(--muted)'};border:none;border-radius:10px;padding:0 14px;height:38px;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer;margin-left:auto">🚩</button>
+      </div>
     </div>
     <div id="next-pupil-banner">${nextPupilHTML(s)}</div>
 
