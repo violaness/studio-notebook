@@ -8865,17 +8865,15 @@ function renderBilling() {
     const n = countChargeable(s, block);
     grand += n;
     // Number first (left), in a fixed-width box, so it sits right next to the name
-    return '<div style="display:flex;align-items:center;gap:14px;padding:10px 4px;border-bottom:1px solid var(--warm)">' +
+    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 6px;background:var(--card-bg);border:1.5px solid var(--warm);border-radius:12px">' +
       '<span style="flex:0 0 auto;width:2em;height:2em;display:flex;align-items:center;justify-content:center;background:#eef6ff;border:1.5px solid #a8c8e8;border-radius:10px;font-size:1rem;font-weight:800;color:#1a4a6b">' + n + '</span>' +
-      '<span style="font-size:0.95rem;color:var(--ink)">' + instrDot(s.instrument) + esc(s.name) + '</span>' +
+      '<span style="font-size:0.92rem;color:var(--ink);line-height:1.2">' + instrDot(s.instrument) + esc(s.name) + '</span>' +
     '</div>';
   }).join('');
 
   sheet.innerHTML =
-    '<div style="display:flex;align-items:center;gap:14px;padding:6px 4px;border-bottom:2px solid var(--warm);font-size:0.68rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">' +
-      '<span style="flex:0 0 auto;width:2em;text-align:center">No.</span><span>Pupil</span></div>' +
-    rows +
-    '<div style="display:flex;align-items:center;gap:14px;padding:12px 4px;margin-top:4px;font-weight:800;color:var(--viola)">' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' + rows + '</div>' +
+    '<div style="display:flex;align-items:center;gap:14px;padding:14px 6px 4px;margin-top:10px;border-top:2px solid var(--warm);font-weight:800;color:var(--viola)">' +
       '<span style="flex:0 0 auto;width:2em;height:2em;display:flex;align-items:center;justify-content:center;background:var(--viola);color:#fff;border-radius:10px;font-size:1rem">' + grand + '</span>' +
       '<span>Total chargeable lessons</span></div>';
 }
