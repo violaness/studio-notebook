@@ -1437,6 +1437,34 @@
   </div>
 </div>
 
+<!-- ADD METHOD BOOK MODAL -->
+<div class="modal-overlay" id="add-method-book-modal">
+  <div class="modal">
+    <h2>Add method book</h2>
+    <input type="hidden" id="method-book-student-id">
+    <div class="field-group">
+      <label class="field-label">Pick from your bank</label>
+      <div id="method-bank-picker-list" style="max-height:240px;overflow-y:auto"></div>
+    </div>
+    <button onclick="toggleCustomMethodFields()" style="width:100%;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:9px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;font-weight:500">＋ Custom one-off book</button>
+    <div id="custom-method-fields" style="display:none;margin-top:12px">
+      <div class="field-group">
+        <label class="field-label" for="custom-method-name">Book name</label>
+        <input type="text" id="custom-method-name" placeholder="e.g. Essential Elements Book 1">
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="custom-method-studies">Units</label>
+        <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">Type a number (e.g. 20) to auto-number 1–20, or list named units one per line.</div>
+        <textarea id="custom-method-studies" rows="4" placeholder="20&#10;— or —&#10;Unit 1 — Open strings&#10;Unit 2 — First finger" style="width:100%;padding:10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.9rem;box-sizing:border-box;resize:vertical"></textarea>
+      </div>
+      <button class="btn-primary" style="width:100%" onclick="confirmAddMethodBook()">Add this book to pupil</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="document.getElementById('add-method-book-modal').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- EXTRA LESSON MODAL -->
 <div class="modal-overlay" id="extra-lesson-modal">
   <div class="modal">
@@ -2039,6 +2067,8 @@ let techniqueDefaults = JSON.parse(localStorage.getItem('studio_technique_defaul
 // Studio-wide bank of study books you can pull onto any pupil. Each:
 // { id, name, studies: ["1","2",...] or ["No. 1 — Détaché", ...] }. Starts empty.
 let studyBookBank = JSON.parse(localStorage.getItem('studio_study_book_bank') || '[]');
+// Studio-wide bank of method books — same shape as the study-book bank.
+let methodBookBank = JSON.parse(localStorage.getItem('studio_method_book_bank') || '[]');
 
 let currentFilter  = 'all';
 let prevView       = 'roster';
@@ -2064,6 +2094,7 @@ function save() {
   localStorage.setItem('studio_extra_lessons',     JSON.stringify(extraLessons));
   localStorage.setItem('studio_technique_defaults', JSON.stringify(techniqueDefaults));
   localStorage.setItem('studio_study_book_bank', JSON.stringify(studyBookBank));
+  localStorage.setItem('studio_method_book_bank', JSON.stringify(methodBookBank));
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
@@ -3188,16 +3219,34 @@ function renderDetail(s, preserveTab = false) {
       </div>
     </div>
 
-    <!-- SCALES -->
+    <!-- SCALES / TECHNIQUE -->
     <div class="moment-panel" id="panel-scales">
+
+      <!-- TECHNIQUE TILE GRID (greens left, blues right, light→dark) -->
+      <div class="admin-grid" style="grid-template-rows:repeat(2,1fr)">
+        <button class="admin-tile" style="background:var(--string);color:var(--ink)" onclick="showTechniqueSection('${s.id}','technique')">
+          <span class="admin-tile-icon">🛠</span><span class="admin-tile-label">Technique checklist</span>
+        </button>
+        <button class="admin-tile" style="background:var(--viola)" onclick="showTechniqueSection('${s.id}','studybooks')">
+          <span class="admin-tile-icon">📖</span><span class="admin-tile-label">Study books</span>
+        </button>
+        <button class="admin-tile" style="background:#46C6E5;color:var(--ink)" onclick="showTechniqueSection('${s.id}','scales')">
+          <span class="admin-tile-icon">🎼</span><span class="admin-tile-label">Scale checklist</span>
+        </button>
+        <button class="admin-tile" style="background:var(--violin)" onclick="showTechniqueSection('${s.id}','methodbooks')">
+          <span class="admin-tile-icon">📘</span><span class="admin-tile-label">Method books</span>
+        </button>
+      </div>
+
+      <div id="technique-panels-${s.id}">
+
       <!-- TECHNIQUE CHECKLIST -->
-      <details class="section-card" open style="padding:0">
-        <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--viola)">
-          <span>🛠 Technique checklist</span><span style="font-size:0.7rem;font-weight:400;color:var(--muted)">tap to collapse</span>
-        </summary>
-        <div style="padding:0 14px 14px">
-        <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:6px">
-          <button onclick="resetTechniqueToDefault('${s.id}')" style="background:none;border:none;font-size:0.68rem;color:var(--muted);cursor:pointer;text-decoration:underline;font-family:'Special Elite',cursive">Reset to default</button>
+      <section class="admin-panel technique-panel" id="tech-panel-technique" style="display:none">
+        <div class="admin-panel-head"><span>🛠 Technique checklist</span>
+          <span style="display:flex;align-items:center;gap:10px">
+            <button onclick="resetTechniqueToDefault('${s.id}')" style="background:none;border:none;font-size:0.68rem;color:var(--muted);cursor:pointer;text-decoration:underline;font-family:'Special Elite',cursive">Reset to default</button>
+            <button class="admin-panel-close" onclick="closeTechniqueSections('${s.id}')">✕ Close</button>
+          </span>
         </div>
         <div style="font-size:0.7rem;color:var(--muted);margin-bottom:10px">Tap the circle to cycle: not started → working on it → secure.</div>
         <div id="technique-list-${s.id}">${techniqueChecklistHTML(s)}</div>
@@ -3222,14 +3271,11 @@ function renderDetail(s, preserveTab = false) {
             </div>
           </div>
         </details>
-        </div>
-      </details>
+      </section>
 
-      <details class="section-card" style="padding:0;margin-top:10px">
-        <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
-          <span>🎼 Scale checklist</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
-        </summary>
-        <div style="padding:0 14px 14px">
+      <!-- SCALE CHECKLIST -->
+      <section class="admin-panel technique-panel" id="tech-panel-scales" style="display:none">
+        <div class="admin-panel-head"><span>🎼 Scale checklist</span><button class="admin-panel-close" onclick="closeTechniqueSections('${s.id}')">✕ Close</button></div>
         <div id="scales-list-${s.id}">${scalesHTML(s)}</div>
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
           <button onclick="openAddKeyModal('${s.id}')"
@@ -3241,54 +3287,61 @@ function renderDetail(s, preserveTab = false) {
             ＋ Add type
           </button>
         </div>
-        </div>
-      </details>
-      ${s.sevcikHidden ? `
-      <button onclick="showSevcik('${s.id}')" style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">＋ Add Sevcik Op. 3</button>
-      ` : `
-      <details style="margin-top:10px">
-        <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
-          <span>Sevcik Op. 3 — 40 Variations</span>
-          <span style="display:flex;align-items:center;gap:10px">
-            <span style="font-size:0.7rem;font-weight:400">tap to expand</span>
-            <button onclick="event.stopPropagation();hideSevcik('${s.id}')" title="Remove from this pupil" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:0 4px">×</button>
-          </span>
-        </summary>
-        <div class="section-card" style="margin-top:6px">
-          <div id="sevcik-list-${s.id}">${sevcikHTML(s)}</div>
-        </div>
-      </details>
-      `}
+      </section>
 
-      <!-- CUSTOM STUDY BOOKS -->
-      <details class="section-card" style="padding:0;margin-top:10px">
-        <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
-          <span>📖 Study books</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
-        </summary>
-        <div style="padding:0 14px 14px">
-          <div id="study-books-${s.id}">${studyBooksHTML(s)}</div>
-          <button onclick="openAddStudyBookModal('${s.id}')"
-            style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
-            ＋ Add study book
-          </button>
-          <details style="margin-top:12px">
-            <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-              <span>⚙ Manage study-book bank</span><span style="font-weight:400">tap to expand</span>
-            </summary>
-            <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
-              <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">Set up books once here, then pull them onto any pupil. Editing the bank doesn’t change books already added to pupils.</div>
-              <div id="study-bank-list">${studyBankEditorHTML()}</div>
-              <div style="margin-top:10px">
-                <input type="text" id="bank-new-name" placeholder="Book name, e.g. Wohlfahrt Op. 45"
-                  style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box;margin-bottom:6px">
-                <textarea id="bank-new-studies" rows="3" placeholder="Number (e.g. 60) to auto-number, or one named study per line"
-                  style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical"></textarea>
-                <button onclick="addBankBook()" style="width:100%;margin-top:6px;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">＋ Add to bank</button>
-              </div>
+      <!-- STUDY BOOKS -->
+      <section class="admin-panel technique-panel" id="tech-panel-studybooks" style="display:none">
+        <div class="admin-panel-head"><span>📖 Study books</span><button class="admin-panel-close" onclick="closeTechniqueSections('${s.id}')">✕ Close</button></div>
+        <div id="study-books-${s.id}">${studyBooksHTML(s)}</div>
+        <button onclick="openAddStudyBookModal('${s.id}')"
+          style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
+          ＋ Add study book
+        </button>
+        <details style="margin-top:12px">
+          <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+            <span>⚙ Manage study-book bank</span><span style="font-weight:400">tap to expand</span>
+          </summary>
+          <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
+            <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">Set up books once here, then pull them onto any pupil. Editing the bank doesn’t change books already added to pupils.</div>
+            <div id="study-bank-list">${studyBankEditorHTML()}</div>
+            <div style="margin-top:10px">
+              <input type="text" id="bank-new-name" placeholder="Book name, e.g. Wohlfahrt Op. 45"
+                style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box;margin-bottom:6px">
+              <textarea id="bank-new-studies" rows="3" placeholder="Number (e.g. 60) to auto-number, or one named study per line"
+                style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical"></textarea>
+              <button onclick="addBankBook()" style="width:100%;margin-top:6px;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">＋ Add to bank</button>
             </div>
-          </details>
-        </div>
-      </details>
+          </div>
+        </details>
+      </section>
+
+      <!-- METHOD BOOKS -->
+      <section class="admin-panel technique-panel" id="tech-panel-methodbooks" style="display:none">
+        <div class="admin-panel-head"><span>📘 Method books</span><button class="admin-panel-close" onclick="closeTechniqueSections('${s.id}')">✕ Close</button></div>
+        <div id="method-books-${s.id}">${methodBooksHTML(s)}</div>
+        <button onclick="openAddMethodBookModal('${s.id}')"
+          style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
+          ＋ Add method book
+        </button>
+        <details style="margin-top:12px">
+          <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+            <span>⚙ Manage method-book bank</span><span style="font-weight:400">tap to expand</span>
+          </summary>
+          <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
+            <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">Set up method books once here, then pull them onto any pupil. Editing the bank doesn’t change books already added to pupils.</div>
+            <div id="method-bank-list">${methodBankEditorHTML()}</div>
+            <div style="margin-top:10px">
+              <input type="text" id="method-bank-new-name" placeholder="Book name, e.g. Essential Elements Book 1"
+                style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box;margin-bottom:6px">
+              <textarea id="method-bank-new-studies" rows="3" placeholder="Number (e.g. 20) to auto-number, or one named unit per line"
+                style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical"></textarea>
+              <button onclick="addMethodBankBook()" style="width:100%;margin-top:6px;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">＋ Add to bank</button>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      </div><!-- /technique-panels -->
     </div>
 
     <!-- CONTACTS -->
@@ -5833,18 +5886,68 @@ function removeStudyBook(studentId, bookIdx) {
 }
 
 // ── STUDY-BOOK BANK EDITOR (studio-wide) ──────────────────────────────────
+let editingBankId = null;
+
+// Turn a book's studies back into editable text: a bare number if they're the
+// plain sequence 1..n, otherwise the named studies one per line.
+function studiesToText(studies) {
+  const list = studies || [];
+  const isPlainSequence = list.every(function(it, i){ return it === String(i + 1); });
+  if (isPlainSequence && list.length) return String(list.length);
+  return list.join('\n');
+}
+
 function studyBankEditorHTML() {
   if (!studyBookBank.length) {
     return '<p style="color:var(--muted);font-size:0.8rem;font-style:italic">No books in your bank yet. Add one below (e.g. “Wohlfahrt Op. 45”, then 60, or paste named studies one per line).</p>';
   }
   return studyBookBank.map(function(bk) {
     const n = (bk.studies || []).length;
+    if (editingBankId === bk.id) {
+      return '<div style="padding:8px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px;border:1.5px solid var(--violin)">'
+        + '<input type="text" id="bank-edit-name" value="' + esc(bk.name) + '" '
+        + 'style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box;margin-bottom:6px">'
+        + '<div style="font-size:0.66rem;color:var(--muted);margin-bottom:4px">Number (e.g. 60) to auto-number, or one named study per line.</div>'
+        + '<textarea id="bank-edit-studies" rows="4" '
+        + 'style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical">' + esc(studiesToText(bk.studies)) + '</textarea>'
+        + '<div style="display:flex;gap:8px;margin-top:6px">'
+        + '<button onclick="saveBankEdit(\'' + bk.id + '\')" style="flex:1;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">Save</button>'
+        + '<button onclick="cancelBankEdit()" style="flex:1;background:var(--warm);color:var(--muted);border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;cursor:pointer">Cancel</button>'
+        + '</div></div>';
+    }
     return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">'
       + '<span style="flex:1;font-size:0.85rem">' + esc(bk.name) + '</span>'
       + '<span style="font-size:0.7rem;color:var(--muted)">' + n + '</span>'
+      + '<button onclick="startBankEdit(\'' + bk.id + '\')" title="Edit studies" style="background:none;border:none;color:var(--violin);font-size:0.9rem;cursor:pointer">✏️</button>'
       + '<button onclick="removeBankBook(\'' + bk.id + '\')" title="Remove from bank" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>'
       + '</div>';
   }).join('');
+}
+
+function startBankEdit(bankId) {
+  editingBankId = bankId;
+  const el = document.getElementById('study-bank-list'); if (el) el.innerHTML = studyBankEditorHTML();
+}
+
+function cancelBankEdit() {
+  editingBankId = null;
+  const el = document.getElementById('study-bank-list'); if (el) el.innerHTML = studyBankEditorHTML();
+}
+
+function saveBankEdit(bankId) {
+  const bk = studyBookBank.find(function(b){ return b.id === bankId; });
+  if (!bk) return;
+  const nameEl = document.getElementById('bank-edit-name');
+  const studiesEl = document.getElementById('bank-edit-studies');
+  const name = nameEl ? nameEl.value.trim() : '';
+  const studies = parseStudiesInput(studiesEl ? studiesEl.value : '');
+  if (!name || studies.length === 0) { alert('Give the book a name and either a number of studies or a list of named studies, one per line.'); return; }
+  bk.name = name;
+  bk.studies = studies;
+  editingBankId = null;
+  save();
+  const el = document.getElementById('study-bank-list'); if (el) el.innerHTML = studyBankEditorHTML();
+  const picker = document.getElementById('bank-picker-list'); if (picker) renderBankPicker();
 }
 
 function addBankBook() {
@@ -5867,6 +5970,212 @@ function removeBankBook(bankId) {
   studyBookBank = studyBookBank.filter(function(b){ return b.id !== bankId; });
   save();
   const el = document.getElementById('study-bank-list'); if (el) el.innerHTML = studyBankEditorHTML();
+}
+
+// ── METHOD BOOKS (same principle as study books, separate bank) ───────────
+function methodBooksHTML(s) {
+  const books = s.methodBooks || [];
+  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No method books yet — tap “＋ Add method book” to pull one from your bank.</p>';
+  return books.map(function(book, bIdx) {
+    const ticks = book.ticks || {};
+    const studies = bookStudies(book);
+    const total = studies.length;
+    const done = studies.filter(function(it){ return ticks[it]; }).length;
+    const allNumeric = studies.every(function(it){ return /^\d+$/.test(it); });
+    let ticksHTML;
+    if (allNumeric) {
+      const cols = [];
+      for (let i = 0; i < Math.ceil(total / 5); i++) cols.push(studies.slice(i*5, i*5+5));
+      ticksHTML = '<div style="display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch">'
+        + cols.map(function(col) {
+            return '<div style="flex-shrink:0">' + col.map(function(it) {
+              const isDone = !!ticks[it];
+              return '<div style="display:flex;align-items:center;gap:5px;padding:2px 0">'
+                + '<span style="font-size:0.72rem;color:var(--ink);min-width:14px">' + esc(it) + '</span>'
+                + '<button onclick="methodBookTick(\'' + s.id + '\',' + bIdx + ',' + JSON.stringify(it).replace(/"/g,'&quot;') + ')" '
+                + 'style="width:20px;height:20px;border-radius:5px;border:1.5px solid ' + (isDone ? 'var(--violin)' : '#e0ddd8') + ';'
+                + 'background:' + (isDone ? 'var(--violin)' : 'transparent') + ';'
+                + 'color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.62rem;font-weight:700;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0">'
+                + (isDone ? '✓' : '') + '</button></div>';
+            }).join('') + '</div>';
+          }).join('')
+        + '</div>';
+    } else {
+      ticksHTML = '<div>' + studies.map(function(it) {
+        const isDone = !!ticks[it];
+        return '<div style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;background:' + (isDone?'#e8f5e0':'transparent') + ';margin-bottom:3px">'
+          + '<button onclick="methodBookTick(\'' + s.id + '\',' + bIdx + ',' + JSON.stringify(it).replace(/"/g,'&quot;') + ')" '
+          + 'style="flex:0 0 auto;width:20px;height:20px;border-radius:5px;border:1.5px solid ' + (isDone ? 'var(--violin)' : '#e0ddd8') + ';'
+          + 'background:' + (isDone ? 'var(--violin)' : 'transparent') + ';color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0">'
+          + (isDone ? '✓' : '') + '</button>'
+          + '<span style="flex:1;font-size:0.85rem;color:var(--ink);' + (isDone?'text-decoration:line-through;opacity:0.65':'') + '">' + esc(it) + '</span>'
+        + '</div>';
+      }).join('') + '</div>';
+    }
+    return '<details style="margin-top:10px">'
+      + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
+      + '<span>' + esc(book.name) + '</span>'
+      + '<span style="display:flex;align-items:center;gap:10px">'
+      + '<span style="font-size:0.7rem;font-weight:400">' + done + ' / ' + total + '</span>'
+      + '<button onclick="event.stopPropagation();removeMethodBook(\'' + s.id + '\',' + bIdx + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:0 4px">×</button>'
+      + '</span></summary>'
+      + '<div class="section-card" style="margin-top:6px">'
+      + '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">' + done + ' of ' + total + ' covered</div>'
+      + ticksHTML
+      + '</div></details>';
+  }).join('');
+}
+
+function openAddMethodBookModal(studentId) {
+  document.getElementById('method-book-student-id').value = studentId;
+  renderMethodBankPicker();
+  document.getElementById('custom-method-name').value = '';
+  document.getElementById('custom-method-studies').value = '';
+  document.getElementById('custom-method-fields').style.display = 'none';
+  document.getElementById('add-method-book-modal').classList.add('open');
+}
+
+function renderMethodBankPicker() {
+  const el = document.getElementById('method-bank-picker-list');
+  if (!el) return;
+  if (!methodBookBank.length) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">Your method-book bank is empty. Set books up in “Manage method-book bank” on the pupil page, or add a custom one below.</p>';
+    return;
+  }
+  el.innerHTML = methodBookBank.map(function(bk) {
+    const n = (bk.studies || []).length;
+    return '<button onclick="addMethodBankBookToPupil(\'' + bk.id + '\')" style="width:100%;text-align:left;background:var(--paper);border:1.5px solid var(--warm);border-radius:10px;padding:10px 12px;margin-bottom:6px;font-family:\'Special Elite\',cursive;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'
+      + '<span style="font-size:0.88rem;color:var(--ink)">' + esc(bk.name) + '</span>'
+      + '<span style="font-size:0.72rem;color:var(--muted)">' + n + ' unit' + (n===1?'':'s') + '</span>'
+      + '</button>';
+  }).join('');
+}
+
+function addMethodBankBookToPupil(bankId) {
+  const id = document.getElementById('method-book-student-id').value;
+  const s = getStudent(id); if (!s) return;
+  const bk = methodBookBank.find(function(b){ return b.id === bankId; });
+  if (!bk) return;
+  if (!s.methodBooks) s.methodBooks = [];
+  s.methodBooks.push({ id: Date.now().toString(), bankId: bk.id, name: bk.name, studies: (bk.studies||[]).slice(), ticks: {} });
+  save();
+  document.getElementById('add-method-book-modal').classList.remove('open');
+  const el = document.getElementById('method-books-' + id);
+  if (el) el.innerHTML = methodBooksHTML(s);
+}
+
+function toggleCustomMethodFields() {
+  const f = document.getElementById('custom-method-fields');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+function confirmAddMethodBook() {
+  const id = document.getElementById('method-book-student-id').value;
+  const name = document.getElementById('custom-method-name').value.trim();
+  const studies = parseStudiesInput(document.getElementById('custom-method-studies').value);
+  if (!name || studies.length === 0) { alert('Give the book a name and either a number of units or a list of named units.'); return; }
+  const s = getStudent(id); if (!s) return;
+  if (!s.methodBooks) s.methodBooks = [];
+  s.methodBooks.push({ id: Date.now().toString(), name: name, studies: studies, ticks: {} });
+  save();
+  document.getElementById('add-method-book-modal').classList.remove('open');
+  const el = document.getElementById('method-books-' + id);
+  if (el) el.innerHTML = methodBooksHTML(s);
+}
+
+function methodBookTick(studentId, bookIdx, item) {
+  const s = getStudent(studentId); if (!s || !s.methodBooks) return;
+  const book = s.methodBooks[bookIdx]; if (!book) return;
+  if (!book.ticks) book.ticks = {};
+  book.ticks[item] = !book.ticks[item];
+  save();
+  document.getElementById('method-books-' + studentId).innerHTML = methodBooksHTML(s);
+}
+
+function removeMethodBook(studentId, bookIdx) {
+  const s = getStudent(studentId); if (!s || !s.methodBooks) return;
+  if (!confirm('Remove "' + s.methodBooks[bookIdx].name + '"? Ticks will be lost.')) return;
+  s.methodBooks.splice(bookIdx, 1);
+  save();
+  document.getElementById('method-books-' + studentId).innerHTML = methodBooksHTML(s);
+}
+
+// Method-book bank editor
+let editingMethodBankId = null;
+
+function methodBankEditorHTML() {
+  if (!methodBookBank.length) {
+    return '<p style="color:var(--muted);font-size:0.8rem;font-style:italic">No method books in your bank yet. Add one below (e.g. “Essential Elements Book 1”, then a number of units, or paste named units one per line).</p>';
+  }
+  return methodBookBank.map(function(bk) {
+    const n = (bk.studies || []).length;
+    if (editingMethodBankId === bk.id) {
+      return '<div style="padding:8px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px;border:1.5px solid var(--violin)">'
+        + '<input type="text" id="method-bank-edit-name" value="' + esc(bk.name) + '" '
+        + 'style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box;margin-bottom:6px">'
+        + '<div style="font-size:0.66rem;color:var(--muted);margin-bottom:4px">Number (e.g. 20) to auto-number, or one named unit per line.</div>'
+        + '<textarea id="method-bank-edit-studies" rows="4" '
+        + 'style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical">' + esc(studiesToText(bk.studies)) + '</textarea>'
+        + '<div style="display:flex;gap:8px;margin-top:6px">'
+        + '<button onclick="saveMethodBankEdit(\'' + bk.id + '\')" style="flex:1;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">Save</button>'
+        + '<button onclick="cancelMethodBankEdit()" style="flex:1;background:var(--warm);color:var(--muted);border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;cursor:pointer">Cancel</button>'
+        + '</div></div>';
+    }
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">'
+      + '<span style="flex:1;font-size:0.85rem">' + esc(bk.name) + '</span>'
+      + '<span style="font-size:0.7rem;color:var(--muted)">' + n + '</span>'
+      + '<button onclick="startMethodBankEdit(\'' + bk.id + '\')" title="Edit units" style="background:none;border:none;color:var(--violin);font-size:0.9rem;cursor:pointer">✏️</button>'
+      + '<button onclick="removeMethodBankBook(\'' + bk.id + '\')" title="Remove from bank" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>'
+      + '</div>';
+  }).join('');
+}
+
+function addMethodBankBook() {
+  const nameEl = document.getElementById('method-bank-new-name');
+  const studiesEl = document.getElementById('method-bank-new-studies');
+  const name = nameEl ? nameEl.value.trim() : '';
+  const studies = parseStudiesInput(studiesEl ? studiesEl.value : '');
+  if (!name || studies.length === 0) { alert('Give the book a name and either a number of units or a list of named units, one per line.'); return; }
+  methodBookBank.push({ id: 'mb' + Date.now(), name: name, studies: studies });
+  save();
+  if (nameEl) nameEl.value = '';
+  if (studiesEl) studiesEl.value = '';
+  const el = document.getElementById('method-bank-list'); if (el) el.innerHTML = methodBankEditorHTML();
+  const picker = document.getElementById('method-bank-picker-list'); if (picker) renderMethodBankPicker();
+}
+
+function startMethodBankEdit(bankId) {
+  editingMethodBankId = bankId;
+  const el = document.getElementById('method-bank-list'); if (el) el.innerHTML = methodBankEditorHTML();
+}
+
+function cancelMethodBankEdit() {
+  editingMethodBankId = null;
+  const el = document.getElementById('method-bank-list'); if (el) el.innerHTML = methodBankEditorHTML();
+}
+
+function saveMethodBankEdit(bankId) {
+  const bk = methodBookBank.find(function(b){ return b.id === bankId; });
+  if (!bk) return;
+  const nameEl = document.getElementById('method-bank-edit-name');
+  const studiesEl = document.getElementById('method-bank-edit-studies');
+  const name = nameEl ? nameEl.value.trim() : '';
+  const studies = parseStudiesInput(studiesEl ? studiesEl.value : '');
+  if (!name || studies.length === 0) { alert('Give the book a name and either a number of units or a list of named units, one per line.'); return; }
+  bk.name = name;
+  bk.studies = studies;
+  editingMethodBankId = null;
+  save();
+  const el = document.getElementById('method-bank-list'); if (el) el.innerHTML = methodBankEditorHTML();
+  const picker = document.getElementById('method-bank-picker-list'); if (picker) renderMethodBankPicker();
+}
+
+function removeMethodBankBook(bankId) {
+  const bk = methodBookBank.find(function(b){ return b.id === bankId; });
+  if (bk && !confirm('Remove "' + bk.name + '" from your bank? Pupils who already have it keep their copy.')) return;
+  methodBookBank = methodBookBank.filter(function(b){ return b.id !== bankId; });
+  save();
+  const el = document.getElementById('method-bank-list'); if (el) el.innerHTML = methodBankEditorHTML();
 }
 
 function sevcikCheck(studentId, item) {
@@ -9186,6 +9495,24 @@ function toggleLittleDetails(pupilId) {
   if (d) d.open = !d.open;
 }
 
+// Technique tab dashboard: open one section panel, hide the rest, highlight tile.
+function showTechniqueSection(pupilId, name) {
+  document.querySelectorAll('#technique-panels-' + pupilId + ' .technique-panel').forEach(function(p) {
+    p.style.display = (p.id === 'tech-panel-' + name) ? 'block' : 'none';
+  });
+  const tiles = document.querySelectorAll('#panel-scales .admin-grid .admin-tile');
+  tiles.forEach(function(t){ t.classList.remove('active'); });
+  const activeTile = document.querySelector('#panel-scales .admin-grid .admin-tile[onclick*="\'' + name + '\'"]');
+  if (activeTile) activeTile.classList.add('active');
+  const panel = document.getElementById('tech-panel-' + name);
+  if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeTechniqueSections(pupilId) {
+  document.querySelectorAll('#technique-panels-' + pupilId + ' .technique-panel').forEach(function(p){ p.style.display = 'none'; });
+  document.querySelectorAll('#panel-scales .admin-grid .admin-tile').forEach(function(t){ t.classList.remove('active'); });
+}
+
 // The Admin billing sheet: every active pupil with their chargeable lesson
 // count for the chosen half-term, totals down the right. Read-only invoicing aid.
 function renderBilling() {
@@ -10381,6 +10708,7 @@ function backupData() {
     studio_extra_lessons: localStorage.getItem('studio_extra_lessons') || '{}',
     studio_technique_defaults: localStorage.getItem('studio_technique_defaults') || '[]',
     studio_study_book_bank: localStorage.getItem('studio_study_book_bank') || '[]',
+    studio_method_book_bank: localStorage.getItem('studio_method_book_bank') || '[]',
     studio_cal_url:       localStorage.getItem('studio_cal_url')       || '',
   };
   const date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');
@@ -10409,7 +10737,7 @@ function restoreData(event) {
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
         'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links','studio_video_cats_removed','studio_video_teachers','studio_hidden_pieces',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
-        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_study_book_bank','studio_cal_url','studio_dark_mode_REMOVED'];
+        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_study_book_bank','studio_method_book_bank','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
 
       // Reload state
@@ -10434,6 +10762,7 @@ function restoreData(event) {
       extraLessons    = JSON.parse(localStorage.getItem('studio_extra_lessons')    || '{}');
       techniqueDefaults = JSON.parse(localStorage.getItem('studio_technique_defaults') || '[]');
       studyBookBank   = JSON.parse(localStorage.getItem('studio_study_book_bank')   || '[]');
+      methodBookBank  = JSON.parse(localStorage.getItem('studio_method_book_bank')  || '[]');
       repairStudentIDs();
       migrateGiftsToList();
             closeBackupModal();
