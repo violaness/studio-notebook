@@ -5843,15 +5843,29 @@ function toggleCustomBookFields() {
   f.style.display = f.style.display === 'none' ? 'block' : 'none';
 }
 
-// Parse the studies textarea: each non-empty line is a study; or if they typed
-// a single number, auto-number 1..n.
+// Parse the studies textarea into a list of studies. Each non-empty line is a
+// study, EXCEPT:
+//   • a line that is a bare number "40"      → expands to 1,2,…,40
+//   • a line that is a range "5-12"          → expands to 5,6,…,12
+// so you can mix named and numbered, e.g.  "Theme" then "40"  → Theme,1..40.
 function parseStudiesInput(raw) {
-  const text = (raw || '').trim();
-  if (/^\d+$/.test(text)) {
-    const n = parseInt(text);
-    return Array.from({length: n}, function(_, i){ return String(i+1); });
-  }
-  return text.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+  const lines = (raw || '').split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+  const out = [];
+  lines.forEach(function(line) {
+    const num = line.match(/^(\d+)$/);
+    const range = line.match(/^(\d+)\s*[-–—]\s*(\d+)$/);
+    if (num) {
+      const n = parseInt(num[1]);
+      for (let i = 1; i <= n; i++) out.push(String(i));
+    } else if (range) {
+      let a = parseInt(range[1]), b = parseInt(range[2]);
+      if (a > b) { const t = a; a = b; b = t; }
+      for (let i = a; i <= b; i++) out.push(String(i));
+    } else {
+      out.push(line);
+    }
+  });
+  return out;
 }
 
 function confirmAddStudyBook() {
@@ -5888,12 +5902,30 @@ function removeStudyBook(studentId, bookIdx) {
 // ── STUDY-BOOK BANK EDITOR (studio-wide) ──────────────────────────────────
 let editingBankId = null;
 
-// Turn a book's studies back into editable text: a bare number if they're the
-// plain sequence 1..n, otherwise the named studies one per line.
+// Turn a book's studies back into editable text, collapsing a trailing 1..n run
+// of plain numbers back to a single number. So ["Theme","1".."40"] shows as
+// "Theme\n40", and ["1".."60"] shows as "60".
 function studiesToText(studies) {
-  const list = studies || [];
-  const isPlainSequence = list.every(function(it, i){ return it === String(i + 1); });
-  if (isPlainSequence && list.length) return String(list.length);
+  const list = (studies || []).slice();
+  // Walk from the end while the values count down n, n-1, … to 1
+  let runLen = 0;
+  let expect = null;
+  for (let i = list.length - 1; i >= 0; i--) {
+    const v = list[i];
+    if (!/^\d+$/.test(v)) break;
+    const num = parseInt(v);
+    if (expect === null) { expect = num; }
+    if (num !== expect) break;
+    runLen++;
+    expect--;
+    if (expect === 0) break; // reached 1
+  }
+  // Only collapse if the run actually starts at 1 (expect hit 0)
+  if (runLen > 0 && expect === 0) {
+    const head = list.slice(0, list.length - runLen);
+    const tail = String(runLen);
+    return head.concat([tail]).join('\n');
+  }
   return list.join('\n');
 }
 
