@@ -1465,6 +1465,34 @@
   </div>
 </div>
 
+<!-- ADD ALBUM MODAL -->
+<div class="modal-overlay" id="add-album-modal">
+  <div class="modal">
+    <h2>Add album</h2>
+    <input type="hidden" id="album-student-id">
+    <div class="field-group">
+      <label class="field-label">Pick from your bank</label>
+      <div id="album-bank-picker-list" style="max-height:240px;overflow-y:auto"></div>
+    </div>
+    <button onclick="toggleCustomAlbumFields()" style="width:100%;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:9px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;font-weight:500">＋ Custom one-off album</button>
+    <div id="custom-album-fields" style="display:none;margin-top:12px">
+      <div class="field-group">
+        <label class="field-label" for="custom-album-name">Album name</label>
+        <input type="text" id="custom-album-name" placeholder="e.g. Fiddle Time Joggers">
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="custom-album-studies">Pieces</label>
+        <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">Type a number (e.g. 15) to auto-number 1–15, or list named pieces one per line.</div>
+        <textarea id="custom-album-studies" rows="4" placeholder="15&#10;— or —&#10;Bow Dance&#10;Rhythm Fever" style="width:100%;padding:10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.9rem;box-sizing:border-box;resize:vertical"></textarea>
+      </div>
+      <button class="btn-primary" style="width:100%" onclick="confirmAddAlbum()">Add this album to pupil</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="document.getElementById('add-album-modal').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- EXTRA LESSON MODAL -->
 <div class="modal-overlay" id="extra-lesson-modal">
   <div class="modal">
@@ -2069,6 +2097,8 @@ let techniqueDefaults = JSON.parse(localStorage.getItem('studio_technique_defaul
 let studyBookBank = JSON.parse(localStorage.getItem('studio_study_book_bank') || '[]');
 // Studio-wide bank of method books — same shape as the study-book bank.
 let methodBookBank = JSON.parse(localStorage.getItem('studio_method_book_bank') || '[]');
+// Studio-wide bank of albums — same shape again.
+let albumBank = JSON.parse(localStorage.getItem('studio_album_bank') || '[]');
 
 let currentFilter  = 'all';
 let prevView       = 'roster';
@@ -2095,6 +2125,7 @@ function save() {
   localStorage.setItem('studio_technique_defaults', JSON.stringify(techniqueDefaults));
   localStorage.setItem('studio_study_book_bank', JSON.stringify(studyBookBank));
   localStorage.setItem('studio_method_book_bank', JSON.stringify(methodBookBank));
+  localStorage.setItem('studio_album_bank', JSON.stringify(albumBank));
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
@@ -3222,9 +3253,9 @@ function renderDetail(s, preserveTab = false) {
     <!-- SCALES / TECHNIQUE -->
     <div class="moment-panel" id="panel-scales">
 
-      <!-- TECHNIQUE TILE GRID (greens left, blues right, light→dark) -->
-      <div class="admin-grid" style="grid-template-rows:repeat(2,1fr)">
-        <button class="admin-tile" style="background:var(--string);color:var(--ink)" onclick="showTechniqueSection('${s.id}','technique')">
+      <!-- TECHNIQUE tile grid: checklist spans the top, then greens left / blues right -->
+      <div class="admin-grid">
+        <button class="admin-tile" style="background:var(--string);color:var(--ink);grid-column:1 / -1" onclick="showTechniqueSection('${s.id}','technique')">
           <span class="admin-tile-icon">🛠</span><span class="admin-tile-label">Technique checklist</span>
         </button>
         <button class="admin-tile" style="background:var(--viola)" onclick="showTechniqueSection('${s.id}','studybooks')">
@@ -3233,9 +3264,13 @@ function renderDetail(s, preserveTab = false) {
         <button class="admin-tile" style="background:#46C6E5;color:var(--ink)" onclick="showTechniqueSection('${s.id}','scales')">
           <span class="admin-tile-icon">🎼</span><span class="admin-tile-label">Scale checklist</span>
         </button>
+        <button class="admin-tile" style="background:var(--ink)" onclick="showTechniqueSection('${s.id}','albums')">
+          <span class="admin-tile-icon">🎵</span><span class="admin-tile-label">Albums</span>
+        </button>
         <button class="admin-tile" style="background:var(--violin)" onclick="showTechniqueSection('${s.id}','methodbooks')">
           <span class="admin-tile-icon">📘</span><span class="admin-tile-label">Method books</span>
         </button>
+        <!-- grid flow: row1 [Study books | Scale checklist], row2 [Albums | Method books] -->
       </div>
 
       <div id="technique-panels-${s.id}">
@@ -3336,6 +3371,32 @@ function renderDetail(s, preserveTab = false) {
               <textarea id="method-bank-new-studies" rows="3" placeholder="Number (e.g. 20) to auto-number, or one named unit per line"
                 style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical"></textarea>
               <button onclick="addMethodBankBook()" style="width:100%;margin-top:6px;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">＋ Add to bank</button>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <!-- ALBUMS -->
+      <section class="admin-panel technique-panel" id="tech-panel-albums" style="display:none">
+        <div class="admin-panel-head"><span>🎵 Albums</span><button class="admin-panel-close" onclick="closeTechniqueSections('${s.id}')">✕ Close</button></div>
+        <div id="albums-${s.id}">${albumsHTML(s)}</div>
+        <button onclick="openAddAlbumModal('${s.id}')"
+          style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
+          ＋ Add album
+        </button>
+        <details style="margin-top:12px">
+          <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+            <span>⚙ Manage album bank</span><span style="font-weight:400">tap to expand</span>
+          </summary>
+          <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
+            <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">Set up albums once here, then pull them onto any pupil. Editing the bank doesn’t change albums already added to pupils.</div>
+            <div id="album-bank-list">${albumBankEditorHTML()}</div>
+            <div style="margin-top:10px">
+              <input type="text" id="album-bank-new-name" placeholder="Album name, e.g. Fiddle Time Joggers"
+                style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box;margin-bottom:6px">
+              <textarea id="album-bank-new-studies" rows="3" placeholder="Number (e.g. 15) to auto-number, or one named piece per line"
+                style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical"></textarea>
+              <button onclick="addAlbumBankBook()" style="width:100%;margin-top:6px;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">＋ Add to bank</button>
             </div>
           </div>
         </details>
@@ -5743,6 +5804,57 @@ function bookStudies(book) {
   return Array.from({length: count}, function(_, i) { return String(i + 1); });
 }
 
+// One tick-box, numbered-grid style (compact, label beside box).
+function studyTickCell(it, isDone, tickFn, sid, bIdx) {
+  return '<div style="display:flex;align-items:center;gap:5px;padding:2px 0">'
+    + '<span style="font-size:0.72rem;color:var(--ink);min-width:16px;text-align:right">' + esc(it) + '</span>'
+    + '<button onclick="' + tickFn + '(\'' + sid + '\',' + bIdx + ',' + JSON.stringify(it).replace(/"/g,'&quot;') + ')" '
+    + 'style="width:20px;height:20px;border-radius:5px;border:1.5px solid ' + (isDone ? 'var(--violin)' : '#e0ddd8') + ';'
+    + 'background:' + (isDone ? 'var(--violin)' : 'transparent') + ';color:' + (isDone ? '#fff' : '#ccc') + ';'
+    + 'cursor:pointer;font-size:0.62rem;font-weight:700;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0">'
+    + (isDone ? '✓' : '') + '</button></div>';
+}
+
+// One tick-box, named-row style (full-width, label after box, struck when done).
+function studyTickRow(it, isDone, tickFn, sid, bIdx) {
+  return '<div style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;background:' + (isDone?'#e8f5e0':'transparent') + ';margin-bottom:3px">'
+    + '<button onclick="' + tickFn + '(\'' + sid + '\',' + bIdx + ',' + JSON.stringify(it).replace(/"/g,'&quot;') + ')" '
+    + 'style="flex:0 0 auto;width:20px;height:20px;border-radius:5px;border:1.5px solid ' + (isDone ? 'var(--violin)' : '#e0ddd8') + ';'
+    + 'background:' + (isDone ? 'var(--violin)' : 'transparent') + ';color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0">'
+    + (isDone ? '✓' : '') + '</button>'
+    + '<span style="flex:1;font-size:0.85rem;color:var(--ink);' + (isDone?'text-decoration:line-through;opacity:0.65':'') + '">' + esc(it) + '</span>'
+  + '</div>';
+}
+
+// Render a book's studies: runs of plain numbers become a compact column grid,
+// named items each get their own readable row. tickFn is the tick handler name.
+function bookTicksHTML(studies, ticks, tickFn, sid, bIdx) {
+  // Split into alternating segments of {numeric:true, items:[...]} / {numeric:false, items:[...]}
+  const segments = [];
+  studies.forEach(function(it) {
+    const isNum = /^\d+$/.test(it);
+    const last = segments[segments.length - 1];
+    if (last && last.numeric === isNum) last.items.push(it);
+    else segments.push({ numeric: isNum, items: [it] });
+  });
+  return segments.map(function(seg) {
+    if (seg.numeric) {
+      const cols = [];
+      for (let i = 0; i < Math.ceil(seg.items.length / 5); i++) cols.push(seg.items.slice(i*5, i*5+5));
+      return '<div style="display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:4px 0">'
+        + cols.map(function(col) {
+            return '<div style="flex-shrink:0">' + col.map(function(it) {
+              return studyTickCell(it, !!ticks[it], tickFn, sid, bIdx);
+            }).join('') + '</div>';
+          }).join('')
+        + '</div>';
+    }
+    return '<div>' + seg.items.map(function(it) {
+      return studyTickRow(it, !!ticks[it], tickFn, sid, bIdx);
+    }).join('') + '</div>';
+  }).join('');
+}
+
 function studyBooksHTML(s) {
   const books = s.studyBooks || [];
   if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No study books yet — tap “＋ Add study book” to pull one from your bank.</p>';
@@ -5751,39 +5863,7 @@ function studyBooksHTML(s) {
     const studies = bookStudies(book);
     const total = studies.length;
     const done = studies.filter(function(it){ return ticks[it]; }).length;
-    // Numbered books (short labels) lay out in Sevcik-style columns; named
-    // studies get a single readable column list.
-    const allNumeric = studies.every(function(it){ return /^\d+$/.test(it); });
-    let ticksHTML;
-    if (allNumeric) {
-      const cols = [];
-      for (let i = 0; i < Math.ceil(total / 5); i++) cols.push(studies.slice(i*5, i*5+5));
-      ticksHTML = '<div style="display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch">'
-        + cols.map(function(col) {
-            return '<div style="flex-shrink:0">' + col.map(function(it) {
-              const isDone = !!ticks[it];
-              return '<div style="display:flex;align-items:center;gap:5px;padding:2px 0">'
-                + '<span style="font-size:0.72rem;color:var(--ink);min-width:14px">' + esc(it) + '</span>'
-                + '<button onclick="studyBookTick(\'' + s.id + '\',' + bIdx + ',' + JSON.stringify(it).replace(/"/g,'&quot;') + ')" '
-                + 'style="width:20px;height:20px;border-radius:5px;border:1.5px solid ' + (isDone ? 'var(--violin)' : '#e0ddd8') + ';'
-                + 'background:' + (isDone ? 'var(--violin)' : 'transparent') + ';'
-                + 'color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.62rem;font-weight:700;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0">'
-                + (isDone ? '✓' : '') + '</button></div>';
-            }).join('') + '</div>';
-          }).join('')
-        + '</div>';
-    } else {
-      ticksHTML = '<div>' + studies.map(function(it) {
-        const isDone = !!ticks[it];
-        return '<div style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;background:' + (isDone?'#e8f5e0':'transparent') + ';margin-bottom:3px">'
-          + '<button onclick="studyBookTick(\'' + s.id + '\',' + bIdx + ',' + JSON.stringify(it).replace(/"/g,'&quot;') + ')" '
-          + 'style="flex:0 0 auto;width:20px;height:20px;border-radius:5px;border:1.5px solid ' + (isDone ? 'var(--violin)' : '#e0ddd8') + ';'
-          + 'background:' + (isDone ? 'var(--violin)' : 'transparent') + ';color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0">'
-          + (isDone ? '✓' : '') + '</button>'
-          + '<span style="flex:1;font-size:0.85rem;color:var(--ink);' + (isDone?'text-decoration:line-through;opacity:0.65':'') + '">' + esc(it) + '</span>'
-        + '</div>';
-      }).join('') + '</div>';
-    }
+    const ticksHTML = bookTicksHTML(studies, ticks, 'studyBookTick', s.id, bIdx);
     return '<details style="margin-top:10px">'
       + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
       + '<span>' + esc(book.name) + '</span>'
@@ -6013,37 +6093,7 @@ function methodBooksHTML(s) {
     const studies = bookStudies(book);
     const total = studies.length;
     const done = studies.filter(function(it){ return ticks[it]; }).length;
-    const allNumeric = studies.every(function(it){ return /^\d+$/.test(it); });
-    let ticksHTML;
-    if (allNumeric) {
-      const cols = [];
-      for (let i = 0; i < Math.ceil(total / 5); i++) cols.push(studies.slice(i*5, i*5+5));
-      ticksHTML = '<div style="display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch">'
-        + cols.map(function(col) {
-            return '<div style="flex-shrink:0">' + col.map(function(it) {
-              const isDone = !!ticks[it];
-              return '<div style="display:flex;align-items:center;gap:5px;padding:2px 0">'
-                + '<span style="font-size:0.72rem;color:var(--ink);min-width:14px">' + esc(it) + '</span>'
-                + '<button onclick="methodBookTick(\'' + s.id + '\',' + bIdx + ',' + JSON.stringify(it).replace(/"/g,'&quot;') + ')" '
-                + 'style="width:20px;height:20px;border-radius:5px;border:1.5px solid ' + (isDone ? 'var(--violin)' : '#e0ddd8') + ';'
-                + 'background:' + (isDone ? 'var(--violin)' : 'transparent') + ';'
-                + 'color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.62rem;font-weight:700;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0">'
-                + (isDone ? '✓' : '') + '</button></div>';
-            }).join('') + '</div>';
-          }).join('')
-        + '</div>';
-    } else {
-      ticksHTML = '<div>' + studies.map(function(it) {
-        const isDone = !!ticks[it];
-        return '<div style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;background:' + (isDone?'#e8f5e0':'transparent') + ';margin-bottom:3px">'
-          + '<button onclick="methodBookTick(\'' + s.id + '\',' + bIdx + ',' + JSON.stringify(it).replace(/"/g,'&quot;') + ')" '
-          + 'style="flex:0 0 auto;width:20px;height:20px;border-radius:5px;border:1.5px solid ' + (isDone ? 'var(--violin)' : '#e0ddd8') + ';'
-          + 'background:' + (isDone ? 'var(--violin)' : 'transparent') + ';color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0">'
-          + (isDone ? '✓' : '') + '</button>'
-          + '<span style="flex:1;font-size:0.85rem;color:var(--ink);' + (isDone?'text-decoration:line-through;opacity:0.65':'') + '">' + esc(it) + '</span>'
-        + '</div>';
-      }).join('') + '</div>';
-    }
+    const ticksHTML = bookTicksHTML(studies, ticks, 'methodBookTick', s.id, bIdx);
     return '<details style="margin-top:10px">'
       + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
       + '<span>' + esc(book.name) + '</span>'
@@ -6208,6 +6258,182 @@ function removeMethodBankBook(bankId) {
   methodBookBank = methodBookBank.filter(function(b){ return b.id !== bankId; });
   save();
   const el = document.getElementById('method-bank-list'); if (el) el.innerHTML = methodBankEditorHTML();
+}
+
+// ── ALBUMS (same principle as study / method books, separate bank) ─────────
+function albumsHTML(s) {
+  const books = s.albums || [];
+  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No albums yet — tap “＋ Add album” to pull one from your bank.</p>';
+  return books.map(function(book, bIdx) {
+    const ticks = book.ticks || {};
+    const studies = bookStudies(book);
+    const total = studies.length;
+    const done = studies.filter(function(it){ return ticks[it]; }).length;
+    const ticksHTML = bookTicksHTML(studies, ticks, 'albumTick', s.id, bIdx);
+    return '<details style="margin-top:10px">'
+      + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
+      + '<span>' + esc(book.name) + '</span>'
+      + '<span style="display:flex;align-items:center;gap:10px">'
+      + '<span style="font-size:0.7rem;font-weight:400">' + done + ' / ' + total + '</span>'
+      + '<button onclick="event.stopPropagation();removeAlbum(\'' + s.id + '\',' + bIdx + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:0 4px">×</button>'
+      + '</span></summary>'
+      + '<div class="section-card" style="margin-top:6px">'
+      + '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">' + done + ' of ' + total + ' done</div>'
+      + ticksHTML
+      + '</div></details>';
+  }).join('');
+}
+
+function openAddAlbumModal(studentId) {
+  document.getElementById('album-student-id').value = studentId;
+  renderAlbumBankPicker();
+  document.getElementById('custom-album-name').value = '';
+  document.getElementById('custom-album-studies').value = '';
+  document.getElementById('custom-album-fields').style.display = 'none';
+  document.getElementById('add-album-modal').classList.add('open');
+}
+
+function renderAlbumBankPicker() {
+  const el = document.getElementById('album-bank-picker-list');
+  if (!el) return;
+  if (!albumBank.length) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">Your album bank is empty. Set albums up in “Manage album bank” on the pupil page, or add a custom one below.</p>';
+    return;
+  }
+  el.innerHTML = albumBank.map(function(bk) {
+    const n = (bk.studies || []).length;
+    return '<button onclick="addAlbumBankToPupil(\'' + bk.id + '\')" style="width:100%;text-align:left;background:var(--paper);border:1.5px solid var(--warm);border-radius:10px;padding:10px 12px;margin-bottom:6px;font-family:\'Special Elite\',cursive;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'
+      + '<span style="font-size:0.88rem;color:var(--ink)">' + esc(bk.name) + '</span>'
+      + '<span style="font-size:0.72rem;color:var(--muted)">' + n + ' piece' + (n===1?'':'s') + '</span>'
+      + '</button>';
+  }).join('');
+}
+
+function addAlbumBankToPupil(bankId) {
+  const id = document.getElementById('album-student-id').value;
+  const s = getStudent(id); if (!s) return;
+  const bk = albumBank.find(function(b){ return b.id === bankId; });
+  if (!bk) return;
+  if (!s.albums) s.albums = [];
+  s.albums.push({ id: Date.now().toString(), bankId: bk.id, name: bk.name, studies: (bk.studies||[]).slice(), ticks: {} });
+  save();
+  document.getElementById('add-album-modal').classList.remove('open');
+  const el = document.getElementById('albums-' + id);
+  if (el) el.innerHTML = albumsHTML(s);
+}
+
+function toggleCustomAlbumFields() {
+  const f = document.getElementById('custom-album-fields');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+function confirmAddAlbum() {
+  const id = document.getElementById('album-student-id').value;
+  const name = document.getElementById('custom-album-name').value.trim();
+  const studies = parseStudiesInput(document.getElementById('custom-album-studies').value);
+  if (!name || studies.length === 0) { alert('Give the album a name and either a number of pieces or a list of named pieces.'); return; }
+  const s = getStudent(id); if (!s) return;
+  if (!s.albums) s.albums = [];
+  s.albums.push({ id: Date.now().toString(), name: name, studies: studies, ticks: {} });
+  save();
+  document.getElementById('add-album-modal').classList.remove('open');
+  const el = document.getElementById('albums-' + id);
+  if (el) el.innerHTML = albumsHTML(s);
+}
+
+function albumTick(studentId, bookIdx, item) {
+  const s = getStudent(studentId); if (!s || !s.albums) return;
+  const book = s.albums[bookIdx]; if (!book) return;
+  if (!book.ticks) book.ticks = {};
+  book.ticks[item] = !book.ticks[item];
+  save();
+  document.getElementById('albums-' + studentId).innerHTML = albumsHTML(s);
+}
+
+function removeAlbum(studentId, bookIdx) {
+  const s = getStudent(studentId); if (!s || !s.albums) return;
+  if (!confirm('Remove "' + s.albums[bookIdx].name + '"? Ticks will be lost.')) return;
+  s.albums.splice(bookIdx, 1);
+  save();
+  document.getElementById('albums-' + studentId).innerHTML = albumsHTML(s);
+}
+
+// Album bank editor
+let editingAlbumBankId = null;
+
+function albumBankEditorHTML() {
+  if (!albumBank.length) {
+    return '<p style="color:var(--muted);font-size:0.8rem;font-style:italic">No albums in your bank yet. Add one below (e.g. “Fiddle Time Joggers”, then a number of pieces, or paste named pieces one per line).</p>';
+  }
+  return albumBank.map(function(bk) {
+    const n = (bk.studies || []).length;
+    if (editingAlbumBankId === bk.id) {
+      return '<div style="padding:8px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px;border:1.5px solid var(--violin)">'
+        + '<input type="text" id="album-bank-edit-name" value="' + esc(bk.name) + '" '
+        + 'style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box;margin-bottom:6px">'
+        + '<div style="font-size:0.66rem;color:var(--muted);margin-bottom:4px">Number (e.g. 15) to auto-number, or one named piece per line.</div>'
+        + '<textarea id="album-bank-edit-studies" rows="4" '
+        + 'style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical">' + esc(studiesToText(bk.studies)) + '</textarea>'
+        + '<div style="display:flex;gap:8px;margin-top:6px">'
+        + '<button onclick="saveAlbumBankEdit(\'' + bk.id + '\')" style="flex:1;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">Save</button>'
+        + '<button onclick="cancelAlbumBankEdit()" style="flex:1;background:var(--warm);color:var(--muted);border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;cursor:pointer">Cancel</button>'
+        + '</div></div>';
+    }
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">'
+      + '<span style="flex:1;font-size:0.85rem">' + esc(bk.name) + '</span>'
+      + '<span style="font-size:0.7rem;color:var(--muted)">' + n + '</span>'
+      + '<button onclick="startAlbumBankEdit(\'' + bk.id + '\')" title="Edit pieces" style="background:none;border:none;color:var(--violin);font-size:0.9rem;cursor:pointer">✏️</button>'
+      + '<button onclick="removeAlbumBankBook(\'' + bk.id + '\')" title="Remove from bank" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>'
+      + '</div>';
+  }).join('');
+}
+
+function addAlbumBankBook() {
+  const nameEl = document.getElementById('album-bank-new-name');
+  const studiesEl = document.getElementById('album-bank-new-studies');
+  const name = nameEl ? nameEl.value.trim() : '';
+  const studies = parseStudiesInput(studiesEl ? studiesEl.value : '');
+  if (!name || studies.length === 0) { alert('Give the album a name and either a number of pieces or a list of named pieces, one per line.'); return; }
+  albumBank.push({ id: 'al' + Date.now(), name: name, studies: studies });
+  save();
+  if (nameEl) nameEl.value = '';
+  if (studiesEl) studiesEl.value = '';
+  const el = document.getElementById('album-bank-list'); if (el) el.innerHTML = albumBankEditorHTML();
+  const picker = document.getElementById('album-bank-picker-list'); if (picker) renderAlbumBankPicker();
+}
+
+function startAlbumBankEdit(bankId) {
+  editingAlbumBankId = bankId;
+  const el = document.getElementById('album-bank-list'); if (el) el.innerHTML = albumBankEditorHTML();
+}
+
+function cancelAlbumBankEdit() {
+  editingAlbumBankId = null;
+  const el = document.getElementById('album-bank-list'); if (el) el.innerHTML = albumBankEditorHTML();
+}
+
+function saveAlbumBankEdit(bankId) {
+  const bk = albumBank.find(function(b){ return b.id === bankId; });
+  if (!bk) return;
+  const nameEl = document.getElementById('album-bank-edit-name');
+  const studiesEl = document.getElementById('album-bank-edit-studies');
+  const name = nameEl ? nameEl.value.trim() : '';
+  const studies = parseStudiesInput(studiesEl ? studiesEl.value : '');
+  if (!name || studies.length === 0) { alert('Give the album a name and either a number of pieces or a list of named pieces, one per line.'); return; }
+  bk.name = name;
+  bk.studies = studies;
+  editingAlbumBankId = null;
+  save();
+  const el = document.getElementById('album-bank-list'); if (el) el.innerHTML = albumBankEditorHTML();
+  const picker = document.getElementById('album-bank-picker-list'); if (picker) renderAlbumBankPicker();
+}
+
+function removeAlbumBankBook(bankId) {
+  const bk = albumBank.find(function(b){ return b.id === bankId; });
+  if (bk && !confirm('Remove "' + bk.name + '" from your bank? Pupils who already have it keep their copy.')) return;
+  albumBank = albumBank.filter(function(b){ return b.id !== bankId; });
+  save();
+  const el = document.getElementById('album-bank-list'); if (el) el.innerHTML = albumBankEditorHTML();
 }
 
 function sevcikCheck(studentId, item) {
@@ -10741,6 +10967,7 @@ function backupData() {
     studio_technique_defaults: localStorage.getItem('studio_technique_defaults') || '[]',
     studio_study_book_bank: localStorage.getItem('studio_study_book_bank') || '[]',
     studio_method_book_bank: localStorage.getItem('studio_method_book_bank') || '[]',
+    studio_album_bank:    localStorage.getItem('studio_album_bank')    || '[]',
     studio_cal_url:       localStorage.getItem('studio_cal_url')       || '',
   };
   const date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');
@@ -10769,7 +10996,7 @@ function restoreData(event) {
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
         'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links','studio_video_cats_removed','studio_video_teachers','studio_hidden_pieces',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
-        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_study_book_bank','studio_method_book_bank','studio_cal_url','studio_dark_mode_REMOVED'];
+        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_study_book_bank','studio_method_book_bank','studio_album_bank','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
 
       // Reload state
@@ -10795,6 +11022,7 @@ function restoreData(event) {
       techniqueDefaults = JSON.parse(localStorage.getItem('studio_technique_defaults') || '[]');
       studyBookBank   = JSON.parse(localStorage.getItem('studio_study_book_bank')   || '[]');
       methodBookBank  = JSON.parse(localStorage.getItem('studio_method_book_bank')  || '[]');
+      albumBank       = JSON.parse(localStorage.getItem('studio_album_bank')        || '[]');
       repairStudentIDs();
       migrateGiftsToList();
             closeBackupModal();
