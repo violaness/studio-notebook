@@ -3254,23 +3254,23 @@ function renderDetail(s, preserveTab = false) {
     <div class="moment-panel" id="panel-scales">
 
       <!-- TECHNIQUE tile grid: checklist spans the top, then greens left / blues right -->
-      <div class="admin-grid">
-        <button class="admin-tile" style="background:var(--string);color:var(--ink);grid-column:1 / -1" onclick="showTechniqueSection('${s.id}','technique')">
+      <div class="admin-grid" style="grid-template-rows:none;grid-auto-flow:row">
+        <button class="admin-tile" style="background:var(--ink);grid-column:1 / -1" onclick="showTechniqueSection('${s.id}','technique')">
           <span class="admin-tile-icon">🛠</span><span class="admin-tile-label">Technique checklist</span>
         </button>
-        <button class="admin-tile" style="background:var(--viola)" onclick="showTechniqueSection('${s.id}','studybooks')">
+        <button class="admin-tile" style="background:var(--string);color:var(--ink)" onclick="showTechniqueSection('${s.id}','studybooks')">
           <span class="admin-tile-icon">📖</span><span class="admin-tile-label">Study books</span>
         </button>
         <button class="admin-tile" style="background:#46C6E5;color:var(--ink)" onclick="showTechniqueSection('${s.id}','scales')">
           <span class="admin-tile-icon">🎼</span><span class="admin-tile-label">Scale checklist</span>
         </button>
-        <button class="admin-tile" style="background:var(--ink)" onclick="showTechniqueSection('${s.id}','albums')">
+        <button class="admin-tile" style="background:var(--viola)" onclick="showTechniqueSection('${s.id}','albums')">
           <span class="admin-tile-icon">🎵</span><span class="admin-tile-label">Albums</span>
         </button>
         <button class="admin-tile" style="background:var(--violin)" onclick="showTechniqueSection('${s.id}','methodbooks')">
           <span class="admin-tile-icon">📘</span><span class="admin-tile-label">Method books</span>
         </button>
-        <!-- grid flow: row1 [Study books | Scale checklist], row2 [Albums | Method books] -->
+        <!-- top: dark green (full width) · middle: light green|light blue · bottom: mid green|mid blue -->
       </div>
 
       <div id="technique-panels-${s.id}">
