@@ -344,6 +344,9 @@
     font-size: 1.4rem; flex-shrink: 0; font-weight: 700;
   }
   .detail-name { font-family: 'DM Serif Display', serif; font-size: 1.5rem; margin-bottom: 5px; }
+  /* Little Details panel: no footprint when closed, gap below the banner when open */
+  .little-details-panel { margin-top: 0; }
+  .little-details-panel[open] { margin-top: 14px; }
 
   /* ── MOMENT TABS ── */
   .moment-tabs {
@@ -1412,16 +1415,24 @@
     <h2>Add study book</h2>
     <input type="hidden" id="study-book-student-id">
     <div class="field-group">
-      <label class="field-label" for="study-book-name">Book name</label>
-      <input type="text" id="study-book-name" placeholder="e.g. Wohlfahrt Op. 45">
+      <label class="field-label">Pick from your bank</label>
+      <div id="bank-picker-list" style="max-height:240px;overflow-y:auto"></div>
     </div>
-    <div class="field-group">
-      <label class="field-label" for="study-book-count">Number of studies</label>
-      <input type="number" id="study-book-count" min="1" max="100" placeholder="—" style="font-family:'Special Elite',cursive;font-size:1.2rem;padding:12px;text-align:center">
+    <button onclick="toggleCustomBookFields()" style="width:100%;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:9px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;font-weight:500">＋ Custom one-off book</button>
+    <div id="custom-book-fields" style="display:none;margin-top:12px">
+      <div class="field-group">
+        <label class="field-label" for="custom-book-name">Book name</label>
+        <input type="text" id="custom-book-name" placeholder="e.g. Wohlfahrt Op. 45">
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="custom-book-studies">Studies</label>
+        <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">Type a number (e.g. 60) to auto-number 1–60, or list named studies one per line.</div>
+        <textarea id="custom-book-studies" rows="4" placeholder="60&#10;— or —&#10;No. 1 — Détaché&#10;No. 2 — Legato" style="width:100%;padding:10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.9rem;box-sizing:border-box;resize:vertical"></textarea>
+      </div>
+      <button class="btn-primary" style="width:100%" onclick="confirmAddStudyBook()">Add this book to pupil</button>
     </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="document.getElementById('add-study-book-modal').classList.remove('open')">Cancel</button>
-      <button class="btn-primary" onclick="confirmAddStudyBook()">Add book</button>
     </div>
   </div>
 </div>
@@ -2020,6 +2031,14 @@ let ideaBoards       = JSON.parse(localStorage.getItem('studio_idea_boards')    
 let currentIdeaBoardId = localStorage.getItem('studio_idea_current') || '';
 let speechReplacements = JSON.parse(localStorage.getItem('studio_speech_replacements') || '[{"from":"gonna","to":"going to"},{"from":"wanna","to":"want to"},{"from":"kinda","to":"kind of"}]');
 let extraLessons = JSON.parse(localStorage.getItem('studio_extra_lessons') || '{}');
+// Studio-wide default technique checklist — the starting template copied to each
+// pupil the first time their Technique checklist is opened. Editing this never
+// touches pupils who already have a checklist.
+let techniqueDefaults = JSON.parse(localStorage.getItem('studio_technique_defaults') ||
+  '["Balance","Hand frame","Bow hold","Posture","Tone production","Intonation","Vibrato","Shifting"]');
+// Studio-wide bank of study books you can pull onto any pupil. Each:
+// { id, name, studies: ["1","2",...] or ["No. 1 — Détaché", ...] }. Starts empty.
+let studyBookBank = JSON.parse(localStorage.getItem('studio_study_book_bank') || '[]');
 
 let currentFilter  = 'all';
 let prevView       = 'roster';
@@ -2043,6 +2062,8 @@ function save() {
   localStorage.setItem('studio_term_dates',            JSON.stringify(termDates));
   localStorage.setItem('studio_speech_replacements',   JSON.stringify(speechReplacements));
   localStorage.setItem('studio_extra_lessons',     JSON.stringify(extraLessons));
+  localStorage.setItem('studio_technique_defaults', JSON.stringify(techniqueDefaults));
+  localStorage.setItem('studio_study_book_bank', JSON.stringify(studyBookBank));
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
@@ -2827,7 +2848,7 @@ function renderDetail(s, preserveTab = false) {
     </div>
     <div id="next-pupil-banner">${nextPupilHTML(s)}</div>
 
-    <details class="section-card" id="little-details-${s.id}" style="margin-bottom:8px;padding:0">
+    <details class="section-card little-details-panel" id="little-details-${s.id}" style="margin-bottom:8px;padding:0">
       <summary style="display:none;list-style:none"></summary>
       <div style="padding:0 14px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
         ${[
@@ -2891,7 +2912,7 @@ function renderDetail(s, preserveTab = false) {
       <button class="moment-tab active" onclick="switchMoment(this,'panel-before')">Before</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-during')">During</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-after')">After</button>
-      <button class="moment-tab" onclick="switchMoment(this,'panel-scales')">Scales</button>
+      <button class="moment-tab" onclick="switchMoment(this,'panel-scales')">Technique</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-history')">History</button>
     </div>
 
@@ -3169,8 +3190,46 @@ function renderDetail(s, preserveTab = false) {
 
     <!-- SCALES -->
     <div class="moment-panel" id="panel-scales">
-      <div class="section-card">
-        <div class="section-label">Scale checklist</div>
+      <!-- TECHNIQUE CHECKLIST -->
+      <details class="section-card" open style="padding:0">
+        <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--viola)">
+          <span>🛠 Technique checklist</span><span style="font-size:0.7rem;font-weight:400;color:var(--muted)">tap to collapse</span>
+        </summary>
+        <div style="padding:0 14px 14px">
+        <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:6px">
+          <button onclick="resetTechniqueToDefault('${s.id}')" style="background:none;border:none;font-size:0.68rem;color:var(--muted);cursor:pointer;text-decoration:underline;font-family:'Special Elite',cursive">Reset to default</button>
+        </div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:10px">Tap the circle to cycle: not started → working on it → secure.</div>
+        <div id="technique-list-${s.id}">${techniqueChecklistHTML(s)}</div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <input type="text" id="new-technique-${s.id}" placeholder="Add a technique for this pupil…" maxlength="40"
+            onkeydown="if(event.key==='Enter')addTechnique('${s.id}')"
+            style="flex:1;padding:8px 12px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box">
+          <button onclick="addTechnique('${s.id}')" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ Add</button>
+        </div>
+        <details style="margin-top:12px">
+          <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+            <span>⚙ Edit studio default list</span><span style="font-weight:400">tap to expand</span>
+          </summary>
+          <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
+            <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">This is the starting list for new pupils. Changing it won’t affect pupils who already have a checklist — use their “Reset to default” to pull in changes.</div>
+            <div id="technique-defaults-list">${techniqueDefaultsHTML()}</div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <input type="text" id="new-technique-default" placeholder="Add a default technique…" maxlength="40"
+                onkeydown="if(event.key==='Enter')addTechniqueDefault()"
+                style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box">
+              <button onclick="addTechniqueDefault()" style="background:var(--violin);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ Add</button>
+            </div>
+          </div>
+        </details>
+        </div>
+      </details>
+
+      <details class="section-card" style="padding:0;margin-top:10px">
+        <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
+          <span>🎼 Scale checklist</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+        </summary>
+        <div style="padding:0 14px 14px">
         <div id="scales-list-${s.id}">${scalesHTML(s)}</div>
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
           <button onclick="openAddKeyModal('${s.id}')"
@@ -3182,22 +3241,54 @@ function renderDetail(s, preserveTab = false) {
             ＋ Add type
           </button>
         </div>
-      </div>
+        </div>
+      </details>
+      ${s.sevcikHidden ? `
+      <button onclick="showSevcik('${s.id}')" style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">＋ Add Sevcik Op. 3</button>
+      ` : `
       <details style="margin-top:10px">
         <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
-          <span>Sevcik Op. 3 — 40 Variations</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+          <span>Sevcik Op. 3 — 40 Variations</span>
+          <span style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+            <button onclick="event.stopPropagation();hideSevcik('${s.id}')" title="Remove from this pupil" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:0 4px">×</button>
+          </span>
         </summary>
         <div class="section-card" style="margin-top:6px">
           <div id="sevcik-list-${s.id}">${sevcikHTML(s)}</div>
         </div>
       </details>
+      `}
 
       <!-- CUSTOM STUDY BOOKS -->
-      <div id="study-books-${s.id}">${studyBooksHTML(s)}</div>
-      <button onclick="openAddStudyBookModal('${s.id}')"
-        style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
-        ＋ Add study book
-      </button>
+      <details class="section-card" style="padding:0;margin-top:10px">
+        <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
+          <span>📖 Study books</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+        </summary>
+        <div style="padding:0 14px 14px">
+          <div id="study-books-${s.id}">${studyBooksHTML(s)}</div>
+          <button onclick="openAddStudyBookModal('${s.id}')"
+            style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
+            ＋ Add study book
+          </button>
+          <details style="margin-top:12px">
+            <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+              <span>⚙ Manage study-book bank</span><span style="font-weight:400">tap to expand</span>
+            </summary>
+            <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
+              <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">Set up books once here, then pull them onto any pupil. Editing the bank doesn’t change books already added to pupils.</div>
+              <div id="study-bank-list">${studyBankEditorHTML()}</div>
+              <div style="margin-top:10px">
+                <input type="text" id="bank-new-name" placeholder="Book name, e.g. Wohlfahrt Op. 45"
+                  style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box;margin-bottom:6px">
+                <textarea id="bank-new-studies" rows="3" placeholder="Number (e.g. 60) to auto-number, or one named study per line"
+                  style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical"></textarea>
+                <button onclick="addBankBook()" style="width:100%;margin-top:6px;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">＋ Add to bank</button>
+              </div>
+            </div>
+          </details>
+        </div>
+      </details>
     </div>
 
     <!-- CONTACTS -->
@@ -4512,7 +4603,7 @@ function scalesForWeekHTML(s) {
   // too, flagged, so they can always be cleared.
   var orphans = selected.filter(function(k) { return allKeys.indexOf(k) === -1; });
 
-  if (allKeys.length === 0 && orphans.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No scales assigned yet — add keys in the Scales tab.</p>';
+  if (allKeys.length === 0 && orphans.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No scales assigned yet — add keys in the Technique tab.</p>';
 
   var html = '<div style="display:flex;flex-wrap:wrap;gap:8px">'
     + allKeys.map(function(k) {
@@ -5591,63 +5682,137 @@ function sevcikHTML(s) {
 }
 
 // ── CUSTOM STUDY BOOKS ────────────────────────────────────────────────────────
+// Get a book's list of studies — supports the new `studies` array and the old
+// `count` form (auto-numbered 1..n) for backward compatibility.
+function bookStudies(book) {
+  if (Array.isArray(book.studies) && book.studies.length) return book.studies;
+  const count = parseInt(book.count) || 0;
+  return Array.from({length: count}, function(_, i) { return String(i + 1); });
+}
+
 function studyBooksHTML(s) {
   const books = s.studyBooks || [];
-  if (books.length === 0) return '';
+  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No study books yet — tap “＋ Add study book” to pull one from your bank.</p>';
   return books.map(function(book, bIdx) {
     const ticks = book.ticks || {};
-    const count = parseInt(book.count) || 12;
-    const done = Object.values(ticks).filter(Boolean).length;
-    const items = Array.from({length: count}, function(_, i) { return String(i + 1); });
-    // Build columns of 5 like Sevcik
-    const cols = [];
-    for (let i = 0; i < Math.ceil(count / 5); i++) cols.push(items.slice(i*5, i*5+5));
-    const ticksHTML = '<div style="display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch">'
-      + cols.map(function(col) {
-          return '<div style="flex-shrink:0">' + col.map(function(it) {
-            const isDone = !!ticks[it];
-            return '<div style="display:flex;align-items:center;gap:5px;padding:2px 0">'
-              + '<span style="font-size:0.72rem;color:var(--ink);min-width:14px">' + it + '</span>'
-              + '<button onclick="studyBookTick(\'' + s.id + '\',' + bIdx + ',\'' + it + '\')" '
-              + 'style="width:20px;height:20px;border-radius:5px;border:1.5px solid ' + (isDone ? 'var(--violin)' : '#e0ddd8') + ';'
-              + 'background:' + (isDone ? 'var(--violin)' : 'transparent') + ';'
-              + 'color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.62rem;font-weight:700;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0">'
-              + (isDone ? '✓' : '') + '</button></div>';
-          }).join('') + '</div>';
-        }).join('')
-      + '</div>';
+    const studies = bookStudies(book);
+    const total = studies.length;
+    const done = studies.filter(function(it){ return ticks[it]; }).length;
+    // Numbered books (short labels) lay out in Sevcik-style columns; named
+    // studies get a single readable column list.
+    const allNumeric = studies.every(function(it){ return /^\d+$/.test(it); });
+    let ticksHTML;
+    if (allNumeric) {
+      const cols = [];
+      for (let i = 0; i < Math.ceil(total / 5); i++) cols.push(studies.slice(i*5, i*5+5));
+      ticksHTML = '<div style="display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch">'
+        + cols.map(function(col) {
+            return '<div style="flex-shrink:0">' + col.map(function(it) {
+              const isDone = !!ticks[it];
+              return '<div style="display:flex;align-items:center;gap:5px;padding:2px 0">'
+                + '<span style="font-size:0.72rem;color:var(--ink);min-width:14px">' + esc(it) + '</span>'
+                + '<button onclick="studyBookTick(\'' + s.id + '\',' + bIdx + ',' + JSON.stringify(it).replace(/"/g,'&quot;') + ')" '
+                + 'style="width:20px;height:20px;border-radius:5px;border:1.5px solid ' + (isDone ? 'var(--violin)' : '#e0ddd8') + ';'
+                + 'background:' + (isDone ? 'var(--violin)' : 'transparent') + ';'
+                + 'color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.62rem;font-weight:700;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0">'
+                + (isDone ? '✓' : '') + '</button></div>';
+            }).join('') + '</div>';
+          }).join('')
+        + '</div>';
+    } else {
+      ticksHTML = '<div>' + studies.map(function(it) {
+        const isDone = !!ticks[it];
+        return '<div style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;background:' + (isDone?'#e8f5e0':'transparent') + ';margin-bottom:3px">'
+          + '<button onclick="studyBookTick(\'' + s.id + '\',' + bIdx + ',' + JSON.stringify(it).replace(/"/g,'&quot;') + ')" '
+          + 'style="flex:0 0 auto;width:20px;height:20px;border-radius:5px;border:1.5px solid ' + (isDone ? 'var(--violin)' : '#e0ddd8') + ';'
+          + 'background:' + (isDone ? 'var(--violin)' : 'transparent') + ';color:' + (isDone ? '#fff' : '#ccc') + ';cursor:pointer;font-size:0.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0">'
+          + (isDone ? '✓' : '') + '</button>'
+          + '<span style="flex:1;font-size:0.85rem;color:var(--ink);' + (isDone?'text-decoration:line-through;opacity:0.65':'') + '">' + esc(it) + '</span>'
+        + '</div>';
+      }).join('') + '</div>';
+    }
     return '<details style="margin-top:10px">'
       + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
       + '<span>' + esc(book.name) + '</span>'
       + '<span style="display:flex;align-items:center;gap:10px">'
-      + '<span style="font-size:0.7rem;font-weight:400">' + done + ' / ' + count + '</span>'
+      + '<span style="font-size:0.7rem;font-weight:400">' + done + ' / ' + total + '</span>'
       + '<button onclick="event.stopPropagation();removeStudyBook(\'' + s.id + '\',' + bIdx + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:0 4px">×</button>'
       + '</span></summary>'
       + '<div class="section-card" style="margin-top:6px">'
-      + '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">' + done + ' of ' + count + ' studied</div>'
+      + '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">' + done + ' of ' + total + ' studied</div>'
       + ticksHTML
       + '</div></details>';
   }).join('');
 }
 
+// ── ADD STUDY BOOK: pick from the bank, or make a custom one-off ───────────
 function openAddStudyBookModal(studentId) {
   document.getElementById('study-book-student-id').value = studentId;
-  document.getElementById('study-book-name').value = '';
-  document.getElementById('study-book-count').value = '';
+  renderBankPicker();
+  // reset custom fields
+  document.getElementById('custom-book-name').value = '';
+  document.getElementById('custom-book-studies').value = '';
+  document.getElementById('custom-book-fields').style.display = 'none';
   document.getElementById('add-study-book-modal').classList.add('open');
+}
+
+function renderBankPicker() {
+  const el = document.getElementById('bank-picker-list');
+  if (!el) return;
+  if (!studyBookBank.length) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">Your bank is empty. Set books up in “Manage study-book bank” on the pupil page, or add a custom one below.</p>';
+    return;
+  }
+  el.innerHTML = studyBookBank.map(function(bk) {
+    const n = (bk.studies || []).length;
+    return '<button onclick="addBankBookToPupil(\'' + bk.id + '\')" style="width:100%;text-align:left;background:var(--paper);border:1.5px solid var(--warm);border-radius:10px;padding:10px 12px;margin-bottom:6px;font-family:\'Special Elite\',cursive;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'
+      + '<span style="font-size:0.88rem;color:var(--ink)">' + esc(bk.name) + '</span>'
+      + '<span style="font-size:0.72rem;color:var(--muted)">' + n + ' stud' + (n===1?'y':'ies') + '</span>'
+      + '</button>';
+  }).join('');
+}
+
+function addBankBookToPupil(bankId) {
+  const id = document.getElementById('study-book-student-id').value;
+  const s = getStudent(id); if (!s) return;
+  const bk = studyBookBank.find(function(b){ return b.id === bankId; });
+  if (!bk) return;
+  if (!s.studyBooks) s.studyBooks = [];
+  s.studyBooks.push({ id: Date.now().toString(), bankId: bk.id, name: bk.name, studies: (bk.studies||[]).slice(), ticks: {} });
+  save();
+  document.getElementById('add-study-book-modal').classList.remove('open');
+  const el = document.getElementById('study-books-' + id);
+  if (el) el.innerHTML = studyBooksHTML(s);
+}
+
+function toggleCustomBookFields() {
+  const f = document.getElementById('custom-book-fields');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+// Parse the studies textarea: each non-empty line is a study; or if they typed
+// a single number, auto-number 1..n.
+function parseStudiesInput(raw) {
+  const text = (raw || '').trim();
+  if (/^\d+$/.test(text)) {
+    const n = parseInt(text);
+    return Array.from({length: n}, function(_, i){ return String(i+1); });
+  }
+  return text.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
 }
 
 function confirmAddStudyBook() {
   const id = document.getElementById('study-book-student-id').value;
-  const name = document.getElementById('study-book-name').value.trim();
-  const count = parseInt(document.getElementById('study-book-count').value);
-  if (!name || !count || count < 1) return;
+  const name = document.getElementById('custom-book-name').value.trim();
+  const studies = parseStudiesInput(document.getElementById('custom-book-studies').value);
+  if (!name || studies.length === 0) { alert('Give the book a name and either a number of studies or a list of named studies.'); return; }
   const s = getStudent(id); if (!s) return;
   if (!s.studyBooks) s.studyBooks = [];
-  s.studyBooks.push({ id: Date.now().toString(), name, count, ticks: {} });
+  s.studyBooks.push({ id: Date.now().toString(), name: name, studies: studies, ticks: {} });
   save();
   document.getElementById('add-study-book-modal').classList.remove('open');
-  document.getElementById('study-books-' + id).innerHTML = studyBooksHTML(s);
+  const el = document.getElementById('study-books-' + id);
+  if (el) el.innerHTML = studyBooksHTML(s);
 }
 
 function studyBookTick(studentId, bookIdx, item) {
@@ -5667,12 +5832,65 @@ function removeStudyBook(studentId, bookIdx) {
   document.getElementById('study-books-' + studentId).innerHTML = studyBooksHTML(s);
 }
 
+// ── STUDY-BOOK BANK EDITOR (studio-wide) ──────────────────────────────────
+function studyBankEditorHTML() {
+  if (!studyBookBank.length) {
+    return '<p style="color:var(--muted);font-size:0.8rem;font-style:italic">No books in your bank yet. Add one below (e.g. “Wohlfahrt Op. 45”, then 60, or paste named studies one per line).</p>';
+  }
+  return studyBookBank.map(function(bk) {
+    const n = (bk.studies || []).length;
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">'
+      + '<span style="flex:1;font-size:0.85rem">' + esc(bk.name) + '</span>'
+      + '<span style="font-size:0.7rem;color:var(--muted)">' + n + '</span>'
+      + '<button onclick="removeBankBook(\'' + bk.id + '\')" title="Remove from bank" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>'
+      + '</div>';
+  }).join('');
+}
+
+function addBankBook() {
+  const nameEl = document.getElementById('bank-new-name');
+  const studiesEl = document.getElementById('bank-new-studies');
+  const name = nameEl ? nameEl.value.trim() : '';
+  const studies = parseStudiesInput(studiesEl ? studiesEl.value : '');
+  if (!name || studies.length === 0) { alert('Give the book a name and either a number of studies or a list of named studies, one per line.'); return; }
+  studyBookBank.push({ id: 'bk' + Date.now(), name: name, studies: studies });
+  save();
+  if (nameEl) nameEl.value = '';
+  if (studiesEl) studiesEl.value = '';
+  const el = document.getElementById('study-bank-list'); if (el) el.innerHTML = studyBankEditorHTML();
+  const picker = document.getElementById('bank-picker-list'); if (picker) renderBankPicker();
+}
+
+function removeBankBook(bankId) {
+  const bk = studyBookBank.find(function(b){ return b.id === bankId; });
+  if (bk && !confirm('Remove "' + bk.name + '" from your bank? Pupils who already have it keep their copy.')) return;
+  studyBookBank = studyBookBank.filter(function(b){ return b.id !== bankId; });
+  save();
+  const el = document.getElementById('study-bank-list'); if (el) el.innerHTML = studyBankEditorHTML();
+}
+
 function sevcikCheck(studentId, item) {
   const s = getStudent(studentId); if (!s) return;
   if (!s.sevcikOp3) s.sevcikOp3 = {};
   s.sevcikOp3[item] = !s.sevcikOp3[item];
   save();
   document.getElementById('sevcik-list-' + studentId).innerHTML = sevcikHTML(s);
+}
+
+// Hide the Sevcik Op. 3 section for a pupil (e.g. a beginner not ready for it).
+// Any ticks are kept, so adding it back restores their progress.
+function hideSevcik(id) {
+  const s = getStudent(id); if (!s) return;
+  s.sevcikHidden = true;
+  save();
+  renderDetail(s, true);
+}
+
+function showSevcik(id) {
+  const s = getStudent(id); if (!s) return;
+  s.sevcikHidden = false;
+  save();
+  renderDetail(s, true);
 }
 
 function removeScaleKey(studentId, key) {
@@ -5709,6 +5927,111 @@ function removeDoubleStopKey(studentId, key) {
 // key's configured octaves at once — octave count is set per key via the
 // existing "oct" picker, same as before, just no longer shown per-cell).
 // Reads/writes the same s.scaleChecklist[key][type][octave] data as before.
+// ── TECHNIQUE CHECKLIST ───────────────────────────────────────────────────
+// Per-pupil list of {name, level}. level: 0 not started, 1 working on it, 2 secure.
+// Seeded once from techniqueDefaults; thereafter fully independent per pupil.
+const TECH_LEVELS = [
+  { label: 'Not started', bg: '#f0ede8', fg: 'var(--muted)', dot: '#ccc' },
+  { label: 'Working on it', bg: '#fff3e0', fg: '#b7791f', dot: '#e67e22' },
+  { label: 'Secure', bg: '#e8f5e0', fg: '#2F5C1A', dot: '#2F5C1A' }
+];
+
+function seedTechniqueIfNeeded(s) {
+  if (!s.techniqueChecklist) {
+    s.techniqueChecklist = (techniqueDefaults || []).map(function(name) {
+      return { name: name, level: 0 };
+    });
+  }
+  return s.techniqueChecklist;
+}
+
+function techniqueChecklistHTML(s) {
+  const list = seedTechniqueIfNeeded(s);
+  if (list.length === 0) {
+    return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No techniques on this pupil’s list yet. Add one below, or reset to your studio default.</p>';
+  }
+  return list.map(function(item, i) {
+    const lv = TECH_LEVELS[item.level || 0];
+    const dotFill = item.level ? lv.dot : 'transparent';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:' + lv.bg + ';margin-bottom:6px">' +
+      '<button onclick="cycleTechnique(\'' + s.id + '\',' + i + ')" title="' + lv.label + '" ' +
+        'style="flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:2px solid ' + lv.dot + ';background:' + dotFill + ';cursor:pointer;padding:0"></button>' +
+      '<span style="flex:1;font-size:0.92rem;color:' + lv.fg + ';font-weight:' + (item.level?600:400) + '">' + esc(item.name) + '</span>' +
+      '<button onclick="cycleTechnique(\'' + s.id + '\',' + i + ')" style="flex:0 0 auto;background:none;border:none;font-size:0.72rem;color:' + lv.fg + ';cursor:pointer;font-family:\'Special Elite\',cursive;white-space:nowrap">' + lv.label + '</button>' +
+      '<button onclick="removeTechnique(\'' + s.id + '\',' + i + ')" title="Remove" style="flex:0 0 auto;background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:0 2px">×</button>' +
+    '</div>';
+  }).join('');
+}
+
+function cycleTechnique(id, idx) {
+  const s = getStudent(id); if (!s) return;
+  const list = seedTechniqueIfNeeded(s);
+  if (!list[idx]) return;
+  list[idx].level = ((list[idx].level || 0) + 1) % 3;
+  save();
+  const el = document.getElementById('technique-list-' + id);
+  if (el) el.innerHTML = techniqueChecklistHTML(s);
+}
+
+function addTechnique(id) {
+  const s = getStudent(id); if (!s) return;
+  const input = document.getElementById('new-technique-' + id);
+  const name = input ? input.value.trim() : '';
+  if (!name) return;
+  seedTechniqueIfNeeded(s).push({ name: name, level: 0 });
+  if (input) input.value = '';
+  save();
+  const el = document.getElementById('technique-list-' + id);
+  if (el) el.innerHTML = techniqueChecklistHTML(s);
+}
+
+function removeTechnique(id, idx) {
+  const s = getStudent(id); if (!s) return;
+  seedTechniqueIfNeeded(s).splice(idx, 1);
+  save();
+  const el = document.getElementById('technique-list-' + id);
+  if (el) el.innerHTML = techniqueChecklistHTML(s);
+}
+
+function resetTechniqueToDefault(id) {
+  const s = getStudent(id); if (!s) return;
+  if (!confirm('Replace this pupil’s technique list with the studio default? Their current ticks will be lost.')) return;
+  s.techniqueChecklist = (techniqueDefaults || []).map(function(name) { return { name: name, level: 0 }; });
+  save();
+  const el = document.getElementById('technique-list-' + id);
+  if (el) el.innerHTML = techniqueChecklistHTML(s);
+}
+
+function techniqueDefaultsHTML() {
+  if (!techniqueDefaults || techniqueDefaults.length === 0) {
+    return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No defaults set. Add the techniques you cover with most pupils.</p>';
+  }
+  return techniqueDefaults.map(function(name, i) {
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">' +
+      '<span style="flex:1;font-size:0.88rem">' + esc(name) + '</span>' +
+      '<button onclick="removeTechniqueDefault(' + i + ')" title="Remove" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>' +
+    '</div>';
+  }).join('');
+}
+
+function addTechniqueDefault() {
+  const input = document.getElementById('new-technique-default');
+  const name = input ? input.value.trim() : '';
+  if (!name) return;
+  techniqueDefaults.push(name);
+  if (input) input.value = '';
+  save();
+  const el = document.getElementById('technique-defaults-list');
+  if (el) el.innerHTML = techniqueDefaultsHTML();
+}
+
+function removeTechniqueDefault(idx) {
+  techniqueDefaults.splice(idx, 1);
+  save();
+  const el = document.getElementById('technique-defaults-list');
+  if (el) el.innerHTML = techniqueDefaultsHTML();
+}
+
 function scalesHTML(s) {
   const keys = s.scaleKeys || [];
   if (keys.length === 0) return '<p style="color:var(--muted);font-size:0.88rem">No keys added yet — tap \u201c+ Add key\u201d below.</p>';
@@ -10056,6 +10379,8 @@ function backupData() {
     studio_idea_boards:   localStorage.getItem('studio_idea_boards')   || '[]',
     studio_idea_current:  localStorage.getItem('studio_idea_current')  || '',
     studio_extra_lessons: localStorage.getItem('studio_extra_lessons') || '{}',
+    studio_technique_defaults: localStorage.getItem('studio_technique_defaults') || '[]',
+    studio_study_book_bank: localStorage.getItem('studio_study_book_bank') || '[]',
     studio_cal_url:       localStorage.getItem('studio_cal_url')       || '',
   };
   const date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');
@@ -10084,7 +10409,7 @@ function restoreData(event) {
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
         'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links','studio_video_cats_removed','studio_video_teachers','studio_hidden_pieces',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
-        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_cal_url','studio_dark_mode_REMOVED'];
+        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_study_book_bank','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
 
       // Reload state
@@ -10107,6 +10432,8 @@ function restoreData(event) {
       speechReplacements = JSON.parse(localStorage.getItem('studio_speech_replacements') || '[]');
       skippedWeeks    = JSON.parse(localStorage.getItem('studio_skipped_weeks')    || '{}');
       extraLessons    = JSON.parse(localStorage.getItem('studio_extra_lessons')    || '{}');
+      techniqueDefaults = JSON.parse(localStorage.getItem('studio_technique_defaults') || '[]');
+      studyBookBank   = JSON.parse(localStorage.getItem('studio_study_book_bank')   || '[]');
       repairStudentIDs();
       migrateGiftsToList();
             closeBackupModal();
