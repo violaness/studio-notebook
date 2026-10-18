@@ -5837,6 +5837,14 @@ function sevcikHTML(s) {
     + '</div>';
 }
 
+// A–Z copy of a list of books by name (numbers in names sort naturally, so
+// "Book 2" comes before "Book 10"). Display only — the saved order is untouched.
+function sortByName(list) {
+  return (list || []).slice().sort(function(a, b) {
+    return String(a.name || '').localeCompare(String(b.name || ''), 'en-GB', { numeric: true, sensitivity: 'base' });
+  });
+}
+
 // ── CUSTOM STUDY BOOKS ────────────────────────────────────────────────────────
 // Get a book's list of studies — supports the new `studies` array and the old
 // `count` form (auto-numbered 1..n) for backward compatibility.
@@ -5938,7 +5946,7 @@ function renderBankPicker() {
     el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">Your bank is empty. Set books up in Library → 📖 Study books, or add a custom one below.</p>';
     return;
   }
-  el.innerHTML = studyBookBank.map(function(bk) {
+  el.innerHTML = sortByName(studyBookBank).map(function(bk) {
     const n = (bk.studies || []).length;
     return '<button onclick="addBankBookToPupil(\'' + bk.id + '\')" style="width:100%;text-align:left;background:var(--paper);border:1.5px solid var(--warm);border-radius:10px;padding:10px 12px;margin-bottom:6px;font-family:\'Special Elite\',cursive;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'
       + '<span style="font-size:0.88rem;color:var(--ink)">' + esc(bk.name) + '</span>'
@@ -6066,7 +6074,7 @@ function studyBankEditorHTML() {
   if (!studyBookBank.length) {
     return '<p style="color:var(--muted);font-size:0.8rem;font-style:italic">No books in your bank yet. Add one below (e.g. “Wohlfahrt Op. 45”, then 60, or paste named studies one per line).</p>';
   }
-  return studyBookBank.map(function(bk) {
+  return sortByName(studyBookBank).map(function(bk) {
     const n = (bk.studies || []).length;
     if (editingBankId === bk.id) {
       return '<div style="padding:8px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px;border:1.5px solid var(--violin)">'
@@ -6177,7 +6185,7 @@ function renderMethodBankPicker() {
     el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">Your method-book bank is empty. Set books up in Library → 📘 Method books, or add a custom one below.</p>';
     return;
   }
-  el.innerHTML = methodBookBank.map(function(bk) {
+  el.innerHTML = sortByName(methodBookBank).map(function(bk) {
     const n = (bk.studies || []).length;
     return '<button onclick="addMethodBankBookToPupil(\'' + bk.id + '\')" style="width:100%;text-align:left;background:var(--paper);border:1.5px solid var(--warm);border-radius:10px;padding:10px 12px;margin-bottom:6px;font-family:\'Special Elite\',cursive;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'
       + '<span style="font-size:0.88rem;color:var(--ink)">' + esc(bk.name) + '</span>'
@@ -6242,7 +6250,7 @@ function methodBankEditorHTML() {
   if (!methodBookBank.length) {
     return '<p style="color:var(--muted);font-size:0.8rem;font-style:italic">No method books in your bank yet. Add one below (e.g. “Essential Elements Book 1”, then a number of units, or paste named units one per line).</p>';
   }
-  return methodBookBank.map(function(bk) {
+  return sortByName(methodBookBank).map(function(bk) {
     const n = (bk.studies || []).length;
     if (editingMethodBankId === bk.id) {
       return '<div style="padding:8px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px;border:1.5px solid var(--violin)">'
@@ -6353,7 +6361,7 @@ function renderAlbumBankPicker() {
     el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">Your album bank is empty. Set albums up in Library → 🎵 Albums, or add a custom one below.</p>';
     return;
   }
-  el.innerHTML = albumBank.map(function(bk) {
+  el.innerHTML = sortByName(albumBank).map(function(bk) {
     const n = (bk.studies || []).length;
     return '<button onclick="addAlbumBankToPupil(\'' + bk.id + '\')" style="width:100%;text-align:left;background:var(--paper);border:1.5px solid var(--warm);border-radius:10px;padding:10px 12px;margin-bottom:6px;font-family:\'Special Elite\',cursive;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'
       + '<span style="font-size:0.88rem;color:var(--ink)">' + esc(bk.name) + '</span>'
@@ -6418,7 +6426,7 @@ function albumBankEditorHTML() {
   if (!albumBank.length) {
     return '<p style="color:var(--muted);font-size:0.8rem;font-style:italic">No albums in your bank yet. Add one below (e.g. “Fiddle Time Joggers”, then a number of pieces, or paste named pieces one per line).</p>';
   }
-  return albumBank.map(function(bk) {
+  return sortByName(albumBank).map(function(bk) {
     const n = (bk.studies || []).length;
     if (editingAlbumBankId === bk.id) {
       return '<div style="padding:8px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px;border:1.5px solid var(--violin)">'
@@ -10545,7 +10553,7 @@ function libPickBookSets(s) {
     return { key: 'p' + i, name: b.name, items: bookStudies(b), ticks: b.ticks || {}, bankId: b.bankId || null };
   });
   const mineBankIds = new Set(mine.map(function(b){ return b.bankId; }).filter(Boolean));
-  const banked = bank.filter(function(b){ return !mineBankIds.has(b.id); }).map(function(b) {
+  const banked = sortByName(bank.filter(function(b){ return !mineBankIds.has(b.id); })).map(function(b) {
     return { key: 'b' + b.id, name: b.name, items: (b.studies || []).slice(), ticks: {} };
   });
   return { mine: mine, bank: banked };
