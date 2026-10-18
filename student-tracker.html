@@ -6004,13 +6004,24 @@ function confirmAddStudyBook() {
   if (el) el.innerHTML = studyBooksHTML(s);
 }
 
+// Re-draw a list of books but keep any book that was open, open — so you can
+// tick several studies in a row without the book snapping shut each time.
+function rerenderKeepOpen(containerId, html) {
+  const el = document.getElementById(containerId); if (!el) return;
+  const openIdx = [];
+  el.querySelectorAll(':scope > details').forEach(function(d, i){ if (d.open) openIdx.push(i); });
+  el.innerHTML = html;
+  const fresh = el.querySelectorAll(':scope > details');
+  openIdx.forEach(function(i){ if (fresh[i]) fresh[i].open = true; });
+}
+
 function studyBookTick(studentId, bookIdx, item) {
   const s = getStudent(studentId); if (!s || !s.studyBooks) return;
   const book = s.studyBooks[bookIdx]; if (!book) return;
   if (!book.ticks) book.ticks = {};
   book.ticks[item] = !book.ticks[item];
   save();
-  document.getElementById('study-books-' + studentId).innerHTML = studyBooksHTML(s);
+  rerenderKeepOpen('study-books-' + studentId, studyBooksHTML(s));
 }
 
 function removeStudyBook(studentId, bookIdx) {
@@ -6213,7 +6224,7 @@ function methodBookTick(studentId, bookIdx, item) {
   if (!book.ticks) book.ticks = {};
   book.ticks[item] = !book.ticks[item];
   save();
-  document.getElementById('method-books-' + studentId).innerHTML = methodBooksHTML(s);
+  rerenderKeepOpen('method-books-' + studentId, methodBooksHTML(s));
 }
 
 function removeMethodBook(studentId, bookIdx) {
@@ -6389,7 +6400,7 @@ function albumTick(studentId, bookIdx, item) {
   if (!book.ticks) book.ticks = {};
   book.ticks[item] = !book.ticks[item];
   save();
-  document.getElementById('albums-' + studentId).innerHTML = albumsHTML(s);
+  rerenderKeepOpen('albums-' + studentId, albumsHTML(s));
 }
 
 function removeAlbum(studentId, bookIdx) {
