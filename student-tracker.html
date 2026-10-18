@@ -806,24 +806,45 @@
 <!-- LIBRARY VIEW -->
 <div id="view-library" class="view">
 
+  <!-- "Back to pupil" bar — only shows when you jumped here from a pupil's Technique tab -->
+  <div id="lib-return-bar" style="display:none;margin:4px 0 12px"></div>
+
+  <!-- PIECE LIBRARY TILE (full width, the main bank) -->
+  <button class="admin-tile lib-tile" style="background:#1a4a6b;width:100%;min-height:92px;margin:6px 0 14px" onclick="showLibrarySection('pieces')">
+    <span class="admin-tile-icon">📚</span>
+    <span class="admin-tile-label">Piece library</span>
+  </button>
+
   <!-- LIBRARY TILE GRID -->
-  <!-- Greens flow down the left column (light→dark), blues down the right (light→dark) -->
-  <div class="admin-grid" style="grid-template-rows:repeat(2,1fr)">
+  <!-- Greens flow down the left column (light→dark), blues down the right (light→dark).
+       Book banks sit on the top two rows, matching the Technique tab colours. -->
+  <div class="admin-grid">
     <!-- LEFT COLUMN: greens, lightest at top -->
-    <button class="admin-tile" style="background:var(--string);color:var(--ink)" onclick="showLibrarySection('pieces')">
-      <span class="admin-tile-icon">📚</span>
-      <span class="admin-tile-label">Piece library</span>
+    <button class="admin-tile lib-tile" style="background:var(--string);color:var(--ink)" onclick="showLibrarySection('studybank')">
+      <span class="admin-tile-icon">📖</span>
+      <span class="admin-tile-label">Study books</span>
+      <span class="admin-tile-badge" id="tile-studybank-badge"></span>
     </button>
-    <button class="admin-tile" style="background:var(--viola)" onclick="showLibrarySection('technical')">
+    <button class="admin-tile lib-tile" style="background:var(--viola)" onclick="showLibrarySection('albumbank')">
+      <span class="admin-tile-icon">🎵</span>
+      <span class="admin-tile-label">Albums</span>
+      <span class="admin-tile-badge" id="tile-albumbank-badge"></span>
+    </button>
+    <button class="admin-tile lib-tile" style="background:var(--ink)" onclick="showLibrarySection('technical')">
       <span class="admin-tile-icon">🎯</span>
       <span class="admin-tile-label">Technical focus</span>
     </button>
     <!-- RIGHT COLUMN: blues, lightest at top -->
-    <button class="admin-tile" style="background:#46C6E5;color:var(--ink)" onclick="showLibrarySection('video')">
+    <button class="admin-tile lib-tile" style="background:#46C6E5;color:var(--ink)" onclick="showLibrarySection('methodbank')">
+      <span class="admin-tile-icon">📘</span>
+      <span class="admin-tile-label">Method books</span>
+      <span class="admin-tile-badge" id="tile-methodbank-badge"></span>
+    </button>
+    <button class="admin-tile lib-tile" style="background:var(--violin)" onclick="showLibrarySection('video')">
       <span class="admin-tile-icon">🎬</span>
       <span class="admin-tile-label">Video library</span>
     </button>
-    <button class="admin-tile" style="background:var(--violin)" onclick="showLibrarySection('voice')">
+    <button class="admin-tile lib-tile" style="background:var(--advanced)" onclick="showLibrarySection('voice')">
       <span class="admin-tile-icon">🎤</span>
       <span class="admin-tile-label">Voice text</span>
     </button>
@@ -831,6 +852,51 @@
 
   <!-- LIBRARY PANELS -->
   <div id="library-panels">
+
+  <!-- STUDY-BOOK BANK -->
+  <section class="admin-panel" id="lib-panel-studybank" style="display:none">
+    <div class="admin-panel-head"><span>📖 Study-book bank</span><button class="admin-panel-close" onclick="closeLibrarySections()">✕ Close</button></div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">Set up books once here, then pull them onto any pupil from their Technique tab. Editing the bank doesn’t change books already added to pupils.</div>
+    <div id="study-bank-list"></div>
+    <div style="border-top:1px solid var(--warm);margin-top:12px;padding-top:12px">
+      <div class="section-label" style="margin-bottom:8px">Add a study book</div>
+      <input type="text" id="bank-new-name" placeholder="Book name, e.g. Wohlfahrt Op. 45"
+        style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;margin-bottom:6px">
+      <textarea id="bank-new-studies" rows="3" placeholder="Number (e.g. 60) to auto-number, or one named study per line"
+        style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;resize:vertical"></textarea>
+      <button onclick="addBankBook()" style="background:var(--string);color:var(--ink);border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:8px auto 0;min-width:160px">＋ Add to bank</button>
+    </div>
+  </section>
+
+  <!-- METHOD-BOOK BANK -->
+  <section class="admin-panel" id="lib-panel-methodbank" style="display:none">
+    <div class="admin-panel-head"><span>📘 Method-book bank</span><button class="admin-panel-close" onclick="closeLibrarySections()">✕ Close</button></div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">Set up method books once here, then pull them onto any pupil from their Technique tab. Editing the bank doesn’t change books already added to pupils.</div>
+    <div id="method-bank-list"></div>
+    <div style="border-top:1px solid var(--warm);margin-top:12px;padding-top:12px">
+      <div class="section-label" style="margin-bottom:8px">Add a method book</div>
+      <input type="text" id="method-bank-new-name" placeholder="Book name, e.g. Essential Elements Book 1"
+        style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;margin-bottom:6px">
+      <textarea id="method-bank-new-studies" rows="3" placeholder="Number (e.g. 20) to auto-number, or one named unit per line"
+        style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;resize:vertical"></textarea>
+      <button onclick="addMethodBankBook()" style="background:#46C6E5;color:var(--ink);border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:8px auto 0;min-width:160px">＋ Add to bank</button>
+    </div>
+  </section>
+
+  <!-- ALBUM BANK -->
+  <section class="admin-panel" id="lib-panel-albumbank" style="display:none">
+    <div class="admin-panel-head"><span>🎵 Album bank</span><button class="admin-panel-close" onclick="closeLibrarySections()">✕ Close</button></div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">Set up albums once here, then pull them onto any pupil from their Technique tab. Editing the bank doesn’t change albums already added to pupils.</div>
+    <div id="album-bank-list"></div>
+    <div style="border-top:1px solid var(--warm);margin-top:12px;padding-top:12px">
+      <div class="section-label" style="margin-bottom:8px">Add an album</div>
+      <input type="text" id="album-bank-new-name" placeholder="Album name, e.g. Fiddle Time Joggers"
+        style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;margin-bottom:6px">
+      <textarea id="album-bank-new-studies" rows="3" placeholder="Number (e.g. 15) to auto-number, or one named piece per line"
+        style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;resize:vertical"></textarea>
+      <button onclick="addAlbumBankBook()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:8px auto 0;min-width:160px">＋ Add to bank</button>
+    </div>
+  </section>
 
   <!-- TECHNICAL FOCUS -->
   <section class="admin-panel" id="lib-panel-technical" style="display:none">
@@ -1337,10 +1403,17 @@
   </div>
 </div>
 
-<!-- PIECE DATABASE MODAL -->
+<!-- FROM LIBRARY PICKER MODAL — pieces, study books, method books, albums -->
 <div class="modal-overlay" id="piece-db-modal">
-  <div class="modal" style="max-width:500px;max-height:85vh;display:flex;flex-direction:column">
-    <h2>Piece library</h2>
+  <div class="modal" style="max-width:520px;max-height:88vh;display:flex;flex-direction:column">
+    <h2 style="margin-bottom:12px">Add from library</h2>
+    <!-- Which library to pick from (chunky tabs) -->
+    <div id="libpick-tabs" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px"></div>
+    <!-- Where the line goes -->
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+      <span style="font-size:0.72rem;color:var(--muted);white-space:nowrap">Add to:</span>
+      <div id="libpick-dest" style="display:flex;gap:6px;flex:1"></div>
+    </div>
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <input type="text" id="piece-search" placeholder="Search…" oninput="filterPieceDB()" style="flex:1;min-width:120px">
       <select id="piece-cat-filter" onchange="filterPieceDB()" style="width:auto">
@@ -1357,8 +1430,9 @@
         <option value="Beginner Repertoire - Violin">Beginner Repertoire — Violin</option>
       </select>
     </div>
-    <div id="piece-db-list" style="overflow-y:auto;flex:1;margin-bottom:12px"></div>
-    <button class="btn-ghost" onclick="closePieceDB()">Cancel</button>
+    <div id="libpick-toast" style="display:none;background:#e8f5e0;color:var(--viola);border-radius:8px;padding:7px 12px;font-size:0.82rem;font-weight:600;margin-bottom:8px"></div>
+    <div id="piece-db-list" style="overflow-y:auto;flex:1;margin-bottom:12px;-webkit-overflow-scrolling:touch"></div>
+    <button class="btn-primary" onclick="closePieceDB()">Done</button>
   </div>
 </div>
 
@@ -2126,6 +2200,8 @@ function save() {
   localStorage.setItem('studio_study_book_bank', JSON.stringify(studyBookBank));
   localStorage.setItem('studio_method_book_bank', JSON.stringify(methodBookBank));
   localStorage.setItem('studio_album_bank', JSON.stringify(albumBank));
+  // Keep the Library tile counts in step with the banks
+  try { updateLibraryBadges(); } catch (e) {}
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
@@ -2252,6 +2328,8 @@ function sortByTime(arr) {
 
 // ── NAV ───────────────────────────────────────────────────────────────────
 function showView(name) {
+  // Leaving the Library any other way forgets the "Back to pupil" shortcut
+  if (name !== 'library') libReturn = null;
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.folder-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
@@ -3255,7 +3333,7 @@ function renderDetail(s, preserveTab = false) {
 
       <!-- TECHNIQUE tile grid: checklist spans the top, then greens left / blues right -->
       <div class="admin-grid" style="grid-template-rows:none;grid-auto-flow:row">
-        <button class="admin-tile" style="background:var(--ink);grid-column:1 / -1" onclick="showTechniqueSection('${s.id}','technique')">
+        <button class="admin-tile" style="background:#1a4a6b;grid-column:1 / -1" onclick="showTechniqueSection('${s.id}','technique')">
           <span class="admin-tile-icon">🛠</span><span class="admin-tile-label">Technique checklist</span>
         </button>
         <button class="admin-tile" style="background:var(--string);color:var(--ink)" onclick="showTechniqueSection('${s.id}','studybooks')">
@@ -3270,7 +3348,7 @@ function renderDetail(s, preserveTab = false) {
         <button class="admin-tile" style="background:var(--violin)" onclick="showTechniqueSection('${s.id}','methodbooks')">
           <span class="admin-tile-icon">📘</span><span class="admin-tile-label">Method books</span>
         </button>
-        <!-- top: dark green (full width) · middle: light green|light blue · bottom: mid green|mid blue -->
+        <!-- top: dark blue like Billing (full width) · middle: light green|light blue · bottom: mid green|mid blue -->
       </div>
 
       <div id="technique-panels-${s.id}">
@@ -3332,22 +3410,10 @@ function renderDetail(s, preserveTab = false) {
           style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
           ＋ Add study book
         </button>
-        <details style="margin-top:12px">
-          <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-            <span>⚙ Manage study-book bank</span><span style="font-weight:400">tap to expand</span>
-          </summary>
-          <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
-            <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">Set up books once here, then pull them onto any pupil. Editing the bank doesn’t change books already added to pupils.</div>
-            <div id="study-bank-list">${studyBankEditorHTML()}</div>
-            <div style="margin-top:10px">
-              <input type="text" id="bank-new-name" placeholder="Book name, e.g. Wohlfahrt Op. 45"
-                style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box;margin-bottom:6px">
-              <textarea id="bank-new-studies" rows="3" placeholder="Number (e.g. 60) to auto-number, or one named study per line"
-                style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical"></textarea>
-              <button onclick="addBankBook()" style="width:100%;margin-top:6px;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">＋ Add to bank</button>
-            </div>
-          </div>
-        </details>
+        <button onclick="openLibraryBank('${s.id}','studybank','studybooks')"
+          style="width:100%;margin-top:10px;background:var(--warm);border:none;color:var(--muted);border-radius:10px;padding:9px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer">
+          📖 Set up study books in the Library →
+        </button>
       </section>
 
       <!-- METHOD BOOKS -->
@@ -3358,22 +3424,10 @@ function renderDetail(s, preserveTab = false) {
           style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
           ＋ Add method book
         </button>
-        <details style="margin-top:12px">
-          <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-            <span>⚙ Manage method-book bank</span><span style="font-weight:400">tap to expand</span>
-          </summary>
-          <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
-            <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">Set up method books once here, then pull them onto any pupil. Editing the bank doesn’t change books already added to pupils.</div>
-            <div id="method-bank-list">${methodBankEditorHTML()}</div>
-            <div style="margin-top:10px">
-              <input type="text" id="method-bank-new-name" placeholder="Book name, e.g. Essential Elements Book 1"
-                style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box;margin-bottom:6px">
-              <textarea id="method-bank-new-studies" rows="3" placeholder="Number (e.g. 20) to auto-number, or one named unit per line"
-                style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical"></textarea>
-              <button onclick="addMethodBankBook()" style="width:100%;margin-top:6px;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">＋ Add to bank</button>
-            </div>
-          </div>
-        </details>
+        <button onclick="openLibraryBank('${s.id}','methodbank','methodbooks')"
+          style="width:100%;margin-top:10px;background:var(--warm);border:none;color:var(--muted);border-radius:10px;padding:9px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer">
+          📘 Set up method books in the Library →
+        </button>
       </section>
 
       <!-- ALBUMS -->
@@ -3384,22 +3438,10 @@ function renderDetail(s, preserveTab = false) {
           style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
           ＋ Add album
         </button>
-        <details style="margin-top:12px">
-          <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-            <span>⚙ Manage album bank</span><span style="font-weight:400">tap to expand</span>
-          </summary>
-          <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
-            <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">Set up albums once here, then pull them onto any pupil. Editing the bank doesn’t change albums already added to pupils.</div>
-            <div id="album-bank-list">${albumBankEditorHTML()}</div>
-            <div style="margin-top:10px">
-              <input type="text" id="album-bank-new-name" placeholder="Album name, e.g. Fiddle Time Joggers"
-                style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box;margin-bottom:6px">
-              <textarea id="album-bank-new-studies" rows="3" placeholder="Number (e.g. 15) to auto-number, or one named piece per line"
-                style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical"></textarea>
-              <button onclick="addAlbumBankBook()" style="width:100%;margin-top:6px;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">＋ Add to bank</button>
-            </div>
-          </div>
-        </details>
+        <button onclick="openLibraryBank('${s.id}','albumbank','albums')"
+          style="width:100%;margin-top:10px;background:var(--warm);border:none;color:var(--muted);border-radius:10px;padding:9px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer">
+          🎵 Set up albums in the Library →
+        </button>
       </section>
 
       </div><!-- /technique-panels -->
@@ -5893,7 +5935,7 @@ function renderBankPicker() {
   const el = document.getElementById('bank-picker-list');
   if (!el) return;
   if (!studyBookBank.length) {
-    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">Your bank is empty. Set books up in “Manage study-book bank” on the pupil page, or add a custom one below.</p>';
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">Your bank is empty. Set books up in Library → 📖 Study books, or add a custom one below.</p>';
     return;
   }
   el.innerHTML = studyBookBank.map(function(bk) {
@@ -6121,7 +6163,7 @@ function renderMethodBankPicker() {
   const el = document.getElementById('method-bank-picker-list');
   if (!el) return;
   if (!methodBookBank.length) {
-    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">Your method-book bank is empty. Set books up in “Manage method-book bank” on the pupil page, or add a custom one below.</p>';
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">Your method-book bank is empty. Set books up in Library → 📘 Method books, or add a custom one below.</p>';
     return;
   }
   el.innerHTML = methodBookBank.map(function(bk) {
@@ -6297,7 +6339,7 @@ function renderAlbumBankPicker() {
   const el = document.getElementById('album-bank-picker-list');
   if (!el) return;
   if (!albumBank.length) {
-    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">Your album bank is empty. Set albums up in “Manage album bank” on the pupil page, or add a custom one below.</p>';
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">Your album bank is empty. Set albums up in Library → 🎵 Albums, or add a custom one below.</p>';
     return;
   }
   el.innerHTML = albumBank.map(function(bk) {
@@ -7946,6 +7988,59 @@ function renderLibrary() {
   renderLibPieces();
   renderVideoLibrary();
   renderSpeechReplacements();
+  renderBankEditors();
+  renderLibReturnBar();
+}
+
+// The three book banks (study / method / album) now live in the Library tab.
+// Their editor functions still target these same element IDs, so we just
+// fill them here and refresh the little count badges on the tiles.
+function renderBankEditors() {
+  const sb = document.getElementById('study-bank-list');  if (sb) sb.innerHTML = studyBankEditorHTML();
+  const mb = document.getElementById('method-bank-list'); if (mb) mb.innerHTML = methodBankEditorHTML();
+  const ab = document.getElementById('album-bank-list');  if (ab) ab.innerHTML = albumBankEditorHTML();
+  updateLibraryBadges();
+}
+
+function updateLibraryBadges() {
+  const setBadge = (id, n) => {
+    const el = document.getElementById(id); if (!el) return;
+    if (n > 0) { el.textContent = n; el.classList.add('show'); }
+    else { el.textContent = ''; el.classList.remove('show'); }
+  };
+  setBadge('tile-studybank-badge',  studyBookBank.length);
+  setBadge('tile-methodbank-badge', methodBookBank.length);
+  setBadge('tile-albumbank-badge',  albumBank.length);
+}
+
+// Jump from a pupil's Technique tab to a bank in the Library, remembering
+// where you came from so a "Back to pupil" bar can take you straight back.
+var libReturn = null; // { pupilId, from, techSection } — var so it exists before init runs
+function openLibraryBank(pupilId, libSection, techSection) {
+  libReturn = { pupilId: pupilId, from: prevView, techSection: techSection };
+  showView('library');
+  showLibrarySection(libSection);
+}
+
+function renderLibReturnBar() {
+  const bar = document.getElementById('lib-return-bar'); if (!bar) return;
+  const s = libReturn ? getStudent(libReturn.pupilId) : null;
+  if (!s) { libReturn = null; bar.style.display = 'none'; bar.innerHTML = ''; return; }
+  bar.style.display = 'block';
+  bar.innerHTML = '<button onclick="returnFromLibrary()" style="width:100%;background:var(--warm);border:1.5px solid var(--string);border-radius:12px;padding:10px 14px;font-family:\'Special Elite\',cursive;font-size:0.88rem;color:var(--viola);cursor:pointer;font-weight:600;text-align:left">← Back to ' + esc(s.name) + '’s Technique tab</button>';
+}
+
+function returnFromLibrary() {
+  const r = libReturn; libReturn = null;
+  renderLibReturnBar();
+  if (!r || !getStudent(r.pupilId)) return;
+  openStudentFrom(r.pupilId, r.from);
+  // Light up the folder tab you originally came from, not Library
+  const folderIdx = {today:0, week:1, roster:2, admin:3, library:4}[r.from];
+  document.querySelectorAll('.folder-tab').forEach(function(t, i){ t.classList.toggle('active', i === folderIdx); });
+  const tab = document.querySelector('#detail-content .moment-tab[onclick*="panel-scales"]');
+  if (tab) switchMoment(tab, 'panel-scales');
+  if (r.techSection) showTechniqueSection(r.pupilId, r.techSection);
 }
 
 function renderAdmin() {
@@ -8003,10 +8098,15 @@ function showLibrarySection(name) {
   document.querySelectorAll('#library-panels .admin-panel').forEach(p => {
     p.style.display = (p.id === 'lib-panel-' + name) ? 'block' : 'none';
   });
-  const tiles = document.querySelectorAll('#view-library .admin-grid .admin-tile');
+  const tiles = document.querySelectorAll('#view-library .lib-tile');
   tiles.forEach(t => t.classList.remove('active'));
-  const activeTile = document.querySelector('#view-library .admin-grid .admin-tile[onclick*="\'' + name + '\'"]');
+  const activeTile = document.querySelector('#view-library .lib-tile[onclick*="\'' + name + '\'"]');
   if (activeTile) activeTile.classList.add('active');
+  // Book banks: fill the editor fresh each time it's opened
+  if (name === 'studybank' || name === 'methodbank' || name === 'albumbank') {
+    editingBankId = null; editingMethodBankId = null; editingAlbumBankId = null;
+    renderBankEditors();
+  }
   const panel = document.getElementById('lib-panel-' + name);
   if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -8014,8 +8114,8 @@ function showLibrarySection(name) {
 // Close all Library section panels, back to the clean tile grid
 function closeLibrarySections() {
   document.querySelectorAll('#library-panels .admin-panel').forEach(p => { p.style.display = 'none'; });
-  document.querySelectorAll('#view-library .admin-grid .admin-tile').forEach(t => t.classList.remove('active'));
-  const grid = document.querySelector('#view-library .admin-grid');
+  document.querySelectorAll('#view-library .lib-tile').forEach(t => t.classList.remove('active'));
+  const grid = document.querySelector('#view-library .lib-tile');
   if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -10293,22 +10393,101 @@ function renderLendingLog() {
   }).join('');
 }
 
+// ── ＋ FROM LIBRARY PICKER ─────────────────────────────────────────────────
+// One picker for every library: pieces, study books, method books, albums.
+// Tapping an item adds a line to the pupil's Pieces & exercises list, or to
+// today's lesson plan — whichever "Add to" chip is selected (remembered).
+// The modal stays open so several things can go in at once; Done closes it.
 let pieceDBStudentId = null;
+let libPickSource = 'pieces';     // 'pieces' | 'studies' | 'methods' | 'albums'
+let libPickOpenBook = null;       // key of the book currently expanded
+let libPickAddedAny = false;
+let libPickDestMem = null;        // fallback if browser storage is unavailable
+let libPickToastTimer = null;
+
+const LIBPICK_SOURCES = [
+  { id: 'pieces',  icon: '📚', label: 'Pieces',  bg: 'var(--ink)',    fg: '#fff' },
+  { id: 'studies', icon: '📖', label: 'Studies', bg: 'var(--string)', fg: 'var(--ink)' },
+  { id: 'methods', icon: '📘', label: 'Methods', bg: '#46C6E5',       fg: 'var(--ink)' },
+  { id: 'albums',  icon: '🎵', label: 'Albums',  bg: 'var(--viola)',  fg: '#fff' }
+];
+
+function libPickGetDest() {
+  let v = libPickDestMem;
+  try { v = localStorage.getItem('libpick_dest') || v; } catch (e) {}
+  return v === 'plan' ? 'plan' : 'pieces';
+}
+function libPickSetDest(v) {
+  libPickDestMem = v;
+  try { localStorage.setItem('libpick_dest', v); } catch (e) {}
+  renderLibPickChrome();
+}
 
 function openPieceDB(studentId) {
   pieceDBStudentId = studentId;
+  libPickOpenBook = null;
+  libPickAddedAny = false;
   populateCatFilters();
   document.getElementById('piece-search').value = '';
   document.getElementById('piece-cat-filter').value = '';
-  renderPieceDB(visibleLibraryPieces());
+  const toast = document.getElementById('libpick-toast');
+  if (toast) { toast.style.display = 'none'; toast.textContent = ''; }
+  renderLibPickChrome();
+  filterPieceDB();
   document.getElementById('piece-db-modal').classList.add('open');
 }
+
 function closePieceDB() {
   document.getElementById('piece-db-modal').classList.remove('open');
+  const id = pieceDBStudentId;
+  const added = libPickAddedAny;
   pieceDBStudentId = null;
+  libPickAddedAny = false;
+  // Refresh the pupil page once so everything (During tab plan, Clear buttons) is in step
+  if (added && id) {
+    const s = getStudent(id);
+    const detail = document.getElementById('view-detail');
+    if (s && detail && detail.classList.contains('active')) renderDetail(s, true);
+  }
 }
+
+function libPickSetSource(src) {
+  libPickSource = src;
+  libPickOpenBook = null;
+  renderLibPickChrome();
+  filterPieceDB();
+}
+
+// Tabs + "Add to" chips + which filters show
+function renderLibPickChrome() {
+  const tabs = document.getElementById('libpick-tabs');
+  if (tabs) {
+    tabs.innerHTML = LIBPICK_SOURCES.map(function(src) {
+      const on = src.id === libPickSource;
+      return '<button onclick="libPickSetSource(\'' + src.id + '\')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px;border-radius:12px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.75rem;font-weight:600;'
+        + 'border:2px solid ' + src.bg + ';background:' + (on ? src.bg : 'transparent') + ';color:' + (on ? src.fg : 'var(--ink)') + ';' + (on ? 'box-shadow:0 2px 8px rgba(5,39,11,0.18)' : 'opacity:0.75') + '">'
+        + '<span style="font-size:1.15rem;line-height:1">' + src.icon + '</span>' + src.label + '</button>';
+    }).join('');
+  }
+  const dest = document.getElementById('libpick-dest');
+  if (dest) {
+    const cur = libPickGetDest();
+    const chip = function(val, label) {
+      const on = cur === val;
+      return '<button onclick="libPickSetDest(\'' + val + '\')" style="flex:1;padding:7px 8px;border-radius:999px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.78rem;'
+        + 'border:1.5px solid var(--viola);background:' + (on ? 'var(--viola)' : 'transparent') + ';color:' + (on ? '#fff' : 'var(--viola)') + ';font-weight:' + (on ? '700' : '500') + '">' + label + '</button>';
+    };
+    dest.innerHTML = chip('pieces', '🎵 Pieces &amp; exercises') + chip('plan', '📌 Today’s plan');
+  }
+  const cat = document.getElementById('piece-cat-filter');
+  if (cat) cat.style.display = libPickSource === 'pieces' ? '' : 'none';
+  const search = document.getElementById('piece-search');
+  if (search) search.placeholder = libPickSource === 'pieces' ? 'Search pieces…' : 'Search books…';
+}
+
 function filterPieceDB() {
   const search = document.getElementById('piece-search').value.toLowerCase();
+  if (libPickSource !== 'pieces') { renderLibPickBooks(search); return; }
   const cat = document.getElementById('piece-cat-filter').value;
   const allPieces = visibleLibraryPieces();
   const filtered = allPieces.filter(p => {
@@ -10318,6 +10497,7 @@ function filterPieceDB() {
   });
   renderPieceDB(filtered);
 }
+
 function renderPieceDB(items) {
   const list = document.getElementById('piece-db-list');
   if (items.length === 0) {
@@ -10329,31 +10509,169 @@ function renderPieceDB(items) {
   items.forEach(p => { if (!groups[p.cat]) groups[p.cat] = []; groups[p.cat].push(p); });
   list.innerHTML = Object.entries(groups).map(([cat, pieces]) => `
     <div style="margin-bottom:14px">
-      <div style="font-size:0.68rem;font-weight:800;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${cat.replace(' - ',' — ')}</div>
+      <div style="font-size:0.68rem;font-weight:800;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${esc(cat.replace(' - ',' — '))}</div>
       ${pieces.map(p => `
         <div onclick="selectPiece('${escJs(p.title)}')"
           style="padding:10px 12px;border-radius:9px;cursor:pointer;margin-bottom:4px;transition:background 0.12s"
           onmouseover="this.style.background='var(--warm)'" onmouseout="this.style.background='transparent'">
           <div style="font-size:0.9rem;font-weight:600">${esc(p.title)}</div>
-          <div style="font-size:0.75rem;color:var(--muted)">${esc(p.composer)} · ${esc(p.grade)}</div>
+          <div style="font-size:0.75rem;color:var(--muted)">${[p.composer, p.grade].filter(Boolean).map(esc).join(' · ')}</div>
         </div>`).join('')}
     </div>`).join('');
 }
-function selectPiece(title) {
-  if (!pieceDBStudentId) return;
-  const s = getStudent(pieceDBStudentId);
-  if (!s) return;
-  if (!s.pieces) s.pieces = [];
-  // Replace last empty slot or add new
-  const emptyIdx = s.pieces.findIndex(p => !p);
-  if (emptyIdx >= 0) s.pieces[emptyIdx] = title;
-  else s.pieces.push(title);
-  save();
-  closePieceDB();
-  renderDetail(s);
 
+// A piece from the piece library
+function selectPiece(title) {
+  libPickAdd(title, '');
 }
 
+// The pupil's own copies of this kind of book, plus the studio bank (minus
+// bank books the pupil already has, so nothing shows twice).
+function libPickBookSets(s) {
+  const field = { studies: 'studyBooks', methods: 'methodBooks', albums: 'albums' }[libPickSource];
+  const bank  = { studies: studyBookBank, methods: methodBookBank, albums: albumBank }[libPickSource] || [];
+  const mine = ((s && s[field]) || []).map(function(b, i) {
+    return { key: 'p' + i, name: b.name, items: bookStudies(b), ticks: b.ticks || {}, bankId: b.bankId || null };
+  });
+  const mineBankIds = new Set(mine.map(function(b){ return b.bankId; }).filter(Boolean));
+  const banked = bank.filter(function(b){ return !mineBankIds.has(b.id); }).map(function(b) {
+    return { key: 'b' + b.id, name: b.name, items: (b.studies || []).slice(), ticks: {} };
+  });
+  return { mine: mine, bank: banked };
+}
+
+function libPickFindBook(key) {
+  const s = getStudent(pieceDBStudentId);
+  const sets = libPickBookSets(s);
+  return sets.mine.concat(sets.bank).find(function(b){ return b.key === key; }) || null;
+}
+
+function libPickToggleBook(key) {
+  libPickOpenBook = (libPickOpenBook === key) ? null : key;
+  filterPieceDB();
+}
+
+function libPickAddWholeBook(key) {
+  const bk = libPickFindBook(key); if (!bk) return;
+  libPickAdd(bk.name, '');
+}
+
+function libPickAddBookItem(key, idx) {
+  const bk = libPickFindBook(key); if (!bk) return;
+  const it = bk.items[idx]; if (it === undefined) return;
+  libPickAdd(bk.name, /^\d+$/.test(it) ? 'No. ' + it : it);
+}
+
+function renderLibPickBooks(search) {
+  const list = document.getElementById('piece-db-list'); if (!list) return;
+  const s = getStudent(pieceDBStudentId);
+  const sets = libPickBookSets(s);
+  const match = function(b) {
+    if (!search) return true;
+    if (b.name.toLowerCase().includes(search)) return true;
+    return b.items.some(function(it){ return String(it).toLowerCase().includes(search); });
+  };
+  const mine = sets.mine.filter(match);
+  const bank = sets.bank.filter(match);
+  const kind = { studies: 'study books', methods: 'method books', albums: 'albums' }[libPickSource];
+  const libTile = { studies: '📖 Study books', methods: '📘 Method books', albums: '🎵 Albums' }[libPickSource];
+  if (!mine.length && !bank.length) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;text-align:center;padding:20px;line-height:1.5">'
+      + (search ? 'No results' : 'No ' + kind + ' yet. Set them up in Library → ' + libTile + '.') + '</p>';
+    return;
+  }
+  const firstName = s ? esc(String(s.name || '').split(' ')[0]) : 'Pupil';
+  const group = function(title, books) {
+    if (!books.length) return '';
+    return '<div style="margin-bottom:14px">'
+      + '<div style="font-size:0.68rem;font-weight:800;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">' + title + '</div>'
+      + books.map(libPickBookHTML).join('') + '</div>';
+  };
+  list.innerHTML = group('On ' + firstName + '’s list', mine) + group('Your bank', bank);
+}
+
+function libPickBookHTML(bk) {
+  const open = libPickOpenBook === bk.key;
+  const k = escJs(bk.key);
+  const done = bk.items.filter(function(it){ return bk.ticks[it]; }).length;
+  const count = bk.key.charAt(0) === 'p' ? done + ' / ' + bk.items.length : String(bk.items.length);
+  let html = '<div style="border:1.5px solid ' + (open ? 'var(--viola)' : 'var(--warm)') + ';border-radius:10px;margin-bottom:6px;overflow:hidden">'
+    + '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:' + (open ? '#f4faef' : 'var(--paper)') + '">'
+    + '<button onclick="libPickToggleBook(\'' + k + '\')" style="flex:1;text-align:left;background:none;border:none;font-family:\'Special Elite\',cursive;cursor:pointer;padding:4px 0;display:flex;align-items:center;gap:8px;color:var(--ink)">'
+    + '<span style="font-size:0.75rem;color:var(--muted);display:inline-block;transform:rotate(' + (open ? '90' : '0') + 'deg);transition:transform 0.15s">▶</span>'
+    + '<span style="flex:1;font-size:0.88rem;font-weight:600">' + esc(bk.name) + '</span>'
+    + '<span style="font-size:0.7rem;color:var(--muted)">' + count + '</span></button>'
+    + '<button onclick="libPickAddWholeBook(\'' + k + '\')" title="Add the book name on its own" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:6px 10px;font-family:\'Special Elite\',cursive;font-size:0.72rem;cursor:pointer;white-space:nowrap">＋ Book</button>'
+    + '</div>';
+  if (open) {
+    html += '<div style="padding:8px 10px 10px">'
+      + '<div style="font-size:0.68rem;color:var(--muted);margin-bottom:6px">Tap a number or item to add it' + (bk.key.charAt(0) === 'p' ? ' · green = already ticked off' : '') + '</div>'
+      + libPickItemsHTML(bk) + '</div>';
+  }
+  return html + '</div>';
+}
+
+// Numbers pack into a wrapping grid of small squares; named items get rows.
+function libPickItemsHTML(bk) {
+  const k = escJs(bk.key);
+  const segs = [];
+  bk.items.forEach(function(it, idx) {
+    const isNum = /^\d+$/.test(it);
+    const last = segs[segs.length - 1];
+    if (last && last.numeric === isNum) last.items.push({ it: it, idx: idx });
+    else segs.push({ numeric: isNum, items: [{ it: it, idx: idx }] });
+  });
+  return segs.map(function(seg) {
+    if (seg.numeric) {
+      return '<div style="display:flex;flex-wrap:wrap;gap:5px;margin:4px 0">' + seg.items.map(function(o) {
+        const t = !!bk.ticks[o.it];
+        return '<button onclick="libPickAddBookItem(\'' + k + '\',' + o.idx + ')" style="min-width:38px;height:36px;padding:0 6px;border-radius:8px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.8rem;'
+          + 'border:1.5px solid ' + (t ? 'var(--string)' : '#d6ddd2') + ';background:' + (t ? '#e8f5e0' : '#fff') + ';color:var(--ink)">' + esc(o.it) + '</button>';
+      }).join('') + '</div>';
+    }
+    return '<div style="margin:4px 0">' + seg.items.map(function(o) {
+      const t = !!bk.ticks[o.it];
+      return '<button onclick="libPickAddBookItem(\'' + k + '\',' + o.idx + ')" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:8px 10px;margin-bottom:4px;border-radius:8px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.85rem;'
+        + 'border:1.5px solid ' + (t ? 'var(--string)' : '#e0ddd8') + ';background:' + (t ? '#e8f5e0' : '#fff') + ';color:var(--ink)">'
+        + '<span style="color:var(--viola);font-weight:700">＋</span><span style="flex:1">' + esc(o.it) + '</span>' + (t ? '<span style="font-size:0.72rem;color:var(--viola)">✓</span>' : '') + '</button>';
+    }).join('') + '</div>';
+  }).join('');
+}
+
+// Put one line where the "Add to" chip says. title = piece/book, ref = No. / item.
+function libPickAdd(title, ref) {
+  if (!pieceDBStudentId) return;
+  const s = getStudent(pieceDBStudentId);
+  if (!s || !title) return;
+  const label = ref ? title + ' — ' + ref : title;
+  if (libPickGetDest() === 'plan') {
+    const cur = String(s.nextLesson || '').replace(/\s+$/, '');
+    s.nextLesson = cur ? cur + '\n' + label : label;
+    const ta = document.getElementById('nextlesson-' + s.id);
+    if (ta) ta.value = s.nextLesson;
+  } else {
+    if (!s.pieces) s.pieces = [];
+    if (!s.pieceRefs) s.pieceRefs = [];
+    // Fill the first empty slot, otherwise add a new one
+    const emptyIdx = s.pieces.findIndex(p => !p);
+    const i = emptyIdx >= 0 ? emptyIdx : s.pieces.length;
+    s.pieces[i] = title;
+    while (s.pieceRefs.length < i) s.pieceRefs.push('');
+    s.pieceRefs[i] = ref || '';
+    const listEl = document.getElementById('pieces-list-' + s.id);
+    if (listEl) listEl.innerHTML = buildPiecesHTML(s);
+  }
+  save();
+  libPickAddedAny = true;
+  const where = libPickGetDest() === 'plan' ? 'today’s plan' : 'Pieces & exercises';
+  const toast = document.getElementById('libpick-toast');
+  if (toast) {
+    toast.textContent = '✓ ' + label + ' → ' + where;
+    toast.style.display = 'block';
+    clearTimeout(libPickToastTimer);
+    libPickToastTimer = setTimeout(function(){ toast.style.display = 'none'; }, 2200);
+  }
+}
 
 
 function openExportModal() {
