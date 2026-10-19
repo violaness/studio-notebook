@@ -75,7 +75,7 @@
 
   /* ── NAV / FOLDER HEADER ── */
 
-  /* ── FOLDER HEADER — Oxford tab style ─────────────────────────────────── */
+  /* ── FOLDER HEADER - Oxford tab style ─────────────────────────────────── */
   /* Header is a flex column: title row on top, tab strip pinned to bottom   */
   header.folder-body {
     background: var(--ink);
@@ -88,7 +88,7 @@
     box-shadow: 0 3px 10px rgba(0,0,0,0.35);
   }
 
-  /* Title row — logo + count/icons */
+  /* Title row - logo + count/icons */
   header.folder-body .hdr-top {
     display: flex; align-items: center; justify-content: space-between;
     padding: 10px 16px 6px;
@@ -101,12 +101,12 @@
     display: flex; align-items: center; gap: 10px;
   }
 
-  /* Tab strip — sits at the BOTTOM of the header, tabs grow upward */
+  /* Tab strip - sits at the BOTTOM of the header, tabs grow upward */
   .folder-tabs-row {
     display: flex; align-items: flex-end;   /* tabs hang from their bottoms */
     padding: 0 12px 0;
     gap: 3px;
-    /* no separate sticky — it rides inside the sticky header */
+    /* no separate sticky - it rides inside the sticky header */
   }
 
   .folder-tab {
@@ -121,7 +121,7 @@
     color: rgba(255,255,255,0.55);
     transition: all 0.15s;
     text-align: center;
-    /* folder tab notch — opens upward */
+    /* folder tab notch - opens upward */
     clip-path: polygon(0% 100%, 0% 18%, 6% 0%, 94% 0%, 100% 18%, 100% 100%);
   }
   .folder-tab:hover {
@@ -132,7 +132,7 @@
     color: var(--ink);
     font-weight: 700;
     z-index: 2;
-    /* active tab is slightly taller — grows upward */
+    /* active tab is slightly taller - grows upward */
     padding-top: 9px;
     padding-bottom: 10px;
   }
@@ -706,7 +706,7 @@
 </head>
 <body>
 
-<!-- NOTEBOOK COVER — shown once per session, tap/click to open -->
+<!-- NOTEBOOK COVER - shown once per session, tap/click to open -->
 <div id="notebook-cover" onclick="openNotebookCover()">
   <div class="spiral-edge" id="spiral-edge"></div>
   <div class="cover-content">
@@ -727,7 +727,7 @@
   </div>
 </div>
 
-<!-- FOLDER BODY (header) — sits at top, tabs at bottom = Oxford folder look -->
+<!-- FOLDER BODY (header) - sits at top, tabs at bottom = Oxford folder look -->
 <header class="folder-body">
   <div class="hdr-top">
     <h1>🎻 Studio Notebook</h1>
@@ -735,7 +735,7 @@
     <span id="header-count"></span>
       </div>
   </div>
-  <!-- Tab strip at bottom of header — green spine line (border-bottom) is the folder edge -->
+  <!-- Tab strip at bottom of header - green spine line (border-bottom) is the folder edge -->
   <div class="folder-tabs-row">
     <button class="folder-tab tab-today active" onclick="showView('today')">📅 Today</button>
     <button class="folder-tab tab-week"         onclick="showView('week')">🗓 Week</button>
@@ -763,7 +763,7 @@
   </div>
   <div id="wednesday-reminder" style="display:none;background:#fffbe6;border:1.5px solid #c9a84c;border-radius:12px;padding:12px 16px;margin-bottom:14px;align-items:center;gap:12px;flex-wrap:wrap">
     <span style="font-size:1.1rem">💾</span>
-    <span style="flex:1;font-size:0.88rem;color:#7a5c00">Wednesday — time for your weekly backup!</span>
+    <span style="flex:1;font-size:0.88rem;color:#7a5c00">Wednesday - time for your weekly backup!</span>
     <button onclick="backupData();document.getElementById('wednesday-reminder').style.display='none'" style="background:#c9a84c;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:'Special Elite',cursive;font-size:0.82rem;cursor:pointer;white-space:nowrap">Back up now</button>
     <button onclick="localStorage.setItem('backup_reminder_dismissed',new Date().toDateString());document.getElementById('wednesday-reminder').style.display='none'" style="background:none;border:none;color:#c9a84c;cursor:pointer;font-size:1.1rem;padding:0 4px">×</button>
   </div>
@@ -806,7 +806,7 @@
 <!-- LIBRARY VIEW -->
 <div id="view-library" class="view">
 
-  <!-- "Back to pupil" bar — only shows when you jumped here from a pupil's Technique tab -->
+  <!-- "Back to pupil" bar - only shows when you jumped here from a pupil's Technique tab -->
   <div id="lib-return-bar" style="display:none;margin:4px 0 12px"></div>
 
   <!-- TOP ROW: the two main banks, dark blue like the Billing sheet -->
@@ -875,7 +875,7 @@
       <div style="display:flex;flex-direction:column;gap:8px">
         <input type="text" id="vio-new-title" placeholder="Title, e.g. Finger patterns on the C string" style="padding:8px 12px;border-radius:8px;font-size:0.88rem"
           onkeydown="if(event.key==='Enter')addViolanessSheet()">
-        <select id="vio-new-cat" onchange="toggleVioNewCat(this.value)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem"></select>
+        <select id="vio-new-cat" onchange="this.style.borderColor='';toggleVioNewCat(this.value)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem"></select>
         <input type="text" id="vio-new-cat-custom" placeholder="New category name" style="display:none;padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <input type="text" id="vio-new-note" placeholder="Note (optional), e.g. level, where it's filed" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <button onclick="addViolanessSheet()" style="background:#1a4a6b;color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">＋ Add to Violaness</button>
@@ -992,7 +992,7 @@
           onkeydown="if(event.key==='Enter')addLibChip()"
           style="flex:2;min-width:120px;padding:8px 12px;border-radius:999px;font-size:0.88rem">
         <select id="lib-new-chip-cat" style="flex:1;min-width:100px;padding:8px 10px;border-radius:999px;font-size:0.82rem;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
-          <option value="">— no category —</option>
+          <option value="">No category</option>
           <option value="left">Left hand</option>
           <option value="right">Right hand & bowing</option>
           <option value="posture">Posture & setup</option>
@@ -1014,12 +1014,12 @@
         <option value="My Library">My Library</option>
         <option value="Scalability">Scalability</option>
         <option value="Technique">Technique</option>
-        <option value="Studies - Viola">Studies — Viola</option>
-        <option value="Studies - Violin">Studies — Violin</option>
-        <option value="Repertoire - Viola">Repertoire — Viola</option>
-        <option value="Repertoire - Violin">Repertoire — Violin</option>
-        <option value="Beginner Repertoire - Viola">Beginner Repertoire — Viola</option>
-        <option value="Beginner Repertoire - Violin">Beginner Repertoire — Violin</option>
+        <option value="Studies - Viola">Studies - Viola</option>
+        <option value="Studies - Violin">Studies - Violin</option>
+        <option value="Repertoire - Viola">Repertoire - Viola</option>
+        <option value="Repertoire - Violin">Repertoire - Violin</option>
+        <option value="Beginner Repertoire - Viola">Beginner Repertoire - Viola</option>
+        <option value="Beginner Repertoire - Violin">Beginner Repertoire - Violin</option>
       </select>
       <input type="text" id="lib-piece-search" placeholder="Search…" oninput="renderLibPieces()"
         style="flex:1;padding:8px 12px;border-radius:8px;font-size:0.88rem;min-width:100px">
@@ -1035,18 +1035,27 @@
           <option value="My Library">My Library</option>
           <option value="Scalability">Scalability</option>
           <option value="Technique">Technique</option>
-          <option value="Studies - Viola">Studies — Viola</option>
-          <option value="Studies - Violin">Studies — Violin</option>
-          <option value="Repertoire - Viola">Repertoire — Viola</option>
-          <option value="Repertoire - Violin">Repertoire — Violin</option>
-          <option value="Beginner Repertoire - Viola">Beginner Repertoire — Viola</option>
-          <option value="Beginner Repertoire - Violin">Beginner Repertoire — Violin</option>
+          <option value="Studies - Viola">Studies - Viola</option>
+          <option value="Studies - Violin">Studies - Violin</option>
+          <option value="Repertoire - Viola">Repertoire - Viola</option>
+          <option value="Repertoire - Violin">Repertoire - Violin</option>
+          <option value="Beginner Repertoire - Viola">Beginner Repertoire - Viola</option>
+          <option value="Beginner Repertoire - Violin">Beginner Repertoire - Violin</option>
           <option value="__new__">+ New category…</option>
         </select>
         <input type="text" id="lib-new-piece-cat-custom" placeholder="New category name" style="display:none;padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <button onclick="addLibPiece()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">Add to library</button>
       </div>
     </div>
+    <details style="margin-top:14px">
+      <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+        <span>🗂 Manage categories</span><span style="font-weight:400">tap to expand</span>
+      </summary>
+      <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
+        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">Delete a category you don’t use. Any pieces in it move to “My Library”, nothing is lost.</div>
+        <div id="piece-cat-manage"></div>
+      </div>
+    </details>
     </div>
   </section>
 
@@ -1087,7 +1096,7 @@
 
   <!-- SPEECH REPLACEMENTS -->
   <section class="admin-panel" id="lib-panel-voice" style="display:none">
-    <div class="admin-panel-head"><span>🎤 Voice text — auto-corrections</span><button class="admin-panel-close" onclick="closeLibrarySections()">✕ Close</button></div>
+    <div class="admin-panel-head"><span>🎤 Voice text - auto-corrections</span><button class="admin-panel-close" onclick="closeLibrarySections()">✕ Close</button></div>
     <div style="margin-top:10px">
       <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Words or phrases that get replaced automatically after dictation.</div>
       <div id="speech-replacements-list"></div>
@@ -1108,13 +1117,13 @@
   <!-- BILLING TILE (full width, the main invoicing sheet) -->
   <button class="admin-tile" style="background:#1a4a6b;width:100%;min-height:92px;margin:6px 0 14px" onclick="showAdminSection('billing')">
     <span class="admin-tile-icon">💷</span>
-    <span class="admin-tile-label">Billing sheet — lessons per pupil</span>
+    <span class="admin-tile-label">Billing sheet - lessons per pupil</span>
   </button>
 
   <!-- ADMIN TILE GRID -->
   <!-- Greens flow down the left column (light→dark), blues down the right (light→dark) -->
   <div class="admin-grid">
-    <!-- LEFT COLUMN (top→bottom): Backup, Attendance, Books on loan — greens light→dark -->
+    <!-- LEFT COLUMN (top→bottom): Backup, Attendance, Books on loan - greens light→dark -->
     <button class="admin-tile" style="background:var(--string);color:var(--ink)" onclick="showAdminSection('backup')">
       <span class="admin-tile-icon">🗄</span>
       <span class="admin-tile-label">Backup &amp; restore</span>
@@ -1128,7 +1137,7 @@
       <span class="admin-tile-label">Books on loan</span>
       <span class="admin-tile-badge" id="tile-lending-badge"></span>
     </button>
-    <!-- RIGHT COLUMN (top→bottom): Term dates, Waiting list, Gifts received — blues light→dark -->
+    <!-- RIGHT COLUMN (top→bottom): Term dates, Waiting list, Gifts received - blues light→dark -->
     <button class="admin-tile" style="background:#46C6E5;color:var(--ink)" onclick="showAdminSection('terms')">
       <span class="admin-tile-icon">📅</span>
       <span class="admin-tile-label">Term dates</span>
@@ -1223,7 +1232,7 @@
   <section class="admin-panel" id="panel-gifts" style="display:none">
     <div class="admin-panel-head"><span>🎁 Gifts received <span style="font-weight:400;font-size:0.8rem" id="gifts-summary-count"></span></span><button class="admin-panel-close" onclick="closeAdminSections()">✕ Close</button></div>
     <div style="margin-top:10px">
-      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Gifts still to thank someone for. Tick one off and it clears from here — it stays on the pupil's page as a record.</div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Gifts still to thank someone for. Tick one off and it clears from here - it stays on the pupil's page as a record.</div>
       <div id="gifts-list"></div>
     </div>
   </section>
@@ -1232,7 +1241,7 @@
   <section class="admin-panel" id="panel-terms" style="display:none">
     <div class="admin-panel-head"><span>📅 Term dates &amp; holidays</span><button class="admin-panel-close" onclick="closeAdminSections()">✕ Close</button></div>
     <div style="margin-top:10px">
-    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Add your terms and holidays — the week view will show term week numbers and grey out pupils during holidays.</div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Add your terms and holidays - the week view will show term week numbers and grey out pupils during holidays.</div>
     <div id="term-dates-list"></div>
     <div style="background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:12px;margin-top:10px">
       <div style="display:flex;gap:16px;margin-bottom:10px">
@@ -1368,7 +1377,7 @@
     <div class="field-group">
       <label class="field-label" for="new-day">Lesson day</label>
       <select id="new-day">
-        <option value="">— not set —</option>
+        <option value="">Not set</option>
         <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
         <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
       </select>
@@ -1400,7 +1409,7 @@
     <div class="field-group" id="new-schoolyear-group">
       <label class="field-label" for="new-schoolyear">School year (optional)</label>
       <select id="new-schoolyear">
-        <option value="">— not set —</option>
+        <option value="">Not set</option>
         <option>Reception</option>
         <option>Year 1</option><option>Year 2</option><option>Year 3</option>
         <option>Year 4</option><option>Year 5</option><option>Year 6</option>
@@ -1447,7 +1456,7 @@
   </div>
 </div>
 
-<!-- FROM LIBRARY PICKER MODAL — pieces, study books, method books, albums -->
+<!-- FROM LIBRARY PICKER MODAL - pieces, study books, method books, albums -->
 <div class="modal-overlay" id="piece-db-modal">
   <div class="modal" style="max-width:520px;max-height:88vh;display:flex;flex-direction:column">
     <h2 style="margin-bottom:12px">Add from library</h2>
@@ -1466,12 +1475,12 @@
         <option value="Scalability">Scalability</option>
         <option value="Scales & Exercises">Scales & Exercises</option>
         <option value="Technique">Technique</option>
-        <option value="Studies - Viola">Studies — Viola</option>
-        <option value="Studies - Violin">Studies — Violin</option>
-        <option value="Repertoire - Viola">Repertoire — Viola</option>
-        <option value="Repertoire - Violin">Repertoire — Violin</option>
-        <option value="Beginner Repertoire - Viola">Beginner Repertoire — Viola</option>
-        <option value="Beginner Repertoire - Violin">Beginner Repertoire — Violin</option>
+        <option value="Studies - Viola">Studies - Viola</option>
+        <option value="Studies - Violin">Studies - Violin</option>
+        <option value="Repertoire - Viola">Repertoire - Viola</option>
+        <option value="Repertoire - Violin">Repertoire - Violin</option>
+        <option value="Beginner Repertoire - Viola">Beginner Repertoire - Viola</option>
+        <option value="Beginner Repertoire - Violin">Beginner Repertoire - Violin</option>
       </select>
     </div>
     <div id="libpick-toast" style="display:none;background:#e8f5e0;color:var(--viola);border-radius:8px;padding:7px 12px;font-size:0.82rem;font-weight:600;margin-bottom:8px"></div>
@@ -1492,8 +1501,8 @@
       <input type="text" id="export-term" placeholder="e.g. Autumn Term 2026">
     </div>
     <div class="modal-actions" style="flex-direction:column;gap:10px">
-      <button class="btn-primary" onclick="exportAll()">🖨️&nbsp; All pupils — one report</button>
-      <button class="btn-primary" style="background:var(--violin)" onclick="exportIndividual()">🖨️&nbsp; One pupil — search by name</button>
+      <button class="btn-primary" onclick="exportAll()">🖨️&nbsp; All pupils - one report</button>
+      <button class="btn-primary" style="background:var(--violin)" onclick="exportIndividual()">🖨️&nbsp; One pupil - search by name</button>
       <button class="btn-ghost" onclick="closeExportModal()">Cancel</button>
     </div>
   </div>
@@ -1545,7 +1554,7 @@
       <div class="field-group">
         <label class="field-label" for="custom-book-studies">Studies</label>
         <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">Type a number (e.g. 60) to auto-number 1–60, or list named studies one per line.</div>
-        <textarea id="custom-book-studies" rows="4" placeholder="60&#10;— or —&#10;No. 1 — Détaché&#10;No. 2 — Legato" style="width:100%;padding:10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.9rem;box-sizing:border-box;resize:vertical"></textarea>
+        <textarea id="custom-book-studies" rows="4" placeholder="60&#10;or&#10;No. 1 - Détaché&#10;No. 2 - Legato" style="width:100%;padding:10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.9rem;box-sizing:border-box;resize:vertical"></textarea>
       </div>
       <button class="btn-primary" style="width:100%" onclick="confirmAddStudyBook()">Add this book to pupil</button>
     </div>
@@ -1573,7 +1582,7 @@
       <div class="field-group">
         <label class="field-label" for="custom-method-studies">Units</label>
         <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">Type a number (e.g. 20) to auto-number 1–20, or list named units one per line.</div>
-        <textarea id="custom-method-studies" rows="4" placeholder="20&#10;— or —&#10;Unit 1 — Open strings&#10;Unit 2 — First finger" style="width:100%;padding:10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.9rem;box-sizing:border-box;resize:vertical"></textarea>
+        <textarea id="custom-method-studies" rows="4" placeholder="20&#10;or&#10;Unit 1 - Open strings&#10;Unit 2 - First finger" style="width:100%;padding:10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.9rem;box-sizing:border-box;resize:vertical"></textarea>
       </div>
       <button class="btn-primary" style="width:100%" onclick="confirmAddMethodBook()">Add this book to pupil</button>
     </div>
@@ -1601,7 +1610,7 @@
       <div class="field-group">
         <label class="field-label" for="custom-album-studies">Pieces</label>
         <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">Type a number (e.g. 15) to auto-number 1–15, or list named pieces one per line.</div>
-        <textarea id="custom-album-studies" rows="4" placeholder="15&#10;— or —&#10;Bow Dance&#10;Rhythm Fever" style="width:100%;padding:10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.9rem;box-sizing:border-box;resize:vertical"></textarea>
+        <textarea id="custom-album-studies" rows="4" placeholder="15&#10;or&#10;Bow Dance&#10;Rhythm Fever" style="width:100%;padding:10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.9rem;box-sizing:border-box;resize:vertical"></textarea>
       </div>
       <button class="btn-primary" style="width:100%" onclick="confirmAddAlbum()">Add this album to pupil</button>
     </div>
@@ -1639,7 +1648,7 @@
 <div class="modal-overlay" id="number-picker-modal">
   <div class="modal">
     <h2 id="number-picker-title">Mark as completed</h2>
-    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;line-height:1.5">Add a number or reference if this is part of a collection — or leave blank for a standalone piece.</p>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;line-height:1.5">Add a number or reference if this is part of a collection - or leave blank for a standalone piece.</p>
     <input type="hidden" id="number-picker-student-id">
     <input type="hidden" id="number-picker-book-title">
     <input type="hidden" id="number-picker-mode"> <!-- 'piece' or 'study' -->
@@ -1704,7 +1713,7 @@
     <div class="field-group">
       <label class="field-label">Lesson day</label>
       <select id="edit-day">
-        <option value="">— not set —</option>
+        <option value="">Not set</option>
         <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
         <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
       </select>
@@ -1736,7 +1745,7 @@
     <div class="field-group">
       <label class="field-label">School year (optional)</label>
       <select id="edit-schoolyear">
-        <option value="">— not set —</option>
+        <option value="">Not set</option>
         <option>Reception</option>
         <option>Year 1</option><option>Year 2</option><option>Year 3</option>
         <option>Year 4</option><option>Year 5</option><option>Year 6</option>
@@ -1780,7 +1789,7 @@
     <div class="field-group">
       <label class="field-label" for="edit-log-attendance">Attendance</label>
       <select id="edit-log-attendance" style="font-family:'Special Elite',cursive">
-        <option value="">— not recorded —</option>
+        <option value="">Not recorded</option>
         <option value="present">✓ Present</option>
         <option value="absent-late">✕ Late cancel</option>
         <option value="absent-notice">– Good notice</option>
@@ -1876,7 +1885,7 @@
   </div>
 </div>
 
-<!-- ADD TYPE MODAL — parallel to Add key, but for picking which scale TYPES
+<!-- ADD TYPE MODAL - parallel to Add key, but for picking which scale TYPES
      are in active use for a pupil (used by the "By type" view) -->
 <div class="modal-overlay" id="add-type-modal">
   <div class="modal">
@@ -1916,12 +1925,12 @@
         <option value="My Library">My Library</option>
         <option value="Scalability">Scalability</option>
         <option value="Technique">Technique</option>
-        <option value="Studies - Viola">Studies — Viola</option>
-        <option value="Studies - Violin">Studies — Violin</option>
-        <option value="Repertoire - Viola">Repertoire — Viola</option>
-        <option value="Repertoire - Violin">Repertoire — Violin</option>
-        <option value="Beginner Repertoire - Viola">Beginner Repertoire — Viola</option>
-        <option value="Beginner Repertoire - Violin">Beginner Repertoire — Violin</option>
+        <option value="Studies - Viola">Studies - Viola</option>
+        <option value="Studies - Violin">Studies - Violin</option>
+        <option value="Repertoire - Viola">Repertoire - Viola</option>
+        <option value="Repertoire - Violin">Repertoire - Violin</option>
+        <option value="Beginner Repertoire - Viola">Beginner Repertoire - Viola</option>
+        <option value="Beginner Repertoire - Violin">Beginner Repertoire - Violin</option>
       </select>
     </div>
     <div class="modal-actions">
@@ -2129,7 +2138,7 @@ async function toggleWakeLock() {
       if (btn) { btn.textContent = '☀️ Keep awake'; btn.style.background = 'none'; btn.style.color = 'var(--muted)'; }
     });
   } catch(e) {
-    alert('Could not keep the screen awake — this can happen if the tab loses focus. Try again, or use the iPad\'s Auto-Lock setting instead.');
+    alert('Could not keep the screen awake - this can happen if the tab loses focus. Try again, or use the iPad\'s Auto-Lock setting instead.');
   }
 }
 
@@ -2161,7 +2170,7 @@ const TECH_CATEGORIES = [
   { id: 'theory',         label: 'Technique',              color: '#B8E0C4' },
 ];
 
-// Default category assignments — user can override via localStorage
+// Default category assignments - user can override via localStorage
 const TECH_CATEGORY_DEFAULTS = {
   'Intonation':    'left',
   'Left hand':     'left',
@@ -2194,6 +2203,8 @@ let customPieces = JSON.parse(localStorage.getItem('studio_custom_pieces') || '[
 // removed from PIECE_DB (it's baked into the app), so we hide it instead.
 // Keyed by "title|||cat".
 let hiddenPieces = JSON.parse(localStorage.getItem('studio_hidden_pieces') || '[]');
+// Built-in piece categories you've deleted (hidden from every category dropdown)
+let hiddenPieceCats = JSON.parse(localStorage.getItem('studio_hidden_piece_cats') || '[]');
 let videoLinks   = JSON.parse(localStorage.getItem('studio_video_links')   || '[]');
 let videoCatsRemoved = JSON.parse(localStorage.getItem('studio_video_cats_removed') || '[]');
 let videoTeachers = JSON.parse(localStorage.getItem('studio_video_teachers') || '[]');
@@ -2205,17 +2216,17 @@ let ideaBoards       = JSON.parse(localStorage.getItem('studio_idea_boards')    
 let currentIdeaBoardId = localStorage.getItem('studio_idea_current') || '';
 let speechReplacements = JSON.parse(localStorage.getItem('studio_speech_replacements') || '[{"from":"gonna","to":"going to"},{"from":"wanna","to":"want to"},{"from":"kinda","to":"kind of"}]');
 let extraLessons = JSON.parse(localStorage.getItem('studio_extra_lessons') || '{}');
-// Studio-wide default technique checklist — the starting template copied to each
+// Studio-wide default technique checklist - the starting template copied to each
 // pupil the first time their Technique checklist is opened. Editing this never
 // touches pupils who already have a checklist.
 let techniqueDefaults = JSON.parse(localStorage.getItem('studio_technique_defaults') ||
   '["Balance","Hand frame","Bow hold","Posture","Tone production","Intonation","Vibrato","Shifting"]');
 // Studio-wide bank of study books you can pull onto any pupil. Each:
-// { id, name, studies: ["1","2",...] or ["No. 1 — Détaché", ...] }. Starts empty.
+// { id, name, studies: ["1","2",...] or ["No. 1 - Détaché", ...] }. Starts empty.
 let studyBookBank = JSON.parse(localStorage.getItem('studio_study_book_bank') || '[]');
-// Studio-wide bank of method books — same shape as the study-book bank.
+// Studio-wide bank of method books - same shape as the study-book bank.
 let methodBookBank = JSON.parse(localStorage.getItem('studio_method_book_bank') || '[]');
-// Studio-wide bank of albums — same shape again.
+// Studio-wide bank of albums - same shape again.
 let albumBank = JSON.parse(localStorage.getItem('studio_album_bank') || '[]');
 // Violaness: Vanessa's own arranged exercises & technical sheets.
 // Each sheet: { id, title, cat, note }. Categories are a simple editable list.
@@ -2236,6 +2247,7 @@ function save() {
   localStorage.setItem('studio_custom_tech_cats',  JSON.stringify(customTechCats));
   localStorage.setItem('studio_custom_pieces',     JSON.stringify(customPieces));
   localStorage.setItem('studio_hidden_pieces',     JSON.stringify(hiddenPieces));
+  localStorage.setItem('studio_hidden_piece_cats', JSON.stringify(hiddenPieceCats));
   localStorage.setItem('studio_video_links',       JSON.stringify(videoLinks));
   localStorage.setItem('studio_video_cats_removed', JSON.stringify(videoCatsRemoved));
   localStorage.setItem('studio_video_teachers',     JSON.stringify(videoTeachers));
@@ -2271,7 +2283,7 @@ function esc(str) {
 }
 
 // esc() makes text safe for HTML, but NOT for a JavaScript string inside an
-// onclick attribute — an apostrophe in a piece title (L'Arlesienne, Vaughan
+// onclick attribute - an apostrophe in a piece title (L'Arlesienne, Vaughan
 // Williams' Fantasia) would close the string early and silently break the
 // button. Use escJs() for anything interpolated into an inline handler.
 function escJs(str) {
@@ -2316,7 +2328,7 @@ function todayDayName() {
 
 // The date string a lesson is logged/matched against. Uses effectiveNow() so a
 // note or attendance saved after midnight (before 1am) is dated to the lesson
-// you actually taught, not the new calendar day — important for billing.
+// you actually taught, not the new calendar day - important for billing.
 function todayLogDate() {
   return effectiveNow().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
 }
@@ -2333,7 +2345,7 @@ function isoWeek(date) {
 
 // Teaching week runs Sat–Wed. Reset happens Friday so Thu/Fri look back at the
 // week just gone. We do this by shifting the date back 1 day before computing
-// the Sat-based week key — so Friday reads as "next week's Saturday" key.
+// the Sat-based week key - so Friday reads as "next week's Saturday" key.
 // getDay(): 0=Sun 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat
 // Days since the previous Saturday, shifted so Friday triggers the new week:
 // Shift: add 1 day so Fri (5) becomes Sat (6) in the shifted date, starting new week.
@@ -2506,7 +2518,7 @@ function renderToday() {
             <div class="summary-text">${soonAbsences.map(a => {
               const d = new Date(a.date);
               const label = d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
-              return esc(label) + (a.note ? ' — ' + esc(a.note) : '');
+              return esc(label) + (a.note ? ' - ' + esc(a.note) : '');
             }).join('<br>')}</div>
           </div>
         </div>` : ''}
@@ -2539,7 +2551,7 @@ function renderToday() {
           </div>
         </div>` : ''}
         ${!plan && !pieces.length && !tech.length && !lastLog ? `
-          <p style="color:var(--muted);font-size:0.85rem;margin-top:10px">No notes yet — open full notes to add some.</p>
+          <p style="color:var(--muted);font-size:0.85rem;margin-top:10px">No notes yet - open full notes to add some.</p>
         ` : ''}
         <button class="open-notes-btn ${s.instrument}-btn" onclick="openStudentFrom('${s.id}','today')">Open full notes →</button>
       </div>
@@ -2578,14 +2590,14 @@ function renderWeek() {
       <span style="font-size:1.4rem">🌴</span>
       <div>
         <div style="font-weight:700;font-size:0.9rem;color:#8a6000">${esc(holidayLabel || 'Holiday')}</div>
-        <div style="font-size:0.78rem;color:#b8880a">Timetable paused — lessons shown greyed out for reference</div>
+        <div style="font-size:0.78rem;color:#b8880a">Timetable paused - lessons shown greyed out for reference</div>
       </div>
     </div>`;
   }
 
   let weekTotalMins = 0;
 
-  // Birthday banner — any pupil whose birthday falls within this teaching week
+  // Birthday banner - any pupil whose birthday falls within this teaching week
   const birthdaysThisWeek = pupilsWithBirthdayThisWeek();
   if (birthdaysThisWeek.length > 0) {
     html += `<div style="background:#fdf0f5;border:1.5px solid #e8b8c4;border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:flex-start;gap:10px">
@@ -2593,7 +2605,7 @@ function renderWeek() {
       <div style="flex:1">
         <div style="font-weight:700;font-size:0.9rem;color:#a03a5e;margin-bottom:2px">Birthday${birthdaysThisWeek.length>1?'s':''} this week</div>
         <div style="font-size:0.82rem;color:#8a4a60">${birthdaysThisWeek.map(function(b){
-          return esc(b.name) + ' — ' + esc(b.label);
+          return esc(b.name) + ' - ' + esc(b.label);
         }).join('<br>')}</div>
       </div>
     </div>`;
@@ -2605,7 +2617,7 @@ function renderWeek() {
     const skippedStudents = dayStudents.filter(s => isSkipped(s.id));
     const dayExtras = (extraLessons[currentWeek] || []).filter(e => e.day === day);
     const totalActive = activeStudents.length + dayExtras.length;
-    // Hours for this day — exclude absent pupils
+    // Hours for this day - exclude absent pupils
     const months2 = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
     function isAbsentThisWeek(s) {
       const att = (s.log||[]).find(e => {
@@ -2627,7 +2639,7 @@ function renderWeek() {
     html += `<div class="week-day">
       <div class="week-day-header ${isToday?'today-header':''}">
         ${isToday?'<div class="today-dot"></div>':''}
-        ${day}${isToday?' — Today':''}
+        ${day}${isToday?' - Today':''}
         <span style="margin-left:auto;font-weight:400;letter-spacing:0">${totalActive?totalActive+' lesson'+(totalActive!==1?'s':'')+(dayHrsLabel?' · '+dayHrsLabel:''):'no lessons'}${skippedStudents.length?' · '+skippedStudents.length+' skipped':''}</span>
       </div>`;
 
@@ -2680,7 +2692,7 @@ function renderWeek() {
         : '';
       const isAbsent = att === 'absent-late' || att === 'absent-notice';
       html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer${isAbsent ? ';border:1px dashed #ddd;opacity:0.4;background:#fafafa' : onHoliday ? ';opacity:0.35;filter:grayscale(0.5)' : ''}">
-        <div class="slot-time">${slot.time||'—'}</div>
+        <div class="slot-time">${slot.time||'-'}</div>
         <div class="slot-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
         <div class="slot-info">
           <div class="slot-name">${s.name}${attBadge}${s.followUp?` <span style="font-size:0.85rem" title="Follow up">🚩</span>`:''}${moved?` <span style="font-size:0.68rem;color:var(--violin);font-weight:700">MOVED</span>`:''}${s.frequency==='fortnightly'?' <span style="font-size:0.68rem;color:var(--muted);font-weight:600">fortnightly</span>':''}
@@ -2705,7 +2717,7 @@ function renderWeek() {
       prevEndMins = exStart + parseInt(s.duration||60);
       const exIdx = (extraLessons[currentWeek] || []).findIndex(e => e.studentId === ex.studentId && e.day === ex.day && e.time === ex.time);
       html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer;border-style:dashed;">
-        <div class="slot-time">${ex.time||'—'}</div>
+        <div class="slot-time">${ex.time||'-'}</div>
         <div class="slot-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
         <div class="slot-info">
           <div class="slot-name">${s.name} <span style="font-size:0.68rem;color:var(--string);font-weight:700;background:#dff0d8;padding:1px 6px;border-radius:999px">extra</span></div>
@@ -2717,11 +2729,11 @@ function renderWeek() {
       </div>`;
     }
 
-    // Skipped pupils — collapsed greyed slots
+    // Skipped pupils - collapsed greyed slots
     for (const s of skippedStudents) {
       const slot = effectiveSlot(s);
       html += `<div class="week-slot ${s.instrument}-slot" style="opacity:0.35;min-height:38px;padding:8px 14px;border:1px dashed #ddd;background:#fafafa;cursor:default">
-        <div class="slot-time" style="font-size:0.72rem">${slot.time||'—'}</div>
+        <div class="slot-time" style="font-size:0.72rem">${slot.time||'-'}</div>
         <div class="slot-avatar avatar-${s.instrument}" style="width:28px;height:28px;font-size:0.75rem">${getInitials(s.name)}</div>
         <div class="slot-info">
           <div class="slot-name" style="font-size:0.85rem">${s.name} <span style="font-size:0.65rem;color:var(--muted);background:#e8e4de;padding:1px 6px;border-radius:999px;font-weight:700">skipped</span></div>
@@ -2775,7 +2787,7 @@ function renderRetiredToggle() {
   if (retiredCount === 0 && !showRetiredPupils) { el.innerHTML = ''; return; }
   if (showRetiredPupils) {
     el.innerHTML = '<button onclick="showRetiredPupils=false;renderRoster()" style="background:var(--muted);color:#fff;border:none;border-radius:999px;padding:6px 14px;font-family:\'Special Elite\',cursive;font-size:0.78rem;cursor:pointer">← Back to active pupils</button>'
-      + '<span style="font-size:0.78rem;color:var(--muted);margin-left:10px">Showing ' + retiredCount + ' retired pupil' + (retiredCount!==1?'s':'') + ' — open one to read their notes or bring them back.</span>';
+      + '<span style="font-size:0.78rem;color:var(--muted);margin-left:10px">Showing ' + retiredCount + ' retired pupil' + (retiredCount!==1?'s':'') + ' - open one to read their notes or bring them back.</span>';
   } else {
     el.innerHTML = '<button onclick="showRetiredPupils=true;renderRoster()" style="background:none;border:1.5px solid var(--warm);border-radius:999px;padding:6px 14px;font-family:\'Special Elite\',cursive;font-size:0.78rem;color:var(--muted);cursor:pointer">💤 Show retired (' + retiredCount + ')</button>';
   }
@@ -3053,7 +3065,7 @@ function renderDetail(s, preserveTab = false) {
           <div>
             <div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">${label}</div>
             <input type="text" value="${esc((s.littleDetails||{})[field]||'')}"
-              placeholder="—"
+              placeholder="-"
               oninput="updateLittleDetail('${s.id}','${field}',this.value)"
               style="width:100%;padding:6px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box">
           </div>
@@ -3166,7 +3178,7 @@ function renderDetail(s, preserveTab = false) {
         </summary>
         <div class="section-card before-tile-body" style="background:#f5f0fb;border:1.5px solid var(--viola);border-top:none;margin-top:0">
           <div style="font-size:0.72rem;color:var(--viola);opacity:0.7;margin-bottom:6px">Not included in reports or emails</div>
-          <textarea rows="5" placeholder="Sensitive or confidential notes — these never leave the app…"
+          <textarea rows="5" placeholder="Sensitive or confidential notes - these never leave the app…"
             oninput="updateField('${s.id}','teacherNotes',this.value)"
             style="background:transparent;border-color:rgba(100,60,160,0.2)">${esc(s.teacherNotes||'')}</textarea>
         </div>
@@ -3178,7 +3190,7 @@ function renderDetail(s, preserveTab = false) {
           ${(s.requestedMoves&&s.requestedMoves.filter(m=>new Date(m.fromDate)>=new Date()).length)?`<span class="before-tile-badge">${s.requestedMoves.filter(m=>new Date(m.fromDate)>=new Date()).length}</span>`:''}
         </summary>
         <div class="section-card before-tile-body" style="margin-top:0;border:1.5px solid var(--violin);border-top:none">
-          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px">For a one-off lesson change on a future date — e.g. moving a lesson in 3 weeks' time. This doesn't change the pupil's regular weekly slot.</div>
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px">For a one-off lesson change on a future date - e.g. moving a lesson in 3 weeks' time. This doesn't change the pupil's regular weekly slot.</div>
           ${requestedMovesHTML(s)}
           <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
             <div>
@@ -3248,10 +3260,10 @@ function renderDetail(s, preserveTab = false) {
       </div>` : ''}
       <div class="section-card">
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
-          <span>Quick notes — right now</span>
+          <span>Quick notes - right now</span>
         </div>
         <textarea autocorrect="off" autocapitalize="sentences" spellcheck="false" class="quick-note"
-          placeholder="Jot anything — key words, reminders, 'try this'…"
+          placeholder="Jot anything - key words, reminders, 'try this'…"
           id="during-scratch-${s.id}"
           oninput="autoGrow(this);fixupListContinuation('during-scratch-${s.id}');saveDuring('${s.id}')"
           onkeydown="if(event.key==='Enter')handleListEnter(event)">${esc(s.duringScratch || '')}</textarea>
@@ -3275,7 +3287,7 @@ function renderDetail(s, preserveTab = false) {
 
       <details style="margin-bottom:10px">
         <summary style="font-size:0.88rem;color:var(--viola);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
-          <span>Sketch — bowings, fingerings, notation</span>
+          <span>Sketch - bowings, fingerings, notation</span>
           <span style="font-size:0.7rem;color:var(--muted)">tap to expand</span>
         </summary>
         <div class="section-card" style="margin-top:6px">
@@ -3318,7 +3330,7 @@ function renderDetail(s, preserveTab = false) {
             <button onclick="document.getElementById('after-note-${s.id}').value='';document.getElementById('after-note-${s.id}').dataset.edited='1';saveAfterDraft('${s.id}','');autoGrow(document.getElementById('after-note-${s.id}'))" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
           </span>
         </div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">Built from your plan and during-lesson notes — edit freely before saving to the log.</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">Built from your plan and during-lesson notes - edit freely before saving to the log.</div>
         <textarea autocorrect="off" autocapitalize="sentences" spellcheck="false" class="quick-note" placeholder="What went well, what to remember for next time…"
           id="after-note-${s.id}"
           oninput="autoGrow(this);fixupListContinuation('after-note-${s.id}');this.dataset.edited='1';saveAfterDraft('${s.id}',this.value)"
@@ -3341,7 +3353,7 @@ function renderDetail(s, preserveTab = false) {
       </div>
       <div class="section-card" style="background:#f8fdf5;border:1.5px solid #c8ddb8">
         <div class="section-label" style="color:var(--string);display:flex;align-items:center;justify-content:space-between">
-          <span>📌 Next lesson — what to focus on</span>
+          <span>📌 Next lesson - what to focus on</span>
           <button onclick="clearNextLessonCapture('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
         </div>
         <textarea autocorrect="off" autocapitalize="sentences" spellcheck="false" class="quick-note" style="background:#f0fae8;border-color:#c8ddb8"
@@ -3355,7 +3367,7 @@ function renderDetail(s, preserveTab = false) {
         <div class="save-toast" id="toast-next-${s.id}">✓ Saved to Before tab</div>
       </div>
       <div class="section-card">
-        <div class="section-label">Attendance — today's lesson</div>
+        <div class="section-label">Attendance - today's lesson</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">
           ${attendanceButtonsHTML(s)}
         </div>
@@ -3412,7 +3424,7 @@ function renderDetail(s, preserveTab = false) {
             <button class="admin-panel-close" onclick="closeTechniqueSections('${s.id}')">✕ Close</button>
           </span>
         </div>
-        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:10px">Tap the circle to cycle: not started → working on it → secure.</div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:10px">Tap the circle to cycle: not started → working on it → secure. Use ▲ ▼ to change the order.</div>
         <div id="technique-list-${s.id}">${techniqueChecklistHTML(s)}</div>
         <div style="display:flex;gap:8px;margin-top:10px">
           <input type="text" id="new-technique-${s.id}" placeholder="Add a technique for this pupil…" maxlength="40"
@@ -3425,7 +3437,7 @@ function renderDetail(s, preserveTab = false) {
             <span>⚙ Edit studio default list</span><span style="font-weight:400">tap to expand</span>
           </summary>
           <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
-            <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">This is the starting list for new pupils. Changing it won’t affect pupils who already have a checklist — use their “Reset to default” to pull in changes.</div>
+            <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">This is the starting list for new pupils. Changing it won’t affect pupils who already have a checklist - use their “Reset to default” to pull in changes.</div>
             <div id="technique-defaults-list">${techniqueDefaultsHTML()}</div>
             <div style="display:flex;gap:8px;margin-top:8px">
               <input type="text" id="new-technique-default" placeholder="Add a default technique…" maxlength="40"
@@ -3638,7 +3650,7 @@ function renderDetail(s, preserveTab = false) {
         }
       });
     }
-    // 3. Pure classList tab restoration — no function calls (Gemini's fix)
+    // 3. Pure classList tab restoration - no function calls (Gemini's fix)
     if (preserveTab && activePanelId && activePanelId !== 'panel-before') {
       // Remove active from all tabs and panels
       document.querySelectorAll('.moment-tab').forEach(function(t) { t.classList.remove('active'); });
@@ -3669,7 +3681,7 @@ function absencesHTML(s) {
     var dayLabel = isSoon ? (daysAway===0?'today':daysAway===1?'tomorrow':'in '+daysAway+' days') : '';
     var soonTag = isSoon ? '<span style="font-size:0.65rem;font-weight:700;background:#e67e22;color:#fff;padding:1px 6px;border-radius:999px;margin-left:6px">' + dayLabel + '</span>' : '';
     var dayName = d.toLocaleDateString('en-GB', {weekday:'long'});
-    var noteSpan = ab.note ? '<span style="color:var(--muted);font-size:0.82rem"> \u2014 ' + esc(ab.note) + '</span>' : '';
+    var noteSpan = ab.note ? '<span style="color:var(--muted);font-size:0.82rem"> - ' + esc(ab.note) + '</span>' : '';
     var fillBtn = '';
     if (!isPast) {
       fillBtn = '<button onclick="openFillSlotModal(\'' + s.id + '\',' + i + ',\'' + ab.date + '\',\'' + (s.lessonTime||'') + '\',\'' + dayName + '\')" '
@@ -3691,7 +3703,7 @@ function absencesHTML(s) {
 // ── REQUESTED LESSON MOVES ────────────────────────────────────────────────
 // Distinct from oneOffMoves (which only ever applies to the CURRENT week via
 // the Week view's "Move" button). This is for moving a specific future-dated
-// lesson — e.g. "the lesson on 10 July moves to 12 July" — booked ahead of time.
+// lesson - e.g. "the lesson on 10 July moves to 12 July" - booked ahead of time.
 function requestedMovesHTML(s) {
   const moves = (s.requestedMoves || []);
   if (moves.length === 0) {
@@ -3716,7 +3728,7 @@ function requestedMovesHTML(s) {
       toLabel = toD.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
       if (mv.toTime) toLabel += ' \u00b7 ' + mv.toTime;
     }
-    var noteSpan = mv.note ? '<span style="color:var(--muted);font-size:0.82rem"> \u2014 ' + esc(mv.note) + '</span>' : '';
+    var noteSpan = mv.note ? '<span style="color:var(--muted);font-size:0.82rem"> - ' + esc(mv.note) + '</span>' : '';
     var removeBtn = '<button onclick="removeRequestedMove(\'' + s.id + '\',' + origIdx + ')" '
       + 'style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1;flex-shrink:0">\u00d7</button>';
     return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--warm);' + (isPast ? 'opacity:0.45' : '') + '">'
@@ -3795,9 +3807,9 @@ function addAbsence(id) {
   // Don't add duplicate dates
   if (s.absences.some(a => a.date === date)) { dateEl.value = ''; noteEl.value = ''; return; }
   s.absences.push({ date, note: noteEl.value.trim() });
-  // Also mark attendance as "absent — notice given" on the lesson log for that
+  // Also mark attendance as "absent - notice given" on the lesson log for that
   // date, so it shows up correctly on the Week view without a separate step.
-  // Only touch today-or-future dates — never overwrite past attendance history.
+  // Only touch today-or-future dates - never overwrite past attendance history.
   const today = new Date(); today.setHours(0,0,0,0);
   const [yy, mm, dd] = date.split('-').map(Number);
   const absDate = new Date(yy, mm - 1, dd); absDate.setHours(0,0,0,0);
@@ -3818,7 +3830,7 @@ function removeAbsence(id, idx) {
   const ab = s.absences[idx];
   s.absences.splice(idx, 1);
   // Also clear the matching attendance mark, but only if it's still set to the
-  // auto-applied "absent-notice" status — don't clobber a manually-set status.
+  // auto-applied "absent-notice" status - don't clobber a manually-set status.
   if (ab && s.log) {
     const [yy, mm, dd] = ab.date.split('-').map(Number);
     const absDate = new Date(yy, mm - 1, dd); absDate.setHours(0,0,0,0);
@@ -3839,7 +3851,7 @@ function openFillSlotModal(absentStudentId, absenceIdx, date, time, dayName) {
   const d = new Date(date);
   const dateLabel = d.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
   document.getElementById('fill-slot-desc').textContent =
-    absentStudent.name + ' is absent — ' + dateLabel + (time ? ' at ' + time : '');
+    absentStudent.name + ' is absent - ' + dateLabel + (time ? ' at ' + time : '');
 
   // Store values for confirmFillSlot
   document.getElementById('fill-slot-date').value = date;
@@ -3847,7 +3859,7 @@ function openFillSlotModal(absentStudentId, absenceIdx, date, time, dayName) {
   document.getElementById('fill-slot-day').value  = dayName;
   document.getElementById('fill-slot-time-input').value = time;
 
-  // Populate pupil picker — new pupil option first, then everyone except the absent pupil
+  // Populate pupil picker - new pupil option first, then everyone except the absent pupil
   const select = document.getElementById('fill-slot-pupil');
   select.innerHTML = '<option value="__new__">+ New pupil…</option>' +
     students
@@ -3922,7 +3934,7 @@ function updatePieceRef(id, i, val) { const s=getStudent(id); if(s){if(!s.pieceR
 function pieceDisplayTitle(s, i) {
   const title = (s.pieces||[])[i] || '';
   const ref   = (s.pieceRefs||[])[i] || '';
-  return ref ? title + ' \u2014 ' + ref : title;
+  return ref ? title + ' - ' + ref : title;
 }
 
 function piecesDisplay(s) {
@@ -4055,7 +4067,7 @@ function insertIntoScratch(id, text) {
 }
 
 // Insert a bullet (•) or checkbox (☐) at the START of the current line in any
-// textarea — used by the small formatting toolbar above Lesson notes / Quick notes.
+// textarea - used by the small formatting toolbar above Lesson notes / Quick notes.
 // If the line already starts with that exact marker, tapping again removes it
 // (acts as a toggle), so repeated taps don't stack up duplicate bullets.
 function insertLinePrefix(elId, marker) {
@@ -4071,11 +4083,11 @@ function insertLinePrefix(elId, marker) {
   const line = val.slice(lineStart, lineEndIdx);
   let newLine, deltaLen;
   if (line.startsWith(marker + ' ')) {
-    // Already has this marker — remove it (toggle off)
+    // Already has this marker - remove it (toggle off)
     newLine = line.slice(marker.length + 1);
     deltaLen = -(marker.length + 1);
   } else if (line.startsWith('• ') || line.startsWith('☐ ') || line.startsWith('☑ ')) {
-    // Has a different marker — swap it for the new one
+    // Has a different marker - swap it for the new one
     const oldLen = 2;
     newLine = marker + ' ' + line.slice(oldLen);
     deltaLen = marker.length + 1 - oldLen;
@@ -4114,7 +4126,7 @@ function toggleCheckboxAtCursor(elId) {
 // When Enter is pressed on a line starting with a bullet or tick box marker,
 // continue the list onto the next line with the same marker. Pressing Enter
 // on an EMPTY list item (just the marker, nothing typed after it) breaks out
-// of the list instead — otherwise you'd never be able to stop bulleting.
+// of the list instead - otherwise you'd never be able to stop bulleting.
 function handleListEnter(event) {
   const el = event.target;
   const val = el.value;
@@ -4127,13 +4139,13 @@ function handleListEnter(event) {
   if (line.startsWith('• '))      marker = '•';
   else if (line.startsWith('☐ ')) marker = '☐';
   else if (line.startsWith('☑ ')) marker = '☐'; // new items start unticked
-  if (!marker) return; // not on a list line — let Enter behave normally
+  if (!marker) return; // not on a list line - let Enter behave normally
 
   const content = line.slice(2); // text after "marker space"
   event.preventDefault();
   event.stopPropagation();
   if (content.trim() === '') {
-    // Empty list item — remove the marker and just add a plain new line
+    // Empty list item - remove the marker and just add a plain new line
     const newVal = val.slice(0, lineStart) + val.slice(lineEndIdx);
     el.value = newVal;
     el.setSelectionRange(lineStart, lineStart);
@@ -4151,7 +4163,7 @@ function handleListEnter(event) {
 // Fallback / safety net for the same feature, triggered on every keystroke via
 // oninput rather than intercepting keydown. iPad Safari's software keyboard
 // doesn't always let keydown interception (handleListEnter above) run in time
-// before inserting its own newline — so this catches that case afterwards:
+// before inserting its own newline - so this catches that case afterwards:
 // if a fresh blank line has just appeared directly below a bulleted/tick-box
 // line, it retroactively adds the matching marker to that new line.
 function fixupListContinuation(elId) {
@@ -4175,8 +4187,8 @@ function fixupListContinuation(elId) {
   if (prevLine.startsWith('• '))      marker = '•';
   else if (prevLine.startsWith('☐ ')) marker = '☐';
   else if (prevLine.startsWith('☑ ')) marker = '☐';
-  if (!marker) return; // previous line wasn't a list item — leave it alone
-  if (prevLine.slice(2).trim() === '') return; // previous line was an empty list item — don't re-add (handleListEnter already handles breaking out)
+  if (!marker) return; // previous line wasn't a list item - leave it alone
+  if (prevLine.slice(2).trim() === '') return; // previous line was an empty list item - don't re-add (handleListEnter already handles breaking out)
   // Insert the marker on the now-empty current line
   const insertion = marker + ' ';
   el.value = val.slice(0, curLineStart) + insertion + val.slice(curLineStart);
@@ -4328,7 +4340,7 @@ function saveLog(id) {
   // If an entry for today already exists (e.g. you tapped an attendance button
   // first), merge the notes into it rather than creating a duplicate. Otherwise
   // make a new entry. Either way, default attendance to Present when nothing has
-  // been chosen — a logged note means the lesson happened — but never override
+  // been chosen - a logged note means the lesson happened - but never override
   // a status you've already set (absent / cancelled).
   let entry = s.log.find(e => e.date === today);
   if (entry) {
@@ -4535,7 +4547,7 @@ function applyReplacements(text) {
       .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       .replace(/\s+/g, '[\\s,.;:!?\u2014\u2013-]+');
 
-    // \b only means anything next to a word character — adding it beside a
+    // \b only means anything next to a word character - adding it beside a
     // symbol makes the pattern unmatchable, so only apply it where it fits.
     const openBoundary  = /^\w/.test(from) ? '\\b' : '';
     const closeBoundary = /\w$/.test(from) ? '\\b' : '';
@@ -4544,7 +4556,7 @@ function applyReplacements(text) {
     try {
       regex = new RegExp(openBoundary + escaped + closeBoundary, 'gi');
     } catch(e) {
-      return; // malformed correction — skip rather than break dictation
+      return; // malformed correction - skip rather than break dictation
     }
 
     if (regex.test(text)) {
@@ -4554,7 +4566,7 @@ function applyReplacements(text) {
     }
   });
 
-  // Only tidy whitespace if a correction actually fired — deleting a word
+  // Only tidy whitespace if a correction actually fired - deleting a word
   // leaves a double space behind. Otherwise leave the transcript untouched,
   // so ordinary dictation isn't silently reformatted.
   if (matchedAny) {
@@ -4676,8 +4688,8 @@ function pupilMetaHTML(s) {
 function attendanceButtonsHTML(s) {
   var labels = {
     'present':        '✓ Present',
-    'absent-late':    '✕ Absent — last minute (charges apply)',
-    'absent-notice':  '– Absent — good notice (no charge)',
+    'absent-late':    '✕ Absent - last minute (charges apply)',
+    'absent-notice':  '– Absent - good notice (no charge)',
     'cancelled':      '– Cancelled by me'
   };
   // Find attendance from current teaching week only
@@ -4721,7 +4733,7 @@ function confirmNumberPicker() {
   const title = document.getElementById('number-picker-book-title').value;
   const mode  = document.getElementById('number-picker-mode').value;
   const num   = document.getElementById('number-picker-value').value.trim();
-  const fullTitle = num ? title + ' \u2014 ' + num : title;
+  const fullTitle = num ? title + ' - ' + num : title;
   closeNumberPicker();
   if (mode === 'piece') completePiece(id, title, fullTitle);
   else completeStudy(id, title, fullTitle);
@@ -4810,7 +4822,7 @@ function scalesForWeekHTML(s) {
   // too, flagged, so they can always be cleared.
   var orphans = selected.filter(function(k) { return allKeys.indexOf(k) === -1; });
 
-  if (allKeys.length === 0 && orphans.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No scales assigned yet — add keys in the Technique tab.</p>';
+  if (allKeys.length === 0 && orphans.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No scales assigned yet - add keys in the Technique tab.</p>';
 
   var html = '<div style="display:flex;flex-wrap:wrap;gap:8px">'
     + allKeys.map(function(k) {
@@ -4824,7 +4836,7 @@ function scalesForWeekHTML(s) {
       }).join('')
     + orphans.map(function(k) {
         return '<button onclick="toggleScaleForWeek(\'' + s.id + '\',\'' + k + '\')" '
-          + 'title="No longer in the checklist — tap to remove from this week" '
+          + 'title="No longer in the checklist - tap to remove from this week" '
           + 'style="padding:6px 14px;border-radius:999px;border:1.5px dashed #c0392b;'
           + 'background:transparent;color:#c0392b;'
           + 'font-size:0.88rem;cursor:pointer;font-weight:700">'
@@ -4962,7 +4974,7 @@ function removeBookPurchased(id, category, idx) {
 
 // Pupils whose birthday (day + month, any year) falls within the current
 // teaching week (the 7 days from this week's Saturday). Handles the year
-// boundary — a week spanning 28 Dec–3 Jan matches both December and January
+// boundary - a week spanning 28 Dec–3 Jan matches both December and January
 // birthdays. Returns each pupil's name and a friendly date label.
 function pupilsWithBirthdayThisWeek() {
   const [wy, wm, wd] = currentWeek.split('-').map(Number);
@@ -4997,7 +5009,7 @@ function pupilsWithBirthdayThisWeek() {
 // matter how many times the app is opened. We store the academic year of the
 // last bump in localStorage ('studio_schoolyear_bumped'); if it already
 // matches the current academic year, we do nothing. There is no birth-year to
-// recompute from, so an accidental double-bump could not be undone — hence the
+// recompute from, so an accidental double-bump could not be undone - hence the
 // guard is deliberately strict.
 const SCHOOL_YEAR_LADDER = [
   'Reception','Year 1','Year 2','Year 3','Year 4','Year 5','Year 6',
@@ -5022,7 +5034,7 @@ function autoAdvanceSchoolYears() {
     return;
   }
 
-  // Already advanced for this academic year — nothing to do.
+  // Already advanced for this academic year - nothing to do.
   if (lastBumped >= acadYear) return;
 
   // Advance each pupil exactly one rung, for each academic year missed
@@ -5030,9 +5042,9 @@ function autoAdvanceSchoolYears() {
   const steps = acadYear - lastBumped;
   let changed = false;
   students.forEach(function(s) {
-    if (!s.schoolYear) return; // not set — leave alone
+    if (!s.schoolYear) return; // not set - leave alone
     let idx = SCHOOL_YEAR_LADDER.indexOf(s.schoolYear);
-    if (idx === -1) return; // unrecognised value — don't touch it
+    if (idx === -1) return; // unrecognised value - don't touch it
     const newIdx = Math.min(idx + steps, SCHOOL_YEAR_LADDER.length - 1);
     if (newIdx !== idx) {
       s.schoolYear = SCHOOL_YEAR_LADDER[newIdx];
@@ -5057,7 +5069,7 @@ function birthdayDisplay(dob) {
   const soonNext = diffNext >= 0 && diffNext <= 14;
   if (soon || soonNext) {
     const days = soon ? Math.round(diff) : Math.round(diffNext);
-    return `🎂 Birthday ${formatted} — in ${days} day${days!==1?'s':''}!`;
+    return `🎂 Birthday ${formatted} - in ${days} day${days!==1?'s':''}!`;
   }
   return `🎂 Birthday: ${formatted}`;
 }
@@ -5117,7 +5129,7 @@ function toggleRetirePupil(id) {
   s.retiredDate = s.retired ? new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
   save();
   closeEditModal();
-  // If we're on a pupil's detail page, go back — a just-retired pupil shouldn't
+  // If we're on a pupil's detail page, go back - a just-retired pupil shouldn't
   // sit open in the active view. Otherwise just refresh the roster.
   const detailView = document.getElementById('view-detail');
   if (detailView && detailView.classList.contains('active')) {
@@ -5202,8 +5214,8 @@ function exportThisWeekIcs() {
       + 'DTSTAMP:' + fmtIcsDateTime(new Date(todayStamp), '00:00') + '\r\n'
       + 'DTSTART:' + dtStart + '\r\n'
       + 'DTEND:' + dtEnd + '\r\n'
-      + 'SUMMARY:' + (s.name || 'Lesson') + ' — ' + (s.instrument || '') + (wasMoved ? ' (moved)' : '') + '\r\n'
-      + 'DESCRIPTION:' + (s.level || '') + ' lesson, ' + duration + ' minutes' + (wasMoved ? ' — moved from usual slot' : '') + '\r\n'
+      + 'SUMMARY:' + (s.name || 'Lesson') + ' - ' + (s.instrument || '') + (wasMoved ? ' (moved)' : '') + '\r\n'
+      + 'DESCRIPTION:' + (s.level || '') + ' lesson, ' + duration + ' minutes' + (wasMoved ? ' - moved from usual slot' : '') + '\r\n'
       + 'END:VEVENT\r\n';
     count++;
   });
@@ -5224,8 +5236,8 @@ function exportThisWeekIcs() {
       + 'DTSTAMP:' + fmtIcsDateTime(new Date(todayStamp), '00:00') + '\r\n'
       + 'DTSTART:' + dtStart + '\r\n'
       + 'DTEND:' + dtEnd + '\r\n'
-      + 'SUMMARY:' + (s.name || 'Lesson') + ' — ' + (s.instrument || '') + ' (extra)\r\n'
-      + 'DESCRIPTION:' + (s.level || '') + ' lesson, ' + duration + ' minutes — extra/fill slot\r\n'
+      + 'SUMMARY:' + (s.name || 'Lesson') + ' - ' + (s.instrument || '') + ' (extra)\r\n'
+      + 'DESCRIPTION:' + (s.level || '') + ' lesson, ' + duration + ' minutes - extra/fill slot\r\n'
       + 'END:VEVENT\r\n';
     count++;
   });
@@ -5283,7 +5295,7 @@ function exportTimetableIcs() {
       + 'DTSTART:' + dtStart + '\r\n'
       + 'DTEND:' + dtEnd + '\r\n'
       + 'RRULE:FREQ=' + freq + ';BYDAY=' + icsDay + '\r\n'
-      + 'SUMMARY:' + (s.name || 'Lesson') + ' — ' + (s.instrument || '') + '\r\n'
+      + 'SUMMARY:' + (s.name || 'Lesson') + ' - ' + (s.instrument || '') + '\r\n'
       + 'DESCRIPTION:' + (s.level || '') + ' lesson, ' + duration + ' minutes\r\n'
       + 'END:VEVENT\r\n';
   });
@@ -5344,7 +5356,7 @@ async function doSyncFromUrl() {
     const text = await resp.text();
     parseAndImportIcs(text);
   } catch(e) {
-    alert('Could not fetch the calendar — try the Paste .ics option instead.');
+    alert('Could not fetch the calendar - try the Paste .ics option instead.');
   } finally {
     if (btn) { btn.textContent = '🔗 Sync URL'; btn.disabled = false; }
   }
@@ -5372,7 +5384,7 @@ function parseAndImportIcs(text) {
       current.dtstart_full = line;    // full line inc. TZID param
     }
     if (baseKey === 'RRULE')   current.rrule    = val;
-    // Skip RECURRENCE-ID events (one-off overrides) — they're not the master slot
+    // Skip RECURRENCE-ID events (one-off overrides) - they're not the master slot
     if (baseKey === 'RECURRENCE-ID') current.isException = true;
   }
 
@@ -5441,7 +5453,7 @@ function parseDtstart(line) {
     valueStr = line.slice(line.lastIndexOf(':') + 1).trim();
   }
 
-  // Strip trailing Z (UTC flag — we treat TZID=GMT Standard Time as local UK time)
+  // Strip trailing Z (UTC flag - we treat TZID=GMT Standard Time as local UK time)
   const isUTC = valueStr.endsWith('Z');
   const clean = valueStr.replace('Z','');
 
@@ -5458,7 +5470,7 @@ function parseDtstart(line) {
     hour = parseInt(clean.slice(tIdx+1, tIdx+3));
     min  = parseInt(clean.slice(tIdx+3, tIdx+5));
   } else if (clean.length === 8) {
-    // All-day event — no time
+    // All-day event - no time
     return null;
   }
 
@@ -5473,7 +5485,7 @@ function parseDtstart(line) {
     };
   }
 
-  // TZID or floating — treat the digits as UK local time directly
+  // TZID or floating - treat the digits as UK local time directly
   return {
     day:  dayNames[new Date(year, month, dayN).getDay()],
     time: String(hour).padStart(2,'0') + ':' + String(min).padStart(2,'0')
@@ -5566,86 +5578,102 @@ function savePieceToLibrary(studentId, idx, title) {
 
 const PIECE_DB = [
   // SCALABILITY
-  { title:'Scalability — 1 octave', composer:'Gaidoni', grade:'Pre-Grade 1', cat:'Scalability' },
-  { title:'Scalability — 2 octave', composer:'Gaidoni', grade:'Grade 1-3',   cat:'Scalability' },
-  { title:'Scalability — 3 octave', composer:'Gaidoni', grade:'Grade 4+',    cat:'Scalability' },
+  { title:'Scalability - 1 octave', composer:'Gaidoni', grade:'Pre-Grade 1', cat:'Scalability' },
+  { title:'Scalability - 2 octave', composer:'Gaidoni', grade:'Grade 1-3',   cat:'Scalability' },
+  { title:'Scalability - 3 octave', composer:'Gaidoni', grade:'Grade 4+',    cat:'Scalability' },
 
   // TECHNIQUE
-  { title:'Ultimate Shifting Exercise — Viola', composer:'Gaidoni', grade:'Grade 3+', cat:'Technique' },
-  { title:'Ultimate Shifting Exercise — Violin', composer:'Gaidoni', grade:'Grade 3+', cat:'Technique' },
+  { title:'Ultimate Shifting Exercise - Viola', composer:'Gaidoni', grade:'Grade 3+', cat:'Technique' },
+  { title:'Ultimate Shifting Exercise - Violin', composer:'Gaidoni', grade:'Grade 3+', cat:'Technique' },
 
-  // STUDIES — VIOLA
-  { title:'Superstudies 1', composer:'Mary Cohen', grade:'Grade 1', cat:'Studies — Viola' },
-  { title:'Superstudies 2', composer:'Mary Cohen', grade:'Grade 2-4', cat:'Studies — Viola' },
-  { title:'My First Studies', composer:'Valérie Bime-Apparailly', grade:'Grade 1-3', cat:'Studies — Viola' },
-  { title:'String Power 1 & 2', composer:'Sally O\'Reilly', grade:'Grade 1-3', cat:'Studies — Viola' },
-  { title:'Finger Fun Viola Workbook', composer:'Daryl Silberman', grade:'Grade 1', cat:'Studies — Viola' },
-  { title:'10 Studies for Viola', composer:'Peter Martin', grade:'Grade 2-3', cat:'Studies — Viola' },
-  { title:'10 More Studies for Viola', composer:'Peter Martin', grade:'Grade 3-4', cat:'Studies — Viola' },
-  { title:'Dancla — 36 Melodious & Easy Studies', composer:'Dancla', grade:'Grade 2-6', cat:'Studies — Viola' },
-  { title:'Wohlfahrt — Studies Op. 45', composer:'Wohlfahrt', grade:'Grade 2-8', cat:'Studies — Viola' },
-  { title:'Wohlfahrt — Foundation Studies Book 1', composer:'Wohlfahrt', grade:'Grade 3-5', cat:'Studies — Viola' },
-  { title:'The Positions', composer:'Samuel Flor', grade:'Grade 3-8', cat:'Studies — Viola' },
-  { title:'Schradieck — School of Technique Book I (Positions)', composer:'Schradieck', grade:'Grade 4-8', cat:'Studies — Viola' },
-  { title:'Schradieck — School of Technique Book II (Double Stopping)', composer:'Schradieck', grade:'Grade 5-8', cat:'Studies — Viola' },
-  { title:'Schradieck — School of Technique Book III (Bowing)', composer:'Schradieck', grade:'Grade 5-8', cat:'Studies — Viola' },
-  { title:'Melodious Double Stop', composer:'Josephine Trott', grade:'Grade 4-6', cat:'Studies — Viola' },
-  { title:'Mazas — Viola Studies Op. 36', composer:'Mazas', grade:'Grade 5-8+', cat:'Studies — Viola' },
-  { title:'Dancla — 15 Studies Op. 68 (Viola Duets)', composer:'Dancla', grade:'Grade 5-8', cat:'Studies — Viola' },
-  { title:'Sevcik Op. 3 — 40 Variations', composer:'Sevcik', grade:'All grades', cat:'Studies — Viola' },
-  { title:'Dont — 24 Exercises Op. 37', composer:'Dont', grade:'Grade 8+', cat:'Studies — Viola' },
-  { title:'Kreutzer — 42 Studies (Ricordi)', composer:'Kreutzer', grade:'Grade 6-8+', cat:'Studies — Viola' },
-  { title:'Campagnoli — 41 Caprices Op. 22', composer:'Campagnoli', grade:'Grade 8+', cat:'Studies — Viola' },
-  { title:'Rode — 24 Caprices', composer:'Rode', grade:'Grade 8+', cat:'Studies — Viola' },
+  // STUDIES - VIOLA
+  { title:'Superstudies 1', composer:'Mary Cohen', grade:'Grade 1', cat:'Studies - Viola' },
+  { title:'Superstudies 2', composer:'Mary Cohen', grade:'Grade 2-4', cat:'Studies - Viola' },
+  { title:'My First Studies', composer:'Valérie Bime-Apparailly', grade:'Grade 1-3', cat:'Studies - Viola' },
+  { title:'String Power 1 & 2', composer:'Sally O\'Reilly', grade:'Grade 1-3', cat:'Studies - Viola' },
+  { title:'Finger Fun Viola Workbook', composer:'Daryl Silberman', grade:'Grade 1', cat:'Studies - Viola' },
+  { title:'10 Studies for Viola', composer:'Peter Martin', grade:'Grade 2-3', cat:'Studies - Viola' },
+  { title:'10 More Studies for Viola', composer:'Peter Martin', grade:'Grade 3-4', cat:'Studies - Viola' },
+  { title:'Dancla - 36 Melodious & Easy Studies', composer:'Dancla', grade:'Grade 2-6', cat:'Studies - Viola' },
+  { title:'Wohlfahrt - Studies Op. 45', composer:'Wohlfahrt', grade:'Grade 2-8', cat:'Studies - Viola' },
+  { title:'Wohlfahrt - Foundation Studies Book 1', composer:'Wohlfahrt', grade:'Grade 3-5', cat:'Studies - Viola' },
+  { title:'The Positions', composer:'Samuel Flor', grade:'Grade 3-8', cat:'Studies - Viola' },
+  { title:'Schradieck - School of Technique Book I (Positions)', composer:'Schradieck', grade:'Grade 4-8', cat:'Studies - Viola' },
+  { title:'Schradieck - School of Technique Book II (Double Stopping)', composer:'Schradieck', grade:'Grade 5-8', cat:'Studies - Viola' },
+  { title:'Schradieck - School of Technique Book III (Bowing)', composer:'Schradieck', grade:'Grade 5-8', cat:'Studies - Viola' },
+  { title:'Melodious Double Stop', composer:'Josephine Trott', grade:'Grade 4-6', cat:'Studies - Viola' },
+  { title:'Mazas - Viola Studies Op. 36', composer:'Mazas', grade:'Grade 5-8+', cat:'Studies - Viola' },
+  { title:'Dancla - 15 Studies Op. 68 (Viola Duets)', composer:'Dancla', grade:'Grade 5-8', cat:'Studies - Viola' },
+  { title:'Sevcik Op. 3 - 40 Variations', composer:'Sevcik', grade:'All grades', cat:'Studies - Viola' },
+  { title:'Dont - 24 Exercises Op. 37', composer:'Dont', grade:'Grade 8+', cat:'Studies - Viola' },
+  { title:'Kreutzer - 42 Studies (Ricordi)', composer:'Kreutzer', grade:'Grade 6-8+', cat:'Studies - Viola' },
+  { title:'Campagnoli - 41 Caprices Op. 22', composer:'Campagnoli', grade:'Grade 8+', cat:'Studies - Viola' },
+  { title:'Rode - 24 Caprices', composer:'Rode', grade:'Grade 8+', cat:'Studies - Viola' },
 
-  // STUDIES — VIOLIN
-  { title:'Schradieck — School of Technique Book I (Positions)', composer:'Schradieck', grade:'Grade 4-8', cat:'Studies — Violin' },
-  { title:'Schradieck — School of Technique Book II (Double Stopping)', composer:'Schradieck', grade:'Grade 5-8', cat:'Studies — Violin' },
-  { title:'Schradieck — School of Technique Book III (Bowing)', composer:'Schradieck', grade:'Grade 5-8', cat:'Studies — Violin' },
-  { title:'Dancla — 36 Studies Op. 84', composer:'Dancla', grade:'Grade 2-6', cat:'Studies — Violin' },
-  { title:'Wohlfahrt — Studies Op. 45', composer:'Wohlfahrt', grade:'Grade 2-8', cat:'Studies — Violin' },
-  { title:'Melodious Double Stops', composer:'Josephine Trott', grade:'Grade 4-6', cat:'Studies — Violin' },
-  { title:'Mazas — Violin Studies Op. 36', composer:'Mazas', grade:'Grade 6-8', cat:'Studies — Violin' },
-  { title:'Sevcik Op. 3 — 40 Variations', composer:'Sevcik', grade:'All grades', cat:'Studies — Violin' },
-  { title:'Kreutzer — 42 Studies (Ricordi)', composer:'Kreutzer', grade:'Grade 6-8+', cat:'Studies — Violin' },
-  { title:'Kreutzer — 42 Studies (Galamian)', composer:'Kreutzer', grade:'Grade 6-8+', cat:'Studies — Violin' },
+  // STUDIES - VIOLIN
+  { title:'Schradieck - School of Technique Book I (Positions)', composer:'Schradieck', grade:'Grade 4-8', cat:'Studies - Violin' },
+  { title:'Schradieck - School of Technique Book II (Double Stopping)', composer:'Schradieck', grade:'Grade 5-8', cat:'Studies - Violin' },
+  { title:'Schradieck - School of Technique Book III (Bowing)', composer:'Schradieck', grade:'Grade 5-8', cat:'Studies - Violin' },
+  { title:'Dancla - 36 Studies Op. 84', composer:'Dancla', grade:'Grade 2-6', cat:'Studies - Violin' },
+  { title:'Wohlfahrt - Studies Op. 45', composer:'Wohlfahrt', grade:'Grade 2-8', cat:'Studies - Violin' },
+  { title:'Melodious Double Stops', composer:'Josephine Trott', grade:'Grade 4-6', cat:'Studies - Violin' },
+  { title:'Mazas - Violin Studies Op. 36', composer:'Mazas', grade:'Grade 6-8', cat:'Studies - Violin' },
+  { title:'Sevcik Op. 3 - 40 Variations', composer:'Sevcik', grade:'All grades', cat:'Studies - Violin' },
+  { title:'Kreutzer - 42 Studies (Ricordi)', composer:'Kreutzer', grade:'Grade 6-8+', cat:'Studies - Violin' },
+  { title:'Kreutzer - 42 Studies (Galamian)', composer:'Kreutzer', grade:'Grade 6-8+', cat:'Studies - Violin' },
 
-  // REPERTOIRE — VIOLA
-  { title:'York Bowen — Sonata No. 1 in C minor', composer:'York Bowen', grade:'Grade 8+', cat:'Repertoire — Viola' },
-  { title:'Noack — Heinzelmännchens Wachtparade Op. 5', composer:'Noack/Birtel', grade:'Grade 3-5', cat:'Repertoire — Viola' },
+  // REPERTOIRE - VIOLA
+  { title:'York Bowen - Sonata No. 1 in C minor', composer:'York Bowen', grade:'Grade 8+', cat:'Repertoire - Viola' },
+  { title:'Noack - Heinzelmännchens Wachtparade Op. 5', composer:'Noack/Birtel', grade:'Grade 3-5', cat:'Repertoire - Viola' },
 
-  // REPERTOIRE — VIOLIN
-  { title:'Rieding — Air Varié Op. 23 No. 3', composer:'Oscar Rieding', grade:'Grade 3-4', cat:'Repertoire — Violin' },
-  { title:'Viola Time Starters', composer:'Blackwell', grade:'Grade 1', cat:'Beginner Repertoire — Viola' },
-  { title:'Viola Time Joggers', composer:'Blackwell', grade:'Grade 1', cat:'Beginner Repertoire — Viola' },
-  { title:'Viola Time Runners', composer:'Blackwell', grade:'Grade 1-2', cat:'Beginner Repertoire — Viola' },
-  { title:'Viola Time Sprinters', composer:'Blackwell', grade:'Grade 2-3', cat:'Beginner Repertoire — Viola' },
-  { title:'Viola Time Scales 1', composer:'Blackwell', grade:'Grade 1-2', cat:'Beginner Repertoire — Viola' },
-  { title:'Viola Time Scales 2', composer:'Blackwell', grade:'Grade 3-4', cat:'Beginner Repertoire — Viola' },
-  { title:'Stepping Stones', composer:'Colledge', grade:'Grade 1', cat:'Beginner Repertoire — Viola' },
-  { title:'Waggon Wheels', composer:'Colledge', grade:'Grade 1-2', cat:'Beginner Repertoire — Viola' },
-  { title:'Fast Forward', composer:'Colledge', grade:'Grade 2-3', cat:'Beginner Repertoire — Viola' },
-  { title:'Shooting Stars', composer:'Colledge', grade:'Grade 3-4', cat:'Beginner Repertoire — Viola' },
+  // REPERTOIRE - VIOLIN
+  { title:'Rieding - Air Varié Op. 23 No. 3', composer:'Oscar Rieding', grade:'Grade 3-4', cat:'Repertoire - Violin' },
+  { title:'Viola Time Starters', composer:'Blackwell', grade:'Grade 1', cat:'Beginner Repertoire - Viola' },
+  { title:'Viola Time Joggers', composer:'Blackwell', grade:'Grade 1', cat:'Beginner Repertoire - Viola' },
+  { title:'Viola Time Runners', composer:'Blackwell', grade:'Grade 1-2', cat:'Beginner Repertoire - Viola' },
+  { title:'Viola Time Sprinters', composer:'Blackwell', grade:'Grade 2-3', cat:'Beginner Repertoire - Viola' },
+  { title:'Viola Time Scales 1', composer:'Blackwell', grade:'Grade 1-2', cat:'Beginner Repertoire - Viola' },
+  { title:'Viola Time Scales 2', composer:'Blackwell', grade:'Grade 3-4', cat:'Beginner Repertoire - Viola' },
+  { title:'Stepping Stones', composer:'Colledge', grade:'Grade 1', cat:'Beginner Repertoire - Viola' },
+  { title:'Waggon Wheels', composer:'Colledge', grade:'Grade 1-2', cat:'Beginner Repertoire - Viola' },
+  { title:'Fast Forward', composer:'Colledge', grade:'Grade 2-3', cat:'Beginner Repertoire - Viola' },
+  { title:'Shooting Stars', composer:'Colledge', grade:'Grade 3-4', cat:'Beginner Repertoire - Viola' },
 
-  // BEGINNER REPERTOIRE — VIOLIN
-  { title:'Fiddle Time Starters', composer:'Blackwell', grade:'Grade 1', cat:'Beginner Repertoire — Violin' },
-  { title:'Fiddle Time Joggers', composer:'Blackwell', grade:'Grade 1', cat:'Beginner Repertoire — Violin' },
-  { title:'Fiddle Time Runners', composer:'Blackwell', grade:'Grade 1-2', cat:'Beginner Repertoire — Violin' },
-  { title:'Fiddle Time Sprinters', composer:'Blackwell', grade:'Grade 2-3', cat:'Beginner Repertoire — Violin' },
-  { title:'Fiddle Time Scales 1', composer:'Blackwell', grade:'Grade 1-2', cat:'Beginner Repertoire — Violin' },
-  { title:'Fiddle Time Scales 2', composer:'Blackwell', grade:'Grade 3-4', cat:'Beginner Repertoire — Violin' },
-  { title:'Stepping Stones', composer:'Colledge', grade:'Grade 1', cat:'Beginner Repertoire — Violin' },
-  { title:'Waggon Wheels', composer:'Colledge', grade:'Grade 1-2', cat:'Beginner Repertoire — Violin' },
-  { title:'Fast Forward', composer:'Colledge', grade:'Grade 2-3', cat:'Beginner Repertoire — Violin' },
-  { title:'Shooting Stars', composer:'Colledge', grade:'Grade 3-4', cat:'Beginner Repertoire — Violin' },
-  { title:'Violin Playtime Book 3', composer:'Paul de Keyser', grade:'Grade 1-2', cat:'Beginner Repertoire — Violin' },
-  { title:'Violin Playtime Studies', composer:'Paul de Keyser', grade:'Grade 2-3', cat:'Beginner Repertoire — Violin' },
-  { title:'Violin Study Time', composer:'Paul de Keyser', grade:'Grade 3-4', cat:'Beginner Repertoire — Violin' },
-  { title:'The Young Violinist\'s Repertoire Book 4', composer:'de Keyser & Waterman', grade:'Grade 4-5', cat:'Beginner Repertoire — Violin' },
-  { title:'Violin Star 1', composer:'Edward Huws Jones', grade:'Beginner', cat:'Beginner Repertoire — Violin' },
-  { title:'Violin Star 2', composer:'Edward Huws Jones', grade:'Grade 1', cat:'Beginner Repertoire — Violin' },
-  { title:'Violin Star 3', composer:'Edward Huws Jones', grade:'Grade 1-2', cat:'Beginner Repertoire — Violin' },
+  // BEGINNER REPERTOIRE - VIOLIN
+  { title:'Fiddle Time Starters', composer:'Blackwell', grade:'Grade 1', cat:'Beginner Repertoire - Violin' },
+  { title:'Fiddle Time Joggers', composer:'Blackwell', grade:'Grade 1', cat:'Beginner Repertoire - Violin' },
+  { title:'Fiddle Time Runners', composer:'Blackwell', grade:'Grade 1-2', cat:'Beginner Repertoire - Violin' },
+  { title:'Fiddle Time Sprinters', composer:'Blackwell', grade:'Grade 2-3', cat:'Beginner Repertoire - Violin' },
+  { title:'Fiddle Time Scales 1', composer:'Blackwell', grade:'Grade 1-2', cat:'Beginner Repertoire - Violin' },
+  { title:'Fiddle Time Scales 2', composer:'Blackwell', grade:'Grade 3-4', cat:'Beginner Repertoire - Violin' },
+  { title:'Stepping Stones', composer:'Colledge', grade:'Grade 1', cat:'Beginner Repertoire - Violin' },
+  { title:'Waggon Wheels', composer:'Colledge', grade:'Grade 1-2', cat:'Beginner Repertoire - Violin' },
+  { title:'Fast Forward', composer:'Colledge', grade:'Grade 2-3', cat:'Beginner Repertoire - Violin' },
+  { title:'Shooting Stars', composer:'Colledge', grade:'Grade 3-4', cat:'Beginner Repertoire - Violin' },
+  { title:'Violin Playtime Book 3', composer:'Paul de Keyser', grade:'Grade 1-2', cat:'Beginner Repertoire - Violin' },
+  { title:'Violin Playtime Studies', composer:'Paul de Keyser', grade:'Grade 2-3', cat:'Beginner Repertoire - Violin' },
+  { title:'Violin Study Time', composer:'Paul de Keyser', grade:'Grade 3-4', cat:'Beginner Repertoire - Violin' },
+  { title:'The Young Violinist\'s Repertoire Book 4', composer:'de Keyser & Waterman', grade:'Grade 4-5', cat:'Beginner Repertoire - Violin' },
+  { title:'Violin Star 1', composer:'Edward Huws Jones', grade:'Beginner', cat:'Beginner Repertoire - Violin' },
+  { title:'Violin Star 2', composer:'Edward Huws Jones', grade:'Grade 1', cat:'Beginner Repertoire - Violin' },
+  { title:'Violin Star 3', composer:'Edward Huws Jones', grade:'Grade 1-2', cat:'Beginner Repertoire - Violin' },
 ];
+
+// One spelling for piece categories. The built-in list above uses a long dash
+// ("Studies - Viola") but the dropdowns use "Studies - Viola", so filtering
+// missed the built-in pieces. Normalise everything (built-ins, your own pieces,
+// hidden/edited keys, deleted categories) to the dropdown spelling on load.
+function normPieceCat(c) { return String(c || '').replace(/\s+[—–]\s+/g, ' - ').replace(/—/g, '-'); }
+function normalisePieceCats() {
+  PIECE_DB.forEach(function(p) { p.cat = normPieceCat(p.cat); p.title = normPieceCat(p.title); });
+  customPieces.forEach(function(p) { p.cat = normPieceCat(p.cat); p.title = normPieceCat(p.title); });
+  hiddenPieces = hiddenPieces.map(function(k) {
+    const i = String(k).lastIndexOf('|||');
+    return i < 0 ? k : normPieceCat(k.slice(0, i)) + '|||' + normPieceCat(k.slice(i + 3));
+  });
+  hiddenPieceCats = hiddenPieceCats.map(normPieceCat);
+}
+normalisePieceCats();
 
 function buildCumulativeNote(s) {
   const parts = [];
@@ -5729,7 +5757,7 @@ function refSummary(s) {
 
   return '<details open style="margin-bottom:10px">'
     + '<summary style="font-size:0.75rem;font-weight:700;color:var(--muted);cursor:pointer;padding:8px 12px;background:var(--warm);border-radius:10px;list-style:none;display:flex;align-items:center;justify-content:space-between">'
-    + '<span>\ud83d\udccb Before \u2014 your plan &amp; notes</span>'
+    + '<span>\ud83d\udccb Before - your plan &amp; notes</span>'
     + '<span style="font-size:0.7rem;font-weight:400">tap to collapse</span>'
     + '</summary>'
     + '<div style="background:var(--warm);border-radius:0 0 10px 10px;padding:10px 12px;margin-top:2px">'
@@ -5845,9 +5873,9 @@ function doubleStopCheck(studentId, key, type) {
   document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
 }
 
-// ── SEVCIK OP. 3 — 40 VARIATIONS TICK CHART ─────────────────────────────────
+// ── SEVCIK OP. 3 - 40 VARIATIONS TICK CHART ─────────────────────────────────
 // Fixed checklist: Theme + Var. 1 through 40. Stored as s.sevcikOp3 = { Theme: true, '1': true, ... }
-// Styled to match the scale checklist cards — small square tick boxes sat
+// Styled to match the scale checklist cards - small square tick boxes sat
 // right next to their number. Theme on its own short row at the top, then
 // Var. 1–40 in a single row of 8 columns (5 numbers each), tightly packed
 // rather than stretched across the available width.
@@ -5889,7 +5917,7 @@ function sevcikHTML(s) {
 }
 
 // A–Z copy of a list of books by name (numbers in names sort naturally, so
-// "Book 2" comes before "Book 10"). Display only — the saved order is untouched.
+// "Book 2" comes before "Book 10"). Display only - the saved order is untouched.
 function sortByName(list) {
   return (list || []).slice().sort(function(a, b) {
     return String(a.name || '').localeCompare(String(b.name || ''), 'en-GB', { numeric: true, sensitivity: 'base' });
@@ -5897,7 +5925,7 @@ function sortByName(list) {
 }
 
 // ── CUSTOM STUDY BOOKS ────────────────────────────────────────────────────────
-// Get a book's list of studies — supports the new `studies` array and the old
+// Get a book's list of studies - supports the new `studies` array and the old
 // `count` form (auto-numbered 1..n) for backward compatibility.
 function bookStudies(book) {
   if (Array.isArray(book.studies) && book.studies.length) return book.studies;
@@ -5979,7 +6007,7 @@ function bookTicksHTML(studies, ticks, tickFn, sid, bIdx) {
 
 function studyBooksHTML(s) {
   const books = s.studyBooks || [];
-  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No study books yet — tap “＋ Add study book” to pull one from your bank.</p>';
+  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No study books yet - tap “＋ Add study book” to pull one from your bank.</p>';
   return books.map(function(book, bIdx) {
     const ticks = book.ticks || {};
     const studies = bookStudies(book);
@@ -6090,7 +6118,7 @@ function confirmAddStudyBook() {
   if (el) el.innerHTML = studyBooksHTML(s);
 }
 
-// Re-draw a list of books but keep any book that was open, open — so you can
+// Re-draw a list of books but keep any book that was open, open - so you can
 // tick several studies in a row without the book snapping shut each time.
 function rerenderKeepOpen(containerId, html) {
   const el = document.getElementById(containerId); if (!el) return;
@@ -6226,7 +6254,7 @@ function removeBankBook(bankId) {
 // ── METHOD BOOKS (same principle as study books, separate bank) ───────────
 function methodBooksHTML(s) {
   const books = s.methodBooks || [];
-  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No method books yet — tap “＋ Add method book” to pull one from your bank.</p>';
+  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No method books yet - tap “＋ Add method book” to pull one from your bank.</p>';
   return books.map(function(book, bIdx) {
     const ticks = book.ticks || {};
     const studies = bookStudies(book);
@@ -6408,7 +6436,7 @@ function removeMethodBankBook(bankId) {
 // ── ALBUMS (same principle as study / method books, separate bank) ─────────
 function albumsHTML(s) {
   const books = s.albums || [];
-  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No albums yet — tap “＋ Add album” to pull one from your bank.</p>';
+  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No albums yet - tap “＋ Add album” to pull one from your bank.</p>';
   return books.map(function(book, bIdx) {
     const ticks = book.ticks || {};
     const studies = bookStudies(book);
@@ -6642,7 +6670,7 @@ function removeDoubleStopKey(studentId, key) {
 
 // Single unified scale chart: one grid, types down the rows, keys across the
 // columns. Tap a cell to tick/untick that key+type combo (across all of that
-// key's configured octaves at once — octave count is set per key via the
+// key's configured octaves at once - octave count is set per key via the
 // existing "oct" picker, same as before, just no longer shown per-cell).
 // Reads/writes the same s.scaleChecklist[key][type][octave] data as before.
 // ── TECHNIQUE CHECKLIST ───────────────────────────────────────────────────
@@ -6663,6 +6691,17 @@ function seedTechniqueIfNeeded(s) {
   return s.techniqueChecklist;
 }
 
+// Small ▲ ▼ pair for reordering a list row. Disabled at the ends.
+function moveArrowsHTML(upCall, downCall, isFirst, isLast) {
+  const btn = function(call, label, off, title) {
+    return '<button ' + (off ? 'disabled ' : 'onclick="' + call + '" ') + 'title="' + title + '" '
+      + 'style="width:30px;height:26px;border-radius:7px;border:1.5px solid ' + (off ? 'transparent' : '#d6ddd2') + ';background:' + (off ? 'transparent' : '#fff') + ';'
+      + 'color:' + (off ? '#ddd' : 'var(--viola)') + ';font-size:0.7rem;cursor:' + (off ? 'default' : 'pointer') + ';padding:0;line-height:1">' + label + '</button>';
+  };
+  return '<span style="flex:0 0 auto;display:inline-flex;gap:4px">'
+    + btn(upCall, '▲', isFirst, 'Move up') + btn(downCall, '▼', isLast, 'Move down') + '</span>';
+}
+
 function techniqueChecklistHTML(s) {
   const list = seedTechniqueIfNeeded(s);
   if (list.length === 0) {
@@ -6676,9 +6715,22 @@ function techniqueChecklistHTML(s) {
         'style="flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:2px solid ' + lv.dot + ';background:' + dotFill + ';cursor:pointer;padding:0"></button>' +
       '<span style="flex:1;font-size:0.92rem;color:' + lv.fg + ';font-weight:' + (item.level?600:400) + '">' + esc(item.name) + '</span>' +
       '<button onclick="cycleTechnique(\'' + s.id + '\',' + i + ')" style="flex:0 0 auto;background:none;border:none;font-size:0.72rem;color:' + lv.fg + ';cursor:pointer;font-family:\'Special Elite\',cursive;white-space:nowrap">' + lv.label + '</button>' +
+      moveArrowsHTML('moveTechnique(\'' + s.id + '\',' + i + ',-1)', 'moveTechnique(\'' + s.id + '\',' + i + ',1)', i === 0, i === list.length - 1) +
       '<button onclick="removeTechnique(\'' + s.id + '\',' + i + ')" title="Remove" style="flex:0 0 auto;background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:0 2px">×</button>' +
     '</div>';
   }).join('');
+}
+
+// Swap a technique with its neighbour (dir -1 = up, 1 = down)
+function moveTechnique(id, idx, dir) {
+  const s = getStudent(id); if (!s) return;
+  const list = seedTechniqueIfNeeded(s);
+  const j = idx + dir;
+  if (j < 0 || j >= list.length) return;
+  const tmp = list[idx]; list[idx] = list[j]; list[j] = tmp;
+  save();
+  const el = document.getElementById('technique-list-' + id);
+  if (el) el.innerHTML = techniqueChecklistHTML(s);
 }
 
 function cycleTechnique(id, idx) {
@@ -6727,9 +6779,19 @@ function techniqueDefaultsHTML() {
   return techniqueDefaults.map(function(name, i) {
     return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">' +
       '<span style="flex:1;font-size:0.88rem">' + esc(name) + '</span>' +
+      moveArrowsHTML('moveTechniqueDefault(' + i + ',-1)', 'moveTechniqueDefault(' + i + ',1)', i === 0, i === techniqueDefaults.length - 1) +
       '<button onclick="removeTechniqueDefault(' + i + ')" title="Remove" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>' +
     '</div>';
   }).join('');
+}
+
+function moveTechniqueDefault(idx, dir) {
+  const j = idx + dir;
+  if (j < 0 || j >= techniqueDefaults.length) return;
+  const tmp = techniqueDefaults[idx]; techniqueDefaults[idx] = techniqueDefaults[j]; techniqueDefaults[j] = tmp;
+  save();
+  const el = document.getElementById('technique-defaults-list');
+  if (el) el.innerHTML = techniqueDefaultsHTML();
 }
 
 function addTechniqueDefault() {
@@ -6752,7 +6814,7 @@ function removeTechniqueDefault(idx) {
 
 function scalesHTML(s) {
   const keys = s.scaleKeys || [];
-  if (keys.length === 0) return '<p style="color:var(--muted);font-size:0.88rem">No keys added yet — tap \u201c+ Add key\u201d below.</p>';
+  if (keys.length === 0) return '<p style="color:var(--muted);font-size:0.88rem">No keys added yet - tap \u201c+ Add key\u201d below.</p>';
 
   const cl = s.scaleChecklist || {};
   const keyOctaves = s.scaleKeyOctaves || {};
@@ -6780,7 +6842,7 @@ function scalesHTML(s) {
       const octs = keyOctaves[key] || ['1','2','3'];
       const ticks = (cl[key] || {})[type] || {};
       if (octs.length === 1) {
-        // Single octave — one box as before
+        // Single octave - one box as before
         const done = !!ticks[octs[0]];
         return '<td style="text-align:center;padding:3px 1px">'
           + '<button onclick="scaleCheckCell(\'' + s.id + '\',\'' + key + '\',\'' + type + '\')" '
@@ -6790,7 +6852,7 @@ function scalesHTML(s) {
           + 'cursor:pointer;font-size:0.8rem;font-weight:700;margin:auto;display:block">'
           + (done ? '\u2713' : '') + '</button></td>';
       } else {
-        // Multiple octaves — one small box per octave, stacked
+        // Multiple octaves - one small box per octave, stacked
         const boxes = octs.map(function(o) {
           const done = !!ticks[o];
           return '<div style="display:flex;align-items:center;justify-content:center;gap:2px;margin-bottom:2px">'
@@ -6853,7 +6915,7 @@ function naturalMinorAndDoubleStopsHTML(s) {
 
   let out = '';
 
-  // Natural minor row — single row, one tick per key
+  // Natural minor row - single row, one tick per key
   out += '<div style="margin-top:14px;padding-top:10px;border-top:1.5px dashed #e0ddd8">'
     + '<div style="font-size:0.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Natural minor</div>';
   if (nmKeys.length === 0) {
@@ -6873,7 +6935,7 @@ function naturalMinorAndDoubleStopsHTML(s) {
   }
   out += '</div>';
 
-  // Double stops — 3 rows (3rds, 6ths, Octaves), one tick per key per type
+  // Double stops - 3 rows (3rds, 6ths, Octaves), one tick per key per type
   out += '<div style="margin-top:14px;padding-top:10px;border-top:1.5px dashed #e0ddd8">'
     + '<div style="font-size:0.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Double stops</div>';
   if (dsKeys.length === 0) {
@@ -6899,7 +6961,7 @@ function naturalMinorAndDoubleStopsHTML(s) {
   return out;
 }
 
-// Toggle Natural minor for one key — ticks/unticks all of that key's
+// Toggle Natural minor for one key - ticks/unticks all of that key's
 // configured octaves together, same pattern as the main grid's scaleCheckCell.
 function naturalMinorCheckCell(studentId, key) {
   const s = getStudent(studentId); if (!s) return;
@@ -7289,7 +7351,7 @@ function saveCanvas(id) {
   const s = getStudent(id); if (!s) return;
   const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
 
-  // Attach to today's log entry — create one if none exists for today
+  // Attach to today's log entry - create one if none exists for today
   if (!s.log) s.log = [];
   let entry = s.log.find(e => e.date === today);
   if (!entry) {
@@ -7341,7 +7403,7 @@ function renderStudioAttendance() {
   const toVal   = document.getElementById('studio-att-to')   ? document.getElementById('studio-att-to').value   : '';
   // Parse From/To as LOCAL midnight, matching how lesson dates are parsed. Using
   // new Date('YYYY-MM-DD') gives UTC midnight, which in BST sits an hour off and
-  // wrongly dropped a lesson falling exactly on the boundary date — critical for
+  // wrongly dropped a lesson falling exactly on the boundary date - critical for
   // billing. The To date is pushed to end-of-day so its own lessons count too.
   function parseInput(v) {
     if (!v) return null;
@@ -7387,7 +7449,7 @@ function renderStudioAttendance() {
     (s.log||[]).forEach(e => {
       if (!e.attendance) return;
       const d = parseDate(e.date);
-      if (isNaN(d)) return; // unparseable date — skip rather than make a NaN column
+      if (isNaN(d)) return; // unparseable date - skip rather than make a NaN column
       if (fromDate && d < fromDate) return;
       if (toDate   && d > toDate)   return;
       const wk = weekKey(d);
@@ -7411,19 +7473,19 @@ function renderStudioAttendance() {
   Object.entries(extraLessons||{}).forEach(([rawKey, entries]) => {
     let wk;
     if (/^\d{4}-\d{2}-\d{2}$/.test(rawKey)) {
-      // Already a Sat-based "YYYY-MM-DD" key — just re-derive its own week start
+      // Already a Sat-based "YYYY-MM-DD" key - just re-derive its own week start
       // in case it wasn't exactly a Saturday (defensive, should normally match).
       const [yy, mm, dd] = rawKey.split('-').map(Number);
       wk = weekKey(new Date(yy, mm - 1, dd));
     } else if (/^\d{4}-W\d{1,2}$/.test(rawKey)) {
-      // Legacy ISO "YYYY-Www" key — convert via that week's Monday
+      // Legacy ISO "YYYY-Www" key - convert via that week's Monday
       const [yr, wPart] = rawKey.split('-W');
       const jan4 = new Date(parseInt(yr), 0, 4);
       const mon = new Date(jan4);
       mon.setDate(jan4.getDate() - (jan4.getDay()+6)%7 + (parseInt(wPart)-1)*7);
       wk = weekKey(mon);
     } else {
-      return; // unrecognised key format — skip rather than show NaN
+      return; // unrecognised key format - skip rather than show NaN
     }
     const sat = weekKeyToSat(wk);
     const fri = new Date(sat); fri.setDate(sat.getDate()+6);
@@ -7470,7 +7532,7 @@ function renderStudioAttendance() {
 
   const colMap   = { present:'#2F5C1A', 'absent-late':'#c0392b', 'absent-notice':'#e67e22', cancelled:'#aaa' };
   const labelMap = { present:'P', 'absent-late':'AL', 'absent-notice':'AN', cancelled:'C' };
-  const fullLabel = { present:'Present', 'absent-late':'Absent — last min', 'absent-notice':'Absent — notice', cancelled:'Cancelled' };
+  const fullLabel = { present:'Present', 'absent-late':'Absent - last min', 'absent-notice':'Absent - notice', cancelled:'Cancelled' };
 
   // Summary totals
   const totalPresentSlots = activePupils.reduce((sum, s) => {
@@ -7537,13 +7599,13 @@ function renderStudioAttendance() {
 
 // Builds the same data the live attendance overview shows, using whatever
 // From/To dates are currently set in the filter, and opens it as a printable
-// A4 page — same pattern as the practice plan / studio overview exports.
+// A4 page - same pattern as the practice plan / studio overview exports.
 function exportStudioAttendancePDF() {
   const fromVal = document.getElementById('studio-att-from') ? document.getElementById('studio-att-from').value : '';
   const toVal   = document.getElementById('studio-att-to')   ? document.getElementById('studio-att-to').value   : '';
   // Parse From/To as LOCAL midnight, matching how lesson dates are parsed. Using
   // new Date('YYYY-MM-DD') gives UTC midnight, which in BST sits an hour off and
-  // wrongly dropped a lesson falling exactly on the boundary date — critical for
+  // wrongly dropped a lesson falling exactly on the boundary date - critical for
   // billing. The To date is pushed to end-of-day so its own lessons count too.
   function parseInput(v) {
     if (!v) return null;
@@ -7581,7 +7643,7 @@ function exportStudioAttendancePDF() {
     (s.log||[]).forEach(e => {
       if (!e.attendance) return;
       const d = parseDate(e.date);
-      if (isNaN(d)) return; // unparseable date — skip rather than make a NaN column
+      if (isNaN(d)) return; // unparseable date - skip rather than make a NaN column
       if (fromDate && d < fromDate) return;
       if (toDate   && d > toDate)   return;
       const wk = weekKey(d);
@@ -7666,7 +7728,7 @@ function exportStudioAttendancePDF() {
   const headerCells = sortedWeeks.map(wk => `<th style="padding:3px 4px;background:#f0ece0;text-align:center;white-space:nowrap;font-size:0.62rem;font-weight:700;${weekHasGapBefore[wk] ? 'border-left:2px dashed #b5a98a;' : ''}">${fmtWeek(wk)}</th>`).join('');
 
   const html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
-    + '<title>Studio Attendance \u2014 Violaness</title>'
+    + '<title>Studio Attendance - Violaness</title>'
     + '<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">'
     + '<style>'
     + '@page{size:A4 landscape;margin:10mm 12mm}'
@@ -7702,13 +7764,13 @@ function exportStudioAttendancePDF() {
 // ── VIDEO LIBRARY ──────────────────────────────────────────────────────────
 // Catalogued YouTube (or any) links, grouped by technique. Stored as
 // studio_video_links = [{ title, url, category }]. Categories are freeform,
-// like the technical-focus chips — a starter list is offered, and new ones
+// like the technical-focus chips - a starter list is offered, and new ones
 // can be typed in.
 const VIDEO_STARTER_CATS = ['Vibrato','Bow hold','Bowing','Left hand','Posture','Shifting','Tone','Intonation','Rhythm','Other'];
 
 function getVideoCategories() {
   // Starters minus any the user has hidden, plus every category actually in
-  // use. A category in use always shows, even if its starter was hidden — so
+  // use. A category in use always shows, even if its starter was hidden - so
   // a video can never end up filed under an invisible category.
   const starters = VIDEO_STARTER_CATS.filter(function(c){ return videoCatsRemoved.indexOf(c) === -1; });
   const used = videoLinks.map(function(v){ return v.category; }).filter(Boolean);
@@ -7789,7 +7851,7 @@ function removeVideoTeacher(name) {
   if (!window.confirm(msg)) return;
   const i = videoTeachers.indexOf(name);
   if (i > -1) videoTeachers.splice(i, 1);
-  // If a video still uses the name it will reappear via getVideoPresenters —
+  // If a video still uses the name it will reappear via getVideoPresenters -
   // that's intended: a name in use is never fully hidden. To drop it entirely,
   // edit those videos' teacher field.
   save();
@@ -7827,7 +7889,7 @@ function populateVideoCatDropdowns() {
     if (cur) addSel.value = cur;
   }
 
-  // Presenter filter — only shows presenters that actually exist
+  // Presenter filter - only shows presenters that actually exist
   const presFilter = document.getElementById('vid-presenter-filter');
   if (presFilter) {
     const cur = presFilter.value;
@@ -7860,7 +7922,7 @@ function renderTeacherManageList() {
   if (!el) return;
   const teachers = getVideoPresenters();
   if (teachers.length === 0) {
-    el.innerHTML = '<p style="color:var(--muted);font-size:0.78rem;font-style:italic;margin:2px 0">No teachers yet — add one when you save a video.</p>';
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.78rem;font-style:italic;margin:2px 0">No teachers yet - add one when you save a video.</p>';
     return;
   }
   el.innerHTML = teachers.map(function(t){
@@ -7913,7 +7975,7 @@ function renderVideoLibrary() {
   list.innerHTML = cats.map(function(cat){
     const rows = byCat[cat].map(function(o){
       if (o.i === editingVideoIdx) {
-        // Inline edit form — reuses the current category list plus a "new"
+        // Inline edit form - reuses the current category list plus a "new"
         // option, so a video can be recategorised (and its text fixed) in place.
         const catOpts = getVideoCategories().map(function(c){
           return '<option value="' + esc(c) + '"' + (c === o.v.category ? ' selected' : '') + '>' + esc(c) + '</option>';
@@ -7991,7 +8053,7 @@ function saveVideoEdit(idx) {
 }
 
 // Videos ticked for emailing. This is a transient selection (not saved to
-// data) — it clears when you leave or send. Indexes match videoLinks.
+// data) - it clears when you leave or send. Indexes match videoLinks.
 let selectedVideoIdxs = new Set();
 
 function toggleVideoSelect(idx, checked) {
@@ -8017,7 +8079,7 @@ function updateVideoEmailBar() {
 
 // Opens the Mail app with the selected videos listed in the body, ready to
 // address and send. Uses a mailto: link, which works from the home-screen web
-// app without any setup. Recipient is left blank — you pick the pupil in Mail.
+// app without any setup. Recipient is left blank - you pick the pupil in Mail.
 function emailSelectedVideos() {
   if (selectedVideoIdxs.size === 0) return;
   const chosen = [...selectedVideoIdxs].sort(function(a,b){ return a-b; })
@@ -8112,7 +8174,7 @@ function renderBankEditors() {
   updateLibraryBadges();
 }
 
-// ── VIOLANESS 🎻 — your own arranged exercises & technical sheets ─────────
+// ── VIOLANESS 🎻 - your own arranged exercises & technical sheets ─────────
 var editingVioId = null;
 
 // Your category list, plus any category a sheet still uses that isn't on it
@@ -8138,8 +8200,9 @@ function renderViolaness() {
   }
   if (newCatEl) {
     const cur = newCatEl.value;
-    newCatEl.innerHTML = vioCatOptions(cur, true);
-    if (cur && cur !== '__new__' && vioAllCats().indexOf(cur) >= 0) newCatEl.value = cur;
+    newCatEl.innerHTML = '<option value="">Choose category…</option>' + vioCatOptions(cur, true);
+    newCatEl.value = (cur && cur !== '__new__' && vioAllCats().indexOf(cur) >= 0) ? cur : '';
+    newCatEl.style.borderColor = '';
   }
   renderVioCatManage();
   updateLibraryBadges();
@@ -8201,14 +8264,20 @@ function addViolanessSheet() {
   const titleEl = document.getElementById('vio-new-title');
   const title = titleEl ? titleEl.value.trim() : '';
   if (!title) { if (titleEl) titleEl.focus(); return; }
-  let cat = document.getElementById('vio-new-cat').value;
+  const catSel = document.getElementById('vio-new-cat');
+  let cat = catSel.value;
+  if (!cat) {
+    // No category picked yet: highlight the box rather than guessing one
+    catSel.style.borderColor = '#e67e22';
+    catSel.focus();
+    return;
+  }
   if (cat === '__new__') {
     const custom = document.getElementById('vio-new-cat-custom');
     cat = custom.value.trim();
     if (!cat) { custom.focus(); return; }
     if (violanessCats.indexOf(cat) === -1) violanessCats.push(cat);
   }
-  if (!cat) cat = violanessCats[0] || 'Uncategorised';
   const noteEl = document.getElementById('vio-new-note');
   violanessSheets.push({ id: 'vs' + Date.now(), title: title, cat: cat, note: noteEl ? noteEl.value.trim() : '' });
   save();
@@ -8216,8 +8285,8 @@ function addViolanessSheet() {
   if (noteEl) noteEl.value = '';
   const custom = document.getElementById('vio-new-cat-custom');
   if (custom) { custom.value = ''; custom.style.display = 'none'; }
+  const sel = document.getElementById('vio-new-cat'); if (sel) sel.value = ''; // back to "Choose category…"
   renderViolaness();
-  const sel = document.getElementById('vio-new-cat'); if (sel) sel.value = cat; // handy when adding several in one category
   titleEl.focus();
 }
 
@@ -8311,7 +8380,7 @@ function updateLibraryBadges() {
 
 // Jump from a pupil's Technique tab to a bank in the Library, remembering
 // where you came from so a "Back to pupil" bar can take you straight back.
-var libReturn = null; // { pupilId, from, techSection } — var so it exists before init runs
+var libReturn = null; // { pupilId, from, techSection } - var so it exists before init runs
 function openLibraryBank(pupilId, libSection, techSection) {
   libReturn = { pupilId: pupilId, from: prevView, techSection: techSection };
   showView('library');
@@ -8423,22 +8492,91 @@ const BUILTIN_CATS = ['My Library','Scalability','Technique','Studies - Viola','
 // dropdowns, so pieces filed under them can still be found/filtered.
 function populateCatFilters() {
   const customCats = [...new Set(customPieces.map(p => p.cat).filter(c => c && !BUILTIN_CATS.includes(c)))].sort();
-  // Update all four category selects: filter dropdowns + add + edit modals
+  // Rebuild all four category selects (filter dropdowns + add + edit modals)
+  // from their original built-in options, leaving out any you've deleted,
+  // then add your own categories (before "+ New category…" where present).
   ['lib-cat-filter','piece-cat-filter','lib-new-piece-cat','edit-lib-piece-cat'].forEach(id => {
     const sel = document.getElementById(id); if (!sel) return;
+    if (!sel._baseOpts) {
+      sel._baseOpts = [...sel.querySelectorAll('option:not([data-custom-cat])')].map(o => ({ v: o.value, t: o.textContent }));
+    }
     const current = sel.value;
-    // Remove any previously-added custom options
-    [...sel.querySelectorAll('option[data-custom-cat]')].forEach(o => o.remove());
-    // For the add dropdown, insert before the "+ New category…" option
-    const newOpt = sel.querySelector('option[value="__new__"]');
-    customCats.forEach(cat => {
+    sel.innerHTML = '';
+    const add = (v, t, custom) => {
       const opt = document.createElement('option');
-      opt.value = cat; opt.textContent = cat; opt.setAttribute('data-custom-cat','1');
-      if (newOpt) sel.insertBefore(opt, newOpt);
-      else sel.appendChild(opt);
+      opt.value = v; opt.textContent = t;
+      if (custom) opt.setAttribute('data-custom-cat', '1');
+      sel.appendChild(opt);
+    };
+    sel._baseOpts.forEach(o => {
+      if (o.v === '__new__') return;                     // goes last
+      if (o.v && hiddenPieceCats.includes(o.v)) return;  // deleted category
+      add(o.v, o.t, false);
     });
+    customCats.forEach(cat => { if (!hiddenPieceCats.includes(cat)) add(cat, cat, true); });
+    if (sel._baseOpts.some(o => o.v === '__new__')) add('__new__', '+ New category…', false);
     if ([...sel.options].some(o => o.value === current)) sel.value = current;
   });
+  renderPieceCatManage();
+}
+
+// Every category currently showing in the piece library, with how many pieces
+function pieceCatList() {
+  const all = visibleLibraryPieces();
+  const cats = [];
+  BUILTIN_CATS.forEach(c => { if (!hiddenPieceCats.includes(c)) cats.push(c); });
+  all.forEach(p => { if (p.cat && !cats.includes(p.cat) && !hiddenPieceCats.includes(p.cat)) cats.push(p.cat); });
+  return cats.map(c => ({ name: c, count: all.filter(p => p.cat === c).length }));
+}
+
+function renderPieceCatManage() {
+  const el = document.getElementById('piece-cat-manage'); if (!el) return;
+  const cats = pieceCatList();
+  el.innerHTML = cats.map(c => {
+    const locked = c.name === 'My Library';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">'
+      + '<span style="flex:1;font-size:0.85rem">' + esc(c.name.replace(' - ', ' - ')) + '</span>'
+      + '<span style="font-size:0.7rem;color:var(--muted)">' + c.count + ' piece' + (c.count === 1 ? '' : 's') + '</span>'
+      + (locked
+          ? '<span style="font-size:0.66rem;color:var(--muted);width:22px;text-align:center" title="Pieces move here, so it stays">🔒</span>'
+          : '<button onclick="deletePieceCat(\'' + escJs(c.name) + '\')" title="Delete category" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;width:22px">×</button>')
+      + '</div>';
+  }).join('')
+  + (hiddenPieceCats.length
+      ? '<button onclick="restorePieceCats()" style="background:none;border:none;font-size:0.7rem;color:var(--muted);cursor:pointer;text-decoration:underline;padding:4px 0;font-family:\'Special Elite\',cursive">Bring back deleted categories (' + hiddenPieceCats.length + ')</button>'
+      : '');
+}
+
+// Delete a category: its pieces move to "My Library" (built-in pieces get your
+// own copy there and the original is hidden), then the category disappears.
+function deletePieceCat(cat) {
+  if (!cat || cat === 'My Library') return;
+  const pieces = visibleLibraryPieces().filter(p => p.cat === cat);
+  const msg = 'Delete the category "' + cat.replace(' - ', ' - ') + '"?'
+    + (pieces.length ? '\n\nIts ' + pieces.length + ' piece' + (pieces.length === 1 ? '' : 's') + ' will move to "My Library".' : '');
+  if (!confirm(msg)) return;
+  pieces.forEach(p => {
+    const custom = customPieces.find(cp => cp === p);
+    if (custom) { custom.cat = 'My Library'; return; }
+    // Built-in piece: hide the original and keep your own copy in My Library
+    const key = pieceKey(p);
+    if (!hiddenPieces.includes(key)) hiddenPieces.push(key);
+    if (!customPieces.some(cp => cp.cat === 'My Library' && cp.title.toLowerCase() === (p.title || '').toLowerCase())) {
+      customPieces.push({ title: p.title, composer: p.composer || '', grade: p.grade || '', cat: 'My Library' });
+    }
+  });
+  if (!hiddenPieceCats.includes(cat)) hiddenPieceCats.push(cat);
+  save();
+  const f1 = document.getElementById('lib-cat-filter'); if (f1 && f1.value === cat) f1.value = '';
+  populateCatFilters();
+  renderLibPieces();
+}
+
+function restorePieceCats() {
+  hiddenPieceCats = [];
+  save();
+  populateCatFilters();
+  renderLibPieces();
 }
 
 function renderLibChips() {
@@ -8482,7 +8620,7 @@ function renderCategoryEditor() {
       <span style="width:110px;flex-shrink:0;font-size:0.82rem;padding:4px 8px;border-left:4px solid ${color||'#e0ddd8'};border-radius:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t)}</span>
       <select onchange="setTechCategory('${esc(t)}',this.value)"
         style="flex:1;font-size:0.78rem;padding:4px 6px;border-radius:6px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;background:${color||'#fff'};color:#05270B">
-        <option value="" ${!currentCat?'selected':''}>— none —</option>
+        <option value="" ${!currentCat?'selected':''}>None</option>
         ${allCats.map(c => `<option value="${c.id}" ${currentCat===c.id?'selected':''} style="background:${c.color}">${c.label}</option>`).join('')}
       </select>
     </div>`;
@@ -8585,6 +8723,7 @@ function visibleLibraryPieces() {
 }
 
 function renderLibPieces() {
+  renderPieceCatManage(); // keep category piece-counts in step
   const list = document.getElementById('lib-pieces-list'); if (!list) return;
   const search = (document.getElementById('lib-piece-search').value || '').toLowerCase();
   const cat = document.getElementById('lib-cat-filter').value;
@@ -8599,7 +8738,7 @@ function renderLibPieces() {
   filtered.forEach(p => { if (!groups[p.cat]) groups[p.cat] = []; groups[p.cat].push(p); });
   list.innerHTML = Object.entries(groups).map(([cat, pieces]) => `
     <div style="margin-bottom:14px">
-      <div style="font-size:0.78rem;font-weight:700;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${cat.replace(' - ',' — ')}</div>
+      <div style="font-size:0.78rem;font-weight:700;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${cat.replace(' - ',' - ')}</div>
       ${pieces.map((p) => {
         // Every piece is now editable. Pass its key so the handler can find it
         // whether it's a custom piece or a built-in being edited for the first time.
@@ -8634,6 +8773,8 @@ function addLibPiece() {
     if (!customCat) { document.getElementById('lib-new-piece-cat-custom').focus(); return; }
     cat = customCat;
   }
+  cat = normPieceCat(cat);
+  hiddenPieceCats = hiddenPieceCats.filter(c => c !== cat); // re-using a deleted name brings it back
   if (customPieces.some(p => p.title.toLowerCase() === title.toLowerCase())) return;
   customPieces.push({ title, composer, grade, cat });
   save();
@@ -8682,7 +8823,7 @@ function saveEditLibPiece() {
 
   const existingIdx = customPieces.findIndex(cp => pieceKey(cp) === origKey);
   if (existingIdx > -1) {
-    // Editing one of the user's own pieces — update it in place.
+    // Editing one of the user's own pieces - update it in place.
     customPieces[existingIdx] = updated;
   } else {
     // Editing a built-in: save an override copy, and hide the original built-in
@@ -8830,7 +8971,7 @@ function openTimerModal(name, duration) {
   timerRunning = false;
   clearInterval(timerInterval);
   const m = parseInt(duration);
-  document.getElementById('timer-pupil-name').textContent = name + ' — ' + m + ' min lesson';
+  document.getElementById('timer-pupil-name').textContent = name + ' - ' + m + ' min lesson';
   document.getElementById('timer-display').textContent = String(m).padStart(2,'0') + ':00';
   document.getElementById('timer-display').style.color = 'var(--viola)';
   document.getElementById('timer-modal').classList.add('open');
@@ -9016,7 +9157,7 @@ function renderIdeaBoardSelector() {
     const opt = document.createElement('option');
     opt.value = board.id;
     const dateObj = new Date(board.createdOn + 'T00:00:00');
-    opt.textContent = board.name + ' — ' + (isNaN(dateObj) ? '' : ideaFmtShort(dateObj));
+    opt.textContent = board.name + ' - ' + (isNaN(dateObj) ? '' : ideaFmtShort(dateObj));
     if (board.id === currentIdeaBoardId) opt.selected = true;
     select.appendChild(opt);
   });
@@ -9051,7 +9192,7 @@ function renameCurrentIdeaBoard() {
   const name = window.prompt('Rename this board:', board.name || '');
   if (name === null) return; // cancelled
   const trimmed = name.trim();
-  if (!trimmed) return;      // blank — keep the existing name rather than wipe it
+  if (!trimmed) return;      // blank - keep the existing name rather than wipe it
   board.name = trimmed;
   saveIdeaBoards();
   renderIdeaBoardSelector();
@@ -9060,7 +9201,7 @@ function renameCurrentIdeaBoard() {
 function deleteCurrentIdeaBoard() {
   ensureIdeaBoard();
   if (ideaBoards.length <= 1) {
-    alert('This is your only board, so it can\'t be deleted — clear its notes individually instead if you\'d like.');
+    alert('This is your only board, so it can\'t be deleted - clear its notes individually instead if you\'d like.');
     return;
   }
   const board = getCurrentIdeaBoard();
@@ -9235,7 +9376,7 @@ function setupIdeaDrawingCanvas(canvasEl, note) {
       const p = { x: (ev.clientX - rect.left) / rect.width, y: (ev.clientY - rect.top) / rect.height };
       const prev = currentStroke[currentStroke.length - 1];
       currentStroke.push(p);
-      // Draw ONLY the new segment — full redraws every move are quadratic and
+      // Draw ONLY the new segment - full redraws every move are quadratic and
       // were freezing the board on long strokes.
       ctx.beginPath();
       ctx.moveTo(prev.x * canvasEl.width, prev.y * canvasEl.height);
@@ -9290,7 +9431,7 @@ function makeIdeaNoteResizable(el, handle, note, canvasEl) {
     activePointerId = e.pointerId;
     startX = e.clientX; startY = e.clientY;
     origSize = note.width || IDEA_DEFAULT_SIZE;
-    // Measure once, not on every move — keeps resizing smooth
+    // Measure once, not on every move - keeps resizing smooth
     const b = ideaBoardBounds();
     cap = Math.max(IDEA_MIN_SIZE, Math.min(IDEA_MAX_SIZE, b.w - (note.x || 0), b.h - (note.y || 0)));
     handle.setPointerCapture(e.pointerId);
@@ -9351,7 +9492,7 @@ function makeIdeaNoteDraggable(el, note) {
     note.x = pending.x;
     note.y = pending.y;
     // Position with left/top. Rotation is a SEPARATE, static transform set in
-    // the render and never touched here — a constant transform doesn't cause
+    // the render and never touched here - a constant transform doesn't cause
     // the repaint churn that a changing one does, which was leaving grey ghost
     // squares and stray lines on iOS Safari.
     el.style.left = pending.x + 'px';
@@ -9359,7 +9500,7 @@ function makeIdeaNoteDraggable(el, note) {
   }
 
   el.addEventListener('pointerdown', function(e) {
-    // Raise on any tap — even if it's on the textarea or a button — so the
+    // Raise on any tap - even if it's on the textarea or a button - so the
     // note you're working with is always on top.
     bringIdeaNoteToFront(el, note);
     if (e.target.tagName === 'TEXTAREA'
@@ -9399,7 +9540,7 @@ function makeIdeaNoteDraggable(el, note) {
     el.classList.remove('is-dragging');
     saveIdeaBoards();
     // Release the capture explicitly (rather than relying on the implicit
-    // release), then nudge a repaint — the capture is what leaves the ghost.
+    // release), then nudge a repaint - the capture is what leaves the ghost.
     try { if (e && el.hasPointerCapture && el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId); } catch (err) {}
     nudgeIdeaBoardRepaint();
   }
@@ -9437,7 +9578,7 @@ function renderIdeaBoard() {
   if (!notes.length) {
     const empty = document.createElement('div');
     empty.className = 'idea-canvas-empty';
-    empty.textContent = 'Nothing here yet — tap "+ Text idea" or "✏️ Drawing idea" to drop the first one.';
+    empty.textContent = 'Nothing here yet - tap "+ Text idea" or "✏️ Drawing idea" to drop the first one.';
     canvas.appendChild(empty);
     return;
   }
@@ -9471,7 +9612,7 @@ function renderIdeaBoard() {
     el.style.height = note.height + 'px';
     el.style.background = note.color;
     if (note.z) el.style.zIndex = note.z;
-    // Rotation only — a constant transform, never changed during drag.
+    // Rotation only - a constant transform, never changed during drag.
     el.style.transform = 'rotate(' + note.rot + 'deg)';
 
     const top = document.createElement('div');
@@ -9692,7 +9833,7 @@ async function checkSpelling() {
         + '❌ Word not found. Try a different spelling?</div>';
     }
   } catch(e) {
-    result.innerHTML = '<div style="color:var(--muted);font-size:0.88rem;font-style:italic">Could not connect — check your internet connection.</div>';
+    result.innerHTML = '<div style="color:var(--muted);font-size:0.88rem;font-style:italic">Could not connect - check your internet connection.</div>';
   }
 }
 
@@ -9848,7 +9989,7 @@ function getCurrentWeekDate() {
 
 // Only the TEACHING days (Sat–Wed) decide whether a week is a holiday. The full
 // Sat–Fri span would wrongly flag a whole week as holiday when half-term starts
-// on the Thu/Fri (e.g. term to 21 Oct, half-term from 22 Oct) — even though
+// on the Thu/Fri (e.g. term to 21 Oct, half-term from 22 Oct) - even though
 // every teaching day that week is still term time.
 function isHolidayWeek() {
   const weekStart = getCurrentWeekDate();
@@ -9896,7 +10037,7 @@ function renderTermDates() {
     return;
   }
   el.innerHTML = termDates.map(function(t, i) {
-    const fmt = function(d) { return d ? new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—'; };
+    const fmt = function(d) { return d ? new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '-'; };
     if (i === editingTermIdx) {
       const isHol = !!t.holidayStart;
       const start = t.termStart || t.holidayStart || '';
@@ -10061,7 +10202,7 @@ function currentTermIdx() {
 // a number locks it to that block (so you can bill last half-term late).
 let billingTermIdx = null;
 
-// Count CHARGEABLE lessons (Present + "Absent — last minute") for one pupil
+// Count CHARGEABLE lessons (Present + "Absent - last minute") for one pupil
 // within a given term block.
 function countChargeable(s, block) {
   const log = s.log || [];
@@ -10261,7 +10402,7 @@ function attendanceChart(s, fromDate, toDate) {
 
   const dots = [...log].reverse().map(e => {
     const colours = { 'present':'#2F5C1A', 'absent-late':'#c0392b', 'absent-notice':'#e67e22', 'cancelled':'#aaa' };
-    const labels  = { 'present':'Present', 'absent-late':'Absent — late cancel', 'absent-notice':'Absent — good notice', 'cancelled':'Cancelled by teacher' };
+    const labels  = { 'present':'Present', 'absent-late':'Absent - late cancel', 'absent-notice':'Absent - good notice', 'cancelled':'Cancelled by teacher' };
     return `<span title="${e.date}: ${labels[e.attendance]||''}"
       style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${colours[e.attendance]||'#ccc'};margin:2px;flex-shrink:0"></span>`;
   }).join('');
@@ -10318,8 +10459,8 @@ function completePiece(id, title, fullTitle) {
   const displayTitle = fullTitle || title;
   s.completedPieces.push({ title: displayTitle, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) });
   // Remove the matching piece by base title (strip ref if present)
-  const baseTitle = title.split(' \u2014 ')[0];
-  const idx = (s.pieces||[]).findIndex(p => p === baseTitle);
+  // Find the piece whose shown title (title + No./mvt.) matches, or the bare title
+  const idx = (s.pieces||[]).findIndex((p, i) => p && (pieceDisplayTitle(s, i) === title || p === title));
   if (idx >= 0) {
     s.pieces.splice(idx, 1);
     if (s.pieceRefs) s.pieceRefs.splice(idx, 1);
@@ -10508,9 +10649,9 @@ function removeSpeechReplacement(idx) {
 
 // ── GIFTS ─────────────────────────────────────────────────────────────────
 // littleDetails.giftList = [{text, date, done}]
-//   text — what it was, e.g. "Bottle of wine"
-//   date — when it was noted, e.g. "17 Jul 2026"
-//   done — ticked off the Library to-do list. The gift STAYS on the pupil's
+//   text - what it was, e.g. "Bottle of wine"
+//   date - when it was noted, e.g. "17 Jul 2026"
+//   done - ticked off the Library to-do list. The gift STAYS on the pupil's
 //          page as a permanent record; `done` only controls whether it still
 //          shows in the Library's outstanding list.
 
@@ -10519,7 +10660,7 @@ function getGiftList(s) {
   return Array.isArray(ld.giftList) ? ld.giftList : [];
 }
 
-// The running list shown on a pupil's own page — full history, no tick boxes.
+// The running list shown on a pupil's own page - full history, no tick boxes.
 function giftListHTML(s) {
   const gifts = getGiftList(s);
   if (gifts.length === 0) {
@@ -10571,7 +10712,7 @@ function removeGift(id, idx) {
 // ── GIFTS RECEIVED (Library to-do list) ───────────────────────────────────
 // Shows only gifts NOT yet ticked off. Ticking one clears it from this list
 // but leaves it on the pupil's page. Also allows adding a gift for any pupil
-// without opening their page — useful at end of term.
+// without opening their page - useful at end of term.
 function renderGiftsList() {
   const el = document.getElementById('gifts-list'); if (!el) return;
   const countEl = document.getElementById('gifts-summary-count');
@@ -10608,7 +10749,7 @@ function renderGiftsList() {
     + '</div></div>';
 
   if (outstanding.length === 0) {
-    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">Nothing outstanding \u2014 all thank yous sent. \ud83c\udf89</p>' + addRow;
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">Nothing outstanding - all thank yous sent. \ud83c\udf89</p>' + addRow;
     return;
   }
 
@@ -10630,7 +10771,7 @@ function renderGiftsList() {
   }).join('') + addRow;
 }
 
-// Tick off — clears from the Library list, stays on the pupil's page.
+// Tick off - clears from the Library list, stays on the pupil's page.
 function markGiftDone(id, idx) {
   const s = getStudent(id); if (!s) return;
   const gifts = getGiftList(s);
@@ -10659,7 +10800,7 @@ function addGiftFromLibrary() {
   save();
   txt.value = '';
   renderGiftsList();
-  // Keep the same pupil selected — often several gifts land at once
+  // Keep the same pupil selected - often several gifts land at once
   const selAfter = document.getElementById('gift-add-pupil');
   if (selAfter) selAfter.value = id;
   const txtAfter = document.getElementById('gift-add-text');
@@ -10693,7 +10834,7 @@ function renderLendingLog() {
 // ── ＋ FROM LIBRARY PICKER ─────────────────────────────────────────────────
 // One picker for every library: pieces, study books, method books, albums.
 // Tapping an item adds a line to the pupil's Pieces & exercises list, or to
-// today's lesson plan — whichever "Add to" chip is selected (remembered).
+// today's lesson plan - whichever "Add to" chip is selected (remembered).
 // The modal stays open so several things can go in at once; Done closes it.
 let pieceDBStudentId = null;
 let libPickSource = 'pieces';     // 'pieces' | 'studies' | 'methods' | 'albums' | 'violaness'
@@ -10808,7 +10949,7 @@ function renderPieceDB(items) {
   items.forEach(p => { if (!groups[p.cat]) groups[p.cat] = []; groups[p.cat].push(p); });
   list.innerHTML = Object.entries(groups).map(([cat, pieces]) => `
     <div style="margin-bottom:14px">
-      <div style="font-size:0.68rem;font-weight:800;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${esc(cat.replace(' - ',' — '))}</div>
+      <div style="font-size:0.68rem;font-weight:800;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${esc(cat.replace(' - ',' - '))}</div>
       ${pieces.map(p => `
         <div onclick="selectPiece('${escJs(p.title)}')"
           style="padding:10px 12px;border-radius:9px;cursor:pointer;margin-bottom:4px;transition:background 0.12s"
@@ -10973,7 +11114,7 @@ function libPickAdd(title, ref) {
   if (!pieceDBStudentId) return;
   const s = getStudent(pieceDBStudentId);
   if (!s || !title) return;
-  const label = ref ? title + ' — ' + ref : title;
+  const label = ref ? title + ' - ' + ref : title;
   if (libPickGetDest() === 'plan') {
     const cur = String(s.nextLesson || '').replace(/\s+$/, '');
     s.nextLesson = cur ? cur + '\n' + label : label;
@@ -11140,7 +11281,7 @@ function buildPupilPlainText(s, term) {
     txt += 'No lesson notes recorded.\n';
   }
   if ((s.canvasSaves||[]).length) {
-    txt += '\nSKETCHES\n' + s.canvasSaves.length + ' sketch' + (s.canvasSaves.length!==1?'es':'') + ' saved — see the full report for images.\n';
+    txt += '\nSKETCHES\n' + s.canvasSaves.length + ' sketch' + (s.canvasSaves.length!==1?'es':'') + ' saved - see the full report for images.\n';
   }
   return txt;
 }
@@ -11210,7 +11351,7 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
         return '<div style="width:15px;height:15px;border:1.5px solid ' + (done?'#2F5C1A':'#c8ddb8') + ';border-radius:3px;background:' + (done?'#2F5C1A':'#fff') + ';margin:auto;display:flex;align-items:center;justify-content:center"><span style="color:#fff;font-size:0.6rem">' + (done?'\u2713':'') + '</span></div>';
       }
 
-      // Main grid: types down the rows, keys across the columns — same shape
+      // Main grid: types down the rows, keys across the columns - same shape
       // as the in-app "By key / type" unified chart.
       var keyHeaderCells = pdfKeys.map(function(key) {
         return '<th style="font-size:0.68rem;font-weight:700;color:#2F5C1A;text-align:center;padding:1px 3px">' + esc(key) + '</th>';
@@ -11244,7 +11385,7 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
           + '</div>';
       }
 
-      // Double stops — 3rds / 6ths / Octaves, own key list
+      // Double stops - 3rds / 6ths / Octaves, own key list
       var dsKeys = s.doubleStopKeys || [];
       var dsChecklist = s.doubleStopsChecklist || {};
       var dsGrid = '';
@@ -11279,7 +11420,7 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
         + '</div>';
     }
 
-    // Sevcik Op. 3 — 40 Variations tick chart. Only built if the teacher
+    // Sevcik Op. 3 - 40 Variations tick chart. Only built if the teacher
     // opted in via the "Include Sevcik chart?" prompt at export time AND at
     // least one item has been ticked for this pupil (keeps the plan clean
     // for pupils who don't use this book). Theme on its own row at the top,
@@ -11304,7 +11445,7 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
       var sevcikCols = [];
       for (var sc = 0; sc < 8; sc++) sevcikCols.push(sevcikVariations.slice(sc*5, sc*5+5));
       sevcikSection = '<div style="margin-bottom:20px">'
-        + '<div style="font-size:0.65rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">Sevcik Op. 3 \u2014 40 Variations</div>'
+        + '<div style="font-size:0.65rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">Sevcik Op. 3 - 40 Variations</div>'
         + '<div style="font-size:0.7rem;color:#8aaa7a;margin-bottom:6px">' + sevcikDoneCount + ' of 41 ticked</div>'
         + '<div style="margin-bottom:8px">' + sevcikThemeRow + '</div>'
         + '<div style="display:flex;gap:10px">'
@@ -11312,7 +11453,7 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
         + '</div></div>';
     }
 
-    // Focus / plan section — pulls plan, this week's goal, and during notes as bullets
+    // Focus / plan section - pulls plan, this week's goal, and during notes as bullets
     var scratch = (s.duringScratch || '').trim();
     // Strip legacy plan-prefix variations in case older saved notes still have them
     var planPrefix = '\ud83d\udccc Plan:\n' + plan;
@@ -11396,7 +11537,7 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
   }).join('');
 
   const html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
-    + '<title>Practice Plan \u2014 Violaness</title>'
+    + '<title>Practice Plan - Violaness</title>'
     + '<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">'
     + '<style>'
     + '@page{size:A4 portrait;margin:12mm 14mm}'
@@ -11451,20 +11592,20 @@ function exportAll() {
         + (nextWeekNote ? '<div style="margin-top:5px;border:1px solid #c8ddb8;border-radius:4px;padding:3px 5px;font-size:0.62rem;color:#1a3a0a;background:#f8fdf5;word-break:break-word">' + esc(nextWeekNote) + '</div>' : '')
       + '</td>'
       + '<td style="padding:5px 8px;vertical-align:top;width:50px">'
-        + (lastLog ? '<div style="font-size:0.62rem;color:#8aaa7a">' + esc(lastLog.date) + '</div>' : '<span style="font-size:0.65rem;color:#aaa;font-style:italic">—</span>')
+        + (lastLog ? '<div style="font-size:0.62rem;color:#8aaa7a">' + esc(lastLog.date) + '</div>' : '<span style="font-size:0.65rem;color:#aaa;font-style:italic">-</span>')
       + '</td>'
       + '<td style="padding:5px 8px;vertical-align:top">'
         + (noteText ? '<div style="font-size:0.72rem;color:#1a3a0a;line-height:1.35">' + noteSummary + '</div>'
                     : '<span style="font-size:0.72rem;color:#aaa;font-style:italic">No notes</span>')
       + '</td>'
       + '<td style="padding:5px 8px;vertical-align:top;width:100px">'
-        + (pieces.length ? pieces.map(function(p){ return '<div style="font-size:0.68rem;color:#2F5C1A;margin-bottom:1px">' + esc(p) + '</div>'; }).join('') : '<span style="font-size:0.68rem;color:#aaa">—</span>')
+        + (pieces.length ? pieces.map(function(p){ return '<div style="font-size:0.68rem;color:#2F5C1A;margin-bottom:1px">' + esc(p) + '</div>'; }).join('') : '<span style="font-size:0.68rem;color:#aaa">-</span>')
       + '</td>'
       + '</tr>';
   }).join('');
 
   const html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
-    + '<title>Studio Overview — ' + dateStr + '</title>'
+    + '<title>Studio Overview - ' + dateStr + '</title>'
     + '<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">'
     + '<style>'
     + '@page{size:A4 landscape;margin:10mm 12mm}'
@@ -11596,6 +11737,7 @@ function backupData() {
     studio_custom_tech_cats:  localStorage.getItem('studio_custom_tech_cats')  || '[]',
     studio_custom_pieces: localStorage.getItem('studio_custom_pieces') || '[]',
     studio_hidden_pieces: localStorage.getItem('studio_hidden_pieces') || '[]',
+    studio_hidden_piece_cats: localStorage.getItem('studio_hidden_piece_cats') || '[]',
     studio_video_links:   localStorage.getItem('studio_video_links')   || '[]',
     studio_video_cats_removed: localStorage.getItem('studio_video_cats_removed') || '[]',
     studio_video_teachers: localStorage.getItem('studio_video_teachers') || '[]',
@@ -11644,7 +11786,7 @@ function restoreData(event) {
       if (!confirm(`Restore backup from ${payload._exported ? new Date(payload._exported).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : 'unknown date'}?\n\nThis will replace all current data.`)) return;
 
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
-        'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links','studio_video_cats_removed','studio_video_teachers','studio_hidden_pieces',
+        'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links','studio_video_cats_removed','studio_video_teachers','studio_hidden_pieces','studio_hidden_piece_cats',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
         'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_study_book_bank','studio_method_book_bank','studio_album_bank','studio_violaness_sheets','studio_violaness_cats','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
@@ -11657,6 +11799,8 @@ function restoreData(event) {
       customTechCats  = JSON.parse(localStorage.getItem('studio_custom_tech_cats') || '[]');
       customPieces    = JSON.parse(localStorage.getItem('studio_custom_pieces')    || '[]');
       hiddenPieces    = JSON.parse(localStorage.getItem('studio_hidden_pieces')    || '[]');
+      hiddenPieceCats = JSON.parse(localStorage.getItem('studio_hidden_piece_cats') || '[]');
+      normalisePieceCats();
       oneOffMoves     = JSON.parse(localStorage.getItem('studio_one_off_moves')    || '{}');
       waitingList     = JSON.parse(localStorage.getItem('studio_waiting_list')     || '[]');
       termDates       = JSON.parse(localStorage.getItem('studio_term_dates')       || '[]');
@@ -11690,7 +11834,7 @@ function restoreData(event) {
 }
 
 
-// Runs on every load — fixes any duplicate or missing IDs without losing data
+// Runs on every load - fixes any duplicate or missing IDs without losing data
 function repairStudentIDs() {
   const seen = new Set();
   let repaired = false;
@@ -11710,11 +11854,11 @@ function repairStudentIDs() {
 // One-time catch-up: fix any pupil whose "Plan for today's lesson" field
 // already has a "📌 Plan:" header baked into it (caused by an older bug in
 // the "Copy last lesson notes as plan" button, which copied an already-built
-// note — header and all — straight into the plan field). Strips just the
+// note - header and all - straight into the plan field). Strips just the
 // header text; leaves the actual plan content untouched.
 // One-time migration: gifts used to be a single free-text field
 // (littleDetails.gifts) with one shared thank-you flag (littleDetails.thankYouSent).
-// It's now a list — littleDetails.giftList = [{text, date, done}] — so each gift
+// It's now a list - littleDetails.giftList = [{text, date, done}] - so each gift
 // can be ticked off the Library to-do list independently while the full history
 // stays on the pupil's page. Any existing text becomes a single entry, carrying
 // its old thankYouSent value across as that entry's `done`. The original fields
@@ -11780,7 +11924,7 @@ function syncRequestedAbsencesToLog() {
 
 // "Requested lesson moves" (s.requestedMoves) can be booked any number of
 // weeks ahead, but the Week view's oneOffMoves/extraLessons stores only ever
-// understand "the current teaching week" — they have no concept of a future
+// understand "the current teaching week" - they have no concept of a future
 // week. So each time the app loads, we check whether a requested move's
 // fromDate has now arrived within the CURRENT teaching week, and if so we
 // activate it using the existing, already-working mechanisms:
@@ -11819,7 +11963,7 @@ function syncRequestedMovesToWeek() {
           if (toWeekKey === currentWeek) {
             oneOffMoves[s.id] = { week: currentWeek, day: dayName, time: toTime };
           } else {
-            // Moving to a different week — mark original as absent and add extra
+            // Moving to a different week - mark original as absent and add extra
             const fromLogStr = fromDateObj.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
             if (!s.log) s.log = [];
             let fromEntry = s.log.find(e => e.date === fromLogStr);
@@ -11834,7 +11978,7 @@ function syncRequestedMovesToWeek() {
           }
         }
       } else {
-        // No destination — just mark original as absent
+        // No destination - just mark original as absent
         const fromLogStr = fromDateObj.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
         if (!s.log) s.log = [];
         let fromEntry = s.log.find(e => e.date === fromLogStr);
@@ -11876,7 +12020,7 @@ renderCoverEod();
 // Refresh Today view every 30 seconds so the "Next" badge colour updates
 // automatically (e.g. turns amber when a lesson is 5 minutes away).
 // If the app is left open across the Thursday-midnight teaching-week rollover,
-// `currentWeek` (computed once at load) goes stale — the week view, holiday
+// `currentWeek` (computed once at load) goes stale - the week view, holiday
 // greying, term counter etc. keep using yesterday's week until a reload. This
 // guard notices when the real week has moved on and reloads once, so the app
 // self-corrects without you having to close and reopen it.
@@ -11889,7 +12033,7 @@ function checkWeekRollover() {
   }
 }
 // Check when the app is brought back to the foreground (covers being left in
-// the background overnight — the commonest case).
+// the background overnight - the commonest case).
 document.addEventListener('visibilitychange', function() {
   if (document.visibilityState === 'visible') checkWeekRollover();
 });
@@ -11917,7 +12061,7 @@ setInterval(function() {
 
 // Shows once per browser session (so it doesn't get in the way every time
 // you switch views, but reappears fresh next time you actually reopen the
-// app — e.g. tomorrow, or after closing Safari).
+// app - e.g. tomorrow, or after closing Safari).
 (function initNotebookCover() {
   const cover = document.getElementById('notebook-cover');
   if (!cover) return;
