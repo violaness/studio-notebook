@@ -809,11 +809,18 @@
   <!-- "Back to pupil" bar — only shows when you jumped here from a pupil's Technique tab -->
   <div id="lib-return-bar" style="display:none;margin:4px 0 12px"></div>
 
-  <!-- PIECE LIBRARY TILE (full width, the main bank) -->
-  <button class="admin-tile lib-tile" style="background:#1a4a6b;width:100%;min-height:92px;margin:6px 0 14px" onclick="showLibrarySection('pieces')">
-    <span class="admin-tile-icon">📚</span>
-    <span class="admin-tile-label">Piece library</span>
-  </button>
+  <!-- TOP ROW: the two main banks, dark blue like the Billing sheet -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 0 14px">
+    <button class="admin-tile lib-tile" style="background:#1a4a6b;min-height:92px" onclick="showLibrarySection('pieces')">
+      <span class="admin-tile-icon">📚</span>
+      <span class="admin-tile-label">Piece library</span>
+    </button>
+    <button class="admin-tile lib-tile" style="background:#1a4a6b;min-height:92px" onclick="showLibrarySection('violaness')">
+      <span class="admin-tile-icon">🎻</span>
+      <span class="admin-tile-label">Violaness</span>
+      <span class="admin-tile-badge" id="tile-violaness-badge"></span>
+    </button>
+  </div>
 
   <!-- LIBRARY TILE GRID -->
   <!-- Greens flow down the left column (light→dark), blues down the right (light→dark).
@@ -852,6 +859,43 @@
 
   <!-- LIBRARY PANELS -->
   <div id="library-panels">
+
+  <!-- VIOLANESS: my own arranged exercises & technical sheets -->
+  <section class="admin-panel" id="lib-panel-violaness" style="display:none">
+    <div class="admin-panel-head"><span>🎻 Violaness: my own sheets</span><button class="admin-panel-close" onclick="closeLibrarySections()">✕ Close</button></div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">Your own arranged exercises and technical sheets, sorted into categories. Add them to a lesson with “＋ From library” on a pupil’s Before tab.</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <select id="vio-cat-filter" onchange="renderViolaness()" style="flex:1;min-width:120px"></select>
+      <input type="text" id="vio-search" placeholder="Search…" oninput="renderViolaness()"
+        style="flex:1;padding:8px 12px;border-radius:8px;font-size:0.88rem;min-width:100px">
+    </div>
+    <div id="vio-list" style="max-height:420px;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
+    <div style="border-top:1px solid var(--warm);margin-top:14px;padding-top:14px">
+      <div class="section-label" style="margin-bottom:8px">Add a sheet</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input type="text" id="vio-new-title" placeholder="Title, e.g. Finger patterns on the C string" style="padding:8px 12px;border-radius:8px;font-size:0.88rem"
+          onkeydown="if(event.key==='Enter')addViolanessSheet()">
+        <select id="vio-new-cat" onchange="toggleVioNewCat(this.value)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem"></select>
+        <input type="text" id="vio-new-cat-custom" placeholder="New category name" style="display:none;padding:8px 12px;border-radius:8px;font-size:0.88rem">
+        <input type="text" id="vio-new-note" placeholder="Note (optional), e.g. level, where it's filed" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
+        <button onclick="addViolanessSheet()" style="background:#1a4a6b;color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">＋ Add to Violaness</button>
+      </div>
+    </div>
+    <details style="margin-top:14px">
+      <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+        <span>🗂 Manage categories</span><span style="font-weight:400">tap to expand</span>
+      </summary>
+      <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
+        <div id="vio-cat-manage"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input type="text" id="vio-cat-new" placeholder="Add a category…" maxlength="40"
+            onkeydown="if(event.key==='Enter')addViolanessCat()"
+            style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box">
+          <button onclick="addViolanessCat()" style="background:#1a4a6b;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ Add</button>
+        </div>
+      </div>
+    </details>
+  </section>
 
   <!-- STUDY-BOOK BANK -->
   <section class="admin-panel" id="lib-panel-studybank" style="display:none">
@@ -1408,7 +1452,7 @@
   <div class="modal" style="max-width:520px;max-height:88vh;display:flex;flex-direction:column">
     <h2 style="margin-bottom:12px">Add from library</h2>
     <!-- Which library to pick from (chunky tabs) -->
-    <div id="libpick-tabs" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px"></div>
+    <div id="libpick-tabs" style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:10px"></div>
     <!-- Where the line goes -->
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
       <span style="font-size:0.72rem;color:var(--muted);white-space:nowrap">Add to:</span>
@@ -2173,6 +2217,11 @@ let studyBookBank = JSON.parse(localStorage.getItem('studio_study_book_bank') ||
 let methodBookBank = JSON.parse(localStorage.getItem('studio_method_book_bank') || '[]');
 // Studio-wide bank of albums — same shape again.
 let albumBank = JSON.parse(localStorage.getItem('studio_album_bank') || '[]');
+// Violaness: Vanessa's own arranged exercises & technical sheets.
+// Each sheet: { id, title, cat, note }. Categories are a simple editable list.
+let violanessSheets = JSON.parse(localStorage.getItem('studio_violaness_sheets') || '[]');
+let violanessCats = JSON.parse(localStorage.getItem('studio_violaness_cats') ||
+  '["Left hand","Right hand & bowing","Posture & set-up","Scales & intonation","Rhythm & counting","Warm-ups"]');
 
 let currentFilter  = 'all';
 let prevView       = 'roster';
@@ -2200,6 +2249,8 @@ function save() {
   localStorage.setItem('studio_study_book_bank', JSON.stringify(studyBookBank));
   localStorage.setItem('studio_method_book_bank', JSON.stringify(methodBookBank));
   localStorage.setItem('studio_album_bank', JSON.stringify(albumBank));
+  localStorage.setItem('studio_violaness_sheets', JSON.stringify(violanessSheets));
+  localStorage.setItem('studio_violaness_cats', JSON.stringify(violanessCats));
   // Keep the Library tile counts in step with the banks
   try { updateLibraryBadges(); } catch (e) {}
 }
@@ -8008,6 +8059,7 @@ function renderLibrary() {
   renderVideoLibrary();
   renderSpeechReplacements();
   renderBankEditors();
+  renderViolaness();
   renderLibReturnBar();
 }
 
@@ -8021,6 +8073,191 @@ function renderBankEditors() {
   updateLibraryBadges();
 }
 
+// ── VIOLANESS 🎻 — your own arranged exercises & technical sheets ─────────
+var editingVioId = null;
+
+// Your category list, plus any category a sheet still uses that isn't on it
+function vioAllCats() {
+  const cats = violanessCats.slice();
+  violanessSheets.forEach(function(sh) { if (sh.cat && cats.indexOf(sh.cat) === -1) cats.push(sh.cat); });
+  return cats;
+}
+
+function vioCatOptions(selected, withNew) {
+  return vioAllCats().map(function(c) {
+    return '<option value="' + esc(c) + '"' + (c === selected ? ' selected' : '') + '>' + esc(c) + '</option>';
+  }).join('') + (withNew ? '<option value="__new__">+ New category…</option>' : '');
+}
+
+function renderViolaness() {
+  const filterEl = document.getElementById('vio-cat-filter');
+  const newCatEl = document.getElementById('vio-new-cat');
+  if (filterEl) {
+    const cur = filterEl.value;
+    filterEl.innerHTML = '<option value="">All categories</option>' + vioCatOptions(cur, false);
+    filterEl.value = vioAllCats().indexOf(cur) >= 0 ? cur : '';
+  }
+  if (newCatEl) {
+    const cur = newCatEl.value;
+    newCatEl.innerHTML = vioCatOptions(cur, true);
+    if (cur && cur !== '__new__' && vioAllCats().indexOf(cur) >= 0) newCatEl.value = cur;
+  }
+  renderVioCatManage();
+  updateLibraryBadges();
+
+  const list = document.getElementById('vio-list'); if (!list) return;
+  const search = ((document.getElementById('vio-search') || {}).value || '').toLowerCase();
+  const cat = filterEl ? filterEl.value : '';
+  const items = violanessSheets.filter(function(sh) {
+    const hit = !search || (sh.title || '').toLowerCase().includes(search) || (sh.note || '').toLowerCase().includes(search) || (sh.cat || '').toLowerCase().includes(search);
+    return hit && (!cat || sh.cat === cat);
+  });
+  if (!violanessSheets.length) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No sheets yet. Add your first one below.</p>';
+    return;
+  }
+  if (!items.length) { list.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">No results.</p>'; return; }
+  list.innerHTML = vioAllCats().map(function(c) {
+    const inCat = sortByTitle(items.filter(function(sh){ return sh.cat === c; }));
+    if (!inCat.length) return '';
+    return '<div style="margin-bottom:14px">'
+      + '<div style="font-size:0.78rem;font-weight:700;color:#1a4a6b;padding:4px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">' + esc(c) + ' <span style="font-weight:400;color:var(--muted)">(' + inCat.length + ')</span></div>'
+      + inCat.map(vioRowHTML).join('') + '</div>';
+  }).join('');
+}
+
+function sortByTitle(list) {
+  return (list || []).slice().sort(function(a, b) {
+    return String(a.title || '').localeCompare(String(b.title || ''), 'en-GB', { numeric: true, sensitivity: 'base' });
+  });
+}
+
+function vioRowHTML(sh) {
+  const id = escJs(sh.id);
+  if (editingVioId === sh.id) {
+    return '<div style="padding:8px 10px;border-radius:8px;background:var(--paper);margin-bottom:6px;border:1.5px solid #1a4a6b">'
+      + '<input type="text" id="vio-edit-title" value="' + esc(sh.title) + '" style="width:100%;padding:7px 10px;border-radius:8px;font-size:0.85rem;box-sizing:border-box;margin-bottom:6px">'
+      + '<select id="vio-edit-cat" style="width:100%;padding:7px 10px;border-radius:8px;font-size:0.85rem;margin-bottom:6px">' + vioCatOptions(sh.cat, false) + '</select>'
+      + '<input type="text" id="vio-edit-note" value="' + esc(sh.note || '') + '" placeholder="Note (optional)" style="width:100%;padding:7px 10px;border-radius:8px;font-size:0.85rem;box-sizing:border-box">'
+      + '<div style="display:flex;gap:8px;margin-top:6px">'
+      + '<button onclick="saveVioEdit(\'' + id + '\')" style="flex:1;background:#1a4a6b;color:#fff;border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">Save</button>'
+      + '<button onclick="cancelVioEdit()" style="flex:1;background:var(--warm);color:var(--muted);border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;cursor:pointer">Cancel</button>'
+      + '</div></div>';
+  }
+  return '<div style="padding:8px 0;border-bottom:1px solid var(--warm);display:flex;align-items:center;gap:8px">'
+    + '<div style="flex:1"><div style="font-size:0.88rem;font-weight:600">' + esc(sh.title) + '</div>'
+    + (sh.note ? '<div style="font-size:0.75rem;color:var(--muted)">' + esc(sh.note) + '</div>' : '') + '</div>'
+    + '<button onclick="startVioEdit(\'' + id + '\')" style="background:none;border:1.5px solid #1a4a6b;border-radius:6px;padding:3px 8px;color:#1a4a6b;cursor:pointer;font-size:0.75rem;flex-shrink:0">Edit</button>'
+    + '<button onclick="removeViolanessSheet(\'' + id + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px;flex-shrink:0">×</button>'
+    + '</div>';
+}
+
+function toggleVioNewCat(val) {
+  const el = document.getElementById('vio-new-cat-custom'); if (!el) return;
+  el.style.display = val === '__new__' ? 'block' : 'none';
+  if (val === '__new__') el.focus();
+}
+
+function addViolanessSheet() {
+  const titleEl = document.getElementById('vio-new-title');
+  const title = titleEl ? titleEl.value.trim() : '';
+  if (!title) { if (titleEl) titleEl.focus(); return; }
+  let cat = document.getElementById('vio-new-cat').value;
+  if (cat === '__new__') {
+    const custom = document.getElementById('vio-new-cat-custom');
+    cat = custom.value.trim();
+    if (!cat) { custom.focus(); return; }
+    if (violanessCats.indexOf(cat) === -1) violanessCats.push(cat);
+  }
+  if (!cat) cat = violanessCats[0] || 'Uncategorised';
+  const noteEl = document.getElementById('vio-new-note');
+  violanessSheets.push({ id: 'vs' + Date.now(), title: title, cat: cat, note: noteEl ? noteEl.value.trim() : '' });
+  save();
+  titleEl.value = '';
+  if (noteEl) noteEl.value = '';
+  const custom = document.getElementById('vio-new-cat-custom');
+  if (custom) { custom.value = ''; custom.style.display = 'none'; }
+  renderViolaness();
+  const sel = document.getElementById('vio-new-cat'); if (sel) sel.value = cat; // handy when adding several in one category
+  titleEl.focus();
+}
+
+function startVioEdit(id) { editingVioId = id; renderViolaness(); }
+function cancelVioEdit() { editingVioId = null; renderViolaness(); }
+
+function saveVioEdit(id) {
+  const sh = violanessSheets.find(function(x){ return x.id === id; }); if (!sh) return;
+  const title = (document.getElementById('vio-edit-title').value || '').trim();
+  if (!title) { alert('Give the sheet a title.'); return; }
+  sh.title = title;
+  sh.cat = document.getElementById('vio-edit-cat').value || sh.cat;
+  sh.note = (document.getElementById('vio-edit-note').value || '').trim();
+  editingVioId = null;
+  save();
+  renderViolaness();
+}
+
+function removeViolanessSheet(id) {
+  const sh = violanessSheets.find(function(x){ return x.id === id; }); if (!sh) return;
+  if (!confirm('Remove "' + sh.title + '" from Violaness? Pupils who already have it in their notes keep it.')) return;
+  violanessSheets = violanessSheets.filter(function(x){ return x.id !== id; });
+  save();
+  renderViolaness();
+}
+
+// Categories: add, rename (moves its sheets too), remove (sheets go to "Uncategorised")
+function renderVioCatManage() {
+  const el = document.getElementById('vio-cat-manage'); if (!el) return;
+  const cats = vioAllCats();
+  if (!cats.length) { el.innerHTML = '<p style="color:var(--muted);font-size:0.8rem;font-style:italic">No categories yet.</p>'; return; }
+  el.innerHTML = cats.map(function(c, i) {
+    const n = violanessSheets.filter(function(sh){ return sh.cat === c; }).length;
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">'
+      + '<span style="flex:1;font-size:0.85rem">' + esc(c) + '</span>'
+      + '<span style="font-size:0.7rem;color:var(--muted)">' + n + '</span>'
+      + '<button onclick="renameViolanessCat(' + i + ')" title="Rename" style="background:none;border:none;color:#1a4a6b;font-size:0.9rem;cursor:pointer">✏️</button>'
+      + '<button onclick="removeViolanessCat(' + i + ')" title="Remove category" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>'
+      + '</div>';
+  }).join('');
+}
+
+function addViolanessCat() {
+  const el = document.getElementById('vio-cat-new');
+  const name = el ? el.value.trim() : '';
+  if (!name) return;
+  if (vioAllCats().some(function(c){ return c.toLowerCase() === name.toLowerCase(); })) { el.value = ''; return; }
+  violanessCats.push(name);
+  save();
+  el.value = '';
+  renderViolaness();
+}
+
+function renameViolanessCat(i) {
+  const old = vioAllCats()[i]; if (old === undefined) return;
+  const name = (prompt('Rename category', old) || '').trim();
+  if (!name || name === old) return;
+  const idx = violanessCats.indexOf(old);
+  if (idx >= 0) violanessCats[idx] = name; else violanessCats.push(name);
+  // If the new name already existed, merge rather than duplicate
+  violanessCats = violanessCats.filter(function(c, j){ return violanessCats.indexOf(c) === j; });
+  violanessSheets.forEach(function(sh){ if (sh.cat === old) sh.cat = name; });
+  save();
+  renderViolaness();
+}
+
+function removeViolanessCat(i) {
+  const cat = vioAllCats()[i]; if (cat === undefined) return;
+  const n = violanessSheets.filter(function(sh){ return sh.cat === cat; }).length;
+  if (!confirm('Remove the category "' + cat + '"?' + (n ? '\n\nIts ' + n + ' sheet' + (n === 1 ? '' : 's') + ' will move to "Uncategorised".' : ''))) return;
+  violanessCats = violanessCats.filter(function(c){ return c !== cat; });
+  if (n) {
+    violanessSheets.forEach(function(sh){ if (sh.cat === cat) sh.cat = 'Uncategorised'; });
+    if (violanessCats.indexOf('Uncategorised') === -1) violanessCats.push('Uncategorised');
+  }
+  save();
+  renderViolaness();
+}
+
 function updateLibraryBadges() {
   const setBadge = (id, n) => {
     const el = document.getElementById(id); if (!el) return;
@@ -8030,6 +8267,7 @@ function updateLibraryBadges() {
   setBadge('tile-studybank-badge',  studyBookBank.length);
   setBadge('tile-methodbank-badge', methodBookBank.length);
   setBadge('tile-albumbank-badge',  albumBank.length);
+  setBadge('tile-violaness-badge',  violanessSheets.length);
 }
 
 // Jump from a pupil's Technique tab to a bank in the Library, remembering
@@ -8122,6 +8360,7 @@ function showLibrarySection(name) {
   const activeTile = document.querySelector('#view-library .lib-tile[onclick*="\'' + name + '\'"]');
   if (activeTile) activeTile.classList.add('active');
   // Book banks: fill the editor fresh each time it's opened
+  if (name === 'violaness') { editingVioId = null; renderViolaness(); }
   if (name === 'studybank' || name === 'methodbank' || name === 'albumbank') {
     editingBankId = null; editingMethodBankId = null; editingAlbumBankId = null;
     renderBankEditors();
@@ -10418,7 +10657,7 @@ function renderLendingLog() {
 // today's lesson plan — whichever "Add to" chip is selected (remembered).
 // The modal stays open so several things can go in at once; Done closes it.
 let pieceDBStudentId = null;
-let libPickSource = 'pieces';     // 'pieces' | 'studies' | 'methods' | 'albums'
+let libPickSource = 'pieces';     // 'pieces' | 'studies' | 'methods' | 'albums' | 'violaness'
 let libPickOpenBook = null;       // key of the book currently expanded
 let libPickAddedAny = false;
 let libPickDestMem = null;        // fallback if browser storage is unavailable
@@ -10428,7 +10667,8 @@ const LIBPICK_SOURCES = [
   { id: 'pieces',  icon: '📚', label: 'Pieces',  bg: 'var(--ink)',    fg: '#fff' },
   { id: 'studies', icon: '📖', label: 'Studies', bg: 'var(--string)', fg: 'var(--ink)' },
   { id: 'methods', icon: '📘', label: 'Methods', bg: '#46C6E5',       fg: 'var(--ink)' },
-  { id: 'albums',  icon: '🎵', label: 'Albums',  bg: 'var(--viola)',  fg: '#fff' }
+  { id: 'albums',  icon: '🎵', label: 'Albums',  bg: 'var(--viola)',  fg: '#fff' },
+  { id: 'violaness', icon: '🎻', label: 'Violaness', bg: '#1a4a6b',   fg: '#fff' }
 ];
 
 function libPickGetDest() {
@@ -10501,11 +10741,12 @@ function renderLibPickChrome() {
   const cat = document.getElementById('piece-cat-filter');
   if (cat) cat.style.display = libPickSource === 'pieces' ? '' : 'none';
   const search = document.getElementById('piece-search');
-  if (search) search.placeholder = libPickSource === 'pieces' ? 'Search pieces…' : 'Search books…';
+  if (search) search.placeholder = libPickSource === 'pieces' ? 'Search pieces…' : libPickSource === 'violaness' ? 'Search your sheets…' : 'Search books…';
 }
 
 function filterPieceDB() {
   const search = document.getElementById('piece-search').value.toLowerCase();
+  if (libPickSource === 'violaness') { renderLibPickViolaness(search); return; }
   if (libPickSource !== 'pieces') { renderLibPickBooks(search); return; }
   const cat = document.getElementById('piece-cat-filter').value;
   const allPieces = visibleLibraryPieces();
@@ -10655,6 +10896,37 @@ function libPickItemsHTML(bk) {
         + '<span style="color:var(--viola);font-weight:700">＋</span><span style="flex:1">' + esc(o.it) + '</span>' + (t ? '<span style="font-size:0.72rem;color:var(--viola)">✓</span>' : '') + '</button>';
     }).join('') + '</div>';
   }).join('');
+}
+
+// Violaness sheets in the picker, grouped by your categories
+function renderLibPickViolaness(search) {
+  const list = document.getElementById('piece-db-list'); if (!list) return;
+  if (!violanessSheets.length) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;text-align:center;padding:20px;line-height:1.5">No sheets yet. Add them in Library → 🎻 Violaness.</p>';
+    return;
+  }
+  const items = violanessSheets.filter(function(sh) {
+    return !search || (sh.title || '').toLowerCase().includes(search) || (sh.note || '').toLowerCase().includes(search) || (sh.cat || '').toLowerCase().includes(search);
+  });
+  if (!items.length) { list.innerHTML = '<p style="color:var(--muted);font-size:0.88rem;text-align:center;padding:20px">No results</p>'; return; }
+  list.innerHTML = vioAllCats().map(function(c) {
+    const inCat = sortByTitle(items.filter(function(sh){ return sh.cat === c; }));
+    if (!inCat.length) return '';
+    return '<div style="margin-bottom:14px">'
+      + '<div style="font-size:0.68rem;font-weight:800;color:#1a4a6b;padding:6px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">' + esc(c) + '</div>'
+      + inCat.map(function(sh) {
+          return '<div onclick="libPickAddVio(\'' + escJs(sh.id) + '\')" style="padding:10px 12px;border-radius:9px;cursor:pointer;margin-bottom:4px" '
+            + 'onmouseover="this.style.background=\'var(--warm)\'" onmouseout="this.style.background=\'transparent\'">'
+            + '<div style="font-size:0.9rem;font-weight:600">' + esc(sh.title) + '</div>'
+            + (sh.note ? '<div style="font-size:0.75rem;color:var(--muted)">' + esc(sh.note) + '</div>' : '')
+            + '</div>';
+        }).join('') + '</div>';
+  }).join('');
+}
+
+function libPickAddVio(id) {
+  const sh = violanessSheets.find(function(x){ return x.id === id; }); if (!sh) return;
+  libPickAdd(sh.title, '');
 }
 
 // Put one line where the "Add to" chip says. title = piece/book, ref = No. / item.
@@ -11305,6 +11577,8 @@ function backupData() {
     studio_study_book_bank: localStorage.getItem('studio_study_book_bank') || '[]',
     studio_method_book_bank: localStorage.getItem('studio_method_book_bank') || '[]',
     studio_album_bank:    localStorage.getItem('studio_album_bank')    || '[]',
+    studio_violaness_sheets: localStorage.getItem('studio_violaness_sheets') || '[]',
+    studio_violaness_cats:   localStorage.getItem('studio_violaness_cats')   || '',
     studio_cal_url:       localStorage.getItem('studio_cal_url')       || '',
   };
   const date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');
@@ -11333,7 +11607,7 @@ function restoreData(event) {
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
         'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links','studio_video_cats_removed','studio_video_teachers','studio_hidden_pieces',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
-        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_study_book_bank','studio_method_book_bank','studio_album_bank','studio_cal_url','studio_dark_mode_REMOVED'];
+        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_study_book_bank','studio_method_book_bank','studio_album_bank','studio_violaness_sheets','studio_violaness_cats','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
 
       // Reload state
@@ -11360,6 +11634,8 @@ function restoreData(event) {
       studyBookBank   = JSON.parse(localStorage.getItem('studio_study_book_bank')   || '[]');
       methodBookBank  = JSON.parse(localStorage.getItem('studio_method_book_bank')  || '[]');
       albumBank       = JSON.parse(localStorage.getItem('studio_album_bank')        || '[]');
+      violanessSheets = JSON.parse(localStorage.getItem('studio_violaness_sheets')  || '[]');
+      violanessCats   = JSON.parse(localStorage.getItem('studio_violaness_cats')    || 'null') || violanessCats;
       repairStudentIDs();
       migrateGiftsToList();
             closeBackupModal();
