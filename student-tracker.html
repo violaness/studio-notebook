@@ -3041,7 +3041,7 @@ function renderDetail(s, preserveTab = false) {
 
     <details class="section-card little-details-panel" id="little-details-${s.id}" style="margin-bottom:8px;padding:0">
       <summary style="display:none;list-style:none"></summary>
-      <div style="padding:0 14px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="padding:18px 14px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
         ${[
           ['siblings',  '👨‍👩‍👧 Siblings'],
           ['pets',      '🐾 Pets'],
@@ -5965,8 +5965,14 @@ function bookTicksHTML(studies, ticks, tickFn, sid, bIdx) {
           }).join('')
         + '</div>';
     }
-    return '<div>' + seg.items.map(function(it) {
-      return studyTickRow(it, ticks[it], tickFn, sid, bIdx);
+    // Short titles sit in 2 or 3 columns (reading down each column, so the
+    // numbering stays in order); long ones keep one full-width list. The
+    // minimum column width means a narrow screen drops to fewer columns.
+    const longest = seg.items.reduce(function(m, it){ return Math.max(m, String(it).length); }, 0);
+    const cols = seg.items.length < 4 ? 1 : longest <= 24 ? 3 : longest <= 40 ? 2 : 1;
+    const colStyle = cols > 1 ? 'columns:' + cols + ' 200px;column-gap:14px;' : '';
+    return '<div style="' + colStyle + '">' + seg.items.map(function(it) {
+      return '<div style="break-inside:avoid;-webkit-column-break-inside:avoid">' + studyTickRow(it, ticks[it], tickFn, sid, bIdx) + '</div>';
     }).join('') + '</div>';
   }).join('');
 }
