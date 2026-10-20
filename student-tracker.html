@@ -908,6 +908,13 @@
         style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;margin-bottom:6px">
       <textarea id="bank-new-studies" rows="3" placeholder="Number (e.g. 60) to auto-number, or one named study per line. Start a line with # for a heading"
         style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;resize:vertical"></textarea>
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.75rem;color:var(--muted);margin:6px 0">Numbers are:
+        <select id="bank-new-label" style="width:auto;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;background:var(--paper)">
+          <option value="No.">No. 1, No. 2…</option>
+          <option value="Page">Page 1, Page 2…</option>
+          <option value="Ex.">Ex. 1, Ex. 2…</option>
+        </select>
+      </label>
       <button onclick="addBankBook()" style="background:var(--string);color:var(--ink);border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:8px auto 0;min-width:160px">＋ Add to bank</button>
     </div>
   </section>
@@ -923,6 +930,13 @@
         style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;margin-bottom:6px">
       <textarea id="method-bank-new-studies" rows="3" placeholder="Number (e.g. 20) to auto-number, or one named unit per line. Start a line with # for a heading"
         style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;resize:vertical"></textarea>
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.75rem;color:var(--muted);margin:6px 0">Numbers are:
+        <select id="method-bank-new-label" style="width:auto;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;background:var(--paper)">
+          <option value="No.">No. 1, No. 2…</option>
+          <option value="Page">Page 1, Page 2…</option>
+          <option value="Ex.">Ex. 1, Ex. 2…</option>
+        </select>
+      </label>
       <button onclick="addMethodBankBook()" style="background:#46C6E5;color:var(--ink);border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:8px auto 0;min-width:160px">＋ Add to bank</button>
     </div>
   </section>
@@ -938,6 +952,13 @@
         style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;margin-bottom:6px">
       <textarea id="album-bank-new-studies" rows="3" placeholder="Number (e.g. 15) to auto-number, or one named piece per line. Start a line with # for a heading"
         style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;resize:vertical"></textarea>
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.75rem;color:var(--muted);margin:6px 0">Numbers are:
+        <select id="album-bank-new-label" style="width:auto;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;background:var(--paper)">
+          <option value="No.">No. 1, No. 2…</option>
+          <option value="Page">Page 1, Page 2…</option>
+          <option value="Ex.">Ex. 1, Ex. 2…</option>
+        </select>
+      </label>
       <button onclick="addAlbumBankBook()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:8px auto 0;min-width:160px">＋ Add to bank</button>
     </div>
   </section>
@@ -6036,6 +6057,21 @@ function bookStudies(book) {
 // A line starting with # is a heading (e.g. "# Suite No. 1 in G major"):
 // shown as a label, never a tick box, not counted. Items under it carry its
 // name into lessons, e.g. "Suite No. 1 in G major - 1. Prélude".
+// What a plain number in a book means: "No. 12", "Page 12" or "Ex. 12".
+// Set per book in the Library bank; pupils' copies follow their bank book.
+const NUM_LABELS = ['No.', 'Page', 'Ex.'];
+function numLabelSelectHTML(id, current) {
+  const cur = NUM_LABELS.indexOf(current) >= 0 ? current : 'No.';
+  return '<label style="display:flex;align-items:center;gap:8px;font-size:0.75rem;color:var(--muted);margin:6px 0">Numbers are:'
+    + '<select id="' + id + '" style="flex:0 0 auto;width:auto;padding:6px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;background:var(--paper)">'
+    + NUM_LABELS.map(function(l){ return '<option value="' + l + '"' + (l === cur ? ' selected' : '') + '>' + (l === 'No.' ? 'No. 1, No. 2…' : l === 'Page' ? 'Page 1, Page 2…' : 'Ex. 1, Ex. 2…') + '</option>'; }).join('')
+    + '</select></label>';
+}
+function readNumLabel(id) {
+  const el = document.getElementById(id);
+  return el && NUM_LABELS.indexOf(el.value) >= 0 ? el.value : 'No.';
+}
+
 function isHeadingItem(it) { return /^\s*#/.test(String(it || '')); }
 function headingText(it) { return String(it || '').replace(/^\s*#+\s*/, ''); }
 function tickableCount(list) { return (list || []).filter(function(it){ return !isHeadingItem(it); }).length; }
@@ -6312,6 +6348,7 @@ function studyBankEditorHTML() {
         + '<div style="font-size:0.66rem;color:var(--muted);margin-bottom:4px">Number (e.g. 60) to auto-number, or one named study per line.</div>'
         + '<textarea id="bank-edit-studies" rows="4" '
         + 'style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical">' + esc(studiesToText(bk.studies)) + '</textarea>'
+        + numLabelSelectHTML('bank-edit-label', bk.numLabel)
         + '<div style="display:flex;gap:8px;margin-top:6px">'
         + '<button onclick="saveBankEdit(\'' + bk.id + '\')" style="flex:1;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">Save</button>'
         + '<button onclick="cancelBankEdit()" style="flex:1;background:var(--warm);color:var(--muted);border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;cursor:pointer">Cancel</button>'
@@ -6319,7 +6356,7 @@ function studyBankEditorHTML() {
     }
     return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">'
       + '<span style="flex:1;font-size:0.85rem">' + esc(bk.name) + '</span>'
-      + '<span style="font-size:0.7rem;color:var(--muted)">' + n + '</span>'
+      + '<span style="font-size:0.7rem;color:var(--muted)">' + (bk.numLabel && bk.numLabel !== 'No.' ? (bk.numLabel === 'Page' ? 'pages · ' : 'ex. · ') : '') + n + '</span>'
       + '<button onclick="startBankEdit(\'' + bk.id + '\')" title="Edit studies" style="background:none;border:none;color:var(--violin);font-size:0.9rem;cursor:pointer">✏️</button>'
       + '<button onclick="removeBankBook(\'' + bk.id + '\')" title="Remove from bank" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>'
       + '</div>';
@@ -6346,6 +6383,7 @@ function saveBankEdit(bankId) {
   if (!name || studies.length === 0) { alert('Give the book a name and either a number of studies or a list of named studies, one per line.'); return; }
   bk.name = name;
   bk.studies = studies;
+  bk.numLabel = readNumLabel('bank-edit-label');
   editingBankId = null;
   save();
   const el = document.getElementById('study-bank-list'); if (el) el.innerHTML = studyBankEditorHTML();
@@ -6358,7 +6396,7 @@ function addBankBook() {
   const name = nameEl ? nameEl.value.trim() : '';
   const studies = parseStudiesInput(studiesEl ? studiesEl.value : '');
   if (!name || studies.length === 0) { alert('Give the book a name and either a number of studies or a list of named studies, one per line.'); return; }
-  studyBookBank.push({ id: 'bk' + Date.now(), name: name, studies: studies });
+  studyBookBank.push({ id: 'bk' + Date.now(), name: name, studies: studies, numLabel: readNumLabel('bank-new-label') });
   save();
   if (nameEl) nameEl.value = '';
   if (studiesEl) studiesEl.value = '';
@@ -6495,6 +6533,7 @@ function methodBankEditorHTML() {
         + '<div style="font-size:0.66rem;color:var(--muted);margin-bottom:4px">Number (e.g. 20) to auto-number, or one named unit per line.</div>'
         + '<textarea id="method-bank-edit-studies" rows="4" '
         + 'style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical">' + esc(studiesToText(bk.studies)) + '</textarea>'
+        + numLabelSelectHTML('method-bank-edit-label', bk.numLabel)
         + '<div style="display:flex;gap:8px;margin-top:6px">'
         + '<button onclick="saveMethodBankEdit(\'' + bk.id + '\')" style="flex:1;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">Save</button>'
         + '<button onclick="cancelMethodBankEdit()" style="flex:1;background:var(--warm);color:var(--muted);border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;cursor:pointer">Cancel</button>'
@@ -6502,7 +6541,7 @@ function methodBankEditorHTML() {
     }
     return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">'
       + '<span style="flex:1;font-size:0.85rem">' + esc(bk.name) + '</span>'
-      + '<span style="font-size:0.7rem;color:var(--muted)">' + n + '</span>'
+      + '<span style="font-size:0.7rem;color:var(--muted)">' + (bk.numLabel && bk.numLabel !== 'No.' ? (bk.numLabel === 'Page' ? 'pages · ' : 'ex. · ') : '') + n + '</span>'
       + '<button onclick="startMethodBankEdit(\'' + bk.id + '\')" title="Edit units" style="background:none;border:none;color:var(--violin);font-size:0.9rem;cursor:pointer">✏️</button>'
       + '<button onclick="removeMethodBankBook(\'' + bk.id + '\')" title="Remove from bank" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>'
       + '</div>';
@@ -6515,7 +6554,7 @@ function addMethodBankBook() {
   const name = nameEl ? nameEl.value.trim() : '';
   const studies = parseStudiesInput(studiesEl ? studiesEl.value : '');
   if (!name || studies.length === 0) { alert('Give the book a name and either a number of units or a list of named units, one per line.'); return; }
-  methodBookBank.push({ id: 'mb' + Date.now(), name: name, studies: studies });
+  methodBookBank.push({ id: 'mb' + Date.now(), name: name, studies: studies, numLabel: readNumLabel('method-bank-new-label') });
   save();
   if (nameEl) nameEl.value = '';
   if (studiesEl) studiesEl.value = '';
@@ -6543,6 +6582,7 @@ function saveMethodBankEdit(bankId) {
   if (!name || studies.length === 0) { alert('Give the book a name and either a number of units or a list of named units, one per line.'); return; }
   bk.name = name;
   bk.studies = studies;
+  bk.numLabel = readNumLabel('method-bank-edit-label');
   editingMethodBankId = null;
   save();
   const el = document.getElementById('method-bank-list'); if (el) el.innerHTML = methodBankEditorHTML();
@@ -6678,6 +6718,7 @@ function albumBankEditorHTML() {
         + '<div style="font-size:0.66rem;color:var(--muted);margin-bottom:4px">Number (e.g. 15) to auto-number, or one named piece per line.</div>'
         + '<textarea id="album-bank-edit-studies" rows="4" '
         + 'style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical">' + esc(studiesToText(bk.studies)) + '</textarea>'
+        + numLabelSelectHTML('album-bank-edit-label', bk.numLabel)
         + '<div style="display:flex;gap:8px;margin-top:6px">'
         + '<button onclick="saveAlbumBankEdit(\'' + bk.id + '\')" style="flex:1;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">Save</button>'
         + '<button onclick="cancelAlbumBankEdit()" style="flex:1;background:var(--warm);color:var(--muted);border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;cursor:pointer">Cancel</button>'
@@ -6685,7 +6726,7 @@ function albumBankEditorHTML() {
     }
     return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">'
       + '<span style="flex:1;font-size:0.85rem">' + esc(bk.name) + '</span>'
-      + '<span style="font-size:0.7rem;color:var(--muted)">' + n + '</span>'
+      + '<span style="font-size:0.7rem;color:var(--muted)">' + (bk.numLabel && bk.numLabel !== 'No.' ? (bk.numLabel === 'Page' ? 'pages · ' : 'ex. · ') : '') + n + '</span>'
       + '<button onclick="startAlbumBankEdit(\'' + bk.id + '\')" title="Edit pieces" style="background:none;border:none;color:var(--violin);font-size:0.9rem;cursor:pointer">✏️</button>'
       + '<button onclick="removeAlbumBankBook(\'' + bk.id + '\')" title="Remove from bank" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>'
       + '</div>';
@@ -6698,7 +6739,7 @@ function addAlbumBankBook() {
   const name = nameEl ? nameEl.value.trim() : '';
   const studies = parseStudiesInput(studiesEl ? studiesEl.value : '');
   if (!name || studies.length === 0) { alert('Give the album a name and either a number of pieces or a list of named pieces, one per line.'); return; }
-  albumBank.push({ id: 'al' + Date.now(), name: name, studies: studies });
+  albumBank.push({ id: 'al' + Date.now(), name: name, studies: studies, numLabel: readNumLabel('album-bank-new-label') });
   save();
   if (nameEl) nameEl.value = '';
   if (studiesEl) studiesEl.value = '';
@@ -6726,6 +6767,7 @@ function saveAlbumBankEdit(bankId) {
   if (!name || studies.length === 0) { alert('Give the album a name and either a number of pieces or a list of named pieces, one per line.'); return; }
   bk.name = name;
   bk.studies = studies;
+  bk.numLabel = readNumLabel('album-bank-edit-label');
   editingAlbumBankId = null;
   save();
   const el = document.getElementById('album-bank-list'); if (el) el.innerHTML = albumBankEditorHTML();
@@ -11197,11 +11239,13 @@ function libPickBookSets(s) {
   const field = { studies: 'studyBooks', methods: 'methodBooks', albums: 'albums' }[libPickSource];
   const bank  = { studies: studyBookBank, methods: methodBookBank, albums: albumBank }[libPickSource] || [];
   const mine = ((s && s[field]) || []).map(function(b, i) {
-    return { key: 'p' + i, name: b.name, items: bookStudies(b), ticks: b.ticks || {}, bankId: b.bankId || null };
+    const fromBank = b.bankId ? bank.find(function(x){ return x.id === b.bankId; }) : null;
+    return { key: 'p' + i, name: b.name, items: bookStudies(b), ticks: b.ticks || {}, bankId: b.bankId || null,
+             numLabel: b.numLabel || (fromBank && fromBank.numLabel) || 'No.' };
   });
   const mineBankIds = new Set(mine.map(function(b){ return b.bankId; }).filter(Boolean));
   const banked = sortByName(bank.filter(function(b){ return !mineBankIds.has(b.id); })).map(function(b) {
-    return { key: 'b' + b.id, name: b.name, items: (b.studies || []).slice(), ticks: {} };
+    return { key: 'b' + b.id, name: b.name, items: (b.studies || []).slice(), ticks: {}, numLabel: b.numLabel || 'No.' };
   });
   return { mine: mine, bank: banked };
 }
@@ -11226,7 +11270,7 @@ function libPickAddBookItem(key, idx) {
   const bk = libPickFindBook(key); if (!bk) return;
   const it = bk.items[idx]; if (it === undefined || isHeadingItem(it)) return;
   const head = headingFor(bk.items, idx);
-  const part = /^\d+$/.test(it) ? 'No. ' + it : it;
+  const part = /^\d+$/.test(it) ? (bk.numLabel || 'No.') + ' ' + it : it;
   libPickAdd(bk.name, head ? head + ' - ' + part : part);
 }
 
