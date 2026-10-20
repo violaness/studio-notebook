@@ -7538,8 +7538,15 @@ function renderStudioAttendance() {
   const allWeeks = new Set();
   // Also build per-pupil, per-week regular log map: { studentId: { weekKey: attendance } }
   const regularMap = {}; // studentId → weekKey → attendance string
+  // An extra lesson you've logged attendance for is the SAME lesson as that log
+  // entry, so it mustn't be counted twice. Track which days each week were
+  // logged, and how many separate days were Present.
+  const presentDates = {}; // studentId -> weekKey -> Set of dates marked Present
+  const loggedDays   = {}; // studentId -> weekKey -> Set of weekday names logged
   students.forEach(s => {
     regularMap[s.id] = {};
+    presentDates[s.id] = {};
+    loggedDays[s.id] = {};
     (s.log||[]).forEach(e => {
       if (!e.attendance) return;
       const d = parseDate(e.date);
@@ -7548,6 +7555,8 @@ function renderStudioAttendance() {
       if (toDate   && d > toDate)   return;
       const wk = weekKey(d);
       allWeeks.add(wk);
+      (loggedDays[s.id][wk] = loggedDays[s.id][wk] || new Set()).add(DAY_NAMES[d.getDay()]);
+      if (e.attendance === 'present') (presentDates[s.id][wk] = presentDates[s.id][wk] || new Set()).add(e.date);
       // Keep the most "significant" status if multiple entries exist in same week
       // Priority: present > absent-notice > absent-late > cancelled
       const priority = { present:4, 'absent-notice':3, 'absent-late':2, cancelled:1 };
@@ -7586,6 +7595,8 @@ function renderStudioAttendance() {
     if (fromDate && fri < fromDate) return;
     if (toDate   && sat > toDate)   return;
     (entries||[]).forEach(ex => {
+      // Already logged on that day? Then the log entry is this lesson - don't add it again
+      if (ex.day && loggedDays[ex.studentId] && loggedDays[ex.studentId][wk] && loggedDays[ex.studentId][wk].has(ex.day)) return;
       if (!extraMap[ex.studentId]) extraMap[ex.studentId] = {};
       extraMap[ex.studentId][wk] = (extraMap[ex.studentId][wk]||0) + 1;
     });
@@ -7630,8 +7641,7 @@ function renderStudioAttendance() {
 
   // Summary totals
   const totalPresentSlots = activePupils.reduce((sum, s) => {
-    return sum + sortedWeeks.filter(wk => regularMap[s.id]?.[wk] === 'present').length
-               + sortedWeeks.reduce((ex, wk) => ex + (extraMap[s.id]?.[wk]||0), 0);
+    return sum + sortedWeeks.reduce((n, wk) => n + (presentDates[s.id]?.[wk]?.size || 0) + (extraMap[s.id]?.[wk] || 0), 0);
   }, 0);
 
   el.innerHTML = `
@@ -7654,10 +7664,12 @@ function renderStudioAttendance() {
             const rowBg = rowIdx % 2 === 1 ? '#f6f3ea' : 'var(--card-bg)';
             const cells = sortedWeeks.map(wk => {
               const reg   = regularMap[s.id]?.[wk] || null;
-              const extra = extraMap[s.id]?.[wk]   || 0;
+              const pres  = presentDates[s.id]?.[wk]?.size || 0;
+              const booked = extraMap[s.id]?.[wk] || 0;   // extras not yet logged
+              // Main badge shows one lesson; "+n" = any further Present days + unlogged extras
+              const extra = Math.max(0, pres - (reg === 'present' ? 1 : 0)) + booked;
               const gapStyle = weekHasGapBefore[wk] ? 'border-left:3px dashed #b5a98a;padding-left:7px' : '';
-              if (reg === 'present') attended++;
-              attended += extra;
+              attended += pres + booked;
               if (!reg && !extra) {
                 return `<td style="text-align:center;padding:4px 2px;border-bottom:1px solid var(--warm);color:#ddd;background:${rowBg};${gapStyle}">·</td>`;
               }
@@ -7665,7 +7677,7 @@ function renderStudioAttendance() {
                 ? `<span style="display:inline-block;width:26px;height:20px;line-height:20px;border-radius:4px;background:${colMap[reg]};color:#fff;font-size:0.68rem;font-weight:700" title="${fullLabel[reg]||reg}">${labelMap[reg]}</span>`
                 : '';
               const extraBadge = extra > 0
-                ? `<span onclick="removeExtraFromOverview('${s.id}','${wk}')" style="display:inline-block;width:20px;height:16px;line-height:16px;border-radius:4px;background:#29789E;color:#fff;font-size:0.6rem;font-weight:700;margin-top:2px;cursor:pointer" title="Tap to remove one extra lesson">+${extra}</span>`
+                ? `<span onclick="removeExtraFromOverview('${s.id}','${wk}')" style="display:inline-block;width:20px;height:16px;line-height:16px;border-radius:4px;background:#29789E;color:#fff;font-size:0.6rem;font-weight:700;margin-top:2px;cursor:pointer" title="${booked ? 'Tap to remove one booked extra lesson' : 'Extra lesson(s) logged'}">+${extra}</span>`
                 : '';
               return `<td style="text-align:center;padding:4px 2px;border-bottom:1px solid var(--warm);vertical-align:middle;background:${rowBg};${gapStyle}">
                 <div style="display:flex;flex-direction:column;align-items:center;gap:1px">${regBadge}${extraBadge}</div>
@@ -7732,8 +7744,15 @@ function exportStudioAttendancePDF() {
 
   const allWeeks = new Set();
   const regularMap = {};
+  // An extra lesson you've logged attendance for is the SAME lesson as that log
+  // entry, so it mustn't be counted twice. Track which days each week were
+  // logged, and how many separate days were Present.
+  const presentDates = {}; // studentId -> weekKey -> Set of dates marked Present
+  const loggedDays   = {}; // studentId -> weekKey -> Set of weekday names logged
   students.forEach(s => {
     regularMap[s.id] = {};
+    presentDates[s.id] = {};
+    loggedDays[s.id] = {};
     (s.log||[]).forEach(e => {
       if (!e.attendance) return;
       const d = parseDate(e.date);
@@ -7742,6 +7761,8 @@ function exportStudioAttendancePDF() {
       if (toDate   && d > toDate)   return;
       const wk = weekKey(d);
       allWeeks.add(wk);
+      (loggedDays[s.id][wk] = loggedDays[s.id][wk] || new Set()).add(DAY_NAMES[d.getDay()]);
+      if (e.attendance === 'present') (presentDates[s.id][wk] = presentDates[s.id][wk] || new Set()).add(e.date);
       const priority = { present:4, 'absent-notice':3, 'absent-late':2, cancelled:1 };
       const existing = regularMap[s.id][wk];
       if (!existing || (priority[e.attendance]||0) > (priority[existing]||0)) {
@@ -7768,6 +7789,8 @@ function exportStudioAttendancePDF() {
     if (fromDate && fri < fromDate) return;
     if (toDate   && sat > toDate)   return;
     (entries||[]).forEach(ex => {
+      // Already logged on that day? Then the log entry is this lesson - don't add it again
+      if (ex.day && loggedDays[ex.studentId] && loggedDays[ex.studentId][wk] && loggedDays[ex.studentId][wk].has(ex.day)) return;
       if (!extraMap[ex.studentId]) extraMap[ex.studentId] = {};
       extraMap[ex.studentId][wk] = (extraMap[ex.studentId][wk]||0) + 1;
     });
@@ -7807,10 +7830,11 @@ function exportStudioAttendancePDF() {
     const rowBg = rowIdx % 2 === 1 ? 'background:#f6f3ea;' : '';
     const cells = sortedWeeks.map(wk => {
       const reg   = regularMap[s.id]?.[wk] || null;
-      const extra = extraMap[s.id]?.[wk]   || 0;
+      const pres  = presentDates[s.id]?.[wk]?.size || 0;
+      const booked = extraMap[s.id]?.[wk] || 0;
+      const extra = Math.max(0, pres - (reg === 'present' ? 1 : 0)) + booked;
       const gapStyle = weekHasGapBefore[wk] ? 'border-left:2px dashed #b5a98a;' : '';
-      if (reg === 'present') attended++;
-      attended += extra;
+      attended += pres + booked;
       if (!reg && !extra) return `<td style="text-align:center;padding:3px 2px;border-bottom:1px solid #e8e0d0;color:#ccc;${gapStyle}">\u00b7</td>`;
       const regBadge = reg ? `<span style="display:inline-block;min-width:20px;padding:1px 3px;border-radius:3px;background:${colMap[reg]};color:#fff;font-size:0.62rem;font-weight:700">${labelMap[reg]}</span>` : '';
       const extraBadge = extra > 0 ? `<span style="display:inline-block;min-width:16px;padding:0 3px;border-radius:3px;background:#29789E;color:#fff;font-size:0.55rem;font-weight:700;margin-top:1px">+${extra}</span>` : '';
@@ -9004,33 +9028,46 @@ function removeExtraLesson(idx) {
 // Remove one extra lesson for a pupil from the attendance overview.
 // satKey is a "YYYY-MM-DD" Sat-based display key; we find the matching ISO week bucket.
 function removeExtraFromOverview(studentId, satKey) {
-  if (!confirm('Remove one extra lesson for this pupil from this week?')) return;
-  // Find the ISO week key(s) whose Sat-based key matches satKey
-  let removed = false;
-  for (const isoWk of Object.keys(extraLessons)) {
-    const entries = extraLessons[isoWk];
-    if (!entries || !entries.length) continue;
-    // Derive the sat key for this ISO week
-    const [yr, wPart] = isoWk.split('-W');
-    const jan4 = new Date(parseInt(yr), 0, 4);
-    const mon = new Date(jan4);
-    mon.setDate(jan4.getDate() - (jan4.getDay()+6)%7 + (parseInt(wPart)-1)*7);
-    const daysSinceSat = (mon.getDay() + 1) % 7;
-    const sat = new Date(mon); sat.setDate(mon.getDate() - daysSinceSat);
-    const mm = String(sat.getMonth()+1).padStart(2,'0');
-    const dd = String(sat.getDate()).padStart(2,'0');
-    const thisSatKey = `${sat.getFullYear()}-${mm}-${dd}`;
-    if (thisSatKey !== satKey) continue;
-    // Find first entry for this student in this bucket and remove it
-    const idx = entries.findIndex(e => e.studentId === studentId);
-    if (idx !== -1) {
-      entries.splice(idx, 1);
-      if (entries.length === 0) delete extraLessons[isoWk];
-      removed = true;
-      break;
-    }
+  // Which week bucket(s) map to this Saturday? Keys are "YYYY-MM-DD" (current)
+  // or "YYYY-Www" (older entries).
+  function satKeyOf(rawKey) {
+    let d;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rawKey)) {
+      const [y, m, dd] = rawKey.split('-').map(Number); d = new Date(y, m - 1, dd);
+    } else if (/^\d{4}-W\d{1,2}$/.test(rawKey)) {
+      const [yr, wPart] = rawKey.split('-W');
+      const jan4 = new Date(parseInt(yr), 0, 4);
+      d = new Date(jan4); d.setDate(jan4.getDate() - (jan4.getDay()+6)%7 + (parseInt(wPart)-1)*7);
+    } else return null;
+    d.setHours(0,0,0,0);
+    d.setDate(d.getDate() - (d.getDay() + 1) % 7);
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   }
-  if (removed) { save(); renderLibrary(); }
+  // Days already logged that week: those extras are real lessons, leave them be
+  const s = getStudent(studentId);
+  const logged = new Set();
+  (s && s.log || []).forEach(function(e) {
+    const d = parseLogDate(e.date);
+    if (!d || !e.attendance) return;
+    const sat = new Date(d); sat.setHours(0,0,0,0); sat.setDate(sat.getDate() - (sat.getDay() + 1) % 7);
+    const k = sat.getFullYear() + '-' + String(sat.getMonth()+1).padStart(2,'0') + '-' + String(sat.getDate()).padStart(2,'0');
+    if (k === satKey) logged.add(DAY_NAMES[d.getDay()]);
+  });
+  let bucket = null, idx = -1;
+  for (const rawKey of Object.keys(extraLessons)) {
+    if (satKeyOf(rawKey) !== satKey) continue;
+    const i = (extraLessons[rawKey] || []).findIndex(function(e){ return e.studentId === studentId && !(e.day && logged.has(e.day)); });
+    if (i !== -1) { bucket = rawKey; idx = i; break; }
+  }
+  if (idx === -1) {
+    alert('This extra lesson has been logged, so it shows in their History. To change it, edit that lesson in the pupil’s History tab.');
+    return;
+  }
+  if (!confirm('Remove one booked extra lesson for this pupil from this week?')) return;
+  extraLessons[bucket].splice(idx, 1);
+  if (extraLessons[bucket].length === 0) delete extraLessons[bucket];
+  save();
+  renderStudioAttendance();
 }
 
 
