@@ -4608,6 +4608,16 @@ function pieceMovements(title) {
   return hit ? hit.movements : null;
 }
 
+// Which movement rows are unfolded (kept while the app is open; folded by default)
+const openMvtRows = new Set();
+function toggleMvtRow(sid, i) {
+  const s = getStudent(sid); if (!s) return;
+  const k = sid + '|' + normPieceCat((s.pieces || [])[i] || '').toLowerCase();
+  if (openMvtRows.has(k)) openMvtRows.delete(k); else openMvtRows.add(k);
+  const el = document.getElementById('mvt-ticks-' + sid + '-' + i);
+  if (el) el.innerHTML = mvtTicksHTML(s, i);
+}
+
 // Per-pupil movement ticks, kept by piece title: s.pieceMvtTicks[title][mvt] = 0/1/2
 function mvtTicksHTML(s, i) {
   const title = (s.pieces || [])[i];
@@ -4616,8 +4626,24 @@ function mvtTicksHTML(s, i) {
   const ticks = ((s.pieceMvtTicks || {})[normPieceCat(title).toLowerCase()]) || {};
   const mkeys = uniqueItemKeys(mvts);
   const done = mkeys.filter(function(k, n){ return !isHeadingItem(mvts[n]) && bookTickLevel(ticks[k]) === 2; }).length;
+  const isOpen = openMvtRows.has(s.id + '|' + normPieceCat(title).toLowerCase());
+  // What's in progress, so the folded line is still useful at a glance
+  const working = [];
+  mvts.forEach(function(m, n) {
+    if (!isHeadingItem(m) && bookTickLevel(ticks[mkeys[n]]) === 1) {
+      const h = headingFor(mvts, n);
+      const shortH = h ? h.split(',')[0] + ': ' : '';
+      working.push(shortH + (/^\d+$/.test(m) ? 'Mvt. ' + m : m));
+    }
+  });
+  const toggle = '<button onclick="toggleMvtRow(\'' + s.id + '\',' + i + ')" style="display:flex;align-items:center;gap:6px;background:none;border:none;padding:2px 0;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.72rem;color:var(--muted);text-align:left">'
+    + '<span style="display:inline-block;transform:rotate(' + (isOpen ? '90' : '0') + 'deg);transition:transform 0.15s;font-size:0.65rem">▶</span>'
+    + '<span>🎼 ' + done + '/' + tickableCount(mvts) + ' movements'
+    + (working.length ? ' · <span style="color:#b7791f">working on: ' + esc(working.slice(0, 3).join(', ')) + (working.length > 3 ? ' +' + (working.length - 3) : '') + '</span>' : '')
+    + (isOpen ? '' : ' <span style="text-decoration:underline">show</span>') + '</span></button>';
+  if (!isOpen) return '<div style="margin:-2px 0 4px 2px">' + toggle + '</div>';
   return '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:-2px 0 4px 2px">'
-    + '<span style="font-size:0.7rem;color:var(--muted);margin-right:2px">🎼 ' + done + '/' + tickableCount(mvts) + '</span>'
+    + '<div style="flex-basis:100%">' + toggle + '</div>'
     + mvts.map(function(m, idx) {
         if (isHeadingItem(m)) return '<span style="flex-basis:100%;font-size:0.72rem;font-weight:700;color:#1a4a6b;margin-top:6px">' + esc(headingText(m)) + '</span>';
         const lv = bookTickLevel(ticks[mkeys[idx]]);
@@ -5734,6 +5760,11 @@ function normalisePieceCats() {
     return i < 0 ? k : normPieceCat(k.slice(0, i)) + '|||' + normPieceCat(k.slice(i + 3));
   });
   hiddenPieceCats = hiddenPieceCats.map(normPieceCat);
+  // Pupils' own piece lists too (e.g. older "Noack — Heinzelmännchens")
+  if (typeof students !== 'undefined') students.forEach(function(s) {
+    if (Array.isArray(s.pieces)) s.pieces = s.pieces.map(function(x){ return x ? normPieceCat(x) : x; });
+    if (Array.isArray(s.pieceRefs)) s.pieceRefs = s.pieceRefs.map(function(x){ return x ? normPieceCat(x) : x; });
+  });
 }
 normalisePieceCats();
 
