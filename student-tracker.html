@@ -906,7 +906,7 @@
       <div class="section-label" style="margin-bottom:8px">Add a study book</div>
       <input type="text" id="bank-new-name" placeholder="Book name, e.g. Wohlfahrt Op. 45"
         style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;margin-bottom:6px">
-      <textarea id="bank-new-studies" rows="3" placeholder="Number (e.g. 60) to auto-number, or one named study per line"
+      <textarea id="bank-new-studies" rows="3" placeholder="Number (e.g. 60) to auto-number, or one named study per line. Start a line with # for a heading"
         style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;resize:vertical"></textarea>
       <button onclick="addBankBook()" style="background:var(--string);color:var(--ink);border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:8px auto 0;min-width:160px">＋ Add to bank</button>
     </div>
@@ -921,7 +921,7 @@
       <div class="section-label" style="margin-bottom:8px">Add a method book</div>
       <input type="text" id="method-bank-new-name" placeholder="Book name, e.g. Essential Elements Book 1"
         style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;margin-bottom:6px">
-      <textarea id="method-bank-new-studies" rows="3" placeholder="Number (e.g. 20) to auto-number, or one named unit per line"
+      <textarea id="method-bank-new-studies" rows="3" placeholder="Number (e.g. 20) to auto-number, or one named unit per line. Start a line with # for a heading"
         style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;resize:vertical"></textarea>
       <button onclick="addMethodBankBook()" style="background:#46C6E5;color:var(--ink);border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:8px auto 0;min-width:160px">＋ Add to bank</button>
     </div>
@@ -936,7 +936,7 @@
       <div class="section-label" style="margin-bottom:8px">Add an album</div>
       <input type="text" id="album-bank-new-name" placeholder="Album name, e.g. Fiddle Time Joggers"
         style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;margin-bottom:6px">
-      <textarea id="album-bank-new-studies" rows="3" placeholder="Number (e.g. 15) to auto-number, or one named piece per line"
+      <textarea id="album-bank-new-studies" rows="3" placeholder="Number (e.g. 15) to auto-number, or one named piece per line. Start a line with # for a heading"
         style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;resize:vertical"></textarea>
       <button onclick="addAlbumBankBook()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:8px auto 0;min-width:160px">＋ Add to bank</button>
     </div>
@@ -1031,7 +1031,7 @@
         <input type="text" id="lib-new-piece-title" placeholder="Title" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <input type="text" id="lib-new-piece-composer" placeholder="Composer (optional)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <input type="text" id="lib-new-piece-grade" placeholder="Grade (optional)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
-        <textarea id="lib-new-piece-mvts" rows="2" placeholder="Movements (optional): a number, e.g. 3, or one per line, e.g. I. Allegro" style="width:100%;padding:8px 12px;border-radius:8px;font-size:0.88rem;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;box-sizing:border-box;resize:vertical;background:var(--paper)"></textarea>
+        <textarea id="lib-new-piece-mvts" rows="2" placeholder="Movements (optional): a number, e.g. 3, or one per line. Start a line with # for a heading, e.g. # Suite No. 1" style="width:100%;padding:8px 12px;border-radius:8px;font-size:0.88rem;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;box-sizing:border-box;resize:vertical;background:var(--paper)"></textarea>
         <select id="lib-new-piece-cat" onchange="toggleNewCatInput(this.value)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
           <option value="My Library">My Library</option>
           <option value="Scalability">Scalability</option>
@@ -1922,7 +1922,7 @@
     </div>
     <div class="field-group">
       <label class="field-label">Movements (optional)</label>
-      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">A number (e.g. 3) for Mvt. 1 to 3, or one named movement per line. Leave empty for none.</div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">A number (e.g. 3) for Mvt. 1 to 3, or one named movement per line. Start a line with # to make a heading, e.g. # Suite No. 1. Leave empty for none.</div>
       <textarea id="edit-lib-piece-mvts" rows="3" placeholder="3&#10;or&#10;I. Allegro&#10;II. Adagio" style="width:100%;padding:8px 12px;border-radius:8px;font-size:0.88rem;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;box-sizing:border-box;resize:vertical;background:var(--paper)"></textarea>
     </div>
     <div class="field-group">
@@ -4614,11 +4614,13 @@ function mvtTicksHTML(s, i) {
   const mvts = pieceMovements(title);
   if (!mvts) return '';
   const ticks = ((s.pieceMvtTicks || {})[normPieceCat(title).toLowerCase()]) || {};
-  const done = mvts.filter(function(m){ return bookTickLevel(ticks[m]) === 2; }).length;
+  const mkeys = uniqueItemKeys(mvts);
+  const done = mkeys.filter(function(k, n){ return !isHeadingItem(mvts[n]) && bookTickLevel(ticks[k]) === 2; }).length;
   return '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:-2px 0 4px 2px">'
-    + '<span style="font-size:0.7rem;color:var(--muted);margin-right:2px">🎼 ' + done + '/' + mvts.length + '</span>'
+    + '<span style="font-size:0.7rem;color:var(--muted);margin-right:2px">🎼 ' + done + '/' + tickableCount(mvts) + '</span>'
     + mvts.map(function(m, idx) {
-        const lv = bookTickLevel(ticks[m]);
+        if (isHeadingItem(m)) return '<span style="flex-basis:100%;font-size:0.72rem;font-weight:700;color:#1a4a6b;margin-top:6px">' + esc(headingText(m)) + '</span>';
+        const lv = bookTickLevel(ticks[mkeys[idx]]);
         const st = BOOK_TICK_STYLE[lv];
         const label = /^\d+$/.test(m) ? 'Mvt. ' + m : m;
         return '<button onclick="mvtTick(\'' + s.id + '\',' + i + ',' + idx + ')" title="' + st.label + '" '
@@ -4634,7 +4636,8 @@ function mvtTick(sid, i, idx) {
   const s = getStudent(sid); if (!s) return;
   const title = (s.pieces || [])[i];
   const mvts = pieceMovements(title); if (!mvts) return;
-  const m = mvts[idx]; if (m === undefined) return;
+  if (isHeadingItem(mvts[idx])) return;
+  const m = uniqueItemKeys(mvts)[idx]; if (m === undefined) return;
   const key = normPieceCat(title).toLowerCase();
   if (!s.pieceMvtTicks) s.pieceMvtTicks = {};
   if (!s.pieceMvtTicks[key]) s.pieceMvtTicks[key] = {};
@@ -5995,6 +5998,32 @@ function bookStudies(book) {
 // Book tick-boxes cycle like the Technique checklist:
 //   0 = not started (empty) → 1 = working on it (orange) → 2 = finished (green ✓)
 // Older saves stored plain true for a tick, which counts as finished.
+// Ticks are saved against an item's name. When a name repeats (e.g. "1. Prélude"
+// in each of six suites) every repeat needs its own key, or ticking one ticks
+// them all. The first one keeps its plain name (so existing ticks still count);
+// later repeats become "1. Prélude#2", "#3"... The tag is never shown.
+// A line starting with # is a heading (e.g. "# Suite No. 1 in G major"):
+// shown as a label, never a tick box, not counted. Items under it carry its
+// name into lessons, e.g. "Suite No. 1 in G major - 1. Prélude".
+function isHeadingItem(it) { return /^\s*#/.test(String(it || '')); }
+function headingText(it) { return String(it || '').replace(/^\s*#+\s*/, ''); }
+function tickableCount(list) { return (list || []).filter(function(it){ return !isHeadingItem(it); }).length; }
+function headingFor(list, idx) {
+  for (let i = idx - 1; i >= 0; i--) if (isHeadingItem(list[i])) return headingText(list[i]);
+  return '';
+}
+function headingLabelHTML(it) {
+  return '<div style="font-size:0.72rem;font-weight:700;color:#1a4a6b;margin:10px 0 4px;padding-bottom:3px;border-bottom:1px solid var(--warm)">' + esc(headingText(it)) + '</div>';
+}
+
+function uniqueItemKeys(list) {
+  const seen = {};
+  return (list || []).map(function(it) {
+    const n = (seen[it] = (seen[it] || 0) + 1);
+    return n === 1 ? it : it + '#' + n;
+  });
+}
+
 function bookTickLevel(v) { return (v === true || v === 2) ? 2 : (v === 1 ? 1 : 0); }
 function bookTickNext(v) { return (bookTickLevel(v) + 1) % 3; }
 const BOOK_TICK_STYLE = [
@@ -6004,11 +6033,11 @@ const BOOK_TICK_STYLE = [
 ];
 
 // One tick-box, numbered-grid style (compact, label beside box).
-function studyTickCell(it, level, tickFn, sid, bIdx) {
+function studyTickCell(it, level, tickFn, sid, bIdx, key) {
   const st = BOOK_TICK_STYLE[bookTickLevel(level)];
   return '<div style="display:flex;align-items:center;gap:5px;padding:2px 0">'
     + '<span style="font-size:0.72rem;color:var(--ink);min-width:16px;text-align:right">' + esc(it) + '</span>'
-    + '<button onclick="' + tickFn + '(\'' + sid + '\',' + bIdx + ',' + JSON.stringify(it).replace(/"/g,'&quot;') + ')" title="' + st.label + '" '
+    + '<button onclick="' + tickFn + '(\'' + sid + '\',' + bIdx + ',' + JSON.stringify(key || it).replace(/"/g,'&quot;') + ')" title="' + st.label + '" '
     + 'style="width:20px;height:20px;border-radius:5px;border:1.5px solid ' + st.border + ';'
     + 'background:' + st.bg + ';color:' + st.fg + ';'
     + 'cursor:pointer;font-size:0.62rem;font-weight:700;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0">'
@@ -6016,11 +6045,11 @@ function studyTickCell(it, level, tickFn, sid, bIdx) {
 }
 
 // One tick-box, named-row style (full-width, label after box, struck when done).
-function studyTickRow(it, level, tickFn, sid, bIdx) {
+function studyTickRow(it, level, tickFn, sid, bIdx, key) {
   const lv = bookTickLevel(level);
   const st = BOOK_TICK_STYLE[lv];
   return '<div style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;background:' + st.rowBg + ';margin-bottom:3px">'
-    + '<button onclick="' + tickFn + '(\'' + sid + '\',' + bIdx + ',' + JSON.stringify(it).replace(/"/g,'&quot;') + ')" title="' + st.label + '" '
+    + '<button onclick="' + tickFn + '(\'' + sid + '\',' + bIdx + ',' + JSON.stringify(key || it).replace(/"/g,'&quot;') + ')" title="' + st.label + '" '
     + 'style="flex:0 0 auto;width:20px;height:20px;border-radius:5px;border:1.5px solid ' + st.border + ';'
     + 'background:' + st.bg + ';color:' + st.fg + ';cursor:pointer;font-size:0.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0">'
     + st.mark + '</button>'
@@ -6034,20 +6063,23 @@ function studyTickRow(it, level, tickFn, sid, bIdx) {
 function bookTicksHTML(studies, ticks, tickFn, sid, bIdx) {
   // Split into alternating segments of {numeric:true, items:[...]} / {numeric:false, items:[...]}
   const segments = [];
-  studies.forEach(function(it) {
+  const keys = uniqueItemKeys(studies);
+  studies.forEach(function(it, n) {
+    if (isHeadingItem(it)) { segments.push({ heading: it }); return; }
     const isNum = /^\d+$/.test(it);
     const last = segments[segments.length - 1];
-    if (last && last.numeric === isNum) last.items.push(it);
-    else segments.push({ numeric: isNum, items: [it] });
+    if (last && !last.heading && last.numeric === isNum) { last.items.push(it); last.keys.push(keys[n]); }
+    else segments.push({ numeric: isNum, items: [it], keys: [keys[n]] });
   });
   return segments.map(function(seg) {
+    if (seg.heading) return headingLabelHTML(seg.heading);
     if (seg.numeric) {
       const cols = [];
-      for (let i = 0; i < Math.ceil(seg.items.length / 5); i++) cols.push(seg.items.slice(i*5, i*5+5));
+      for (let i = 0; i < Math.ceil(seg.items.length / 5); i++) cols.push(seg.items.slice(i*5, i*5+5).map(function(it, j){ return { it: it, key: seg.keys[i*5 + j] }; }));
       return '<div style="display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:4px 0">'
         + cols.map(function(col) {
-            return '<div style="flex-shrink:0">' + col.map(function(it) {
-              return studyTickCell(it, ticks[it], tickFn, sid, bIdx);
+            return '<div style="flex-shrink:0">' + col.map(function(o) {
+              return studyTickCell(o.it, ticks[o.key], tickFn, sid, bIdx, o.key);
             }).join('') + '</div>';
           }).join('')
         + '</div>';
@@ -6058,8 +6090,8 @@ function bookTicksHTML(studies, ticks, tickFn, sid, bIdx) {
     const longest = seg.items.reduce(function(m, it){ return Math.max(m, String(it).length); }, 0);
     const cols = seg.items.length < 4 ? 1 : longest <= 24 ? 3 : longest <= 40 ? 2 : 1;
     const colStyle = cols > 1 ? 'columns:' + cols + ' 200px;column-gap:14px;' : '';
-    return '<div style="' + colStyle + '">' + seg.items.map(function(it) {
-      return '<div style="break-inside:avoid;-webkit-column-break-inside:avoid">' + studyTickRow(it, ticks[it], tickFn, sid, bIdx) + '</div>';
+    return '<div style="' + colStyle + '">' + seg.items.map(function(it, j) {
+      return '<div style="break-inside:avoid;-webkit-column-break-inside:avoid">' + studyTickRow(it, ticks[seg.keys[j]], tickFn, sid, bIdx, seg.keys[j]) + '</div>';
     }).join('') + '</div>';
   }).join('');
 }
@@ -6070,9 +6102,10 @@ function studyBooksHTML(s) {
   return books.map(function(book, bIdx) {
     const ticks = book.ticks || {};
     const studies = bookStudies(book);
-    const total = studies.length;
-    const done = studies.filter(function(it){ return bookTickLevel(ticks[it]) === 2; }).length;
-    const working = studies.filter(function(it){ return bookTickLevel(ticks[it]) === 1; }).length;
+    const total = tickableCount(studies);
+    const tkeys = uniqueItemKeys(studies).filter(function(k, n){ return !isHeadingItem(studies[n]); });
+    const done = tkeys.filter(function(k){ return bookTickLevel(ticks[k]) === 2; }).length;
+    const working = tkeys.filter(function(k){ return bookTickLevel(ticks[k]) === 1; }).length;
     const ticksHTML = bookTicksHTML(studies, ticks, 'studyBookTick', s.id, bIdx);
     return '<details style="margin-top:10px">'
       + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
@@ -6109,7 +6142,7 @@ function renderBankPicker() {
     return;
   }
   el.innerHTML = sortByName(studyBookBank).map(function(bk) {
-    const n = (bk.studies || []).length;
+    const n = tickableCount(bk.studies);
     const pupil = getStudent((document.getElementById('study-book-student-id') || {}).value);
     const onList = !!(pupil && (pupil.studyBooks || []).some(function(b){ return b.bankId === bk.id; }));
     return '<button onclick="addBankBookToPupil(\'' + bk.id + '\')" style="width:100%;text-align:left;background:' + (onList ? '#e8f5e0' : 'var(--paper)') + ';border:1.5px solid ' + (onList ? 'var(--string)' : 'var(--warm)') + ';border-radius:10px;padding:10px 12px;margin-bottom:6px;font-family:\'Special Elite\',cursive;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px">'
@@ -6240,7 +6273,7 @@ function studyBankEditorHTML() {
     return '<p style="color:var(--muted);font-size:0.8rem;font-style:italic">No books in your bank yet. Add one below (e.g. “Wohlfahrt Op. 45”, then 60, or paste named studies one per line).</p>';
   }
   return sortByName(studyBookBank).map(function(bk) {
-    const n = (bk.studies || []).length;
+    const n = tickableCount(bk.studies);
     if (editingBankId === bk.id) {
       return '<div style="padding:8px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px;border:1.5px solid var(--violin)">'
         + '<input type="text" id="bank-edit-name" value="' + esc(bk.name) + '" '
@@ -6317,9 +6350,10 @@ function methodBooksHTML(s) {
   return books.map(function(book, bIdx) {
     const ticks = book.ticks || {};
     const studies = bookStudies(book);
-    const total = studies.length;
-    const done = studies.filter(function(it){ return bookTickLevel(ticks[it]) === 2; }).length;
-    const working = studies.filter(function(it){ return bookTickLevel(ticks[it]) === 1; }).length;
+    const total = tickableCount(studies);
+    const tkeys = uniqueItemKeys(studies).filter(function(k, n){ return !isHeadingItem(studies[n]); });
+    const done = tkeys.filter(function(k){ return bookTickLevel(ticks[k]) === 2; }).length;
+    const working = tkeys.filter(function(k){ return bookTickLevel(ticks[k]) === 1; }).length;
     const ticksHTML = bookTicksHTML(studies, ticks, 'methodBookTick', s.id, bIdx);
     return '<details style="margin-top:10px">'
       + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
@@ -6354,7 +6388,7 @@ function renderMethodBankPicker() {
     return;
   }
   el.innerHTML = sortByName(methodBookBank).map(function(bk) {
-    const n = (bk.studies || []).length;
+    const n = tickableCount(bk.studies);
     const pupil = getStudent((document.getElementById('method-book-student-id') || {}).value);
     const onList = !!(pupil && (pupil.methodBooks || []).some(function(b){ return b.bankId === bk.id; }));
     return '<button onclick="addMethodBankBookToPupil(\'' + bk.id + '\')" style="width:100%;text-align:left;background:' + (onList ? '#e8f5e0' : 'var(--paper)') + ';border:1.5px solid ' + (onList ? 'var(--string)' : 'var(--warm)') + ';border-radius:10px;padding:10px 12px;margin-bottom:6px;font-family:\'Special Elite\',cursive;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px">'
@@ -6422,7 +6456,7 @@ function methodBankEditorHTML() {
     return '<p style="color:var(--muted);font-size:0.8rem;font-style:italic">No method books in your bank yet. Add one below (e.g. “Essential Elements Book 1”, then a number of units, or paste named units one per line).</p>';
   }
   return sortByName(methodBookBank).map(function(bk) {
-    const n = (bk.studies || []).length;
+    const n = tickableCount(bk.studies);
     if (editingMethodBankId === bk.id) {
       return '<div style="padding:8px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px;border:1.5px solid var(--violin)">'
         + '<input type="text" id="method-bank-edit-name" value="' + esc(bk.name) + '" '
@@ -6499,9 +6533,10 @@ function albumsHTML(s) {
   return books.map(function(book, bIdx) {
     const ticks = book.ticks || {};
     const studies = bookStudies(book);
-    const total = studies.length;
-    const done = studies.filter(function(it){ return bookTickLevel(ticks[it]) === 2; }).length;
-    const working = studies.filter(function(it){ return bookTickLevel(ticks[it]) === 1; }).length;
+    const total = tickableCount(studies);
+    const tkeys = uniqueItemKeys(studies).filter(function(k, n){ return !isHeadingItem(studies[n]); });
+    const done = tkeys.filter(function(k){ return bookTickLevel(ticks[k]) === 2; }).length;
+    const working = tkeys.filter(function(k){ return bookTickLevel(ticks[k]) === 1; }).length;
     const ticksHTML = bookTicksHTML(studies, ticks, 'albumTick', s.id, bIdx);
     return '<details style="margin-top:10px">'
       + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
@@ -6536,7 +6571,7 @@ function renderAlbumBankPicker() {
     return;
   }
   el.innerHTML = sortByName(albumBank).map(function(bk) {
-    const n = (bk.studies || []).length;
+    const n = tickableCount(bk.studies);
     const pupil = getStudent((document.getElementById('album-student-id') || {}).value);
     const onList = !!(pupil && (pupil.albums || []).some(function(b){ return b.bankId === bk.id; }));
     return '<button onclick="addAlbumBankToPupil(\'' + bk.id + '\')" style="width:100%;text-align:left;background:' + (onList ? '#e8f5e0' : 'var(--paper)') + ';border:1.5px solid ' + (onList ? 'var(--string)' : 'var(--warm)') + ';border-radius:10px;padding:10px 12px;margin-bottom:6px;font-family:\'Special Elite\',cursive;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px">'
@@ -6604,7 +6639,7 @@ function albumBankEditorHTML() {
     return '<p style="color:var(--muted);font-size:0.8rem;font-style:italic">No albums in your bank yet. Add one below (e.g. “Fiddle Time Joggers”, then a number of pieces, or paste named pieces one per line).</p>';
   }
   return sortByName(albumBank).map(function(bk) {
-    const n = (bk.studies || []).length;
+    const n = tickableCount(bk.studies);
     if (editingAlbumBankId === bk.id) {
       return '<div style="padding:8px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px;border:1.5px solid var(--violin)">'
         + '<input type="text" id="album-bank-edit-name" value="' + esc(bk.name) + '" '
@@ -8807,7 +8842,7 @@ function renderLibPieces() {
         return `<div style="padding:8px 0;border-bottom:1px solid var(--warm);display:flex;align-items:center;gap:8px">
           <div style="flex:1">
             <div style="font-size:0.88rem;font-weight:600">${esc(p.title)}</div>
-            ${p.composer||p.grade||(p.movements&&p.movements.length) ? `<div style="font-size:0.75rem;color:var(--muted)">${[p.composer,p.grade].filter(Boolean).map(esc).concat(p.movements&&p.movements.length ? ['<span style="color:var(--violin)">🎼 ' + p.movements.length + ' movement' + (p.movements.length===1?'':'s') + '</span>'] : []).join(' · ')}</div>` : ''}
+            ${p.composer||p.grade||(p.movements&&p.movements.length) ? `<div style="font-size:0.75rem;color:var(--muted)">${[p.composer,p.grade].filter(Boolean).map(esc).concat(p.movements&&p.movements.length ? ['<span style="color:var(--violin)">🎼 ' + tickableCount(p.movements) + ' movement' + (tickableCount(p.movements)===1?'':'s') + '</span>'] : []).join(' · ')}</div>` : ''}
           </div>
           <button onclick="editLibPieceByKey('${key}')" style="background:none;border:1.5px solid var(--viola);border-radius:6px;padding:3px 8px;color:var(--viola);cursor:pointer;font-size:0.75rem;flex-shrink:0">Edit</button>
           <button onclick="removeLibPieceByKey('${key}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px;flex-shrink:0">×</button>
@@ -11063,12 +11098,13 @@ function libPickPieceWithMvtsHTML(p) {
     + '<button onclick="libPickToggleBook(\'pc:' + k + '\')" style="flex:1;text-align:left;background:none;border:none;font-family:\'Special Elite\',cursive;cursor:pointer;padding:2px 0;display:flex;align-items:center;gap:8px;color:var(--ink)">'
     + '<span style="font-size:0.75rem;color:var(--muted);display:inline-block;transform:rotate(' + (open ? '90' : '0') + 'deg);transition:transform 0.15s">▶</span>'
     + '<span style="flex:1"><span style="display:block;font-size:0.9rem;font-weight:600">' + esc(p.title) + '</span>'
-    + '<span style="display:block;font-size:0.75rem;color:var(--muted)">' + [p.composer, p.grade].filter(Boolean).map(esc).concat(['🎼 ' + p.movements.length + ' movement' + (p.movements.length === 1 ? '' : 's')]).join(' · ') + '</span></span></button>'
+    + '<span style="display:block;font-size:0.75rem;color:var(--muted)">' + [p.composer, p.grade].filter(Boolean).map(esc).concat(['🎼 ' + tickableCount(p.movements) + ' movement' + (tickableCount(p.movements) === 1 ? '' : 's')]).join(' · ') + '</span></span></button>'
     + '<button onclick="selectPiece(\'' + escJs(p.title) + '\')" title="Add the piece on its own" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:6px 10px;font-family:\'Special Elite\',cursive;font-size:0.72rem;cursor:pointer;white-space:nowrap">＋ Piece</button>'
     + '</div>';
   if (open) {
     html += '<div style="padding:8px 10px 10px"><div style="font-size:0.68rem;color:var(--muted);margin-bottom:6px">Tap a movement to add it</div>'
       + p.movements.map(function(m, idx) {
+          if (isHeadingItem(m)) return headingLabelHTML(m);
           const isNum = /^\d+$/.test(m);
           return '<button onclick="libPickAddMvt(\'' + k + '\',' + idx + ')" style="' + (isNum ? 'display:inline-block;min-width:64px;margin:0 5px 5px 0;' : 'display:flex;width:100%;margin-bottom:4px;text-align:left;') + 'align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.85rem;border:1.5px solid #e0ddd8;background:#fff;color:var(--ink)">'
             + '<span style="color:var(--viola);font-weight:700">＋</span> ' + esc(isNum ? 'Mvt. ' + m : m) + '</button>';
@@ -11081,8 +11117,10 @@ function libPickPieceWithMvtsHTML(p) {
 function libPickAddMvt(key, idx) {
   const p = visibleLibraryPieces().find(function(x){ return pieceKey(x) === key; });
   if (!p || !p.movements) return;
-  const m = p.movements[idx]; if (m === undefined) return;
-  libPickAdd(p.title, /^\d+$/.test(m) ? 'Mvt. ' + m : m);
+  const m = p.movements[idx]; if (m === undefined || isHeadingItem(m)) return;
+  const head = headingFor(p.movements, idx);
+  const part = /^\d+$/.test(m) ? 'Mvt. ' + m : m;
+  libPickAdd(p.title, head ? head + ' - ' + part : part);
 }
 
 // The pupil's own copies of this kind of book, plus the studio bank (minus
@@ -11118,8 +11156,10 @@ function libPickAddWholeBook(key) {
 
 function libPickAddBookItem(key, idx) {
   const bk = libPickFindBook(key); if (!bk) return;
-  const it = bk.items[idx]; if (it === undefined) return;
-  libPickAdd(bk.name, /^\d+$/.test(it) ? 'No. ' + it : it);
+  const it = bk.items[idx]; if (it === undefined || isHeadingItem(it)) return;
+  const head = headingFor(bk.items, idx);
+  const part = /^\d+$/.test(it) ? 'No. ' + it : it;
+  libPickAdd(bk.name, head ? head + ' - ' + part : part);
 }
 
 function renderLibPickBooks(search) {
@@ -11153,8 +11193,8 @@ function renderLibPickBooks(search) {
 function libPickBookHTML(bk) {
   const open = libPickOpenBook === bk.key;
   const k = escJs(bk.key);
-  const done = bk.items.filter(function(it){ return bookTickLevel(bk.ticks[it]) === 2; }).length;
-  const count = bk.key.charAt(0) === 'p' ? done + ' / ' + bk.items.length : String(bk.items.length);
+  const done = uniqueItemKeys(bk.items).filter(function(k, n){ return !isHeadingItem(bk.items[n]) && bookTickLevel(bk.ticks[k]) === 2; }).length;
+  const count = bk.key.charAt(0) === 'p' ? done + ' / ' + tickableCount(bk.items) : String(tickableCount(bk.items));
   let html = '<div style="border:1.5px solid ' + (open ? 'var(--viola)' : 'var(--warm)') + ';border-radius:10px;margin-bottom:6px;overflow:hidden">'
     + '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:' + (open ? '#f4faef' : 'var(--paper)') + '">'
     + '<button onclick="libPickToggleBook(\'' + k + '\')" style="flex:1;text-align:left;background:none;border:none;font-family:\'Special Elite\',cursive;cursor:pointer;padding:4px 0;display:flex;align-items:center;gap:8px;color:var(--ink)">'
@@ -11175,22 +11215,25 @@ function libPickBookHTML(bk) {
 function libPickItemsHTML(bk) {
   const k = escJs(bk.key);
   const segs = [];
+  const ikeys = uniqueItemKeys(bk.items);
   bk.items.forEach(function(it, idx) {
+    if (isHeadingItem(it)) { segs.push({ heading: it }); return; }
     const isNum = /^\d+$/.test(it);
     const last = segs[segs.length - 1];
-    if (last && last.numeric === isNum) last.items.push({ it: it, idx: idx });
+    if (last && !last.heading && last.numeric === isNum) last.items.push({ it: it, idx: idx });
     else segs.push({ numeric: isNum, items: [{ it: it, idx: idx }] });
   });
   return segs.map(function(seg) {
+    if (seg.heading) return headingLabelHTML(seg.heading);
     if (seg.numeric) {
       return '<div style="display:flex;flex-wrap:wrap;gap:5px;margin:4px 0">' + seg.items.map(function(o) {
-        const lv = bookTickLevel(bk.ticks[o.it]);
+        const lv = bookTickLevel(bk.ticks[ikeys[o.idx]]);
         return '<button onclick="libPickAddBookItem(\'' + k + '\',' + o.idx + ')" style="min-width:38px;height:36px;padding:0 6px;border-radius:8px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.8rem;'
           + 'border:1.5px solid ' + (lv === 2 ? 'var(--string)' : lv === 1 ? '#e67e22' : '#d6ddd2') + ';background:' + (lv === 2 ? '#e8f5e0' : lv === 1 ? '#fff3e0' : '#fff') + ';color:var(--ink)">' + esc(o.it) + '</button>';
       }).join('') + '</div>';
     }
     return '<div style="margin:4px 0">' + seg.items.map(function(o) {
-      const lv = bookTickLevel(bk.ticks[o.it]);
+      const lv = bookTickLevel(bk.ticks[ikeys[o.idx]]);
       return '<button onclick="libPickAddBookItem(\'' + k + '\',' + o.idx + ')" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:8px 10px;margin-bottom:4px;border-radius:8px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.85rem;'
         + 'border:1.5px solid ' + (lv === 2 ? 'var(--string)' : lv === 1 ? '#e67e22' : '#e0ddd8') + ';background:' + (lv === 2 ? '#e8f5e0' : lv === 1 ? '#fff3e0' : '#fff') + ';color:var(--ink)">'
         + '<span style="color:var(--viola);font-weight:700">＋</span><span style="flex:1">' + esc(o.it) + '</span>' + (lv === 2 ? '<span style="font-size:0.72rem;color:var(--viola)">✓</span>' : lv === 1 ? '<span style="font-size:0.72rem;color:#b7791f">working</span>' : '') + '</button>';
