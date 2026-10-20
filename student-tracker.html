@@ -1031,6 +1031,7 @@
         <input type="text" id="lib-new-piece-title" placeholder="Title" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <input type="text" id="lib-new-piece-composer" placeholder="Composer (optional)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <input type="text" id="lib-new-piece-grade" placeholder="Grade (optional)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
+        <textarea id="lib-new-piece-mvts" rows="2" placeholder="Movements (optional): a number, e.g. 3, or one per line, e.g. I. Allegro" style="width:100%;padding:8px 12px;border-radius:8px;font-size:0.88rem;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;box-sizing:border-box;resize:vertical;background:var(--paper)"></textarea>
         <select id="lib-new-piece-cat" onchange="toggleNewCatInput(this.value)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
           <option value="My Library">My Library</option>
           <option value="Scalability">Scalability</option>
@@ -1918,6 +1919,11 @@
     <div class="field-group">
       <label class="field-label">Grade (optional)</label>
       <input type="text" id="edit-lib-piece-grade" placeholder="Grade">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Movements (optional)</label>
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">A number (e.g. 3) for Mvt. 1 to 3, or one named movement per line. Leave empty for none.</div>
+      <textarea id="edit-lib-piece-mvts" rows="3" placeholder="3&#10;or&#10;I. Allegro&#10;II. Adagio" style="width:100%;padding:8px 12px;border-radius:8px;font-size:0.88rem;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;box-sizing:border-box;resize:vertical;background:var(--paper)"></textarea>
     </div>
     <div class="field-group">
       <label class="field-label">Category</label>
@@ -4592,11 +4598,63 @@ function saveNextLesson(id) {
   if (beforeEl) beforeEl.value = s.nextWeekNote;
   showToast('toast-next-' + id);
 }
+// Movements for a piece title, if your library has that piece with movements
+function pieceMovements(title) {
+  const t = normPieceCat(String(title || '').trim()).toLowerCase();
+  if (!t) return null;
+  const hit = visibleLibraryPieces().find(function(x) {
+    return x.movements && x.movements.length && normPieceCat(x.title).toLowerCase() === t;
+  });
+  return hit ? hit.movements : null;
+}
+
+// Per-pupil movement ticks, kept by piece title: s.pieceMvtTicks[title][mvt] = 0/1/2
+function mvtTicksHTML(s, i) {
+  const title = (s.pieces || [])[i];
+  const mvts = pieceMovements(title);
+  if (!mvts) return '';
+  const ticks = ((s.pieceMvtTicks || {})[normPieceCat(title).toLowerCase()]) || {};
+  const done = mvts.filter(function(m){ return bookTickLevel(ticks[m]) === 2; }).length;
+  return '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:-2px 0 4px 2px">'
+    + '<span style="font-size:0.7rem;color:var(--muted);margin-right:2px">🎼 ' + done + '/' + mvts.length + '</span>'
+    + mvts.map(function(m, idx) {
+        const lv = bookTickLevel(ticks[m]);
+        const st = BOOK_TICK_STYLE[lv];
+        const label = /^\d+$/.test(m) ? 'Mvt. ' + m : m;
+        return '<button onclick="mvtTick(\'' + s.id + '\',' + i + ',' + idx + ')" title="' + st.label + '" '
+          + 'style="display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.75rem;'
+          + 'border:1.5px solid ' + (lv ? st.border : '#d6ddd2') + ';background:' + (lv ? st.rowBg : '#fff') + ';color:var(--ink)">'
+          + '<span style="width:14px;height:14px;border-radius:4px;border:1.5px solid ' + st.border + ';background:' + st.bg + ';color:' + st.fg + ';font-size:0.55rem;display:inline-flex;align-items:center;justify-content:center">' + st.mark + '</span>'
+          + esc(label) + '</button>';
+      }).join('')
+    + '</div>';
+}
+
+function mvtTick(sid, i, idx) {
+  const s = getStudent(sid); if (!s) return;
+  const title = (s.pieces || [])[i];
+  const mvts = pieceMovements(title); if (!mvts) return;
+  const m = mvts[idx]; if (m === undefined) return;
+  const key = normPieceCat(title).toLowerCase();
+  if (!s.pieceMvtTicks) s.pieceMvtTicks = {};
+  if (!s.pieceMvtTicks[key]) s.pieceMvtTicks[key] = {};
+  s.pieceMvtTicks[key][m] = bookTickNext(s.pieceMvtTicks[key][m]);
+  save();
+  const el = document.getElementById('mvt-ticks-' + sid + '-' + i);
+  if (el) el.innerHTML = mvtTicksHTML(s, i);
+}
+
 function buildPiecesHTML(s) {
   const pieces = s.pieces && s.pieces.length ? s.pieces : [''];
   const refs   = s.pieceRefs || [];
+  const seenMvt = {};
   return pieces.map(function(p, i) {
     const ref = refs[i] || '';
+    // Movement ticks under the first row of each piece that has movements
+    const mk = normPieceCat(String(p || '')).toLowerCase();
+    const showMvts = p && !seenMvt[mk] && pieceMovements(p);
+    if (showMvts) seenMvt[mk] = true;
+    const mvtRow = showMvts ? '<div id="mvt-ticks-' + s.id + '-' + i + '" style="flex-basis:100%">' + mvtTicksHTML(s, i) + '</div>' : '';
     return '<div class="piece-item" style="flex-wrap:wrap;gap:6px;align-items:center">'
       + '<input type="text" placeholder="Piece or exercise\u2026" value="' + esc(p) + '" style="flex:2;min-width:120px"'
       + ' oninput="updatePiece(\'' + s.id + '\',' + i + ',this.value)"'
@@ -4604,6 +4662,7 @@ function buildPiecesHTML(s) {
       + '<input type="text" placeholder="No. / mvt. (optional)" value="' + esc(ref) + '" style="flex:1;min-width:80px;font-size:0.82rem"'
       + ' oninput="updatePieceRef(\'' + s.id + '\',' + i + ',this.value)">'
       + '<button class="remove-piece-btn" onclick="removePiece(\'' + s.id + '\',' + i + ')" title="Remove">\u00d7</button>'
+      + mvtRow
       + '</div>';
   }).join('');
 }
@@ -8562,7 +8621,9 @@ function deletePieceCat(cat) {
     const key = pieceKey(p);
     if (!hiddenPieces.includes(key)) hiddenPieces.push(key);
     if (!customPieces.some(cp => cp.cat === 'My Library' && cp.title.toLowerCase() === (p.title || '').toLowerCase())) {
-      customPieces.push({ title: p.title, composer: p.composer || '', grade: p.grade || '', cat: 'My Library' });
+      const copy = { title: p.title, composer: p.composer || '', grade: p.grade || '', cat: 'My Library' };
+      if (p.movements && p.movements.length) copy.movements = p.movements.slice();
+      customPieces.push(copy);
     }
   });
   if (!hiddenPieceCats.includes(cat)) hiddenPieceCats.push(cat);
@@ -8746,7 +8807,7 @@ function renderLibPieces() {
         return `<div style="padding:8px 0;border-bottom:1px solid var(--warm);display:flex;align-items:center;gap:8px">
           <div style="flex:1">
             <div style="font-size:0.88rem;font-weight:600">${esc(p.title)}</div>
-            ${p.composer||p.grade ? `<div style="font-size:0.75rem;color:var(--muted)">${[p.composer,p.grade].filter(Boolean).join(' · ')}</div>` : ''}
+            ${p.composer||p.grade||(p.movements&&p.movements.length) ? `<div style="font-size:0.75rem;color:var(--muted)">${[p.composer,p.grade].filter(Boolean).map(esc).concat(p.movements&&p.movements.length ? ['<span style="color:var(--violin)">🎼 ' + p.movements.length + ' movement' + (p.movements.length===1?'':'s') + '</span>'] : []).join(' · ')}</div>` : ''}
           </div>
           <button onclick="editLibPieceByKey('${key}')" style="background:none;border:1.5px solid var(--viola);border-radius:6px;padding:3px 8px;color:var(--viola);cursor:pointer;font-size:0.75rem;flex-shrink:0">Edit</button>
           <button onclick="removeLibPieceByKey('${key}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px;flex-shrink:0">×</button>
@@ -8776,8 +8837,13 @@ function addLibPiece() {
   cat = normPieceCat(cat);
   hiddenPieceCats = hiddenPieceCats.filter(c => c !== cat); // re-using a deleted name brings it back
   if (customPieces.some(p => p.title.toLowerCase() === title.toLowerCase())) return;
-  customPieces.push({ title, composer, grade, cat });
+  const mvEl = document.getElementById('lib-new-piece-mvts');
+  const movements = parseStudiesInput(mvEl ? mvEl.value : '');
+  const piece = { title, composer, grade, cat };
+  if (movements.length) piece.movements = movements;
+  customPieces.push(piece);
   save();
+  if (mvEl) mvEl.value = '';
   document.getElementById('lib-new-piece-title').value = '';
   document.getElementById('lib-new-piece-composer').value = '';
   document.getElementById('lib-new-piece-grade').value = '';
@@ -8804,6 +8870,7 @@ function editLibPieceByKey(key) {
   document.getElementById('edit-lib-piece-composer').value = p.composer || '';
   document.getElementById('edit-lib-piece-grade').value    = p.grade    || '';
   document.getElementById('edit-lib-piece-cat').value      = p.cat      || 'My Library';
+  document.getElementById('edit-lib-piece-mvts').value     = studiesToText(p.movements || []);
   document.getElementById('edit-lib-piece-modal').classList.add('open');
 }
 
@@ -8819,6 +8886,8 @@ function saveEditLibPiece() {
     grade:    document.getElementById('edit-lib-piece-grade').value.trim(),
     cat:      document.getElementById('edit-lib-piece-cat').value,
   };
+  const mvts = parseStudiesInput(document.getElementById('edit-lib-piece-mvts').value);
+  if (mvts.length) updated.movements = mvts;
   if (!updated.title) return; // don't save a blank title
 
   const existingIdx = customPieces.findIndex(cp => pieceKey(cp) === origKey);
@@ -9786,12 +9855,31 @@ function pencilKey(key) {
     }
   } else if (key === 'Capitalise') {
     if (start !== end) {
-      const selected = val.slice(start, end).toUpperCase();
-      el.value = val.slice(0, start) + selected + val.slice(end);
+      // Selection: make it all capitals, or back to lower case if it already is
+      const sel = val.slice(start, end);
+      const flipped = (sel === sel.toUpperCase() && sel !== sel.toLowerCase()) ? sel.toLowerCase() : sel.toUpperCase();
+      el.value = val.slice(0, start) + flipped + val.slice(end);
       el.selectionStart = start;
       el.selectionEnd = end;
-    } else if (start > 0) {
-      el.value = val.slice(0, start - 1) + val[start - 1].toUpperCase() + val.slice(start);
+    } else {
+      // No selection: capitalise the first letter of the word the cursor is in,
+      // or the word just written (skipping the space Scribble adds after a word).
+      // Tapping again turns it back to lower case.
+      let i = start;
+      while (i > 0 && /\s/.test(val[i - 1]) && !(i < val.length && /\S/.test(val[i]))) i--; // step back over trailing spaces
+      if (i < val.length && /\S/.test(val[i]) && (i === 0 || /\s/.test(val[i - 1]))) {
+        // cursor sits right at the start of a word: use that word
+      } else {
+        while (i > 0 && /\S/.test(val[i - 1])) i--; // back to the start of this word
+      }
+      // Skip opening punctuation like ( " ' to reach the first letter
+      let j = i;
+      while (j < val.length && /\S/.test(val[j]) && !/[\p{L}]/u.test(val[j])) j++;
+      if (j < val.length && /[\p{L}]/u.test(val[j])) {
+        const ch = val[j];
+        const swapped = ch === ch.toUpperCase() ? ch.toLowerCase() : ch.toUpperCase();
+        el.value = val.slice(0, j) + swapped + val.slice(j + 1);
+      }
       el.selectionStart = el.selectionEnd = start;
     }
   } else {
@@ -10950,7 +11038,7 @@ function renderPieceDB(items) {
   list.innerHTML = Object.entries(groups).map(([cat, pieces]) => `
     <div style="margin-bottom:14px">
       <div style="font-size:0.68rem;font-weight:800;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${esc(cat.replace(' - ',' - '))}</div>
-      ${pieces.map(p => `
+      ${pieces.map(p => (p.movements && p.movements.length) ? libPickPieceWithMvtsHTML(p) : `
         <div onclick="selectPiece('${escJs(p.title)}')"
           style="padding:10px 12px;border-radius:9px;cursor:pointer;margin-bottom:4px;transition:background 0.12s"
           onmouseover="this.style.background='var(--warm)'" onmouseout="this.style.background='transparent'">
@@ -10963,6 +11051,38 @@ function renderPieceDB(items) {
 // A piece from the piece library
 function selectPiece(title) {
   libPickAdd(title, '');
+}
+
+// A piece that has movements opens like a book: tap a movement, or "＋ Piece"
+function libPickPieceWithMvtsHTML(p) {
+  const key = pieceKey(p);
+  const k = escJs(key);
+  const open = libPickOpenBook === 'pc:' + key;
+  let html = '<div style="border:1.5px solid ' + (open ? 'var(--viola)' : 'var(--warm)') + ';border-radius:10px;margin-bottom:6px;overflow:hidden">'
+    + '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:' + (open ? '#f4faef' : 'transparent') + '">'
+    + '<button onclick="libPickToggleBook(\'pc:' + k + '\')" style="flex:1;text-align:left;background:none;border:none;font-family:\'Special Elite\',cursive;cursor:pointer;padding:2px 0;display:flex;align-items:center;gap:8px;color:var(--ink)">'
+    + '<span style="font-size:0.75rem;color:var(--muted);display:inline-block;transform:rotate(' + (open ? '90' : '0') + 'deg);transition:transform 0.15s">▶</span>'
+    + '<span style="flex:1"><span style="display:block;font-size:0.9rem;font-weight:600">' + esc(p.title) + '</span>'
+    + '<span style="display:block;font-size:0.75rem;color:var(--muted)">' + [p.composer, p.grade].filter(Boolean).map(esc).concat(['🎼 ' + p.movements.length + ' movement' + (p.movements.length === 1 ? '' : 's')]).join(' · ') + '</span></span></button>'
+    + '<button onclick="selectPiece(\'' + escJs(p.title) + '\')" title="Add the piece on its own" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:6px 10px;font-family:\'Special Elite\',cursive;font-size:0.72rem;cursor:pointer;white-space:nowrap">＋ Piece</button>'
+    + '</div>';
+  if (open) {
+    html += '<div style="padding:8px 10px 10px"><div style="font-size:0.68rem;color:var(--muted);margin-bottom:6px">Tap a movement to add it</div>'
+      + p.movements.map(function(m, idx) {
+          const isNum = /^\d+$/.test(m);
+          return '<button onclick="libPickAddMvt(\'' + k + '\',' + idx + ')" style="' + (isNum ? 'display:inline-block;min-width:64px;margin:0 5px 5px 0;' : 'display:flex;width:100%;margin-bottom:4px;text-align:left;') + 'align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.85rem;border:1.5px solid #e0ddd8;background:#fff;color:var(--ink)">'
+            + '<span style="color:var(--viola);font-weight:700">＋</span> ' + esc(isNum ? 'Mvt. ' + m : m) + '</button>';
+        }).join('')
+      + '</div>';
+  }
+  return html + '</div>';
+}
+
+function libPickAddMvt(key, idx) {
+  const p = visibleLibraryPieces().find(function(x){ return pieceKey(x) === key; });
+  if (!p || !p.movements) return;
+  const m = p.movements[idx]; if (m === undefined) return;
+  libPickAdd(p.title, /^\d+$/.test(m) ? 'Mvt. ' + m : m);
 }
 
 // The pupil's own copies of this kind of book, plus the studio bank (minus
