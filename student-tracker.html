@@ -2546,7 +2546,10 @@ function renderToday() {
     const isNext = s.id === nextId;
     const isImminent = s.id === imminentId;
     const todayStr = todayLogDate();
-    const lastLog = (s.log||[]).filter(e => e.text && e.date !== todayStr).slice(-1)[0];
+    // Most recent lesson BY DATE (not by when it was saved), before today
+    const lastLog = (s.log||[]).filter(e => e.text && e.date !== todayStr && parseLogDate(e.date))
+      .sort((a, b) => parseLogDate(a.date) - parseLogDate(b.date)).slice(-1)[0];
+    const focusNote = (s.nextWeekNote || '').trim();
     const todayLog = (s.log||[]).find(e => e.date === todayStr);
     const markedAbsentToday = todayLog && todayLog.attendance && todayLog.attendance !== 'present';
     const pieces = piecesDisplay(s);
@@ -2585,7 +2588,14 @@ function renderToday() {
           <div class="summary-icon">📌</div>
           <div class="summary-content">
             <div class="summary-label">Plan for today</div>
-            <div class="summary-text">${esc(plan)}</div>
+            <div class="summary-text">${plan.split('\n').filter(l=>l.trim()).map(l=>esc(l.trim())).join('<br>')}</div>
+          </div>
+        </div>` : ''}
+        ${focusNote ? `<div class="summary-row">
+          <div class="summary-icon">🎯</div>
+          <div class="summary-content">
+            <div class="summary-label" style="color:#1a4a6b">Focus on (from last lesson)</div>
+            <div class="summary-text">${focusNote.split('\n').filter(l=>l.trim()).map(l=>esc(l.trim())).join('<br>')}</div>
           </div>
         </div>` : ''}
         ${pieces.length ? `<div class="summary-row">
@@ -2606,10 +2616,10 @@ function renderToday() {
           <div class="summary-icon">📝</div>
           <div class="summary-content">
             <div class="summary-label">Last lesson (${lastLog.date})</div>
-            <div class="summary-text">${lastLog.text.split('\n').filter(l=>l.trim()).slice(0,3).map(l=>'• '+esc(l.trim())).join('<br>')}${lastLog.text.split('\n').filter(l=>l.trim()).length>3?'<br><span style="color:var(--muted);font-size:0.78rem">…more</span>':''}</div>
+            <div class="summary-text">${lastLog.text.split('\n').filter(l=>l.trim()).slice(0,5).map(l=>'• '+esc(l.trim())).join('<br>')}${lastLog.text.split('\n').filter(l=>l.trim()).length>5?'<br><span style="color:var(--muted);font-size:0.78rem">…more</span>':''}</div>
           </div>
         </div>` : ''}
-        ${!plan && !pieces.length && !tech.length && !lastLog ? `
+        ${!plan && !focusNote && !pieces.length && !tech.length && !lastLog ? `
           <p style="color:var(--muted);font-size:0.85rem;margin-top:10px">No notes yet - open full notes to add some.</p>
         ` : ''}
         <button class="open-notes-btn ${s.instrument}-btn" onclick="openStudentFrom('${s.id}','today')">Open full notes →</button>
