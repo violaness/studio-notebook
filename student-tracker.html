@@ -1214,18 +1214,24 @@
   <!-- STUDIO ATTENDANCE OVERVIEW -->
   <section class="admin-panel" id="panel-attendance" style="display:none">
     <div class="admin-panel-head"><span>📊 Studio attendance overview</span><button class="admin-panel-close" onclick="closeAdminSections()">✕ Close</button></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 4px">
+      <label for="att-range-select" style="font-size:0.75rem;color:var(--muted)">Showing:</label>
+      <select id="att-range-select" onchange="attRangePick(this.value)"
+        style="font-family:'Special Elite',cursive;font-size:0.85rem;color:#1a4a6b;background:var(--paper);border:1.5px solid #a8c8e8;border-radius:10px;padding:8px 12px;cursor:pointer;flex:1;min-width:160px"></select>
+    </div>
+    <div style="font-size:0.68rem;color:var(--muted);margin-bottom:4px">Remembered for next time. Change the dates below for your own range.</div>
     <div style="display:flex;flex-direction:column;gap:8px;margin:10px 0">
       <div>
         <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">From</label>
-        <input type="date" id="studio-att-from" onchange="renderStudioAttendance()"
+        <input type="date" id="studio-att-from" onchange="attRangeCustom()"
           style="display:block;width:100%;min-height:44px;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none">
       </div>
       <div>
         <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">To</label>
-        <input type="date" id="studio-att-to" onchange="renderStudioAttendance()"
+        <input type="date" id="studio-att-to" onchange="attRangeCustom()"
           style="display:block;width:100%;min-height:44px;padding:6px 10px;border:1.5px solid var(--warm);border-radius:8px;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none">
       </div>
-      <button onclick="document.getElementById('studio-att-from').value='';document.getElementById('studio-att-to').value='';renderStudioAttendance()"
+      <button onclick="attRangePick('all')"
         style="background:none;border:1.5px solid var(--warm);border-radius:8px;padding:8px 10px;font-family:'Special Elite',cursive;font-size:0.8rem;color:var(--muted);cursor:pointer">All time</button>
     </div>
     <div id="studio-attendance"></div>
@@ -7727,6 +7733,98 @@ function deleteCanvasSave(id, idx) {
 }
 
 
+// ── ATTENDANCE OVERVIEW DATE RANGE (remembered) ─────────────────────────
+// Choices: 'auto' (this half-term, follows today), 'b:<label>' (a half-term),
+// 't:<name>' (a whole term = half-terms sharing a name, e.g. Autumn 1 + 2),
+// 'custom' (your own From/To) or 'all'. Kept on this iPad between visits.
+function attRangeLoad() {
+  try { return JSON.parse(localStorage.getItem('att_range') || 'null') || { mode: 'auto' }; }
+  catch (e) { return { mode: 'auto' }; }
+}
+function attRangeSave(r) { try { localStorage.setItem('att_range', JSON.stringify(r)); } catch (e) {} }
+function toInputDate(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+// Whole terms: group half-terms whose names match once the trailing number is
+// dropped ("Autumn 1", "Autumn 2" -> "Autumn"). Only groups of 2+ are offered.
+function wholeTerms(blocks) {
+  const groups = {};
+  blocks.forEach(function(b) {
+    const name = String(b.label).replace(/\s*(half[- ]?term\s*)?\d+\s*$/i, '').trim();
+    if (!name || name === b.label) return;
+    (groups[name] = groups[name] || []).push(b);
+  });
+  return Object.keys(groups).filter(function(n){ return groups[n].length > 1; }).map(function(n) {
+    const g = groups[n];
+    return { label: n, start: g[0].start, end: g[g.length - 1].end };
+  });
+}
+function attRangeDates(r) {
+  const blocks = termBlocks();
+  if (r.mode === 'auto') {
+    if (!blocks.length) return null;
+    let i = currentTermIdx();
+    if (i < 0) { // in a holiday: the most recent half-term that has started
+      const now = effectiveNow();
+      for (let j = blocks.length - 1; j >= 0; j--) if (blocks[j].start <= now) { i = j; break; }
+      if (i < 0) i = 0;
+    }
+    return { from: blocks[i].start, to: blocks[i].end, label: blocks[i].label };
+  }
+  if (r.mode === 'block') {
+    const b = blocks.find(function(x){ return x.label === r.key; });
+    return b ? { from: b.start, to: b.end } : null;
+  }
+  if (r.mode === 'term') {
+    const w = wholeTerms(blocks).find(function(x){ return x.label === r.key; });
+    return w ? { from: w.start, to: w.end } : null;
+  }
+  return null;
+}
+function attRangeInit() {
+  const sel = document.getElementById('att-range-select'); if (!sel) return;
+  const r = attRangeLoad();
+  const blocks = termBlocks();
+  const auto = attRangeDates({ mode: 'auto' });
+  let opts = '';
+  if (blocks.length) {
+    opts += '<option value="auto">This half-term' + (auto ? ' (' + esc(auto.label) + ')' : '') + ', moves on by itself</option>';
+    opts += '<optgroup label="Half-terms">' + blocks.map(function(b){ return '<option value="b:' + esc(b.label) + '">' + esc(b.label) + '</option>'; }).join('') + '</optgroup>';
+    const terms = wholeTerms(blocks);
+    if (terms.length) opts += '<optgroup label="Whole terms">' + terms.map(function(w){ return '<option value="t:' + esc(w.label) + '">' + esc(w.label) + ' (whole term)</option>'; }).join('') + '</optgroup>';
+  }
+  opts += '<option value="custom">Custom dates</option><option value="all">All time</option>';
+  sel.innerHTML = opts;
+  // Put the remembered choice back (falls back to "this half-term" if a term was deleted)
+  let val = r.mode === 'block' ? 'b:' + r.key : r.mode === 'term' ? 't:' + r.key : r.mode;
+  if (![...sel.options].some(function(o){ return o.value === val; })) val = blocks.length ? 'auto' : 'all';
+  sel.value = val;
+  const from = document.getElementById('studio-att-from');
+  const to   = document.getElementById('studio-att-to');
+  if (val === 'custom') { from.value = r.from || ''; to.value = r.to || ''; }
+  else if (val === 'all') { from.value = ''; to.value = ''; }
+  else {
+    const d = attRangeDates(val === 'auto' ? { mode: 'auto' } : (val.charAt(0) === 'b' ? { mode: 'block', key: val.slice(2) } : { mode: 'term', key: val.slice(2) }));
+    from.value = d ? toInputDate(d.from) : '';
+    to.value   = d ? toInputDate(d.to) : '';
+  }
+}
+function attRangePick(val) {
+  let r;
+  if (val === 'auto' || val === 'all') r = { mode: val };
+  else if (val === 'custom') {
+    r = { mode: 'custom', from: document.getElementById('studio-att-from').value, to: document.getElementById('studio-att-to').value };
+  } else r = { mode: val.charAt(0) === 'b' ? 'block' : 'term', key: val.slice(2) };
+  attRangeSave(r);
+  attRangeInit();
+  renderStudioAttendance();
+}
+function attRangeCustom() {
+  attRangeSave({ mode: 'custom', from: document.getElementById('studio-att-from').value, to: document.getElementById('studio-att-to').value });
+  const sel = document.getElementById('att-range-select'); if (sel) sel.value = 'custom';
+  renderStudioAttendance();
+}
+
 function renderStudioAttendance() {
   const el = document.getElementById('studio-attendance'); if (!el) return;
   const fromVal = document.getElementById('studio-att-from') ? document.getElementById('studio-att-from').value : '';
@@ -8765,6 +8863,7 @@ function returnFromLibrary() {
 }
 
 function renderAdmin() {
+  attRangeInit();
   renderStudioAttendance();
   renderWaiting();
   renderLendingLog();
@@ -10390,12 +10489,21 @@ function getCurrentWeekDate() {
 // Sat–Fri span would wrongly flag a whole week as holiday when half-term starts
 // on the Thu/Fri (e.g. term to 21 Oct, half-term from 22 Oct) - even though
 // every teaching day that week is still term time.
+// Read a "YYYY-MM-DD" term/holiday date as LOCAL midnight. new Date('YYYY-MM-DD')
+// gives UTC midnight, which in British Summer Time is 1am - so a lesson on the
+// first day of a half-term (stored as midnight) fell just outside it and was
+// left off the billing count.
+function ymdLocal(str) {
+  const m = String(str || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(str);
+}
+
 function isHolidayWeek() {
   const weekStart = getCurrentWeekDate();
   const teachEnd = new Date(weekStart); teachEnd.setDate(weekStart.getDate() + 4); // Wed
   return termDates.some(function(t) {
     if (!t.holidayStart || !t.holidayEnd) return false;
-    const hs = new Date(t.holidayStart); const he = new Date(t.holidayEnd);
+    const hs = ymdLocal(t.holidayStart); const he = ymdLocal(t.holidayEnd);
     return weekStart <= he && teachEnd >= hs;
   });
 }
@@ -10405,7 +10513,7 @@ function getHolidayLabel() {
   const teachEnd = new Date(weekStart); teachEnd.setDate(weekStart.getDate() + 4); // Wed
   const h = termDates.find(function(t) {
     if (!t.holidayStart || !t.holidayEnd) return false;
-    const hs = new Date(t.holidayStart); const he = new Date(t.holidayEnd);
+    const hs = ymdLocal(t.holidayStart); const he = ymdLocal(t.holidayEnd);
     return weekStart <= he && teachEnd >= hs;
   });
   return h ? (h.label || 'Holiday') : null;
@@ -10416,7 +10524,7 @@ function getTermInfo() {
   const terms = termDates.filter(function(t) { return t.termStart && t.termEnd; })
     .sort(function(a,b) { return a.termStart.localeCompare(b.termStart); });
   for (const t of terms) {
-    const ts = new Date(t.termStart); const te = new Date(t.termEnd);
+    const ts = ymdLocal(t.termStart); const te = ymdLocal(t.termEnd);
     if (weekStart >= ts && weekStart <= te) {
       let weekNum = 1;
       const d = new Date(ts);
@@ -10580,8 +10688,8 @@ function termBlocks() {
   return (termDates || [])
     .filter(function(t) { return t.termStart && t.termEnd; })
     .map(function(t) {
-      const ts = new Date(t.termStart);
-      const te = new Date(t.termEnd); te.setHours(23,59,59,999);
+      const ts = ymdLocal(t.termStart);
+      const te = ymdLocal(t.termEnd); te.setHours(23,59,59,999);
       return { label: t.label || 'Half-term', start: ts, end: te };
     })
     .sort(function(a, b) { return a.start - b.start; });
