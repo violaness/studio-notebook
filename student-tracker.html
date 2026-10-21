@@ -2549,12 +2549,8 @@ function renderToday() {
     // Most recent lesson BY DATE (not by when it was saved), before today
     const lastLog = (s.log||[]).filter(e => e.text && e.date !== todayStr && parseLogDate(e.date))
       .sort((a, b) => parseLogDate(a.date) - parseLogDate(b.date)).slice(-1)[0];
-    const focusNote = (s.nextWeekNote || '').trim();
     const todayLog = (s.log||[]).find(e => e.date === todayStr);
     const markedAbsentToday = todayLog && todayLog.attendance && todayLog.attendance !== 'present';
-    const pieces = piecesDisplay(s);
-    const tech = (s.techFocus||[]).slice(0,3);
-    const plan = s.nextLesson || '';
     // Upcoming absences within 4 weeks
     const todayMs = new Date().setHours(0,0,0,0);
     const soonAbsences = (s.absences||[]).filter(a => {
@@ -2584,49 +2580,62 @@ function renderToday() {
             }).join('<br>')}</div>
           </div>
         </div>` : ''}
-        ${plan ? `<div class="summary-row">
-          <div class="summary-icon">📌</div>
-          <div class="summary-content">
-            <div class="summary-label">Plan for today</div>
-            <div class="summary-text">${plan.split('\n').filter(l=>l.trim()).map(l=>esc(l.trim())).join('<br>')}</div>
-          </div>
-        </div>` : ''}
-        ${focusNote ? `<div class="summary-row">
-          <div class="summary-icon">🎯</div>
-          <div class="summary-content">
-            <div class="summary-label" style="color:#1a4a6b">Focus on (from last lesson)</div>
-            <div class="summary-text">${focusNote.split('\n').filter(l=>l.trim()).map(l=>esc(l.trim())).join('<br>')}</div>
-          </div>
-        </div>` : ''}
-        ${pieces.length ? `<div class="summary-row">
-          <div class="summary-icon">🎵</div>
-          <div class="summary-content">
-            <div class="summary-label">Pieces</div>
-            <div class="summary-text">${pieces.map(p=>esc(p)).join(' · ')}</div>
-          </div>
-        </div>` : ''}
-        ${tech.length ? `<div class="summary-row">
-          <div class="summary-icon">🔧</div>
-          <div class="summary-content">
-            <div class="summary-label">Technical focus</div>
-            <div class="summary-text">${tech.map(t=>esc(t)).join(' · ')}</div>
-          </div>
-        </div>` : ''}
-        ${lastLog ? `<div class="summary-row">
-          <div class="summary-icon">📝</div>
-          <div class="summary-content">
-            <div class="summary-label">Last lesson (${lastLog.date})</div>
-            <div class="summary-text">${lastLog.text.split('\n').filter(l=>l.trim()).slice(0,5).map(l=>'• '+esc(l.trim())).join('<br>')}${lastLog.text.split('\n').filter(l=>l.trim()).length>5?'<br><span style="color:var(--muted);font-size:0.78rem">…more</span>':''}</div>
-          </div>
-        </div>` : ''}
-        ${!plan && !focusNote && !pieces.length && !tech.length && !lastLog ? `
-          <p style="color:var(--muted);font-size:0.85rem;margin-top:10px">No notes yet - open full notes to add some.</p>
-        ` : ''}
+        ${todayCardMainHTML(s, lastLog)}
         <button class="open-notes-btn ${s.instrument}-btn" onclick="openStudentFrom('${s.id}','today')">Open full notes →</button>
       </div>
     </div>`;
   }).join('');
   loadDailyNotes();
+}
+
+// ── TODAY CARD (expanded) ────────────────────────────────────────────────
+// Just what's needed at a glance: the pieces they're on, and what happened last
+// lesson. Pieces left, last lesson right (stacked on a narrow screen).
+function todayCardMainHTML(s, lastLog) {
+  const pieces = (s.pieces || []).map(function(p, i){ return { title: (p || '').trim(), ref: ((s.pieceRefs || [])[i] || '').trim() }; })
+    .filter(function(x){ return x.title; });
+  const label = function(txt, col) {
+    return '<div style="font-size:0.68rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:' + (col || 'var(--muted)') + ';margin-bottom:6px">' + txt + '</div>';
+  };
+  const piecesCol = pieces.length
+    ? label('🎵 Pieces') + '<div style="display:flex;flex-wrap:wrap;gap:6px">' + pieces.map(function(x) {
+        return '<div style="background:var(--warm);border-radius:10px;padding:6px 10px;line-height:1.3;max-width:100%">'
+          + '<div style="font-size:0.84rem;color:var(--ink)">' + esc(normPieceCat(x.title)) + '</div>'
+          + (x.ref ? '<div style="font-size:0.72rem;color:var(--viola);margin-top:1px">' + esc(normPieceCat(x.ref)) + '</div>' : '')
+          + '</div>';
+      }).join('') + '</div>'
+    : label('🎵 Pieces') + '<div style="font-size:0.82rem;color:var(--muted);font-style:italic">None added yet</div>';
+
+  let lastCol;
+  if (lastLog) {
+    // Tidy the notes: drop header-only lines ("📌 Plan:"), strip bullet marks,
+    // hyphens for long dashes, and bold anything before a colon (usually the piece)
+    const lines = String(lastLog.text || '').split('\n')
+      .map(function(l){ return normPieceCat(l.replace(/^[\s•·\-☐☑✓*]+/, '').trim()); })
+      .filter(function(l){ return l && !/^[^\w]*\s*(plan|notes?|during|after|before)\s*:?\s*$/i.test(l); });
+    const shown = lines.slice(0, 6);
+    const d = parseLogDate(lastLog.date);
+    let ago = '';
+    if (d) {
+      const days = Math.round((new Date(effectiveNow()).setHours(0,0,0,0) - d.setHours(0,0,0,0)) / 86400000);
+      ago = days <= 0 ? 'today' : days === 1 ? 'yesterday' : days < 14 ? days + ' days ago' : Math.round(days / 7) + ' weeks ago';
+    }
+    const dateTxt = (parseLogDate(lastLog.date) || new Date()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    lastCol = label('📝 Last lesson · ' + esc(dateTxt) + (ago ? ' <span style="text-transform:none;font-weight:400">(' + ago + ')</span>' : ''), '#1a4a6b')
+      + '<div style="display:flex;flex-direction:column;gap:5px">' + shown.map(function(l) {
+          const m = l.match(/^(.{2,80}?):\s+(.+)$/);
+          const body = m ? '<strong style="font-weight:700">' + esc(m[1]) + ':</strong> ' + esc(m[2]) : esc(l);
+          return '<div style="display:flex;gap:7px;font-size:0.84rem;line-height:1.45;color:var(--ink)"><span style="color:var(--string);flex:0 0 auto">●</span><span>' + body + '</span></div>';
+        }).join('')
+      + (lines.length > 6 ? '<div style="font-size:0.75rem;color:var(--muted);padding-left:16px">+' + (lines.length - 6) + ' more in full notes</div>' : '')
+      + '</div>';
+  } else {
+    lastCol = label('📝 Last lesson', '#1a4a6b') + '<div style="font-size:0.82rem;color:var(--muted);font-style:italic">No lessons logged yet</div>';
+  }
+  return '<div style="display:flex;flex-wrap:wrap;gap:14px 18px;margin-top:12px">'
+    + '<div style="flex:2 1 220px;min-width:0">' + piecesCol + '</div>'
+    + '<div style="flex:3 1 280px;min-width:0;border-left:3px solid var(--warm);padding-left:14px">' + lastCol + '</div>'
+    + '</div>';
 }
 
 function toggleSummary(id) {
