@@ -809,8 +809,8 @@
   <!-- "Back to pupil" bar - only shows when you jumped here from a pupil's Technique tab -->
   <div id="lib-return-bar" style="display:none;margin:4px 0 12px"></div>
 
-  <!-- TOP ROW: the two main banks, dark blue like the Billing sheet -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 0 14px">
+  <!-- TOP ROW: the main banks, dark blue like the Billing sheet -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:6px 0 14px">
     <button class="admin-tile lib-tile" style="background:#1a4a6b;min-height:92px" onclick="showLibrarySection('pieces')">
       <span class="admin-tile-icon">📚</span>
       <span class="admin-tile-label">Piece library</span>
@@ -819,6 +819,11 @@
       <span class="admin-tile-icon">🎻</span>
       <span class="admin-tile-label">Violaness</span>
       <span class="admin-tile-badge" id="tile-violaness-badge"></span>
+    </button>
+    <button class="admin-tile lib-tile" style="background:#1a4a6b;min-height:92px" onclick="showLibrarySection('techsets')">
+      <span class="admin-tile-icon">🛠</span>
+      <span class="admin-tile-label">Checklist sets</span>
+      <span class="admin-tile-badge" id="tile-techsets-badge"></span>
     </button>
   </div>
 
@@ -859,6 +864,21 @@
 
   <!-- LIBRARY PANELS -->
   <div id="library-panels">
+
+  <!-- TECHNIQUE CHECKLIST SETS -->
+  <section class="admin-panel" id="lib-panel-techsets" style="display:none">
+    <div class="admin-panel-head"><span>🛠 Technique checklist sets</span><button class="admin-panel-close" onclick="closeLibrarySections()">✕ Close</button></div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">Ready-made technique lists, e.g. Beginner, Intermediate, Advanced. Load one onto a pupil from their Technique checklist. ★ = the set new pupils start with. Changing a set doesn’t change pupils who already have a list.</div>
+    <div id="techsets-list"></div>
+    <div style="border-top:1px solid var(--warm);margin-top:12px;padding-top:12px">
+      <div class="section-label" style="margin-bottom:8px">Make a new set</div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="techset-new-name" placeholder="Set name, e.g. Grade 3" maxlength="40"
+          onkeydown="if(event.key==='Enter')addTechSet()" style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box">
+        <button onclick="addTechSet()" style="background:#1a4a6b;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ New set</button>
+      </div>
+    </div>
+  </section>
 
   <!-- VIOLANESS: my own arranged exercises & technical sheets -->
   <section class="admin-panel" id="lib-panel-violaness" style="display:none">
@@ -2246,6 +2266,9 @@ let extraLessons = JSON.parse(localStorage.getItem('studio_extra_lessons') || '{
 // Studio-wide default technique checklist - the starting template copied to each
 // pupil the first time their Technique checklist is opened. Editing this never
 // touches pupils who already have a checklist.
+// Named technique checklist sets (Beginner, Intermediate…). Each: { id, name, items:[...], starter }
+// The starter set is what brand-new pupils begin with.
+let techniqueSets = JSON.parse(localStorage.getItem('studio_technique_sets') || 'null');
 let techniqueDefaults = JSON.parse(localStorage.getItem('studio_technique_defaults') ||
   '["Balance","Hand frame","Bow hold","Posture","Tone production","Intonation","Vibrato","Shifting"]');
 // Studio-wide bank of study books you can pull onto any pupil. Each:
@@ -2284,7 +2307,10 @@ function save() {
   localStorage.setItem('studio_term_dates',            JSON.stringify(termDates));
   localStorage.setItem('studio_speech_replacements',   JSON.stringify(speechReplacements));
   localStorage.setItem('studio_extra_lessons',     JSON.stringify(extraLessons));
+  // Keep the old single default list in step with the starter set (backups / older versions)
+  try { techniqueDefaults = starterTechSet().items.slice(); } catch (e) {}
   localStorage.setItem('studio_technique_defaults', JSON.stringify(techniqueDefaults));
+  localStorage.setItem('studio_technique_sets', JSON.stringify(techniqueSets));
   localStorage.setItem('studio_study_book_bank', JSON.stringify(studyBookBank));
   localStorage.setItem('studio_method_book_bank', JSON.stringify(methodBookBank));
   localStorage.setItem('studio_album_bank', JSON.stringify(albumBank));
@@ -3447,7 +3473,6 @@ function renderDetail(s, preserveTab = false) {
       <section class="admin-panel technique-panel" id="tech-panel-technique" style="display:none">
         <div class="admin-panel-head"><span>🛠 Technique checklist</span>
           <span style="display:flex;align-items:center;gap:10px">
-            <button onclick="resetTechniqueToDefault('${s.id}')" style="background:none;border:none;font-size:0.68rem;color:var(--muted);cursor:pointer;text-decoration:underline;font-family:'Special Elite',cursive">Reset to default</button>
             <button class="admin-panel-close" onclick="closeTechniqueSections('${s.id}')">✕ Close</button>
           </span>
         </div>
@@ -3459,21 +3484,14 @@ function renderDetail(s, preserveTab = false) {
             style="flex:1;padding:8px 12px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box">
           <button onclick="addTechnique('${s.id}')" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ Add</button>
         </div>
-        <details style="margin-top:12px">
-          <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-            <span>⚙ Edit studio default list</span><span style="font-weight:400">tap to expand</span>
-          </summary>
-          <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
-            <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">This is the starting list for new pupils. Changing it won’t affect pupils who already have a checklist - use their “Reset to default” to pull in changes.</div>
-            <div id="technique-defaults-list">${techniqueDefaultsHTML()}</div>
-            <div style="display:flex;gap:8px;margin-top:8px">
-              <input type="text" id="new-technique-default" placeholder="Add a default technique…" maxlength="40"
-                onkeydown="if(event.key==='Enter')addTechniqueDefault()"
-                style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box">
-              <button onclick="addTechniqueDefault()" style="background:var(--violin);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ Add</button>
-            </div>
-          </div>
-        </details>
+        <div style="margin-top:12px;background:var(--warm);border-radius:10px;padding:10px">
+          <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:6px">📋 Load a checklist set</div>
+          <div id="techset-loader-${s.id}">${techSetLoaderHTML(s)}</div>
+        </div>
+        <button onclick="openLibraryBank('${s.id}','techsets','technique')"
+          style="width:100%;margin-top:10px;background:var(--warm);border:none;color:var(--muted);border-radius:10px;padding:9px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer">
+          🛠 Edit checklist sets in the Library →
+        </button>
       </section>
 
       <!-- SCALE CHECKLIST -->
@@ -4283,8 +4301,13 @@ function saveEditLogModal() {
   const id  = document.getElementById('edit-log-student-id').value;
   const idx = parseInt(document.getElementById('edit-log-entry-idx').value);
   const s   = getStudent(id); if (!s || !s.log[idx]) return;
-  s.log[idx].date       = inputToLogDate(document.getElementById('edit-log-date').value) || s.log[idx].date;
-  s.log[idx].attendance = document.getElementById('edit-log-attendance').value || '';
+  const newDate = inputToLogDate(document.getElementById('edit-log-date').value) || s.log[idx].date;
+  const newAtt  = document.getElementById('edit-log-attendance').value || '';
+  // Moving a lesson (or giving it attendance) into a week that already has one? Check first.
+  const changed = newDate !== s.log[idx].date || (newAtt && !s.log[idx].attendance);
+  if (newAtt && changed && !okToLogSecondThisWeek(s, newDate, s.log[idx])) return;
+  s.log[idx].date       = newDate;
+  s.log[idx].attendance = newAtt;
   s.log[idx].text       = document.getElementById('edit-log-text').value.trim();
   save();
   closeEditLogModal();
@@ -4357,6 +4380,31 @@ function saveAfterDraft(id, value) {
   save();
 }
 
+// ── ONE LESSON A WEEK CHECK ─────────────────────────────────────────────
+// Most weeks a pupil has one lesson, so a second log in the same teaching week
+// is usually a slip that would throw the billing out. These helpers spot it.
+const ATT_SHORT = { present: 'Present', 'absent-late': 'Absent - last minute', 'absent-notice': 'Absent - good notice', cancelled: 'Cancelled by me' };
+
+// Other logged lessons (with attendance) in the same teaching week as dateStr,
+// leaving out the given entry and any entry on that same date (those merge).
+function otherLogsSameWeek(s, dateStr, skipEntry) {
+  const d = parseLogDate(dateStr); if (!d) return [];
+  const wk = teachingWeekKey(d);
+  return (s.log || []).filter(function(e) {
+    if (e === skipEntry || !e.attendance || e.date === dateStr) return false;
+    const ed = parseLogDate(e.date);
+    return ed && teachingWeekKey(ed) === wk;
+  });
+}
+
+// Ask before adding a second lesson in a week. Returns true to carry on.
+function okToLogSecondThisWeek(s, dateStr, skipEntry) {
+  const others = otherLogsSameWeek(s, dateStr, skipEntry);
+  if (!others.length) return true;
+  const list = others.map(function(e){ return e.date + ' (' + (ATT_SHORT[e.attendance] || e.attendance) + ')'; }).join(', ');
+  return confirm(s.name + ' already has a lesson logged this week: ' + list + '.\n\nLog another one for ' + dateStr + '? Only tap OK if this really is a second lesson, otherwise it will count twice on the billing sheet.');
+}
+
 function saveLog(id) {
   const s=getStudent(id); if(!s)return;
   const el=document.getElementById('after-note-'+id);
@@ -4371,9 +4419,11 @@ function saveLog(id) {
   // a status you've already set (absent / cancelled).
   let entry = s.log.find(e => e.date === today);
   if (entry) {
+    if (!entry.attendance && !okToLogSecondThisWeek(s, today, entry)) return;
     entry.text = text;
     if (!entry.attendance) entry.attendance = 'present';
   } else {
+    if (!okToLogSecondThisWeek(s, today, null)) return;
     s.log.push({ date: today, text: text, attendance: 'present' });
   }
   s.duringScratch=''; s.afterDraft=''; save(); el.value=''; delete el.dataset.edited;
@@ -6851,7 +6901,7 @@ const TECH_LEVELS = [
 
 function seedTechniqueIfNeeded(s) {
   if (!s.techniqueChecklist) {
-    s.techniqueChecklist = (techniqueDefaults || []).map(function(name) {
+    s.techniqueChecklist = starterTechSet().items.map(function(name) {
       return { name: name, level: 0 };
     });
   }
@@ -6872,7 +6922,7 @@ function moveArrowsHTML(upCall, downCall, isFirst, isLast) {
 function techniqueChecklistHTML(s) {
   const list = seedTechniqueIfNeeded(s);
   if (list.length === 0) {
-    return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No techniques on this pupil’s list yet. Add one below, or reset to your studio default.</p>';
+    return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No techniques on this pupil’s list yet. Add one below, or load a checklist set.</p>';
   }
   return list.map(function(item, i) {
     const lv = TECH_LEVELS[item.level || 0];
@@ -6930,53 +6980,166 @@ function removeTechnique(id, idx) {
   if (el) el.innerHTML = techniqueChecklistHTML(s);
 }
 
-function resetTechniqueToDefault(id) {
-  const s = getStudent(id); if (!s) return;
-  if (!confirm('Replace this pupil’s technique list with the studio default? Their current ticks will be lost.')) return;
-  s.techniqueChecklist = (techniqueDefaults || []).map(function(name) { return { name: name, level: 0 }; });
-  save();
-  const el = document.getElementById('technique-list-' + id);
-  if (el) el.innerHTML = techniqueChecklistHTML(s);
-}
-
-function techniqueDefaultsHTML() {
-  if (!techniqueDefaults || techniqueDefaults.length === 0) {
-    return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No defaults set. Add the techniques you cover with most pupils.</p>';
+// ── TECHNIQUE CHECKLIST SETS ─────────────────────────────────────────────
+// First run: turn the old single default list into a "Default" set (★ starter),
+// plus empty Beginner / Intermediate / Advanced / New pupil sets to fill in.
+function migrateTechSets() {
+  if (!Array.isArray(techniqueSets) || !techniqueSets.length) {
+    const base = Date.now();
+    techniqueSets = [{ id: 'ts' + base, name: 'Default', items: (techniqueDefaults || []).slice(), starter: true }]
+      .concat(['Beginner', 'Intermediate', 'Advanced', 'New pupil'].map(function(n, i) {
+        return { id: 'ts' + (base + i + 1), name: n, items: [], starter: false };
+      }));
   }
-  return techniqueDefaults.map(function(name, i) {
-    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">' +
-      '<span style="flex:1;font-size:0.88rem">' + esc(name) + '</span>' +
-      moveArrowsHTML('moveTechniqueDefault(' + i + ',-1)', 'moveTechniqueDefault(' + i + ',1)', i === 0, i === techniqueDefaults.length - 1) +
-      '<button onclick="removeTechniqueDefault(' + i + ')" title="Remove" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>' +
-    '</div>';
+  if (!techniqueSets.some(function(x){ return x.starter; })) techniqueSets[0].starter = true;
+}
+migrateTechSets();
+
+function starterTechSet() {
+  return techniqueSets.find(function(x){ return x.starter; }) || techniqueSets[0] || { items: [] };
+}
+function getTechSet(id) { return techniqueSets.find(function(x){ return x.id === id; }); }
+
+var openTechSetId = null;
+
+function renderTechSets() {
+  updateLibraryBadges();
+  const el = document.getElementById('techsets-list'); if (!el) return;
+  el.innerHTML = techniqueSets.map(function(set) {
+    const id = escJs(set.id);
+    const open = openTechSetId === set.id;
+    let html = '<div style="border:1.5px solid ' + (open ? '#1a4a6b' : 'var(--warm)') + ';border-radius:10px;margin-bottom:8px;overflow:hidden">'
+      + '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:' + (open ? '#eef4fa' : 'var(--paper)') + '">'
+      + '<button onclick="toggleTechSet(\'' + id + '\')" style="flex:1;text-align:left;background:none;border:none;font-family:\'Special Elite\',cursive;cursor:pointer;padding:4px 0;display:flex;align-items:center;gap:8px;color:var(--ink)">'
+      + '<span style="font-size:0.75rem;color:var(--muted);display:inline-block;transform:rotate(' + (open ? '90' : '0') + 'deg);transition:transform 0.15s">▶</span>'
+      + '<span style="flex:1;font-size:0.9rem;font-weight:600">' + esc(set.name) + '</span>'
+      + '<span style="font-size:0.7rem;color:var(--muted)">' + set.items.length + ' item' + (set.items.length === 1 ? '' : 's') + '</span></button>'
+      + '<button onclick="setStarterTechSet(\'' + id + '\')" title="' + (set.starter ? 'New pupils start with this set' : 'Make this the set new pupils start with') + '" style="background:none;border:none;font-size:1.05rem;cursor:pointer;color:' + (set.starter ? '#e6a817' : '#ccc') + '">' + (set.starter ? '★' : '☆') + '</button>'
+      + '<button onclick="renameTechSet(\'' + id + '\')" title="Rename" style="background:none;border:none;font-size:0.9rem;cursor:pointer">✏️</button>'
+      + '<button onclick="duplicateTechSet(\'' + id + '\')" title="Copy this set" style="background:none;border:none;font-size:0.85rem;cursor:pointer;color:var(--violin)">⧉</button>'
+      + '<button onclick="deleteTechSet(\'' + id + '\')" title="Delete set" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>'
+      + '</div>';
+    if (open) {
+      html += '<div style="padding:8px 10px 10px">'
+        + (set.items.length ? set.items.map(function(name, i) {
+            return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:#fff;margin-bottom:5px;border:1px solid var(--warm)">'
+              + '<span style="flex:1;font-size:0.88rem">' + esc(name) + '</span>'
+              + moveArrowsHTML('moveTechSetItem(\'' + id + '\',' + i + ',-1)', 'moveTechSetItem(\'' + id + '\',' + i + ',1)', i === 0, i === set.items.length - 1)
+              + '<button onclick="removeTechSetItem(\'' + id + '\',' + i + ')" title="Remove" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>'
+              + '</div>';
+          }).join('') : '<p style="color:var(--muted);font-size:0.8rem;font-style:italic;margin:2px 0 6px">Empty - add the techniques for this set below.</p>')
+        + '<div style="display:flex;gap:8px;margin-top:6px">'
+        + '<input type="text" id="techset-item-' + esc(set.id) + '" placeholder="Add a technique…" maxlength="40" onkeydown="if(event.key===\'Enter\')addTechSetItem(\'' + id + '\')" '
+        + 'style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box">'
+        + '<button onclick="addTechSetItem(\'' + id + '\')" style="background:#1a4a6b;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:\'Special Elite\',cursive;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ Add</button>'
+        + '</div></div>';
+    }
+    return html + '</div>';
   }).join('');
 }
 
-function moveTechniqueDefault(idx, dir) {
-  const j = idx + dir;
-  if (j < 0 || j >= techniqueDefaults.length) return;
-  const tmp = techniqueDefaults[idx]; techniqueDefaults[idx] = techniqueDefaults[j]; techniqueDefaults[j] = tmp;
+function toggleTechSet(id) { openTechSetId = openTechSetId === id ? null : id; renderTechSets(); }
+
+function addTechSet() {
+  const el = document.getElementById('techset-new-name');
+  const name = el ? el.value.trim() : '';
+  if (!name) { if (el) el.focus(); return; }
+  const set = { id: 'ts' + Date.now(), name: name, items: [], starter: false };
+  techniqueSets.push(set);
+  openTechSetId = set.id;
   save();
-  const el = document.getElementById('technique-defaults-list');
-  if (el) el.innerHTML = techniqueDefaultsHTML();
+  el.value = '';
+  renderTechSets();
+  const inp = document.getElementById('techset-item-' + set.id); if (inp) inp.focus();
 }
 
-function addTechniqueDefault() {
-  const input = document.getElementById('new-technique-default');
-  const name = input ? input.value.trim() : '';
+function renameTechSet(id) {
+  const set = getTechSet(id); if (!set) return;
+  const name = (prompt('Rename set', set.name) || '').trim();
   if (!name) return;
-  techniqueDefaults.push(name);
-  if (input) input.value = '';
-  save();
-  const el = document.getElementById('technique-defaults-list');
-  if (el) el.innerHTML = techniqueDefaultsHTML();
+  set.name = name; save(); renderTechSets();
 }
 
-function removeTechniqueDefault(idx) {
-  techniqueDefaults.splice(idx, 1);
+function duplicateTechSet(id) {
+  const set = getTechSet(id); if (!set) return;
+  const copy = { id: 'ts' + Date.now(), name: set.name + ' (copy)', items: set.items.slice(), starter: false };
+  techniqueSets.splice(techniqueSets.indexOf(set) + 1, 0, copy);
+  openTechSetId = copy.id;
+  save(); renderTechSets();
+}
+
+function deleteTechSet(id) {
+  const set = getTechSet(id); if (!set) return;
+  if (techniqueSets.length === 1) { alert('You need at least one set.'); return; }
+  if (!confirm('Delete the set "' + set.name + '"? Pupils who already have a checklist keep it.')) return;
+  techniqueSets = techniqueSets.filter(function(x){ return x.id !== id; });
+  if (set.starter) techniqueSets[0].starter = true;
+  save(); renderTechSets();
+}
+
+function setStarterTechSet(id) {
+  techniqueSets.forEach(function(x){ x.starter = (x.id === id); });
+  save(); renderTechSets();
+}
+
+function addTechSetItem(id) {
+  const set = getTechSet(id); if (!set) return;
+  const el = document.getElementById('techset-item-' + id);
+  const name = el ? el.value.trim() : '';
+  if (!name) return;
+  set.items.push(name);
+  save(); renderTechSets();
+  const inp = document.getElementById('techset-item-' + id); if (inp) inp.focus();
+}
+
+function removeTechSetItem(id, i) {
+  const set = getTechSet(id); if (!set) return;
+  set.items.splice(i, 1); save(); renderTechSets();
+}
+
+function moveTechSetItem(id, i, dir) {
+  const set = getTechSet(id); if (!set) return;
+  const j = i + dir; if (j < 0 || j >= set.items.length) return;
+  const tmp = set.items[i]; set.items[i] = set.items[j]; set.items[j] = tmp;
+  save(); renderTechSets();
+}
+
+// On the pupil's Technique checklist: pick a set, then Replace or Add to list.
+// The set matching the pupil's level (Beginner etc.) is picked for you.
+function techSetLoaderHTML(s) {
+  const lvl = String(s.level || '').toLowerCase();
+  const match = techniqueSets.find(function(x){ return x.name.toLowerCase() === lvl && x.items.length; });
+  const pick = (match || starterTechSet()).id;
+  const btn = 'border:none;border-radius:8px;padding:7px 12px;font-family:\'Special Elite\',cursive;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap';
+  return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
+    + '<select id="techset-pick-' + s.id + '" style="flex:1;min-width:140px;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;background:var(--paper)">'
+    + techniqueSets.map(function(x) {
+        return '<option value="' + esc(x.id) + '"' + (x.id === pick ? ' selected' : '') + '>' + esc(x.name) + ' (' + x.items.length + ')' + (x.starter ? ' ★' : '') + '</option>';
+      }).join('')
+    + '</select>'
+    + '<button onclick="loadTechSet(\'' + s.id + '\',\'add\')" title="Adds anything missing, keeps their ticks" style="background:var(--viola);color:#fff;' + btn + '">＋ Add to list</button>'
+    + '<button onclick="loadTechSet(\'' + s.id + '\',\'replace\')" title="Swap their list for this set" style="background:#fff;color:var(--muted);border:1.5px solid #d6ddd2 !important;' + btn + '">Replace list</button>'
+    + '</div>'
+    + '<div style="font-size:0.66rem;color:var(--muted);margin-top:5px">“Add to list” keeps their ticks and adds anything missing. “Replace list” starts them fresh.</div>';
+}
+
+function loadTechSet(sid, mode) {
+  const s = getStudent(sid); if (!s) return;
+  const sel = document.getElementById('techset-pick-' + sid);
+  const set = sel ? getTechSet(sel.value) : null;
+  if (!set) return;
+  if (!set.items.length) { alert('"' + set.name + '" is empty. Add techniques to it in Library → 🛠 Checklist sets.'); return; }
+  const list = seedTechniqueIfNeeded(s);
+  if (mode === 'replace') {
+    if (list.some(function(x){ return x.level; }) && !confirm('Replace ' + s.name + '’s list with "' + set.name + '"? Their current ticks will be lost.')) return;
+    s.techniqueChecklist = set.items.map(function(name){ return { name: name, level: 0 }; });
+  } else {
+    const have = new Set(list.map(function(x){ return x.name.toLowerCase(); }));
+    set.items.forEach(function(name){ if (!have.has(name.toLowerCase())) list.push({ name: name, level: 0 }); });
+  }
   save();
-  const el = document.getElementById('technique-defaults-list');
-  if (el) el.innerHTML = techniqueDefaultsHTML();
+  const el = document.getElementById('technique-list-' + sid);
+  if (el) el.innerHTML = techniqueChecklistHTML(s);
 }
 
 function scalesHTML(s) {
@@ -8352,6 +8515,7 @@ function renderLibrary() {
   renderSpeechReplacements();
   renderBankEditors();
   renderViolaness();
+  renderTechSets();
   renderLibReturnBar();
 }
 
@@ -8567,6 +8731,7 @@ function updateLibraryBadges() {
   setBadge('tile-methodbank-badge', methodBookBank.length);
   setBadge('tile-albumbank-badge',  albumBank.length);
   setBadge('tile-violaness-badge',  violanessSheets.length);
+  setBadge('tile-techsets-badge',   (techniqueSets || []).length);
 }
 
 // Jump from a pupil's Technique tab to a bank in the Library, remembering
@@ -8660,6 +8825,7 @@ function showLibrarySection(name) {
   if (activeTile) activeTile.classList.add('active');
   // Book banks: fill the editor fresh each time it's opened
   if (name === 'violaness') { editingVioId = null; renderViolaness(); }
+  if (name === 'techsets') renderTechSets();
   if (name === 'studybank' || name === 'methodbank' || name === 'albumbank') {
     editingBankId = null; editingMethodBankId = null; editingAlbumBankId = null;
     renderBankEditors();
@@ -10578,10 +10744,23 @@ function renderBilling() {
   const rows = roster.map(function(s) {
     const n = countChargeable(s, block);
     grand += n;
+    // Flag any week in this half-term with two or more chargeable lessons
+    const perWeek = {};
+    (s.log || []).forEach(function(e) {
+      if (e.attendance !== 'present' && e.attendance !== 'absent-late') return;
+      const d = parseLogDate(e.date);
+      if (!d || d < block.start || d > block.end) return;
+      const wk = teachingWeekKey(d);
+      (perWeek[wk] = perWeek[wk] || []).push(e.date);
+    });
+    const doubles = Object.keys(perWeek).filter(function(wk){ return perWeek[wk].length > 1; });
+    const flag = doubles.length
+      ? '<span style="display:block;font-size:0.7rem;color:#b7791f;margin-top:2px" title="Two lessons logged in one week - check it isn\'t a mistake">⚠ 2 in one week: ' + esc(doubles.map(function(wk){ return perWeek[wk].join(' & '); }).join('; ')) + '</span>'
+      : '';
     // Number first (left), in a fixed-width box, so it sits right next to the name
     return '<div style="display:flex;align-items:center;gap:12px;padding:10px 6px;background:var(--card-bg);border:1.5px solid var(--warm);border-radius:12px">' +
       '<span style="flex:0 0 auto;width:2em;height:2em;display:flex;align-items:center;justify-content:center;background:#eef6ff;border:1.5px solid #a8c8e8;border-radius:10px;font-size:1rem;font-weight:800;color:#1a4a6b">' + n + '</span>' +
-      '<span style="font-size:0.92rem;color:var(--ink);line-height:1.2">' + instrDot(s.instrument) + esc(s.name) + '</span>' +
+      '<span style="font-size:0.92rem;color:var(--ink);line-height:1.2">' + instrDot(s.instrument) + esc(s.name) + flag + '</span>' +
     '</div>';
   }).join('');
 
@@ -10599,6 +10778,7 @@ function setAttendance(id, status) {
   if (!s.log) s.log = [];
   const today = todayLogDate();
   let entry = s.log.find(e => e.date === today);
+  if ((!entry || !entry.attendance) && !okToLogSecondThisWeek(s, today, entry || null)) return;
   if (!entry) { entry = { date: today, text: '', attendance: status }; s.log.push(entry); }
   else { entry.attendance = status; }
   save(); showToast('toast-attendance-' + id); renderDetail(s, true);
@@ -12030,6 +12210,7 @@ function backupData() {
     studio_idea_current:  localStorage.getItem('studio_idea_current')  || '',
     studio_extra_lessons: localStorage.getItem('studio_extra_lessons') || '{}',
     studio_technique_defaults: localStorage.getItem('studio_technique_defaults') || '[]',
+    studio_technique_sets: localStorage.getItem('studio_technique_sets') || '',
     studio_study_book_bank: localStorage.getItem('studio_study_book_bank') || '[]',
     studio_method_book_bank: localStorage.getItem('studio_method_book_bank') || '[]',
     studio_album_bank:    localStorage.getItem('studio_album_bank')    || '[]',
@@ -12063,7 +12244,7 @@ function restoreData(event) {
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
         'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links','studio_video_cats_removed','studio_video_teachers','studio_hidden_pieces','studio_hidden_piece_cats',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
-        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_study_book_bank','studio_method_book_bank','studio_album_bank','studio_violaness_sheets','studio_violaness_cats','studio_cal_url','studio_dark_mode_REMOVED'];
+        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_technique_sets','studio_study_book_bank','studio_method_book_bank','studio_album_bank','studio_violaness_sheets','studio_violaness_cats','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
 
       // Reload state
@@ -12089,6 +12270,8 @@ function restoreData(event) {
       skippedWeeks    = JSON.parse(localStorage.getItem('studio_skipped_weeks')    || '{}');
       extraLessons    = JSON.parse(localStorage.getItem('studio_extra_lessons')    || '{}');
       techniqueDefaults = JSON.parse(localStorage.getItem('studio_technique_defaults') || '[]');
+      techniqueSets = JSON.parse(localStorage.getItem('studio_technique_sets') || 'null');
+      migrateTechSets();
       studyBookBank   = JSON.parse(localStorage.getItem('studio_study_book_bank')   || '[]');
       methodBookBank  = JSON.parse(localStorage.getItem('studio_method_book_bank')  || '[]');
       albumBank       = JSON.parse(localStorage.getItem('studio_album_bank')        || '[]');
