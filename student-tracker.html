@@ -12123,26 +12123,36 @@ function invEmails(s) {
   return out;
 }
 // The email message, with {names} and {term} filled in for this invoice.
-const INVOICE_MESSAGE_DEFAULT = 'Hello,\n\nPlease find attached the invoice for {names} for {term}.\n\nThank you for all the hard work this half-term, it has been lovely. Looking forward to seeing you next half-term!\n\nBest wishes,\nVanessa';
+const INVOICE_MESSAGE_DEFAULT = 'Hello,\n\nPlease find attached the invoice for [names] for [term].\n\nThank you for all the hard work this half-term, it has been lovely. Looking forward to seeing you next half-term!\n\nBest wishes,\nVanessa';
 function invMessageTemplate() {
   return (invoiceSettings && typeof invoiceSettings.message === 'string') ? invoiceSettings.message : INVOICE_MESSAGE_DEFAULT;
 }
+// Fill in the magic words, written with [square] or {curly} brackets, any capitals:
+// [names] / [name], [term] / [half-term], [invoice number] / [invoice] / [number], [amount]
+function fillMagicWords(text, s, block, amount) {
+  const vals = {
+    names: invNames(invFamily(s)), name: invNames(invFamily(s)),
+    term: block.label, 'half-term': block.label, 'half term': block.label, halfterm: block.label,
+    'invoice number': invNumber(s, block), 'invoice no': invNumber(s, block), 'invoice no.': invNumber(s, block), invoice: invNumber(s, block), number: invNumber(s, block),
+    amount: amount != null ? amount : invPounds(invSum(invFamLines(s, block))),
+    year: String(block.start.getFullYear())
+  };
+  return String(text).replace(/[\[{]\s*([a-z .\-]+?)\s*[\]}]/gi, function(all, word) {
+    const v = vals[word.toLowerCase()];
+    return v != null ? v : all; // unknown words are left as typed
+  });
+}
 function invMessage(s, block) {
-  return invMessageTemplate()
-    .replace(/\{names?\}/gi, invNames(invFamily(s)))
-    .replace(/\{term\}/gi, block.label);
+  return fillMagicWords(invMessageTemplate(), s, block);
 }
 // The "payment received" note: {names}, {term} and {amount} fill in by themselves.
-const THANKS_MESSAGE_DEFAULT = 'Hello,\n\nThank you very much, I have received your payment of {amount} for {names} for {term}.\n\nBest wishes,\nVanessa';
+const THANKS_MESSAGE_DEFAULT = 'Hello,\n\nThank you, payment of [amount] received for invoice [invoice number], for [names]\'s lessons for [term]. Much appreciated!\n\nBest wishes,\nVanessa';
 function thanksTemplate() {
-  return (invoiceSettings && typeof invoiceSettings.thanks === 'string') ? invoiceSettings.thanks : THANKS_MESSAGE_DEFAULT;
+  return (invoiceSettings && typeof invoiceSettings.thanks === 'string' && invoiceSettings.thanks.trim()) ? invoiceSettings.thanks : THANKS_MESSAGE_DEFAULT;
 }
 function thanksMailto(s, block) {
   const amt = invPounds(invSum(invFamLines(s, block)));
-  const body = thanksTemplate()
-    .replace(/\{names?\}/gi, invNames(invFamily(s)))
-    .replace(/\{term\}/gi, block.label)
-    .replace(/\{amount\}/gi, amt);
+  const body = fillMagicWords(thanksTemplate(), s, block, amt);
   const subject = 'Payment received - Invoice ' + invNumber(s, block) + ' - ' + block.label + ' ' + block.start.getFullYear() + ' - ' + invNames(invFamily(s));
   return 'mailto:' + invEmails(s).join(',') + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
 }
@@ -12249,10 +12259,10 @@ function renderInvoiceSettings() {
       + 'oninput="setInvoiceSetting(\'' + f[0] + '\',this.value)" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:\'Special Elite\',cursive;font-size:0.9rem;background:var(--paper);box-sizing:border-box"></label>';
   }).join('')
   + '<label style="grid-column:1/-1;display:flex;flex-direction:column;gap:4px;font-size:0.75rem;color:#1a4a6b;font-weight:700">💬 Email message'
-  + '<span style="font-weight:400;color:var(--muted);font-size:0.7rem">Goes in the email with each invoice. {names} and {term} fill in by themselves.</span>'
+  + '<span style="font-weight:400;color:var(--muted);font-size:0.7rem">Goes in the email with each invoice. [names], [term], [invoice number] and [amount] fill in by themselves.</span>'
   + '<textarea rows="6" oninput="setInvoiceSetting(\'message\',this.value)" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:\'Special Elite\',cursive;font-size:0.9rem;background:var(--paper);box-sizing:border-box;resize:vertical">' + esc(invMessageTemplate()) + '</textarea></label>'
   + '<label style="grid-column:1/-1;display:flex;flex-direction:column;gap:4px;font-size:0.75rem;color:#1a4a6b;font-weight:700">💌 Payment thank-you message'
-  + '<span style="font-weight:400;color:var(--muted);font-size:0.7rem">Sent with ✉️ Thank you on the billing sheet. {names}, {term} and {amount} fill in by themselves.</span>'
+  + '<span style="font-weight:400;color:var(--muted);font-size:0.7rem">Sent with ✉️ Thank you on the billing sheet. [names], [term], [invoice number] and [amount] fill in by themselves.</span>'
   + '<textarea rows="5" oninput="setInvoiceSetting(\'thanks\',this.value)" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:\'Special Elite\',cursive;font-size:0.9rem;background:var(--paper);box-sizing:border-box;resize:vertical">' + esc(thanksTemplate()) + '</textarea></label>'
   + '<div style="grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:4px">'
   + '<img src="' + (st.logo || INVOICE_LOGO) + '" alt="Invoice picture" style="height:64px;border-radius:6px;border:1.5px solid #a8c8e8">'
