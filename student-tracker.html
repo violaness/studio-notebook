@@ -1879,6 +1879,11 @@
         <div style="font-size:0.7rem;color:var(--muted);margin-top:5px">The fee is added to their total on the billing sheet each half-term.</div>
       </div>
     </div>
+    <div class="field-group" style="background:#eef6ff;border-radius:10px;padding:10px 12px">
+      <label class="field-label" for="edit-billwith">👪 Same invoice as</label>
+      <select id="edit-billwith" style="width:100%;font-family:'Special Elite',cursive;font-size:0.93rem;border:1.5px solid #a8c8e8;border-radius:8px;padding:9px 11px;background:var(--paper);color:var(--ink);box-sizing:border-box"></select>
+      <div style="font-size:0.7rem;color:var(--muted);margin-top:5px">For brothers and sisters, or parent and child: one invoice, one Paid tick.</div>
+    </div>
     <div class="field-group">
       <label class="field-label">Parent / contact email (optional)</label>
       <input type="text" id="edit-email" placeholder="email@example.com">
@@ -5377,6 +5382,12 @@ function openEditModal(id) {
   document.getElementById('edit-rent-fields').style.display = _rent.on ? 'block' : 'none';
   document.getElementById('edit-rent-what').value = _rent.what || '';
   document.getElementById('edit-rent-fee').value = _rent.fee || '';
+  // Who they share an invoice with (any other pupil in the same family group)
+  const _mate = s.billWith ? students.find(function(x){ return x.id !== s.id && x.billWith === s.billWith; }) : null;
+  document.getElementById('edit-billwith').innerHTML = '<option value="">Just this pupil</option>'
+    + students.filter(function(x){ return x.id !== s.id && (!x.retired || (s.billWith && x.billWith === s.billWith)); })
+      .sort(function(a, b){ return a.name.localeCompare(b.name); })
+      .map(function(x){ return '<option value="' + x.id + '"' + (_mate && _mate.id === x.id ? ' selected' : '') + '>' + esc(x.name) + '</option>'; }).join('');
   const _std = parseFloat((studioRates || {})[(s.scheme === 'latestarter' ? 'ls' : '') + String(s.duration || 60)]);
   const _hint = document.getElementById('edit-rate-hint');
   if (_hint) _hint.textContent = _std
@@ -5408,11 +5419,31 @@ function saveEditModal() {
   s.rental     = document.getElementById('edit-rents').checked
     ? { on: true, what: document.getElementById('edit-rent-what').value.trim(), fee: parseFloat(document.getElementById('edit-rent-fee').value) || 0 }
     : null;
+  setBillWith(s, document.getElementById('edit-billwith').value);
   save();
   closeEditModal();
   renderDetail(s);
 }
 
+// Put a pupil on the same invoice as another (or on their own when mateId is '').
+// A family is everyone sharing the same billWith value.
+function setBillWith(s, mateId) {
+  const mate = mateId ? getStudent(mateId) : null;
+  const oldGroup = s.billWith || '';
+  if (mate) {
+    if (mate.billWith && mate.billWith === oldGroup) return; // already together
+    const gid = mate.billWith || ('fam-' + mate.id);
+    mate.billWith = gid;
+    s.billWith = gid;
+  } else {
+    s.billWith = '';
+  }
+  // A family of one is just a pupil again
+  if (oldGroup && oldGroup !== s.billWith) {
+    const left = students.filter(function(x){ return x.billWith === oldGroup; });
+    if (left.length === 1) left[0].billWith = '';
+  }
+}
 
 // Retiring keeps a pupil and all their history but flags them as inactive, so
 // they drop out of Today, Week and the normal All Pupils list. Reversible.
@@ -11324,16 +11355,25 @@ function togglePaid(pupilId) {
   const block = blocks[sel ? parseInt(sel.value, 10) : -1]; if (!block) return;
   const k = billingKey(block);
   const m = billingPaid[k] = billingPaid[k] || {};
-  const s = getStudent(pupilId);
-  // Earlier half-terms carried on this invoice are paid (or un-paid) along with it
-  const carried = s ? invArrearsBlocks(s, block).map(billingKey) : [];
+  const s = getStudent(pupilId); if (!s) return;
+  const fam = invFamily(s);
   const on = !m[pupilId];
+  // Earlier half-terms carried on this invoice are paid (or un-paid) along with it
+  const carried = {};
+  fam.forEach(function(x){ carried[x.id] = invArrearsBlocks(x, block).map(billingKey); });
   // Remember exactly which earlier half-terms went with this payment, so undo puts them back
-  if (on && s && carried.length && !invSaved(s, block)) (invoiceExtras[k] = invoiceExtras[k] || {})[pupilId] = { manual: [], arrears: carried };
-  if (on) m[pupilId] = true; else delete m[pupilId];
-  carried.forEach(function(ck) {
-    const cm = billingPaid[ck] = billingPaid[ck] || {};
-    if (on) cm[pupilId] = true; else delete cm[pupilId];
+  if (on && !invSaved(s, block)) {
+    const all = [];
+    fam.forEach(function(x){ carried[x.id].forEach(function(ck){ if (all.indexOf(ck) < 0) all.push(ck); }); });
+    if (all.length) (invoiceExtras[k] = invoiceExtras[k] || {})[invLead(s).id] = { manual: [], arrears: all };
+  }
+  // One invoice, one payment: the whole family is ticked together
+  fam.forEach(function(x) {
+    if (on) m[x.id] = true; else delete m[x.id];
+    carried[x.id].forEach(function(ck) {
+      const cm = billingPaid[ck] = billingPaid[ck] || {};
+      if (on) cm[x.id] = true; else delete cm[x.id];
+    });
   });
   save();
   renderBilling();
@@ -11385,7 +11425,7 @@ function renderBilling() {
     const total = own + invSum(arrLines);
     const paid = !!paidMap[s.id];
     if (paid) paidMoney += own;
-    const paidBtn = (n || total)
+    const paidBtn = (n || total || (s.billWith && invSum(invFamLines(s, block))))
       ? '<button onclick="togglePaid(\'' + s.id + '\')" title="' + (paid ? 'Paid - tap to undo' : 'Tap when paid') + '" style="flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.72rem;'
         + 'border:1.5px solid ' + (paid ? 'var(--viola)' : '#d6ddd2') + ';background:' + (paid ? 'var(--viola)' : '#fff') + ';color:' + (paid ? '#fff' : 'var(--muted)') + '">'
         + (paid ? '✓ Paid' : '☐ Paid') + '</button>'
@@ -11394,6 +11434,11 @@ function renderBilling() {
     const rentNote = ((s.rental && s.rental.on && s.rental.fee) ? noteSpan('incl. £' + s.rental.fee + ' rental', '#1a4a6b') : '')
       + (manualAmt ? noteSpan('incl. ' + money(manualAmt) + ' extras', '#1a4a6b') : '')
       + arrLines.map(function(l){ return noteSpan('+ ' + money(l.amt) + ' ' + esc(l.text), '#b7791f'); }).join('');
+    const famList = invFamily(s);
+    const famNote = famList.length > 1
+      ? '<span style="display:block;font-size:0.7rem;color:#2F5C1A;margin-top:2px">👪 with ' + esc(famList.filter(function(x){ return x.id !== s.id; }).map(function(x){ return x.name; }).join(', ')) + '</span>'
+      : '';
+    const famBill = famList.length > 1 ? invSum(invFamLines(s, block)) : total;
     const sentOn = (invoiceSent[billingKey(block)] || {})[s.id];
     const sentNote = sentOn
       ? '<span onclick="clearSent(\'' + s.id + '\')" title="Invoice made - tap to remove" style="display:block;font-size:0.7rem;color:#29789E;margin-top:2px;cursor:pointer">📨 Sent ' + ymdLocal(sentOn).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + '</span>'
@@ -11418,9 +11463,9 @@ function renderBilling() {
     // Number first (left), in a fixed-width box, so it sits right next to the name
     return '<div style="display:flex;align-items:center;gap:10px;padding:10px 6px;background:' + (paid ? '#e8f5e0' : 'var(--card-bg)') + ';border:1.5px solid ' + (paid ? 'var(--string)' : 'var(--warm)') + ';border-radius:12px">' +
       '<span style="flex:0 0 auto;width:2em;height:2em;display:flex;align-items:center;justify-content:center;background:#eef6ff;border:1.5px solid #a8c8e8;border-radius:10px;font-size:1rem;font-weight:800;color:#1a4a6b">' + n + '</span>' +
-      '<span style="font-size:0.92rem;color:var(--ink);line-height:1.2;min-width:0">' + instrDot(s.instrument) + esc(s.name) + (s.scheme === 'latestarter' ? ' <span style="font-size:0.65rem;background:#fff3e0;color:#b7791f;border-radius:999px;padding:1px 6px;white-space:nowrap">Late Starter</span>' : '') + sentNote + flag + '</span>' +
+      '<span style="font-size:0.92rem;color:var(--ink);line-height:1.2;min-width:0">' + instrDot(s.instrument) + esc(s.name) + (s.scheme === 'latestarter' ? ' <span style="font-size:0.65rem;background:#fff3e0;color:#b7791f;border-radius:999px;padding:1px 6px;white-space:nowrap">Late Starter</span>' : '') + famNote + sentNote + flag + '</span>' +
       owed +
-      (total ? '<button onclick="openInvoiceModal(\'' + s.id + '\')" title="Make invoice" style="flex:0 0 auto;padding:4px 7px;border-radius:999px;cursor:pointer;border:1.5px solid #a8c8e8;background:#eef6ff;font-size:0.95rem;line-height:1">🧾</button>' : '') +
+      (famBill ? '<button onclick="openInvoiceModal(\'' + s.id + '\')" title="Make invoice" style="flex:0 0 auto;padding:4px 7px;border-radius:999px;cursor:pointer;border:1.5px solid #a8c8e8;background:#eef6ff;font-size:0.95rem;line-height:1">🧾</button>' : '') +
       paidBtn +
     '</div>';
   }).join('');
@@ -11460,17 +11505,39 @@ function invTermTitle(label) {
 }
 
 function invInstrument(s) { return s.instrument === 'violin' ? 'Violin' : 'Viola'; }
-function invRefPrefix(s) { return s.instrument === 'violin' ? 'VLN' : 'VLA'; }
 
-// Same invoice number every time for this pupil and half-term.
-function invNumber(s, block) {
-  const k = billingKey(block);
-  const m = invoiceNos[k] = invoiceNos[k] || {};
-  if (!m[s.id]) { m[s.id] = String(Math.floor(1000000 + Math.random() * 9000000)); save(); }
-  return m[s.id];
+// ── Families: pupils with the same s.billWith share one invoice ──
+function invFamily(s) {
+  if (!s || !s.billWith) return [s];
+  const f = students.filter(function(x){ return x.billWith === s.billWith; })
+    .sort(function(a, b){ return a.name.localeCompare(b.name); });
+  return f.length ? f : [s];
+}
+// The family's invoice (number, extras, choices) is kept under its first pupil A-Z.
+function invLead(s) { return invFamily(s)[0]; }
+function invNames(fam) {
+  const n = fam.map(function(x){ return x.name; });
+  return n.length < 2 ? n[0] : n.slice(0, -1).join(', ') + ' & ' + n[n.length - 1];
+}
+function invFamInstrument(fam) {
+  const both = fam.some(function(x){ return x.instrument === 'violin'; }) && fam.some(function(x){ return x.instrument !== 'violin'; });
+  return both ? 'Violin & Viola' : invInstrument(fam[0]);
+}
+function invFamRef(fam) {
+  const both = fam.some(function(x){ return x.instrument === 'violin'; }) && fam.some(function(x){ return x.instrument !== 'violin'; });
+  return both ? 'VLNVLA' : (fam[0].instrument === 'violin' ? 'VLN' : 'VLA');
 }
 
-// The standard fee lines for a pupil: lessons, then instrument hire.
+// Same invoice number every time for this pupil (or family) and half-term.
+function invNumber(s, block) {
+  const id = invLead(s).id;
+  const k = billingKey(block);
+  const m = invoiceNos[k] = invoiceNos[k] || {};
+  if (!m[id]) { m[id] = String(Math.floor(1000000 + Math.random() * 9000000)); save(); }
+  return m[id];
+}
+
+// The standard fee lines for one pupil: lessons, then instrument hire.
 function invBaseLines(s, block) {
   const lines = [];
   const n = countChargeable(s, block);
@@ -11482,11 +11549,16 @@ function invBaseLines(s, block) {
   return lines;
 }
 
-// Saved invoice choices per half-term: { "label|date": { pupilId: { manual:[{text,amt}], arrears:["label|date", ...] } } }
-function invSaved(s, block) { return (invoiceExtras[billingKey(block)] || {})[s.id] || null; }
-function invManual(s, block) { const r = invSaved(s, block); return (r && r.manual) ? r.manual : []; }
+// Saved invoice choices per half-term, kept under the family's first pupil:
+// { "label|date": { pupilId: { manual:[{text,amt}], arrears:["label|date", ...] } } }
+function invSaved(s, block) { return (invoiceExtras[billingKey(block)] || {})[invLead(s).id] || null; }
+// Your own extra lines belong to the whole invoice, so they're counted once (on the first pupil).
+function invManual(s, block) {
+  if (invLead(s).id !== s.id) return [];
+  const r = invSaved(s, block); return (r && r.manual) ? r.manual : [];
+}
 function invSum(lines) { return lines.reduce(function(a, l){ return a + (l.amt || 0); }, 0); }
-// What this half-term itself costs the pupil: lessons, hire and your own extra lines (not arrears).
+// What this half-term itself costs the pupil: lessons, hire and extra lines (not arrears).
 function invOwnTotal(s, block) { return invSum(invBaseLines(s, block).concat(invManual(s, block))); }
 // Earlier half-terms this pupil still owes for. Only half-terms you've billed in the
 // app count (at least one pupil ticked Paid), so old terms from before don't pop up.
@@ -11498,7 +11570,7 @@ function invUnpaidEarlier(s, block) {
     return invOwnTotal(s, b) > 0;
   });
 }
-// The arrears lines on this invoice: what you chose last time, or every unpaid one.
+// The arrears on this invoice for one pupil: what you chose last time, or every unpaid one.
 // Once this invoice is Paid (which also ticks those earlier terms), keep showing them.
 function invArrearsBlocks(s, block) {
   const saved = invSaved(s, block);
@@ -11506,6 +11578,7 @@ function invArrearsBlocks(s, block) {
   if (saved && saved.arrears) {
     return termBlocks().filter(function(b) {
       if (saved.arrears.indexOf(billingKey(b)) < 0) return false;
+      if (invOwnTotal(s, b) <= 0) return false;
       return paidHere || !(billingPaid[billingKey(b)] || {})[s.id];
     });
   }
@@ -11514,7 +11587,32 @@ function invArrearsBlocks(s, block) {
 function invArrearsLines(s, block) {
   return invArrearsBlocks(s, block).map(function(b){ return { text: b.label, amt: invOwnTotal(s, b), from: billingKey(b) }; });
 }
-function invAllLines(s, block) { return invBaseLines(s, block).concat(invArrearsLines(s, block), invManual(s, block)); }
+
+// Earlier half-terms the family could carry, each with what the family owes for it.
+function invFamOffer(fam, block, onlyChosen) {
+  const byKey = {};
+  fam.forEach(function(m) {
+    const chosen = invArrearsBlocks(m, block);
+    (onlyChosen ? chosen : invUnpaidEarlier(m, block).concat(chosen)).forEach(function(b) {
+      const k = billingKey(b);
+      const e = byKey[k] = byKey[k] || { block: b, amt: 0, who: {} };
+      if (!e.who[m.id]) { e.who[m.id] = true; e.amt += invOwnTotal(m, b); }
+    });
+  });
+  return Object.keys(byKey).map(function(k){ return byKey[k]; }).sort(function(a, b){ return a.block.start - b.block.start; });
+}
+// Every line on the family's invoice: each pupil's lessons and hire (named when
+// there's more than one), then unpaid half-terms, then your extra lines.
+function invFamLines(s, block) {
+  const fam = invFamily(s), multi = fam.length > 1;
+  const base = [];
+  fam.forEach(function(m) {
+    invBaseLines(m, block).forEach(function(l){ base.push(multi ? { text: m.name + ': ' + l.text, amt: l.amt } : l); });
+  });
+  const arr = invFamOffer(fam, block, true).map(function(e){ return { text: e.block.label, amt: e.amt }; });
+  return base.concat(arr, invManual(invLead(s), block));
+}
+function invAllLines(s, block) { return invFamLines(s, block); }
 
 // Stop before an invoice goes out with the bank details missing.
 function invBankReady() {
@@ -11526,33 +11624,41 @@ function invBankReady() {
 }
 function invMarkSent(s, block) {
   const k = billingKey(block);
-  (invoiceSent[k] = invoiceSent[k] || {})[s.id] = toInputDate(effectiveNow());
+  const m = invoiceSent[k] = invoiceSent[k] || {};
+  invFamily(s).forEach(function(x){ m[x.id] = toInputDate(effectiveNow()); });
 }
 function clearSent(pupilId) {
   const block = termBlocks()[billingBlockIdx()]; if (!block) return;
   const m = invoiceSent[billingKey(block)];
-  if (m && m[pupilId] && confirm('Remove the "Sent" mark?')) { delete m[pupilId]; save(); renderBilling(); }
+  const s = getStudent(pupilId);
+  if (m && m[pupilId] && s && confirm('Remove the "Sent" mark?')) {
+    invFamily(s).forEach(function(x){ delete m[x.id]; });
+    save(); renderBilling();
+  }
 }
 
 function openInvoiceModal(pupilId) {
-  const s = getStudent(pupilId); if (!s) return;
+  const s0 = getStudent(pupilId); if (!s0) return;
+  const s = invLead(s0), fam = invFamily(s0);
   const blocks = termBlocks(); const bi = billingBlockIdx(); const block = blocks[bi]; if (!block) return;
-  invoiceDraft = { pupilId: pupilId, blockIdx: bi };
-  document.getElementById('inv-pupil-name').textContent = s.name;
+  invoiceDraft = { pupilId: s.id, blockIdx: bi };
+  document.getElementById('inv-pupil-name').textContent = invNames(fam);
   document.getElementById('inv-term').textContent = block.label + ' · ' + block.start.getFullYear();
-  document.getElementById('inv-lines').innerHTML = invBaseLines(s, block).map(function(l) {
-    return '<div style="display:flex;justify-content:space-between;gap:10px;font-size:0.85rem;background:#eef6ff;border-radius:8px;padding:8px 10px"><span>' + esc(l.text) + '</span><strong style="color:#1a4a6b">' + invPounds(l.amt) + '</strong></div>';
+  const multi = fam.length > 1;
+  document.getElementById('inv-lines').innerHTML = fam.map(function(m) {
+    return invBaseLines(m, block).map(function(l) {
+      return '<div style="display:flex;justify-content:space-between;gap:10px;font-size:0.85rem;background:#eef6ff;border-radius:8px;padding:8px 10px"><span>' + (multi ? '<strong>' + esc(m.name) + ':</strong> ' : '') + esc(l.text) + '</span><strong style="color:#1a4a6b">' + invPounds(l.amt) + '</strong></div>';
+    }).join('');
   }).join('') || '<div style="font-size:0.8rem;color:#e67e22">No lessons with a rate this half-term.</div>';
   // Unpaid earlier half-terms, ticked if they're on the invoice
-  const chosen = invArrearsBlocks(s, block).map(billingKey);
-  const offer = invUnpaidEarlier(s, block);
-  invArrearsBlocks(s, block).forEach(function(b){ if (offer.indexOf(b) < 0 && !offer.some(function(o){ return billingKey(o) === billingKey(b); })) offer.push(b); });
+  const chosen = invFamOffer(fam, block, true).map(function(e){ return billingKey(e.block); });
+  const offer = invFamOffer(fam, block, false);
   document.getElementById('inv-arrears').innerHTML = offer.length
-    ? '<div style="font-size:0.75rem;font-weight:700;color:#b7791f;margin-bottom:6px">⏳ Not paid yet</div>' + offer.map(function(b) {
-        const k = billingKey(b);
+    ? '<div style="font-size:0.75rem;font-weight:700;color:#b7791f;margin-bottom:6px">⏳ Not paid yet</div>' + offer.map(function(e) {
+        const k = billingKey(e.block);
         return '<label style="display:flex;align-items:center;gap:10px;font-size:0.85rem;background:#fff3e0;border-radius:8px;padding:8px 10px;margin-bottom:6px;cursor:pointer">'
-          + '<input type="checkbox" class="inv-arr" value="' + esc(k) + '"' + (chosen.indexOf(k) >= 0 ? ' checked' : '') + ' onchange="invUpdateTotal()" style="width:20px;height:20px">'
-          + '<span style="flex:1">' + esc(b.label) + '</span><strong style="color:#b7791f">' + invPounds(invOwnTotal(s, b)) + '</strong></label>';
+          + '<input type="checkbox" class="inv-arr" value="' + esc(k) + '" data-amt="' + e.amt + '"' + (chosen.indexOf(k) >= 0 ? ' checked' : '') + ' onchange="invUpdateTotal()" style="width:20px;height:20px">'
+          + '<span style="flex:1">' + esc(e.block.label) + '</span><strong style="color:#b7791f">' + invPounds(e.amt) + '</strong></label>';
       }).join('')
     : '';
   const man = invManual(s, block);
@@ -11580,11 +11686,9 @@ function invCheckedArrears() {
 function invUpdateTotal() {
   if (!invoiceDraft) return;
   const s = getStudent(invoiceDraft.pupilId); const block = termBlocks()[invoiceDraft.blockIdx];
-  const arr = invCheckedArrears().reduce(function(a, k) {
-    const b = termBlocks().find(function(x){ return billingKey(x) === k; });
-    return a + (b ? invOwnTotal(s, b) : 0);
-  }, 0);
-  document.getElementById('inv-total').textContent = invPounds(invSum(invBaseLines(s, block).concat(invExtraLines())) + arr);
+  const arr = Array.prototype.reduce.call(document.querySelectorAll('#inv-arrears .inv-arr:checked'), function(a, c){ return a + (parseFloat(c.dataset.amt) || 0); }, 0);
+  const base = invFamily(s).reduce(function(a, m){ return a + invSum(invBaseLines(m, block)); }, 0);
+  document.getElementById('inv-total').textContent = invPounds(base + invSum(invExtraLines()) + arr);
 }
 function confirmInvoice() {
   if (!invoiceDraft) return;
@@ -11597,33 +11701,37 @@ function confirmInvoice() {
   closeInvoiceModal();
   renderBilling();
   openInvoiceWindow([{ s: s, block: block }],
-    block.start.getFullYear() + ' - ' + block.label + ' - ' + s.name + ' - ' + invNumber(s, block));
+    block.start.getFullYear() + ' - ' + block.label + ' - ' + invNames(invFamily(s)) + ' - ' + invNumber(s, block));
 }
 
 function makeAllInvoices() {
   const block = termBlocks()[billingBlockIdx()];
   if (!block) { alert('Add your half-terms in Term dates first.'); return; }
+  const seen = {};
   const list = students.filter(function(s){ return !s.retired; })
+    .map(invLead)
+    .filter(function(s){ if (seen[s.id]) return false; seen[s.id] = true; return true; })
     .sort(function(a, b){ return a.name.localeCompare(b.name); })
-    .filter(function(s){ return invAllLines(s, block).length; })
+    .filter(function(s){ return invFamLines(s, block).length; })
     .map(function(s){ return { s: s, block: block }; });
   if (!list.length) { alert('No pupils have anything to invoice for ' + block.label + '.'); return; }
   if (!invBankReady()) return;
   const k = billingKey(block);
   list.forEach(function(it) {
-    invMarkSent(it.s, block);
     // Lock in the arrears that went on this invoice
-    if (!invSaved(it.s, block)) (invoiceExtras[k] = invoiceExtras[k] || {})[it.s.id] = { manual: [], arrears: invArrearsBlocks(it.s, block).map(billingKey) };
+    if (!invSaved(it.s, block)) (invoiceExtras[k] = invoiceExtras[k] || {})[it.s.id] = { manual: [], arrears: invFamOffer(invFamily(it.s), block, true).map(function(e){ return billingKey(e.block); }) };
+    invMarkSent(it.s, block);
   });
   save();
   renderBilling();
   openInvoiceWindow(list, block.start.getFullYear() + ' - ' + block.label + ' - All invoices');
 }
 
-// One A4 page, laid out like the original invoice.
+// One A4 page, laid out like the original invoice. One page per family.
 function invoicePageHTML(s, block) {
   const st = invoiceSettings || {};
-  const lines = invAllLines(s, block);
+  const fam = invFamily(s);
+  const lines = invFamLines(s, block);
   const total = lines.reduce(function(a, l){ return a + l.amt; }, 0);
   const now = effectiveNow();
   const dateStr = now.getDate() + '/' + (now.getMonth() + 1) + '/' + now.getFullYear();
@@ -11634,11 +11742,11 @@ function invoicePageHTML(s, block) {
     + '<div class="head"><img src="' + (st.logo || INVOICE_LOGO) + '" alt="">'
     + '<div class="contact"><div class="big">' + esc(st.name || '') + '</div><div class="big">' + esc(st.phone || '') + '</div>'
     + '<div>' + esc(st.email || '') + '</div><div>' + esc(st.website || '') + '</div></div></div>'
-    + '<h1>' + invInstrument(s) + ' Lessons - Invoice</h1>'
+    + '<h1>' + invFamInstrument(fam) + ' Lessons - Invoice</h1>'
     + '<p class="u">Tuition Fees for ' + esc(invTermTitle(block.label)) + ' - ' + block.start.getFullYear() + '</p>'
     + '<table class="info"><tr><td>Invoice Number:</td><td>' + invNumber(s, block) + '</td></tr>'
     + '<tr><td>Invoice Date:</td><td>' + dateStr + '</td></tr>'
-    + '<tr><td>Pupil\'s Name:</td><td>' + esc(s.name) + '</td></tr></table>'
+    + '<tr><td>' + (fam.length > 1 ? 'Pupils\' Names:' : 'Pupil\'s Name:') + '</td><td>' + esc(invNames(fam)) + '</td></tr></table>'
     + '<p class="u fees">Fees:</p>'
     + '<table class="fees">' + lines.map(function(l){ return row(l.text, invPounds(l.amt)); }).join('') + gap + row('Total', invPounds(total), 'tot') + '</table>'
     + '<p class="u">Payment Terms:</p>'
@@ -11647,7 +11755,7 @@ function invoicePageHTML(s, block) {
     + 'Payee Sort Code: ' + (st.sortCode ? esc(st.sortCode) : missing) + '<br>'
     + 'Account: ' + esc(st.bank || '') + '<br>'
     + 'Payee Account Number: ' + (st.account ? esc(st.account) : missing) + '<br>'
-    + 'Payee Reference: ' + invRefPrefix(s) + ' ' + esc(s.name) + '</div>'
+    + 'Payee Reference: ' + invFamRef(fam) + ' ' + esc(invNames(fam)) + '</div>'
     + '</section>';
 }
 
