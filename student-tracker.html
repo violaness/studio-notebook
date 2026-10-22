@@ -549,6 +549,8 @@
   .import-result-name { font-weight: 600; }
   .import-result-detail { font-size: 0.78rem; opacity: 0.8; margin-top: 1px; }
 
+  /* Phone: hide the Pencil buttons (Undo, Cap...) - they're for the iPad and cover the page on a small screen */
+  @media (max-width: 600px) { #pencil-kb { display: none !important; } }
   @media (max-width: 480px) {
     header h1 { font-size: 1.1rem; }
     .detail-name { font-size: 1.3rem; }
@@ -11510,7 +11512,8 @@ function renderBilling() {
   }).join('');
 
   sheet.innerHTML =
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' + rows + '</div>' +
+    // Two columns when there's room (iPad), one on a narrow screen (phone)
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:10px">' + rows + '</div>' +
     '<div style="display:flex;align-items:center;gap:14px;padding:14px 6px 4px;margin-top:10px;border-top:2px solid var(--warm);font-weight:800;color:var(--viola)">' +
       '<span style="flex:0 0 auto;width:2em;height:2em;display:flex;align-items:center;justify-content:center;background:var(--viola);color:#fff;border-radius:10px;font-size:1rem">' + grand + '</span>' +
       '<span>Total chargeable lessons</span>' +
