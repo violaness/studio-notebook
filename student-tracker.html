@@ -10710,6 +10710,19 @@ function termBlocks() {
     .sort(function(a, b) { return a.start - b.start; });
 }
 
+// When today isn't inside a half-term (a holiday), the one to show is the
+// half-term that has most recently STARTED - i.e. the one just finished, which
+// is what you'd be invoicing. (Not simply the last in the list, which may be a
+// future term you've already entered.)
+function recentTermIdx() {
+  const blocks = termBlocks();
+  const i = currentTermIdx();
+  if (i >= 0) return i;
+  const now = effectiveNow();
+  for (let j = blocks.length - 1; j >= 0; j--) if (blocks[j].start <= now) return j;
+  return blocks.length ? 0 : -1;
+}
+
 // Index (into termBlocks()) of the half-term that today falls within, or -1.
 function currentTermIdx() {
   const ref = effectiveNow();
@@ -10743,7 +10756,7 @@ function lessonCount(s) {
     return n > 0 ? `${n} chargeable lessons (add term dates in Admin for a half-term total)` : '';
   }
   let idx = (billingTermIdx !== null && blocks[billingTermIdx]) ? billingTermIdx : currentTermIdx();
-  if (idx < 0) idx = blocks.length - 1; // in a holiday now → show the most recent term
+  if (idx < 0) idx = recentTermIdx(); // in a holiday now → the half-term just finished
   const block = blocks[idx];
   const n = countChargeable(s, block);
   const noun = n === 1 ? 'lesson' : 'lessons';
@@ -10761,7 +10774,7 @@ function lessonCountHTML(s) {
   }
 
   let sel = (billingTermIdx !== null && blocks[billingTermIdx]) ? billingTermIdx : currentTermIdx();
-  if (sel < 0) sel = blocks.length - 1;
+  if (sel < 0) sel = recentTermIdx();
   const n = countChargeable(s, blocks[sel]);
   const noun = n === 1 ? 'lesson' : 'lessons';
   // Count pill: just the number, so it sits neatly beside the picker
@@ -10783,7 +10796,7 @@ function currentChargeableCount(s) {
     return (s.log || []).filter(function(e){ return e.attendance === 'present' || e.attendance === 'absent-late'; }).length;
   }
   let idx = (billingTermIdx !== null && blocks[billingTermIdx]) ? billingTermIdx : currentTermIdx();
-  if (idx < 0) idx = blocks.length - 1;
+  if (idx < 0) idx = recentTermIdx();
   return countChargeable(s, blocks[idx]);
 }
 
@@ -10792,7 +10805,7 @@ function termPickerHTML(s) {
   const blocks = termBlocks();
   if (blocks.length === 0) return '';
   let sel = (billingTermIdx !== null && blocks[billingTermIdx]) ? billingTermIdx : currentTermIdx();
-  if (sel < 0) sel = blocks.length - 1;
+  if (sel < 0) sel = recentTermIdx();
   const opts = blocks.map(function(b, i) {
     return `<option value="${i}"${i === sel ? ' selected' : ''}>${esc(b.label)}</option>`;
   }).join('');
@@ -10847,7 +10860,7 @@ function renderBilling() {
 
   // Populate the half-term dropdown once (keep the current selection if valid).
   let chosen = sel.value !== '' ? parseInt(sel.value, 10) : currentTermIdx();
-  if (isNaN(chosen) || chosen < 0 || chosen >= blocks.length) chosen = blocks.length - 1;
+  if (isNaN(chosen) || chosen < 0 || chosen >= blocks.length) chosen = recentTermIdx();
   sel.innerHTML = blocks.map(function(b, i) {
     const d = function(x){ return x.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); };
     return '<option value="' + i + '"' + (i === chosen ? ' selected' : '') + '>' +
