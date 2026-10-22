@@ -1435,6 +1435,13 @@
       </div>
     </div>
     <div class="field-group">
+      <label class="field-label">Billing</label>
+      <div class="radio-group">
+        <div class="radio-opt"><input type="radio" name="scheme" id="scheme-private" value="private" checked><label for="scheme-private">Private</label></div>
+        <div class="radio-opt"><input type="radio" name="scheme" id="scheme-ls" value="latestarter"><label for="scheme-ls">Late Starter</label></div>
+      </div>
+    </div>
+    <div class="field-group">
       <label class="field-label" for="new-day">Lesson day</label>
       <select id="new-day">
         <option value="">Not set</option>
@@ -1768,6 +1775,13 @@
       <div class="radio-group">
         <div class="radio-opt"><input type="radio" name="edit-pupiltype" id="edit-type-child" value="child"><label for="edit-type-child">School age</label></div>
         <div class="radio-opt"><input type="radio" name="edit-pupiltype" id="edit-type-adult" value="adult"><label for="edit-type-adult">Adult</label></div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Billing</label>
+      <div class="radio-group">
+        <div class="radio-opt"><input type="radio" name="edit-scheme" id="edit-scheme-private" value="private"><label for="edit-scheme-private">Private</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-scheme" id="edit-scheme-ls" value="latestarter"><label for="edit-scheme-ls">Late Starter</label></div>
       </div>
     </div>
     <div class="field-group">
@@ -2952,6 +2966,7 @@ function addStudent() {
   const instrument = document.querySelector('input[name="instrument"]:checked').value;
   const level      = document.querySelector('input[name="level"]:checked').value;
   const pupilType  = document.querySelector('input[name="pupiltype"]:checked').value;
+  const scheme     = (document.querySelector('input[name="scheme"]:checked') || {}).value || 'private';
   const lessonDay  = document.getElementById('new-day').value;
   const lessonTime = document.getElementById('new-time').value.trim();
   const frequency  = document.querySelector('input[name="frequency"]:checked').value;
@@ -2961,7 +2976,7 @@ function addStudent() {
   const email      = document.getElementById('new-email').value.trim();
   students.push({
     id: Date.now().toString(),
-    name, instrument, level, pupilType, lessonDay, lessonTime, frequency, duration, dob, schoolYear, email,
+    name, instrument, level, pupilType, scheme, lessonDay, lessonTime, frequency, duration, dob, schoolYear, email,
     pieces: [''], techFocus: [],
     goals: {longTerm:'',medium:'',shortTerm:''},
     nextLesson: '', duringScratch: '', log: []
@@ -3126,6 +3141,7 @@ function renderDetail(s, preserveTab = false) {
             <span class="badge badge-${s.instrument}">${instrDot(s.instrument)}${s.instrument}</span>
             <span class="badge badge-${s.level}">${s.level}</span>
             <span class="badge" style="background:var(--warm);color:var(--muted)">${(s.pupilType||'child')==='adult'?'Adult':'School age'}</span>
+            ${s.scheme==='latestarter' ? '<span class="badge" style="background:#fff3e0;color:#b7791f">Late Starter</span>' : ''}
             ${pupilRate(s) ? `<span class="badge" style="background:#dff0d8;color:#2F5C1A">£${pupilRate(s)} per lesson</span>` : ''}
             ${slot.day?`<span style="font-size:0.78rem;color:var(--muted)">◷ ${slot.day}${slot.time?' '+slot.time:''}${s.duration?' · '+s.duration+'min':''}</span>`:''}
           </div>
@@ -5284,6 +5300,8 @@ function openEditModal(id) {
   document.querySelector('input[name="edit-level"][value="' + s.level + '"]').checked = true;
   const pt = s.pupilType || 'child';
   document.querySelector('input[name="edit-pupiltype"][value="' + pt + '"]').checked = true;
+  const sch = s.scheme === 'latestarter' ? 'latestarter' : 'private';
+  document.querySelector('input[name="edit-scheme"][value="' + sch + '"]').checked = true;
   const freq = s.frequency || 'weekly';
   document.querySelector('input[name="edit-frequency"][value="' + freq + '"]').checked = true;
   const dur = s.duration || '60';
@@ -5292,10 +5310,10 @@ function openEditModal(id) {
   document.getElementById('edit-schoolyear').value = s.schoolYear || '';
   document.getElementById('edit-email').value      = s.email      || '';
   document.getElementById('edit-rate').value       = s.rate       || '';
-  const _std = parseFloat((studioRates || {})[String(s.duration || 60)]);
+  const _std = parseFloat((studioRates || {})[(s.scheme === 'latestarter' ? 'ls' : '') + String(s.duration || 60)]);
   const _hint = document.getElementById('edit-rate-hint');
   if (_hint) _hint.textContent = _std
-    ? 'Leave empty to use your standard rate: £' + _std + ' for ' + (s.duration || 60) + ' min.'
+    ? 'Leave empty to use your standard ' + (s.scheme === 'latestarter' ? 'Late Starter' : 'private') + ' rate: £' + _std + ' for ' + (s.duration || 60) + ' min.'
     : 'Leave empty to use your standard rate (set it in Admin → 💷 Billing sheet).';
   const retireBtn = document.getElementById('retire-btn');
   if (retireBtn) retireBtn.textContent = s.retired ? '↩ Bring pupil back' : '💤 Retire pupil';
@@ -5311,6 +5329,7 @@ function saveEditModal() {
   s.instrument = document.querySelector('input[name="edit-instrument"]:checked').value;
   s.level      = document.querySelector('input[name="edit-level"]:checked').value;
   s.pupilType  = document.querySelector('input[name="edit-pupiltype"]:checked').value;
+  s.scheme     = (document.querySelector('input[name="edit-scheme"]:checked') || {}).value || 'private';
   s.lessonDay  = document.getElementById('edit-day').value;
   s.lessonTime = document.getElementById('edit-time').value.trim();
   s.frequency  = document.querySelector('input[name="edit-frequency"]:checked').value;
@@ -7999,7 +8018,8 @@ function exportAttendanceSpreadsheet() {
       r.present, r.late, r.notice, r.cancelled,
       { f: 'C' + row + '+D' + row, s: 'bold' },
       { v: pupilRate(s), s: 'money' },
-      { f: 'G' + row + '*H' + row, s: 'money' }
+      { f: 'G' + row + '*H' + row, s: 'money' },
+      s.scheme === 'latestarter' ? 'Late Starter' : 'Private'
     ]);
   });
   const last = first + pupils.length - 1;
@@ -8007,13 +8027,19 @@ function exportAttendanceSpreadsheet() {
     [{ v: 'Lessons and income - ' + rangeLabel, s: 'title' }],
     [{ v: 'Chargeable = Present + Absent last minute. Rates come from each pupil (Edit). Change a rate here and the £ updates.', s: 'muted' }],
     [],
-    ['Pupil', 'Instrument', 'Present', 'Absent - last minute (charged)', 'Absent - good notice', 'Cancelled by me', 'Chargeable lessons', 'Rate per lesson', 'Amount'].map(function(h){ return { v: h, s: 'head' }; })
+    ['Pupil', 'Instrument', 'Present', 'Absent - last minute (charged)', 'Absent - good notice', 'Cancelled by me', 'Chargeable lessons', 'Rate per lesson', 'Amount', 'Billing'].map(function(h){ return { v: h, s: 'head' }; })
   ].concat(sumRows, [[
     { v: 'TOTAL', s: 'bold' }, '',
     { f: 'SUM(C' + first + ':C' + last + ')', s: 'bold' }, { f: 'SUM(D' + first + ':D' + last + ')', s: 'bold' },
     { f: 'SUM(E' + first + ':E' + last + ')', s: 'bold' }, { f: 'SUM(F' + first + ':F' + last + ')', s: 'bold' },
     { f: 'SUM(G' + first + ':G' + last + ')', s: 'bold' }, '',
     { f: 'SUM(I' + first + ':I' + last + ')', s: 'moneyBold' }
+  ], [], [
+    { v: 'Private total', s: 'bold' }, '', '', '', '', '', { f: 'SUMIF(J' + first + ':J' + last + ',"Private",G' + first + ':G' + last + ')', s: 'bold' }, '',
+    { f: 'SUMIF(J' + first + ':J' + last + ',"Private",I' + first + ':I' + last + ')', s: 'moneyBold' }
+  ], [
+    { v: 'Late Starter total', s: 'bold' }, '', '', '', '', '', { f: 'SUMIF(J' + first + ':J' + last + ',"Late Starter",G' + first + ':G' + last + ')', s: 'bold' }, '',
+    { f: 'SUMIF(J' + first + ':J' + last + ',"Late Starter",I' + first + ':I' + last + ')', s: 'moneyBold' }
   ]]);
   // Sheet 3: Key
   const key = [
@@ -8028,7 +8054,7 @@ function exportAttendanceSpreadsheet() {
   ];
   const blob = buildXlsx([
     { name: 'Attendance', rows: grid, widths: [22].concat(wkList.map(function(){ return 9; }), [9]), freeze: { rows: 4, cols: 1 } },
-    { name: 'Summary', rows: summary, widths: [22, 11, 9, 14, 13, 12, 12, 11, 12], freeze: { rows: 4, cols: 1 } },
+    { name: 'Summary', rows: summary, widths: [22, 11, 9, 14, 13, 12, 12, 11, 12, 13], freeze: { rows: 4, cols: 1 } },
     { name: 'Key', rows: key, widths: [8, 40] }
   ]);
   const a = document.createElement('a');
@@ -8149,20 +8175,31 @@ function attRangeCustom() {
 function pupilRate(s) {
   const own = parseFloat(s && s.rate);
   if (own) return own;
-  return parseFloat((studioRates || {})[String((s && s.duration) || 60)]) || 0;
+  const len = String((s && s.duration) || 60);
+  const key = (s && s.scheme === 'latestarter') ? 'ls' + len : len;
+  return parseFloat((studioRates || {})[key]) || 0;
 }
 function pupilRateIsOwn(s) { return !!parseFloat(s && s.rate); }
 
 function renderRatesEditor() {
   const el = document.getElementById('rates-editor'); if (!el) return;
   const counts = {};
-  students.filter(function(s){ return !s.retired; }).forEach(function(s){ const d = String(s.duration || 60); counts[d] = (counts[d] || 0) + 1; });
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">' + ['30','45','60','90'].map(function(m) {
-    return '<label style="display:flex;flex-direction:column;gap:4px;font-size:0.75rem;color:#1a4a6b;font-weight:700">' + m + ' min'
-      + '<span style="font-weight:400;color:var(--muted);font-size:0.68rem">' + (counts[m] || 0) + ' pupil' + (counts[m] === 1 ? '' : 's') + '</span>'
-      + '<span style="display:flex;align-items:center;gap:4px"><span>£</span><input type="number" min="0" step="0.50" inputmode="decimal" value="' + (studioRates[m] != null ? esc(studioRates[m]) : '') + '" placeholder="-" '
-      + 'oninput="setStudioRate(\'' + m + '\',this.value)" style="' + "width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:'Special Elite',cursive;font-size:0.95rem;background:var(--paper);box-sizing:border-box" + '"></span></label>';
-  }).join('') + '</div>';
+  students.filter(function(s){ return !s.retired; }).forEach(function(s){
+    const k = (s.scheme === 'latestarter' ? 'ls' : '') + String(s.duration || 60);
+    counts[k] = (counts[k] || 0) + 1;
+  });
+  // One row of prices per billing type: Private, then Late Starter (keys "ls30" etc.)
+  const row = function(title, prefix, col) {
+    return '<div style="font-size:0.78rem;font-weight:700;color:' + col + ';margin:10px 0 6px">' + title + '</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">' + ['30','45','60','90'].map(function(m) {
+        const k = prefix + m;
+        return '<label style="display:flex;flex-direction:column;gap:4px;font-size:0.75rem;color:#1a4a6b;font-weight:700">' + m + ' min'
+          + '<span style="font-weight:400;color:var(--muted);font-size:0.68rem">' + (counts[k] || 0) + ' pupil' + (counts[k] === 1 ? '' : 's') + '</span>'
+          + '<span style="display:flex;align-items:center;gap:4px"><span>£</span><input type="number" min="0" step="0.50" inputmode="decimal" value="' + (studioRates[k] != null ? esc(studioRates[k]) : '') + '" placeholder="-" '
+          + 'oninput="setStudioRate(\'' + k + '\',this.value)" style="' + "width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:'Special Elite',cursive;font-size:0.95rem;background:var(--paper);box-sizing:border-box" + '"></span></label>';
+      }).join('') + '</div>';
+  };
+  el.innerHTML = row('🎻 Private pupils', '', '#2F5C1A') + row('🌱 Late Starter scheme', 'ls', '#b7791f');
   const own = students.filter(function(s){ return !s.retired && pupilRateIsOwn(s); });
   const note = document.getElementById('rates-own-note');
   if (note) note.innerHTML = own.length
@@ -11285,7 +11322,7 @@ function renderBilling() {
     // Number first (left), in a fixed-width box, so it sits right next to the name
     return '<div style="display:flex;align-items:center;gap:10px;padding:10px 6px;background:' + (paid ? '#e8f5e0' : 'var(--card-bg)') + ';border:1.5px solid ' + (paid ? 'var(--string)' : 'var(--warm)') + ';border-radius:12px">' +
       '<span style="flex:0 0 auto;width:2em;height:2em;display:flex;align-items:center;justify-content:center;background:#eef6ff;border:1.5px solid #a8c8e8;border-radius:10px;font-size:1rem;font-weight:800;color:#1a4a6b">' + n + '</span>' +
-      '<span style="font-size:0.92rem;color:var(--ink);line-height:1.2;min-width:0">' + instrDot(s.instrument) + esc(s.name) + flag + '</span>' +
+      '<span style="font-size:0.92rem;color:var(--ink);line-height:1.2;min-width:0">' + instrDot(s.instrument) + esc(s.name) + (s.scheme === 'latestarter' ? ' <span style="font-size:0.65rem;background:#fff3e0;color:#b7791f;border-radius:999px;padding:1px 6px;white-space:nowrap">Late Starter</span>' : '') + flag + '</span>' +
       owed + paidBtn +
     '</div>';
   }).join('');
