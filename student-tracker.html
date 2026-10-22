@@ -8107,6 +8107,17 @@ function attRangeCustom() {
   renderStudioAttendance();
 }
 
+// Chargeable lessons (Present + Absent last minute) for a pupil between two
+// dates, and what that comes to at their rate. Used by the attendance table.
+function chargeableInRange(s, fromDate, toDate) {
+  return (s.log || []).filter(function(e) {
+    if (e.attendance !== 'present' && e.attendance !== 'absent-late') return false;
+    const d = parseLogDate(e.date);
+    return d && (!fromDate || d >= fromDate) && (!toDate || d <= toDate);
+  }).length;
+}
+function money(n) { return '£' + (Math.round(n * 100) / 100).toFixed(2).replace(/\.00$/, ''); }
+
 function renderStudioAttendance() {
   const el = document.getElementById('studio-attendance'); if (!el) return;
   const fromVal = document.getElementById('studio-att-from') ? document.getElementById('studio-att-from').value : '';
@@ -8264,6 +8275,7 @@ function renderStudioAttendance() {
     <div style="font-size:0.8rem;color:var(--muted);margin-bottom:10px;display:flex;gap:16px;flex-wrap:wrap">
       <span>📅 <strong style="color:var(--ink)">${sortedWeeks.length}</strong> week${sortedWeeks.length !== 1 ? 's' : ''} recorded</span>
       <span>✅ <strong style="color:#2F5C1A">${totalPresentSlots}</strong> lesson${totalPresentSlots !== 1 ? 's' : ''} attended</span>
+      <span>💷 <strong style="color:#1a4a6b">${money(activePupils.reduce((sum, s) => sum + chargeableInRange(s, fromDate, toDate) * (parseFloat(s.rate) || 0), 0))}</strong> chargeable</span>
     </div>
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:10px">
       <table style="border-collapse:collapse;font-size:0.78rem;min-width:100%;font-family:'Special Elite',cursive">
@@ -8272,6 +8284,8 @@ function renderStudioAttendance() {
             <th style="text-align:left;padding:6px 8px;background:var(--warm);position:sticky;left:0;z-index:2;min-width:100px;border-radius:8px 0 0 0">Pupil</th>
             ${sortedWeeks.map(wk => `<th style="padding:4px 6px;background:var(--warm);text-align:center;white-space:nowrap;min-width:44px;line-height:1.3${weekHasGapBefore[wk] ? ';border-left:3px dashed #b5a98a;padding-left:9px' : ''}">${fmtWeek(wk)}</th>`).join('')}
             <th style="padding:4px 8px;background:var(--warm);text-align:center;white-space:nowrap" title="Lessons attended in this period">#</th>
+            <th style="padding:4px 8px;background:#eef6ff;color:#1a4a6b;text-align:center;white-space:nowrap" title="Rate per lesson (set in the pupil's Edit)">Rate</th>
+            <th style="padding:4px 8px;background:#eef6ff;color:#1a4a6b;text-align:center;white-space:nowrap;border-radius:0 8px 0 0" title="Chargeable lessons × rate">£</th>
           </tr>
         </thead>
         <tbody>
@@ -8303,6 +8317,12 @@ function renderStudioAttendance() {
               <td style="padding:5px 8px;position:sticky;left:0;background:${rowBg};z-index:1;white-space:nowrap;border-bottom:1px solid var(--warm);cursor:pointer;font-weight:500" onclick="openStudentFrom('${s.id}','roster')">${s.name}</td>
               ${cells}
               <td style="text-align:center;padding:4px 8px;border-bottom:1px solid var(--warm);font-weight:700;color:var(--ink);background:${rowBg}">${attended}</td>
+              ${(() => {
+                const rate = parseFloat(s.rate) || 0;
+                const ch = chargeableInRange(s, fromDate, toDate);
+                return `<td style="text-align:center;padding:4px 8px;border-bottom:1px solid var(--warm);color:var(--muted);background:${rowBg};white-space:nowrap">${rate ? money(rate) : '<span title="Add a rate in the pupil\'s Edit" style="color:#e67e22">-</span>'}</td>
+                <td style="text-align:center;padding:4px 8px;border-bottom:1px solid var(--warm);font-weight:700;color:#1a4a6b;background:${rowBg};white-space:nowrap" title="${ch} chargeable × ${rate ? money(rate) : 'no rate'}">${rate ? money(ch * rate) : '-'}</td>`;
+              })()}
             </tr>`;
           }).join('')}
         </tbody>
@@ -8445,6 +8465,7 @@ function exportStudioAttendancePDF() {
     ? fmtWeek(weekKey(new Date(fromVal))) + ' \u2013 ' + fmtWeek(weekKey(new Date(toVal)))
     : (fromVal ? 'From ' + fmtWeek(weekKey(new Date(fromVal))) : toVal ? 'Up to ' + fmtWeek(weekKey(new Date(toVal))) : 'All time');
 
+  let pdfTotal = 0;
   const rowsHTML = activePupils.map((s, rowIdx) => {
     let attended = 0;
     const rowBg = rowIdx % 2 === 1 ? 'background:#f6f3ea;' : '';
@@ -8460,7 +8481,10 @@ function exportStudioAttendancePDF() {
       const extraBadge = extra > 0 ? `<span style="display:inline-block;min-width:16px;padding:0 3px;border-radius:3px;background:#29789E;color:#fff;font-size:0.55rem;font-weight:700;margin-top:1px">+${extra}</span>` : '';
       return `<td style="text-align:center;padding:3px 2px;border-bottom:1px solid #e8e0d0;${gapStyle}"><div style="display:flex;flex-direction:column;align-items:center;gap:1px">${regBadge}${extraBadge}</div></td>`;
     }).join('');
-    return `<tr style="${rowBg}"><td style="padding:4px 6px;white-space:nowrap;border-bottom:1px solid #e8e0d0;font-weight:500">${esc(s.name)}</td>${cells}<td style="text-align:center;padding:4px 6px;border-bottom:1px solid #e8e0d0;font-weight:700">${attended}</td></tr>`;
+    const rate = parseFloat(s.rate) || 0;
+    const ch = chargeableInRange(s, fromDate, toDate);
+    pdfTotal += ch * rate;
+    return `<tr style="${rowBg}"><td style="padding:4px 6px;white-space:nowrap;border-bottom:1px solid #e8e0d0;font-weight:500">${esc(s.name)}</td>${cells}<td style="text-align:center;padding:4px 6px;border-bottom:1px solid #e8e0d0;font-weight:700">${attended}</td><td style="text-align:center;padding:4px 6px;border-bottom:1px solid #e8e0d0;color:#777;white-space:nowrap">${rate ? money(rate) : '-'}</td><td style="text-align:center;padding:4px 6px;border-bottom:1px solid #e8e0d0;font-weight:700;color:#1a4a6b;white-space:nowrap">${rate ? money(ch * rate) : '-'}</td></tr>`;
   }).join('');
 
   const headerCells = sortedWeeks.map(wk => `<th style="padding:3px 4px;background:#f0ece0;text-align:center;white-space:nowrap;font-size:0.62rem;font-weight:700;${weekHasGapBefore[wk] ? 'border-left:2px dashed #b5a98a;' : ''}">${fmtWeek(wk)}</th>`).join('');
@@ -8485,8 +8509,10 @@ function exportStudioAttendancePDF() {
       + '<div style="font-size:0.62rem;color:#8aaa7a;text-transform:uppercase;letter-spacing:0.08em">www.violaness.co.uk</div>'
     + '</div>'
     + '<table>'
-      + '<thead><tr><th style="text-align:left;padding:3px 6px;background:#f0ece0;font-size:0.68rem">Pupil</th>' + headerCells + '<th style="padding:3px 6px;background:#f0ece0;font-size:0.62rem">#</th></tr></thead>'
-      + '<tbody>' + rowsHTML + '</tbody>'
+      + '<thead><tr><th style="text-align:left;padding:3px 6px;background:#f0ece0;font-size:0.68rem">Pupil</th>' + headerCells + '<th style="padding:3px 6px;background:#f0ece0;font-size:0.62rem">#</th><th style="padding:3px 6px;background:#eef6ff;font-size:0.62rem">Rate</th><th style="padding:3px 6px;background:#eef6ff;font-size:0.62rem">\u00a3</th></tr></thead>'
+      + '<tbody>' + rowsHTML
+      + '<tr><td colspan="' + (sortedWeeks.length + 3) + '" style="text-align:right;padding:6px;font-weight:700">Total chargeable</td><td style="text-align:center;padding:6px;font-weight:700;color:#1a4a6b;white-space:nowrap">' + money(pdfTotal) + '</td></tr>'
+      + '</tbody>'
     + '</table>'
     + '<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:0.68rem;margin-top:14px;color:#4a6a3a">'
       + '<span>P = Present</span><span>AL = Absent late</span><span>AN = Absent notice</span><span>C = Cancelled</span><span>+n = Extra lesson(s)</span><span>Dashed line = week(s) not taught</span>'
