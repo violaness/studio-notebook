@@ -8231,6 +8231,11 @@ function attRangeDates(r) {
     const y = parseInt(r.key, 10);
     return isNaN(y) ? null : { from: new Date(y, 3, 6), to: new Date(y + 1, 3, 5) };
   }
+  if (r.mode === 'quarter') { // tax quarter: key "2026-3" = 2026/27 Q3
+    const parts = String(r.key).split('-'), y = parseInt(parts[0], 10), q = parseInt(parts[1], 10);
+    const Q = [[new Date(y, 3, 6), new Date(y, 6, 5)], [new Date(y, 6, 6), new Date(y, 9, 5)], [new Date(y, 9, 6), new Date(y + 1, 0, 5)], [new Date(y + 1, 0, 6), new Date(y + 1, 3, 5)]];
+    return (isNaN(y) || !Q[q - 1]) ? null : { from: Q[q - 1][0], to: Q[q - 1][1] };
+  }
   return null;
 }
 function attRangeInit() {
@@ -8252,11 +8257,22 @@ function attRangeInit() {
   students.forEach(function(s){ (s.log || []).forEach(function(e){ const d = parseLogDate(e.date); if (d) { const ty = (d.getMonth() > 3 || (d.getMonth() === 3 && d.getDate() >= 6)) ? d.getFullYear() : d.getFullYear() - 1; if (ty < firstYear) firstYear = ty; } }); });
   let taxOpts = '';
   for (let y = curTaxStart; y >= firstYear; y--) taxOpts += '<option value="x:' + y + '">Tax year ' + y + '-' + String(y + 1).slice(2) + ' (6 Apr ' + y + ' - 5 Apr ' + (y + 1) + ')</option>';
+  // Tax quarters (6 Apr, 6 Jul, 6 Oct, 6 Jan), newest first, only ones that have started
+  const qf = function(d){ return d.getDate() + ' ' + d.toLocaleDateString('en-GB', { month: 'short' }); };
+  let qOpts = '';
+  for (let y = curTaxStart; y >= firstYear; y--) {
+    for (let q = 4; q >= 1; q--) {
+      const d = attRangeDates({ mode: 'quarter', key: y + '-' + q });
+      if (!d || d.from > nowD) continue;
+      qOpts += '<option value="q:' + y + '-' + q + '">' + y + '/' + String(y + 1).slice(2) + ' Q' + q + ' (' + qf(d.from) + ' - ' + qf(d.to) + ')</option>';
+    }
+  }
+  opts += '<optgroup label="Tax quarters">' + qOpts + '</optgroup>';
   opts += '<optgroup label="Tax years">' + taxOpts + '</optgroup>';
   opts += '<option value="custom">Custom dates</option><option value="all">All time</option>';
   sel.innerHTML = opts;
   // Put the remembered choice back (falls back to "this half-term" if a term was deleted)
-  let val = r.mode === 'block' ? 'b:' + r.key : r.mode === 'term' ? 't:' + r.key : r.mode === 'tax' ? 'x:' + r.key : r.mode;
+  let val = r.mode === 'block' ? 'b:' + r.key : r.mode === 'term' ? 't:' + r.key : r.mode === 'tax' ? 'x:' + r.key : r.mode === 'quarter' ? 'q:' + r.key : r.mode;
   if (![...sel.options].some(function(o){ return o.value === val; })) val = blocks.length ? 'auto' : 'all';
   sel.value = val;
   const from = document.getElementById('studio-att-from');
@@ -8264,7 +8280,7 @@ function attRangeInit() {
   if (val === 'custom') { from.value = r.from || ''; to.value = r.to || ''; }
   else if (val === 'all') { from.value = ''; to.value = ''; }
   else {
-    const d = attRangeDates(val === 'auto' ? { mode: 'auto' } : { mode: { b: 'block', t: 'term', x: 'tax' }[val.charAt(0)], key: val.slice(2) });
+    const d = attRangeDates(val === 'auto' ? { mode: 'auto' } : { mode: { b: 'block', t: 'term', x: 'tax', q: 'quarter' }[val.charAt(0)], key: val.slice(2) });
     from.value = d ? toInputDate(d.from) : '';
     to.value   = d ? toInputDate(d.to) : '';
   }
@@ -8274,7 +8290,7 @@ function attRangePick(val) {
   if (val === 'auto' || val === 'all') r = { mode: val };
   else if (val === 'custom') {
     r = { mode: 'custom', from: document.getElementById('studio-att-from').value, to: document.getElementById('studio-att-to').value };
-  } else r = { mode: { b: 'block', t: 'term', x: 'tax' }[val.charAt(0)], key: val.slice(2) };
+  } else r = { mode: { b: 'block', t: 'term', x: 'tax', q: 'quarter' }[val.charAt(0)], key: val.slice(2) };
   attRangeSave(r);
   attRangeInit();
   renderStudioAttendance();
