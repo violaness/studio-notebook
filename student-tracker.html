@@ -12110,20 +12110,29 @@ function invoiceFileName(s, block) {
   return block.start.getFullYear() + ' - ' + block.label + ' - ' + invNames(invFamily(s)) + ' - ' + invNumber(s, block);
 }
 
+// Email subject: invoice number, instrument, half-term and year, names.
+function invSubject(s, block) {
+  return 'Invoice ' + invNumber(s, block) + ' - ' + invFamInstrument(invFamily(s)) + ' lessons - ' + block.label + ' ' + block.start.getFullYear() + ' - ' + invNames(invFamily(s));
+}
+// Opens Mail with To, Subject and your message filled in (attach the PDF with 📎).
+function invMailto(s, block) {
+  return 'mailto:' + invEmails(s).join(',')
+    + '?subject=' + encodeURIComponent(invSubject(s, block))
+    + '&body=' + encodeURIComponent(invMessage(s, block));
+}
+
 function openInvoiceWindow(items, title) {
   const many = items.length > 1;
   const btn = 'font-family:inherit;font-size:14px;padding:9px 18px;border-radius:8px;border:none;cursor:pointer;background:#29789E;color:#fff';
   const pages = items.map(function(it, i) {
     const em = invEmails(it.s);
-    const emTag = em.length
-      ? '<button onclick="copyEm(this,' + i + ')" style="font-family:inherit;font-size:13px;padding:8px 12px;border-radius:8px;border:1.5px solid #a8c8e8;background:#fff;color:#1a4a6b;cursor:pointer;margin-right:10px">\u2709\ufe0f ' + esc(em.join(', ')) + ' <span style="opacity:.6">\u00b7 tap to copy</span></button>'
-      : '<span style="font-size:13px;color:#b7791f;margin-right:10px">No email in \u270f\ufe0f Edit</span>';
-    return (many ? '<div class="pbar">' + emTag + '<button onclick="shareInv([' + i + '])" style="' + btn + '">\ud83d\udce4 ' + esc(invNames(invFamily(it.s))) + '</button></div>' : '')
+    const emTag = '<a class="mail" href="' + esc(invMailto(it.s, it.block)) + '">\u2709\ufe0f Email ' + (em.length ? esc(em.join(', ')) : '<span style="color:#b7791f">(no email in \u270f\ufe0f Edit)</span>') + '</a>';
+    return (many ? '<div class="pbar"><button onclick="shareInv([' + i + '])" style="' + btn + '">\ud83d\udce4 Save ' + esc(invNames(invFamily(it.s))) + '</button>' + emTag + '</div>' : '')
       + invoicePageHTML(it.s, it.block);
   }).join('');
   const all = items.map(function(it, i){ return i; }).join(',');
   const oneEm = !many ? invEmails(items[0].s) : [];
-  const topEm = (!many && oneEm.length) ? '<button onclick="copyEm(this,0)" style="background:#fff;color:#1a4a6b">\u2709\ufe0f ' + esc(oneEm.join(', ')) + ' <span style="opacity:.6">\u00b7 tap to copy</span></button>' : '';
+  const topEm = !many ? '<a class="mail" href="' + esc(invMailto(items[0].s, items[0].block)) + '">\u2709\ufe0f Email ' + (oneEm.length ? esc(oneEm.join(', ')) : '') + '</a>' : '';
   const html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
     + '<title>' + esc(title) + '</title><link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet"><style>'
     + '@page{size:A4;margin:0}'
@@ -12141,10 +12150,11 @@ function openInvoiceWindow(items, title) {
     + '.pay{font-size:9.5pt;line-height:1.5}'
     + '.bar{position:sticky;top:0;display:flex;gap:10px;justify-content:center;padding:10px;background:#05270B}'
     + '.bar button{font-family:inherit;font-size:14px;padding:9px 18px;border-radius:8px;border:none;cursor:pointer}'
-    + '.pbar{width:210mm;margin:18px auto 0;text-align:right}'
+    + '.pbar{width:210mm;margin:18px auto 0;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}'
+    + 'a.mail{font-family:inherit;font-size:14px;padding:9px 16px;border-radius:8px;background:#fff;color:#1a4a6b;border:1.5px solid #a8c8e8;text-decoration:none;display:inline-flex;align-items:center;gap:4px}'
     + '@media print{html,body{background:#fff}.bar,.pbar{display:none}.page{margin:0}}'
     + '</style></head><body>'
-    + '<div class="bar"><button onclick="shareInv([' + all + '])" style="background:#29789E;color:#fff">\ud83d\udce4 ' + (many ? 'Save / share all ' + items.length + ' PDFs' : 'Save / share PDF') + '</button>' + topEm
+    + '<div class="bar"><button onclick="shareInv([' + all + '])" style="background:#29789E;color:#fff">\ud83d\udce4 ' + (many ? 'Save all ' + items.length + ' PDFs' : 'Save PDF') + '</button>' + topEm
     + '<button onclick="window.close()" style="background:#fff;color:#2F5C1A">← Close</button></div>'
     + pages + '</body></html>';
   const w = window.open('', '_blank');
@@ -12154,36 +12164,10 @@ function openInvoiceWindow(items, title) {
   // The PDF for each invoice is made when you tap Share (one file per family).
   // It's handed to the iPad share sheet (Mail, Files...), or downloaded elsewhere.
   w.invPdf = function(i) { const it = items[i]; return invoicePdf([it], invoiceFileName(it.s, it.block)); };
-  // Tap the email to copy it, ready to paste into Mail's To box
-  w.copyEm = function(btn, i) {
-    const em = invEmails(items[i].s).join(', ');
-    const done = function(ok) {
-      const old = btn.innerHTML;
-      btn.innerHTML = ok ? '\u2705 Copied! Paste it into To' : '\u26a0\ufe0f Couldn\u2019t copy: ' + esc(em);
-      setTimeout(function(){ btn.innerHTML = old; }, 2500);
-    };
-    try {
-      if (w.navigator.clipboard && w.navigator.clipboard.writeText) { w.navigator.clipboard.writeText(em).then(function(){ done(true); }, function(){ done(fallbackCopy()); }); }
-      else done(fallbackCopy());
-    } catch (e) { done(fallbackCopy()); }
-    function fallbackCopy() {
-      try {
-        const t = w.document.createElement('textarea'); t.value = em; t.setAttribute('readonly', '');
-        t.style.position = 'fixed'; t.style.opacity = '0'; w.document.body.appendChild(t);
-        t.select(); t.setSelectionRange(0, em.length);
-        const ok = w.document.execCommand('copy'); t.remove(); return ok;
-      } catch (e) { return false; }
-    }
-  };
   w.shareInv = function(ix) {
     try {
       const files = ix.map(function(i) { const f = w.invPdf(i); return new w.File([f.bytes], f.name, { type: 'application/pdf' }); });
       const nav = w.navigator;
-      // One invoice: copy the parent's email so it can be pasted into Mail's To box
-      if (ix.length === 1) {
-        const em = invEmails(items[ix[0]].s).join(', ');
-        if (em && nav.clipboard && nav.clipboard.writeText) nav.clipboard.writeText(em).catch(function(){});
-      }
       const data = { files: files };
       if (ix.length === 1) {
         const it = items[ix[0]];
