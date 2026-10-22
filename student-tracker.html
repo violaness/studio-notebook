@@ -11935,13 +11935,15 @@ function openInvoiceWindow(items, title) {
   const btn = 'font-family:inherit;font-size:14px;padding:9px 18px;border-radius:8px;border:none;cursor:pointer;background:#29789E;color:#fff';
   const pages = items.map(function(it, i) {
     const em = invEmails(it.s);
-    const emTag = '<span style="font-size:13px;color:' + (em.length ? '#1a4a6b' : '#b7791f') + ';margin-right:10px">' + (em.length ? '\u2709\ufe0f ' + esc(em.join(', ')) : 'No email in \u270f\ufe0f Edit') + '</span>';
+    const emTag = em.length
+      ? '<button onclick="copyEm(this,' + i + ')" style="font-family:inherit;font-size:13px;padding:8px 12px;border-radius:8px;border:1.5px solid #a8c8e8;background:#fff;color:#1a4a6b;cursor:pointer;margin-right:10px">\u2709\ufe0f ' + esc(em.join(', ')) + ' <span style="opacity:.6">\u00b7 tap to copy</span></button>'
+      : '<span style="font-size:13px;color:#b7791f;margin-right:10px">No email in \u270f\ufe0f Edit</span>';
     return (many ? '<div class="pbar">' + emTag + '<button onclick="shareInv([' + i + '])" style="' + btn + '">\ud83d\udce4 ' + esc(invNames(invFamily(it.s))) + '</button></div>' : '')
       + invoicePageHTML(it.s, it.block);
   }).join('');
   const all = items.map(function(it, i){ return i; }).join(',');
   const oneEm = !many ? invEmails(items[0].s) : [];
-  const topEm = (!many && oneEm.length) ? '<span style="color:#fff;font-size:13px;align-self:center">\u2709\ufe0f ' + esc(oneEm.join(', ')) + '</span>' : '';
+  const topEm = (!many && oneEm.length) ? '<button onclick="copyEm(this,0)" style="background:#fff;color:#1a4a6b">\u2709\ufe0f ' + esc(oneEm.join(', ')) + ' <span style="opacity:.6">\u00b7 tap to copy</span></button>' : '';
   const html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
     + '<title>' + esc(title) + '</title><link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet"><style>'
     + '@page{size:A4;margin:0}'
@@ -11972,6 +11974,27 @@ function openInvoiceWindow(items, title) {
   // The PDF for each invoice is made when you tap Share (one file per family).
   // It's handed to the iPad share sheet (Mail, Files...), or downloaded elsewhere.
   w.invPdf = function(i) { const it = items[i]; return invoicePdf([it], invoiceFileName(it.s, it.block)); };
+  // Tap the email to copy it, ready to paste into Mail's To box
+  w.copyEm = function(btn, i) {
+    const em = invEmails(items[i].s).join(', ');
+    const done = function(ok) {
+      const old = btn.innerHTML;
+      btn.innerHTML = ok ? '\u2705 Copied! Paste it into To' : '\u26a0\ufe0f Couldn\u2019t copy: ' + esc(em);
+      setTimeout(function(){ btn.innerHTML = old; }, 2500);
+    };
+    try {
+      if (w.navigator.clipboard && w.navigator.clipboard.writeText) { w.navigator.clipboard.writeText(em).then(function(){ done(true); }, function(){ done(fallbackCopy()); }); }
+      else done(fallbackCopy());
+    } catch (e) { done(fallbackCopy()); }
+    function fallbackCopy() {
+      try {
+        const t = w.document.createElement('textarea'); t.value = em; t.setAttribute('readonly', '');
+        t.style.position = 'fixed'; t.style.opacity = '0'; w.document.body.appendChild(t);
+        t.select(); t.setSelectionRange(0, em.length);
+        const ok = w.document.execCommand('copy'); t.remove(); return ok;
+      } catch (e) { return false; }
+    }
+  };
   w.shareInv = function(ix) {
     try {
       const files = ix.map(function(i) { const f = w.invPdf(i); return new w.File([f.bytes], f.name, { type: 'application/pdf' }); });
