@@ -551,6 +551,8 @@
 
   /* Phone: hide the Pencil buttons (Undo, Cap...) - they're for the iPad and cover the page on a small screen */
   @media (max-width: 600px) { #pencil-kb { display: none !important; } }
+  /* iPad: keep the billing sheet's Paid buttons clear of the Pencil buttons on the right */
+  @media (min-width: 601px) { #billing-sheet { padding-right: 58px; } }
   @media (max-width: 480px) {
     header h1 { font-size: 1.1rem; }
     .detail-name { font-size: 1.3rem; }
@@ -11513,8 +11515,8 @@ function renderBilling() {
   }).join('');
 
   sheet.innerHTML =
-    // Two columns when there's room (iPad), one on a narrow screen (phone)
-    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:10px">' + rows + '</div>' +
+    // One pupil per row: room for all the details (paid date, family, notes)
+    '<div style="display:grid;grid-template-columns:1fr;gap:8px">' + rows + '</div>' +
     '<div style="display:flex;align-items:center;gap:14px;padding:14px 6px 4px;margin-top:10px;border-top:2px solid var(--warm);font-weight:800;color:var(--viola)">' +
       '<span style="flex:0 0 auto;width:2em;height:2em;display:flex;align-items:center;justify-content:center;background:var(--viola);color:#fff;border-radius:10px;font-size:1rem">' + grand + '</span>' +
       '<span>Total chargeable lessons</span>' +
