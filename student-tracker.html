@@ -7757,8 +7757,19 @@ function deleteCanvasSave(id, idx) {
 // them (inline text, numbers, simple formulas, coloured cells, column widths,
 // frozen header) and zips them up uncompressed.
 const XLSX_STYLES = {
-  normal: 0, head: 1, bold: 2, P: 3, AL: 4, AN: 5, C: 6, money: 7, moneyBold: 8, title: 9, extra: 10, muted: 11
+  normal: 0, head: 1, bold: 2, P: 3, AL: 4, AN: 5, C: 6, money: 7, moneyBold: 8, title: 9, extra: 10, muted: 11,
+  stripe: 12, boldStripe: 13, moneyStripe: 14
 };
+// Shade a row (every other pupil) so it's easy to read across. Coloured
+// attendance codes keep their own colours; everything else gets the stripe.
+function xlsxStripe(row) {
+  const map = { undefined: 'stripe', normal: 'stripe', bold: 'boldStripe', money: 'moneyStripe' };
+  return row.map(function(c) {
+    const o = (c !== null && typeof c === 'object') ? Object.assign({}, c) : { v: c == null ? '' : c };
+    if (o.s in map || o.s === undefined) o.s = map[o.s];
+    return o;
+  });
+}
 function xlsxEsc(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
@@ -7789,7 +7800,7 @@ function xlsxSheetXML(sheet) {
 }
 function xlsxStylesXML() {
   // fills: 0 none, 1 gray125 (required), then ours
-  const fills = ['none', 'gray125', 'FF05270B', 'FF2F5C1A', 'FFC0392B', 'FFE67E22', 'FFAAAAAA', 'FF29789E', 'FFE8F0E4'];
+  const fills = ['none', 'gray125', 'FF05270B', 'FF2F5C1A', 'FFC0392B', 'FFE67E22', 'FFAAAAAA', 'FF29789E', 'FFE8F0E4', 'FFE3EFDA'];
   const fillXML = fills.map(function(f, i) {
     if (i === 0) return '<fill><patternFill patternType="none"/></fill>';
     if (i === 1) return '<fill><patternFill patternType="gray125"/></fill>';
@@ -7820,7 +7831,10 @@ function xlsxStylesXML() {
     xf(1, 8, 164),       // money bold (totals)
     xf(3, 0),            // title
     xf(2, 7, 0, C),      // extra (blue)
-    xf(4, 0)             // muted note
+    xf(4, 0),            // muted note
+    xf(0, 9),            // stripe (light green row)
+    xf(1, 9),            // bold on stripe
+    xf(0, 9, 164)        // money on stripe
   ];
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
     + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
@@ -7953,19 +7967,20 @@ function exportAttendanceSpreadsheet() {
       if (!w.status) return { v: '+' + extra, s: 'extra' };
       return { v: code[w.status] + (extra ? ' +' + extra : ''), s: code[w.status] };
     });
-    return [{ v: s.name, s: 'bold' }].concat(cells, [{ v: attended, s: 'bold' }]);
+    const row = [{ v: s.name, s: 'bold' }].concat(cells, [{ v: attended, s: 'bold' }]);
+    return pupils.indexOf(s) % 2 === 1 ? xlsxStripe(row) : row;
   }));
   // Sheet 2: Summary with money
   const first = 5; // first pupil row in the summary (1-based)
   const sumRows = pupils.map(function(s, i) {
     const r = data[s.id], row = first + i;
-    return [
+    return (i % 2 === 1 ? xlsxStripe : function(x){ return x; })([
       { v: s.name, s: 'bold' }, s.instrument ? s.instrument.charAt(0).toUpperCase() + s.instrument.slice(1) : '',
       r.present, r.late, r.notice, r.cancelled,
       { f: 'C' + row + '+D' + row, s: 'bold' },
       { v: parseFloat(s.rate) || 0, s: 'money' },
       { f: 'G' + row + '*H' + row, s: 'money' }
-    ];
+    ]);
   });
   const last = first + pupils.length - 1;
   const summary = [
