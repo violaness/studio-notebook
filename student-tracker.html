@@ -7752,6 +7752,257 @@ function deleteCanvasSave(id, idx) {
 }
 
 
+// ── SPREADSHEET EXPORT (.xlsx, built in - no internet needed) ───────────
+// A tiny .xlsx writer: an .xlsx file is a zip of a few XML files. This builds
+// them (inline text, numbers, simple formulas, coloured cells, column widths,
+// frozen header) and zips them up uncompressed.
+const XLSX_STYLES = {
+  normal: 0, head: 1, bold: 2, P: 3, AL: 4, AN: 5, C: 6, money: 7, moneyBold: 8, title: 9, extra: 10, muted: 11
+};
+function xlsxEsc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+}
+function xlsxCol(n) { let s = ''; n++; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; }
+// rows: array of arrays of cells. Cell = string | number | null | {v, s, f}
+function xlsxSheetXML(sheet) {
+  const cols = (sheet.widths || []).map(function(w, i){ return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>'; }).join('');
+  const rows = sheet.rows.map(function(row, r) {
+    const cells = row.map(function(c, ci) {
+      if (c == null || c === '') return '';
+      const ref = xlsxCol(ci) + (r + 1);
+      const o = (typeof c === 'object') ? c : { v: c };
+      const s = o.s ? ' s="' + XLSX_STYLES[o.s] + '"' : '';
+      if (o.f) return '<c r="' + ref + '"' + s + '><f>' + xlsxEsc(o.f) + '</f></c>';
+      if (typeof o.v === 'number') return '<c r="' + ref + '"' + s + '><v>' + o.v + '</v></c>';
+      if (o.v == null || o.v === '') return s ? '<c r="' + ref + '"' + s + '/>' : '';
+      return '<c r="' + ref + '"' + s + ' t="inlineStr"><is><t xml:space="preserve">' + xlsxEsc(o.v) + '</t></is></c>';
+    }).join('');
+    return '<row r="' + (r + 1) + '">' + cells + '</row>';
+  }).join('');
+  const freeze = sheet.freeze
+    ? '<sheetViews><sheetView workbookViewId="0"><pane xSplit="' + (sheet.freeze.cols || 0) + '" ySplit="' + (sheet.freeze.rows || 0) + '" topLeftCell="' + xlsxCol(sheet.freeze.cols || 0) + ((sheet.freeze.rows || 0) + 1) + '" activePane="bottomRight" state="frozen"/></sheetView></sheetViews>'
+    : '';
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+    + freeze + (cols ? '<cols>' + cols + '</cols>' : '') + '<sheetData>' + rows + '</sheetData></worksheet>';
+}
+function xlsxStylesXML() {
+  // fills: 0 none, 1 gray125 (required), then ours
+  const fills = ['none', 'gray125', 'FF05270B', 'FF2F5C1A', 'FFC0392B', 'FFE67E22', 'FFAAAAAA', 'FF29789E', 'FFE8F0E4'];
+  const fillXML = fills.map(function(f, i) {
+    if (i === 0) return '<fill><patternFill patternType="none"/></fill>';
+    if (i === 1) return '<fill><patternFill patternType="gray125"/></fill>';
+    return '<fill><patternFill patternType="solid"><fgColor rgb="' + f + '"/><bgColor indexed="64"/></patternFill></fill>';
+  }).join('');
+  // fonts: 0 normal, 1 bold, 2 bold white, 3 bold big, 4 grey
+  const fonts = '<font><sz val="11"/><name val="Calibri"/></font>'
+    + '<font><b/><sz val="11"/><name val="Calibri"/></font>'
+    + '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'
+    + '<font><b/><sz val="14"/><color rgb="FF05270B"/><name val="Calibri"/></font>'
+    + '<font><i/><sz val="10"/><color rgb="FF6B8A6B"/><name val="Calibri"/></font>';
+  const C = '<alignment horizontal="center" vertical="center"/>';
+  // cellXfs in XLSX_STYLES order
+  const xf = function(font, fill, numFmt, align) {
+    return '<xf numFmtId="' + (numFmt || 0) + '" fontId="' + font + '" fillId="' + fill + '" borderId="0" xfId="0"'
+      + (fill ? ' applyFill="1"' : '') + (font ? ' applyFont="1"' : '') + (numFmt ? ' applyNumberFormat="1"' : '')
+      + (align ? ' applyAlignment="1">' + align + '</xf>' : '/>');
+  };
+  const xfs = [
+    xf(0, 0),            // normal
+    xf(2, 2, 0, '<alignment horizontal="center" vertical="center" wrapText="1"/>'), // head
+    xf(1, 0),            // bold
+    xf(2, 3, 0, C),      // P  (green)
+    xf(2, 4, 0, C),      // AL (red)
+    xf(2, 5, 0, C),      // AN (orange)
+    xf(2, 6, 0, C),      // C  (grey)
+    xf(0, 0, 164),       // money
+    xf(1, 8, 164),       // money bold (totals)
+    xf(3, 0),            // title
+    xf(2, 7, 0, C),      // extra (blue)
+    xf(4, 0)             // muted note
+  ];
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+    + '<numFmts count="1"><numFmt numFmtId="164" formatCode="&quot;£&quot;#,##0.00"/></numFmts>'
+    + '<fonts count="5">' + fonts + '</fonts>'
+    + '<fills count="' + fills.length + '">' + fillXML + '</fills>'
+    + '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+    + '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+    + '<cellXfs count="' + xfs.length + '">' + xfs.join('') + '</cellXfs>'
+    + '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>'
+    + '</styleSheet>';
+}
+// Minimal zip (stored, no compression) with CRC-32
+const _crcTable = (function(){ const t = []; for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); t[n] = c >>> 0; } return t; })();
+function _crc32(bytes) { let c = 0xFFFFFFFF; for (let i = 0; i < bytes.length; i++) c = _crcTable[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zipStore(files) { // files: [{name, data: string}]
+  const enc = new TextEncoder();
+  const parts = [], central = [];
+  let offset = 0;
+  const u16 = function(v){ return [v & 0xFF, (v >>> 8) & 0xFF]; };
+  const u32 = function(v){ return [v & 0xFF, (v >>> 8) & 0xFF, (v >>> 16) & 0xFF, (v >>> 24) & 0xFF]; };
+  files.forEach(function(f) {
+    const name = enc.encode(f.name), data = enc.encode(f.data), crc = _crc32(data);
+    const local = [].concat([0x50,0x4B,0x03,0x04], u16(20), u16(0x0800), u16(0), u16(0), u16(0x21), u32(crc), u32(data.length), u32(data.length), u16(name.length), u16(0));
+    parts.push(new Uint8Array(local), name, data);
+    central.push(new Uint8Array([].concat([0x50,0x4B,0x01,0x02], u16(20), u16(20), u16(0x0800), u16(0), u16(0), u16(0x21), u32(crc), u32(data.length), u32(data.length), u16(name.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(offset))), name);
+    offset += local.length + name.length + data.length;
+  });
+  const cdSize = central.reduce(function(n, p){ return n + p.length; }, 0);
+  const end = new Uint8Array([].concat([0x50,0x4B,0x05,0x06], u16(0), u16(0), u16(files.length), u16(files.length), u32(cdSize), u32(offset), u16(0)));
+  return new Blob(parts.concat(central, [end]), { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+function buildXlsx(sheets) { // sheets: [{name, rows, widths, freeze}]
+  const ct = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    + '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>'
+    + '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+    + '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+    + sheets.map(function(s, i){ return '<Override PartName="/xl/worksheets/sheet' + (i + 1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'; }).join('')
+    + '</Types>';
+  const rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>';
+  const wb = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'
+    + sheets.map(function(s, i){ return '<sheet name="' + xlsxEsc(s.name).slice(0, 31) + '" sheetId="' + (i + 1) + '" r:id="rId' + (i + 1) + '"/>'; }).join('')
+    + '</sheets></workbook>';
+  const wbRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    + sheets.map(function(s, i){ return '<Relationship Id="rId' + (i + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + (i + 1) + '.xml"/>'; }).join('')
+    + '<Relationship Id="rId' + (sheets.length + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>';
+  const files = [
+    { name: '[Content_Types].xml', data: ct }, { name: '_rels/.rels', data: rels },
+    { name: 'xl/workbook.xml', data: wb }, { name: 'xl/_rels/workbook.xml.rels', data: wbRels },
+    { name: 'xl/styles.xml', data: xlsxStylesXML() }
+  ].concat(sheets.map(function(s, i){ return { name: 'xl/worksheets/sheet' + (i + 1) + '.xml', data: xlsxSheetXML(s) }; }));
+  return zipStore(files);
+}
+
+// Build the attendance spreadsheet for whatever range the overview is showing.
+function exportAttendanceSpreadsheet() {
+  const fromVal = (document.getElementById('studio-att-from') || {}).value || '';
+  const toVal   = (document.getElementById('studio-att-to')   || {}).value || '';
+  const fromDate = fromVal ? ymdLocal(fromVal) : null;
+  const toDate   = toVal ? ymdLocal(toVal) : null;
+  if (toDate) toDate.setHours(23, 59, 59, 999);
+  const sel = document.getElementById('att-range-select');
+  const rangeLabel = sel && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].text.replace(/, moves on by itself/, '') : 'All time';
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const fmt = function(d){ return d.getDate() + ' ' + MON[d.getMonth()] + ' ' + d.getFullYear(); };
+  const inRange = function(d){ return d && (!fromDate || d >= fromDate) && (!toDate || d <= toDate); };
+  const satKey = function(d) {
+    const t = new Date(d); t.setHours(0,0,0,0); t.setDate(t.getDate() - (t.getDay() + 1) % 7);
+    return t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0');
+  };
+  // Gather per pupil, per week
+  const weeks = new Set();
+  const data = {}; // id -> { wk -> {status, present:Set, logged:Set(dayNames), extras:n} , counts }
+  const prio = { present: 4, 'absent-notice': 3, 'absent-late': 2, cancelled: 1 };
+  students.forEach(function(s) {
+    const rec = { weeks: {}, present: 0, late: 0, notice: 0, cancelled: 0, chargeable: 0 };
+    (s.log || []).forEach(function(e) {
+      if (!e.attendance) return;
+      const d = parseLogDate(e.date); if (!inRange(d)) return;
+      const wk = satKey(d); weeks.add(wk);
+      const w = rec.weeks[wk] = rec.weeks[wk] || { status: null, present: new Set(), logged: new Set(), extras: 0 };
+      if (!w.status || (prio[e.attendance] || 0) > (prio[w.status] || 0)) w.status = e.attendance;
+      w.logged.add(DAY_NAMES[d.getDay()]);
+      if (e.attendance === 'present') { w.present.add(e.date); rec.present++; }
+      if (e.attendance === 'absent-late') rec.late++;
+      if (e.attendance === 'absent-notice') rec.notice++;
+      if (e.attendance === 'cancelled') rec.cancelled++;
+      if (e.attendance === 'present' || e.attendance === 'absent-late') rec.chargeable++;
+    });
+    data[s.id] = rec;
+  });
+  // Booked extras not logged (shown as +n, same as the overview)
+  Object.keys(extraLessons || {}).forEach(function(rawKey) {
+    let d;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rawKey)) d = ymdLocal(rawKey);
+    else if (/^\d{4}-W\d{1,2}$/.test(rawKey)) {
+      const [yr, wPart] = rawKey.split('-W'); const jan4 = new Date(parseInt(yr), 0, 4);
+      d = new Date(jan4); d.setDate(jan4.getDate() - (jan4.getDay()+6)%7 + (parseInt(wPart)-1)*7);
+    } else return;
+    const wk = satKey(d);
+    const sat = ymdLocal(wk), fri = new Date(sat); fri.setDate(sat.getDate() + 6);
+    if ((fromDate && fri < fromDate) || (toDate && sat > toDate)) return;
+    (extraLessons[rawKey] || []).forEach(function(ex) {
+      const rec = data[ex.studentId]; if (!rec) return;
+      const w = rec.weeks[wk] = rec.weeks[wk] || { status: null, present: new Set(), logged: new Set(), extras: 0 };
+      if (ex.day && w.logged.has(ex.day)) return;
+      w.extras++; weeks.add(wk);
+    });
+  });
+  const wkList = Array.from(weeks).sort();
+  const pupils = students.filter(function(s){ return Object.keys(data[s.id].weeks).length; })
+    .sort(function(a, b){ return a.name.localeCompare(b.name); });
+  if (!pupils.length) { alert('No attendance recorded for ' + rangeLabel + '.'); return; }
+
+  const code = { present: 'P', 'absent-late': 'AL', 'absent-notice': 'AN', cancelled: 'C' };
+  // Sheet 1: Attendance grid
+  const head = [{ v: 'Pupil', s: 'head' }].concat(wkList.map(function(wk){ const d = ymdLocal(wk); return { v: d.getDate() + ' ' + MON[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2), s: 'head' }; }), [{ v: 'Lessons', s: 'head' }]);
+  const grid = [
+    [{ v: 'Studio attendance - ' + rangeLabel, s: 'title' }],
+    [{ v: (fromDate ? fmt(fromDate) : 'Start') + ' to ' + (toDate ? fmt(toDate) : 'today') + '  ·  week columns start on the Saturday  ·  violaness.co.uk', s: 'muted' }],
+    [],
+    head
+  ].concat(pupils.map(function(s) {
+    let attended = 0;
+    const cells = wkList.map(function(wk) {
+      const w = data[s.id].weeks[wk];
+      if (!w) return null;
+      const extra = Math.max(0, w.present.size - (w.status === 'present' ? 1 : 0)) + w.extras;
+      attended += w.present.size + w.extras;
+      if (!w.status) return { v: '+' + extra, s: 'extra' };
+      return { v: code[w.status] + (extra ? ' +' + extra : ''), s: code[w.status] };
+    });
+    return [{ v: s.name, s: 'bold' }].concat(cells, [{ v: attended, s: 'bold' }]);
+  }));
+  // Sheet 2: Summary with money
+  const first = 5; // first pupil row in the summary (1-based)
+  const sumRows = pupils.map(function(s, i) {
+    const r = data[s.id], row = first + i;
+    return [
+      { v: s.name, s: 'bold' }, s.instrument ? s.instrument.charAt(0).toUpperCase() + s.instrument.slice(1) : '',
+      r.present, r.late, r.notice, r.cancelled,
+      { f: 'C' + row + '+D' + row, s: 'bold' },
+      { v: parseFloat(s.rate) || 0, s: 'money' },
+      { f: 'G' + row + '*H' + row, s: 'money' }
+    ];
+  });
+  const last = first + pupils.length - 1;
+  const summary = [
+    [{ v: 'Lessons and income - ' + rangeLabel, s: 'title' }],
+    [{ v: 'Chargeable = Present + Absent last minute. Rates come from each pupil (Edit). Change a rate here and the £ updates.', s: 'muted' }],
+    [],
+    ['Pupil', 'Instrument', 'Present', 'Absent - last minute (charged)', 'Absent - good notice', 'Cancelled by me', 'Chargeable lessons', 'Rate per lesson', 'Amount'].map(function(h){ return { v: h, s: 'head' }; })
+  ].concat(sumRows, [[
+    { v: 'TOTAL', s: 'bold' }, '',
+    { f: 'SUM(C' + first + ':C' + last + ')', s: 'bold' }, { f: 'SUM(D' + first + ':D' + last + ')', s: 'bold' },
+    { f: 'SUM(E' + first + ':E' + last + ')', s: 'bold' }, { f: 'SUM(F' + first + ':F' + last + ')', s: 'bold' },
+    { f: 'SUM(G' + first + ':G' + last + ')', s: 'bold' }, '',
+    { f: 'SUM(I' + first + ':I' + last + ')', s: 'moneyBold' }
+  ]]);
+  // Sheet 3: Key
+  const key = [
+    [{ v: 'Key', s: 'title' }], [],
+    [{ v: 'P', s: 'P' }, 'Present (charged)'],
+    [{ v: 'AL', s: 'AL' }, 'Absent - last minute (charged)'],
+    [{ v: 'AN', s: 'AN' }, 'Absent - good notice (not charged)'],
+    [{ v: 'C', s: 'C' }, 'Cancelled by me (not charged)'],
+    [{ v: '+1', s: 'extra' }, 'Extra lesson(s) that week'],
+    [],
+    [{ v: 'Exported from Studio Notebook on ' + fmt(new Date()), s: 'muted' }]
+  ];
+  const blob = buildXlsx([
+    { name: 'Attendance', rows: grid, widths: [22].concat(wkList.map(function(){ return 9; }), [9]), freeze: { rows: 4, cols: 1 } },
+    { name: 'Summary', rows: summary, widths: [22, 11, 9, 14, 13, 12, 12, 11, 12], freeze: { rows: 4, cols: 1 } },
+    { name: 'Key', rows: key, widths: [8, 40] }
+  ]);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Studio attendance - ' + rangeLabel.replace(/[\\/:*?"<>|]/g, '-') + '.xlsx';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+}
+
 // ── ATTENDANCE OVERVIEW DATE RANGE (remembered) ─────────────────────────
 // Choices: 'auto' (this half-term, follows today), 'b:<label>' (a half-term),
 // 't:<name>' (a whole term = half-terms sharing a name, e.g. Autumn 1 + 2),
@@ -7798,6 +8049,10 @@ function attRangeDates(r) {
     const w = wholeTerms(blocks).find(function(x){ return x.label === r.key; });
     return w ? { from: w.start, to: w.end } : null;
   }
+  if (r.mode === 'tax') { // UK tax year: 6 April to 5 April
+    const y = parseInt(r.key, 10);
+    return isNaN(y) ? null : { from: new Date(y, 3, 6), to: new Date(y + 1, 3, 5) };
+  }
   return null;
 }
 function attRangeInit() {
@@ -7812,10 +8067,18 @@ function attRangeInit() {
     const terms = wholeTerms(blocks);
     if (terms.length) opts += '<optgroup label="Whole terms">' + terms.map(function(w){ return '<option value="t:' + esc(w.label) + '">' + esc(w.label) + ' (whole term)</option>'; }).join('') + '</optgroup>';
   }
+  // Tax years (6 Apr - 5 Apr) from your first logged lesson up to the current one
+  const nowD = effectiveNow();
+  const curTaxStart = (nowD.getMonth() > 3 || (nowD.getMonth() === 3 && nowD.getDate() >= 6)) ? nowD.getFullYear() : nowD.getFullYear() - 1;
+  let firstYear = curTaxStart;
+  students.forEach(function(s){ (s.log || []).forEach(function(e){ const d = parseLogDate(e.date); if (d) { const ty = (d.getMonth() > 3 || (d.getMonth() === 3 && d.getDate() >= 6)) ? d.getFullYear() : d.getFullYear() - 1; if (ty < firstYear) firstYear = ty; } }); });
+  let taxOpts = '';
+  for (let y = curTaxStart; y >= firstYear; y--) taxOpts += '<option value="x:' + y + '">Tax year ' + y + '-' + String(y + 1).slice(2) + ' (6 Apr ' + y + ' - 5 Apr ' + (y + 1) + ')</option>';
+  opts += '<optgroup label="Tax years">' + taxOpts + '</optgroup>';
   opts += '<option value="custom">Custom dates</option><option value="all">All time</option>';
   sel.innerHTML = opts;
   // Put the remembered choice back (falls back to "this half-term" if a term was deleted)
-  let val = r.mode === 'block' ? 'b:' + r.key : r.mode === 'term' ? 't:' + r.key : r.mode;
+  let val = r.mode === 'block' ? 'b:' + r.key : r.mode === 'term' ? 't:' + r.key : r.mode === 'tax' ? 'x:' + r.key : r.mode;
   if (![...sel.options].some(function(o){ return o.value === val; })) val = blocks.length ? 'auto' : 'all';
   sel.value = val;
   const from = document.getElementById('studio-att-from');
@@ -7823,7 +8086,7 @@ function attRangeInit() {
   if (val === 'custom') { from.value = r.from || ''; to.value = r.to || ''; }
   else if (val === 'all') { from.value = ''; to.value = ''; }
   else {
-    const d = attRangeDates(val === 'auto' ? { mode: 'auto' } : (val.charAt(0) === 'b' ? { mode: 'block', key: val.slice(2) } : { mode: 'term', key: val.slice(2) }));
+    const d = attRangeDates(val === 'auto' ? { mode: 'auto' } : { mode: { b: 'block', t: 'term', x: 'tax' }[val.charAt(0)], key: val.slice(2) });
     from.value = d ? toInputDate(d.from) : '';
     to.value   = d ? toInputDate(d.to) : '';
   }
@@ -7833,7 +8096,7 @@ function attRangePick(val) {
   if (val === 'auto' || val === 'all') r = { mode: val };
   else if (val === 'custom') {
     r = { mode: 'custom', from: document.getElementById('studio-att-from').value, to: document.getElementById('studio-att-to').value };
-  } else r = { mode: val.charAt(0) === 'b' ? 'block' : 'term', key: val.slice(2) };
+  } else r = { mode: { b: 'block', t: 'term', x: 'tax' }[val.charAt(0)], key: val.slice(2) };
   attRangeSave(r);
   attRangeInit();
   renderStudioAttendance();
@@ -8053,7 +8316,11 @@ function renderStudioAttendance() {
       <span><span style="display:inline-block;width:20px;height:16px;border-radius:3px;background:#29789E;vertical-align:middle;margin-right:4px"></span>+n = Extra lesson(s)</span>
       <span><span style="display:inline-block;width:0;height:16px;border-left:3px dashed #b5a98a;vertical-align:middle;margin-right:6px"></span>Gap = week(s) not taught</span>
     </div>
-    <button onclick="exportStudioAttendancePDF()" style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto">🖨️ Download attendance PDF</button>`;
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button onclick="exportAttendanceSpreadsheet()" style="background:#2F5C1A;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">📥 Download spreadsheet</button>
+      <button onclick="exportStudioAttendancePDF()" style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">🖨️ Download PDF</button>
+    </div>
+    <div style="font-size:0.68rem;color:var(--muted);text-align:center;margin-top:6px">The spreadsheet opens in Google Sheets, Numbers or Excel. It covers the dates shown above, with a Summary tab of lessons and £.</div>`;
 }
 
 // Builds the same data the live attendance overview shows, using whatever
