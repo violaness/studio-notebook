@@ -1213,6 +1213,14 @@
         style="font-family:'Special Elite',cursive;font-size:0.85rem;color:#1a4a6b;background:var(--paper);border:1.5px solid #a8c8e8;border-radius:10px;padding:8px 12px;cursor:pointer;flex:1;min-width:140px"></select>
     </div>
     <div id="billing-sheet"></div>
+    <details style="margin-top:16px" ontoggle="if(this.open)renderRatesEditor()">
+      <summary style="font-size:0.8rem;font-weight:700;color:#1a4a6b;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:2px solid var(--warm)">
+        <span>💷 Standard lesson rates</span><span style="font-weight:400;font-size:0.7rem;color:var(--muted)">tap to set</span>
+      </summary>
+      <div style="font-size:0.72rem;color:var(--muted);margin:4px 0 10px">Set the price for each lesson length once. Every pupil uses the rate for their lesson length, unless you’ve given them their own rate in ✏️ Edit.</div>
+      <div id="rates-editor"></div>
+      <div id="rates-own-note" style="font-size:0.7rem;color:var(--muted);margin-top:10px"></div>
+    </details>
   </section>
 
   <!-- STUDIO ATTENDANCE OVERVIEW -->
@@ -1807,8 +1815,9 @@
       </select>
     </div>
     <div class="field-group">
-      <label class="field-label">Lesson rate (£ per lesson)</label>
-      <input type="number" id="edit-rate" placeholder="e.g. 45" min="0" step="0.50" style="width:100%;font-family:'Special Elite',cursive;font-size:0.93rem;border:1.5px solid #e0ddd8;border-radius:8px;padding:9px 11px;background:var(--paper);color:var(--ink)">
+      <label class="field-label">Own lesson rate (£ per lesson)</label>
+      <div id="edit-rate-hint" style="font-size:0.72rem;color:var(--muted);margin-bottom:5px">Leave empty to use your standard rate (Admin → 💷 Billing sheet).</div>
+      <input type="number" id="edit-rate" placeholder="Standard rate" min="0" step="0.50" style="width:100%;font-family:'Special Elite',cursive;font-size:0.93rem;border:1.5px solid #e0ddd8;border-radius:8px;padding:9px 11px;background:var(--paper);color:var(--ink)">
     </div>
     <div class="field-group">
       <label class="field-label">Parent / contact email (optional)</label>
@@ -2288,6 +2297,8 @@ let studyBookBank = JSON.parse(localStorage.getItem('studio_study_book_bank') ||
 let methodBookBank = JSON.parse(localStorage.getItem('studio_method_book_bank') || '[]');
 // Studio-wide bank of albums - same shape again.
 let albumBank = JSON.parse(localStorage.getItem('studio_album_bank') || '[]');
+// Standard lesson rates by length (minutes -> £). A pupil's own rate (Edit) overrides these.
+let studioRates = JSON.parse(localStorage.getItem('studio_rates') || '{}');
 // Violaness: Vanessa's own arranged exercises & technical sheets.
 // Each sheet: { id, title, cat, note }. Categories are a simple editable list.
 let violanessSheets = JSON.parse(localStorage.getItem('studio_violaness_sheets') || '[]');
@@ -2324,6 +2335,7 @@ function save() {
   localStorage.setItem('studio_study_book_bank', JSON.stringify(studyBookBank));
   localStorage.setItem('studio_method_book_bank', JSON.stringify(methodBookBank));
   localStorage.setItem('studio_album_bank', JSON.stringify(albumBank));
+  localStorage.setItem('studio_rates', JSON.stringify(studioRates));
   localStorage.setItem('studio_violaness_sheets', JSON.stringify(violanessSheets));
   localStorage.setItem('studio_violaness_cats', JSON.stringify(violanessCats));
   // Keep the Library tile counts in step with the banks
@@ -3111,7 +3123,7 @@ function renderDetail(s, preserveTab = false) {
             <span class="badge badge-${s.instrument}">${instrDot(s.instrument)}${s.instrument}</span>
             <span class="badge badge-${s.level}">${s.level}</span>
             <span class="badge" style="background:var(--warm);color:var(--muted)">${(s.pupilType||'child')==='adult'?'Adult':'School age'}</span>
-            ${s.rate ? `<span class="badge" style="background:#dff0d8;color:#2F5C1A">£${s.rate} per lesson</span>` : ''}
+            ${pupilRate(s) ? `<span class="badge" style="background:#dff0d8;color:#2F5C1A">£${pupilRate(s)} per lesson</span>` : ''}
             ${slot.day?`<span style="font-size:0.78rem;color:var(--muted)">◷ ${slot.day}${slot.time?' '+slot.time:''}${s.duration?' · '+s.duration+'min':''}</span>`:''}
           </div>
           ${pupilMetaHTML(s)}
@@ -5277,6 +5289,11 @@ function openEditModal(id) {
   document.getElementById('edit-schoolyear').value = s.schoolYear || '';
   document.getElementById('edit-email').value      = s.email      || '';
   document.getElementById('edit-rate').value       = s.rate       || '';
+  const _std = parseFloat((studioRates || {})[String(s.duration || 60)]);
+  const _hint = document.getElementById('edit-rate-hint');
+  if (_hint) _hint.textContent = _std
+    ? 'Leave empty to use your standard rate: £' + _std + ' for ' + (s.duration || 60) + ' min.'
+    : 'Leave empty to use your standard rate (set it in Admin → 💷 Billing sheet).';
   const retireBtn = document.getElementById('retire-btn');
   if (retireBtn) retireBtn.textContent = s.retired ? '↩ Bring pupil back' : '💤 Retire pupil';
   document.getElementById('edit-modal').classList.add('open');
@@ -7978,7 +7995,7 @@ function exportAttendanceSpreadsheet() {
       { v: s.name, s: 'bold' }, s.instrument ? s.instrument.charAt(0).toUpperCase() + s.instrument.slice(1) : '',
       r.present, r.late, r.notice, r.cancelled,
       { f: 'C' + row + '+D' + row, s: 'bold' },
-      { v: parseFloat(s.rate) || 0, s: 'money' },
+      { v: pupilRate(s), s: 'money' },
       { f: 'G' + row + '*H' + row, s: 'money' }
     ]);
   });
@@ -8124,6 +8141,38 @@ function attRangeCustom() {
 
 // Chargeable lessons (Present + Absent last minute) for a pupil between two
 // dates, and what that comes to at their rate. Used by the attendance table.
+// The rate a pupil pays per lesson: their own rate if set, otherwise the
+// studio standard rate for their lesson length (30/45/60/90 min).
+function pupilRate(s) {
+  const own = parseFloat(s && s.rate);
+  if (own) return own;
+  return parseFloat((studioRates || {})[String((s && s.duration) || 60)]) || 0;
+}
+function pupilRateIsOwn(s) { return !!parseFloat(s && s.rate); }
+
+function renderRatesEditor() {
+  const el = document.getElementById('rates-editor'); if (!el) return;
+  const counts = {};
+  students.filter(function(s){ return !s.retired; }).forEach(function(s){ const d = String(s.duration || 60); counts[d] = (counts[d] || 0) + 1; });
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">' + ['30','45','60','90'].map(function(m) {
+    return '<label style="display:flex;flex-direction:column;gap:4px;font-size:0.75rem;color:#1a4a6b;font-weight:700">' + m + ' min'
+      + '<span style="font-weight:400;color:var(--muted);font-size:0.68rem">' + (counts[m] || 0) + ' pupil' + (counts[m] === 1 ? '' : 's') + '</span>'
+      + '<span style="display:flex;align-items:center;gap:4px"><span>£</span><input type="number" min="0" step="0.50" inputmode="decimal" value="' + (studioRates[m] != null ? esc(studioRates[m]) : '') + '" placeholder="-" '
+      + 'oninput="setStudioRate(\'' + m + '\',this.value)" style="' + "width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:'Special Elite',cursive;font-size:0.95rem;background:var(--paper);box-sizing:border-box" + '"></span></label>';
+  }).join('') + '</div>';
+  const own = students.filter(function(s){ return !s.retired && pupilRateIsOwn(s); });
+  const note = document.getElementById('rates-own-note');
+  if (note) note.innerHTML = own.length
+    ? 'Pupils with their own rate (these win over the standard rate): ' + own.map(function(s){ return esc(s.name) + ' £' + esc(s.rate); }).join(', ')
+    : 'No pupils have their own rate, so everyone uses the standard rates above.';
+}
+function setStudioRate(m, v) {
+  const n = parseFloat(v);
+  if (isNaN(n)) delete studioRates[m]; else studioRates[m] = n;
+  save();
+  try { renderStudioAttendance(); } catch (e) {} // £ column updates straight away
+}
+
 function chargeableInRange(s, fromDate, toDate) {
   return (s.log || []).filter(function(e) {
     if (e.attendance !== 'present' && e.attendance !== 'absent-late') return false;
@@ -8290,7 +8339,7 @@ function renderStudioAttendance() {
     <div style="font-size:0.8rem;color:var(--muted);margin-bottom:10px;display:flex;gap:16px;flex-wrap:wrap">
       <span>📅 <strong style="color:var(--ink)">${sortedWeeks.length}</strong> week${sortedWeeks.length !== 1 ? 's' : ''} recorded</span>
       <span>✅ <strong style="color:#2F5C1A">${totalPresentSlots}</strong> lesson${totalPresentSlots !== 1 ? 's' : ''} attended</span>
-      <span>💷 <strong style="color:#1a4a6b">${money(activePupils.reduce((sum, s) => sum + chargeableInRange(s, fromDate, toDate) * (parseFloat(s.rate) || 0), 0))}</strong> chargeable</span>
+      <span>💷 <strong style="color:#1a4a6b">${money(activePupils.reduce((sum, s) => sum + chargeableInRange(s, fromDate, toDate) * pupilRate(s), 0))}</strong> chargeable</span>
     </div>
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:10px">
       <table style="border-collapse:collapse;font-size:0.78rem;min-width:100%;font-family:'Special Elite',cursive">
@@ -8333,7 +8382,7 @@ function renderStudioAttendance() {
               ${cells}
               <td style="text-align:center;padding:4px 8px;border-bottom:1px solid var(--warm);font-weight:700;color:var(--ink);background:${rowBg}">${attended}</td>
               ${(() => {
-                const rate = parseFloat(s.rate) || 0;
+                const rate = pupilRate(s);
                 const ch = chargeableInRange(s, fromDate, toDate);
                 return `<td style="text-align:center;padding:4px 8px;border-bottom:1px solid var(--warm);color:var(--muted);background:${rowBg};white-space:nowrap">${rate ? money(rate) : '<span title="Add a rate in the pupil\'s Edit" style="color:#e67e22">-</span>'}</td>
                 <td style="text-align:center;padding:4px 8px;border-bottom:1px solid var(--warm);font-weight:700;color:#1a4a6b;background:${rowBg};white-space:nowrap" title="${ch} chargeable × ${rate ? money(rate) : 'no rate'}">${rate ? money(ch * rate) : '-'}</td>`;
@@ -8496,7 +8545,7 @@ function exportStudioAttendancePDF() {
       const extraBadge = extra > 0 ? `<span style="display:inline-block;min-width:16px;padding:0 3px;border-radius:3px;background:#29789E;color:#fff;font-size:0.55rem;font-weight:700;margin-top:1px">+${extra}</span>` : '';
       return `<td style="text-align:center;padding:3px 2px;border-bottom:1px solid #e8e0d0;${gapStyle}"><div style="display:flex;flex-direction:column;align-items:center;gap:1px">${regBadge}${extraBadge}</div></td>`;
     }).join('');
-    const rate = parseFloat(s.rate) || 0;
+    const rate = pupilRate(s);
     const ch = chargeableInRange(s, fromDate, toDate);
     pdfTotal += ch * rate;
     return `<tr style="${rowBg}"><td style="padding:4px 6px;white-space:nowrap;border-bottom:1px solid #e8e0d0;font-weight:500">${esc(s.name)}</td>${cells}<td style="text-align:center;padding:4px 6px;border-bottom:1px solid #e8e0d0;font-weight:700">${attended}</td><td style="text-align:center;padding:4px 6px;border-bottom:1px solid #e8e0d0;color:#777;white-space:nowrap">${rate ? money(rate) : '-'}</td><td style="text-align:center;padding:4px 6px;border-bottom:1px solid #e8e0d0;font-weight:700;color:#1a4a6b;white-space:nowrap">${rate ? money(ch * rate) : '-'}</td></tr>`;
@@ -12662,6 +12711,7 @@ function backupData() {
     studio_study_book_bank: localStorage.getItem('studio_study_book_bank') || '[]',
     studio_method_book_bank: localStorage.getItem('studio_method_book_bank') || '[]',
     studio_album_bank:    localStorage.getItem('studio_album_bank')    || '[]',
+    studio_rates:         localStorage.getItem('studio_rates')         || '{}',
     studio_violaness_sheets: localStorage.getItem('studio_violaness_sheets') || '[]',
     studio_violaness_cats:   localStorage.getItem('studio_violaness_cats')   || '',
     studio_cal_url:       localStorage.getItem('studio_cal_url')       || '',
@@ -12692,7 +12742,7 @@ function restoreData(event) {
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
         'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links','studio_video_cats_removed','studio_video_teachers','studio_hidden_pieces','studio_hidden_piece_cats',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
-        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_technique_sets','studio_study_book_bank','studio_method_book_bank','studio_album_bank','studio_violaness_sheets','studio_violaness_cats','studio_cal_url','studio_dark_mode_REMOVED'];
+        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_technique_sets','studio_study_book_bank','studio_method_book_bank','studio_album_bank','studio_rates','studio_violaness_sheets','studio_violaness_cats','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
 
       // Reload state
@@ -12723,6 +12773,7 @@ function restoreData(event) {
       studyBookBank   = JSON.parse(localStorage.getItem('studio_study_book_bank')   || '[]');
       methodBookBank  = JSON.parse(localStorage.getItem('studio_method_book_bank')  || '[]');
       albumBank       = JSON.parse(localStorage.getItem('studio_album_bank')        || '[]');
+      studioRates     = JSON.parse(localStorage.getItem('studio_rates')             || '{}');
       violanessSheets = JSON.parse(localStorage.getItem('studio_violaness_sheets')  || '[]');
       violanessCats   = JSON.parse(localStorage.getItem('studio_violaness_cats')    || 'null') || violanessCats;
       repairStudentIDs();
