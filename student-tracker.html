@@ -2395,6 +2395,8 @@ let invoiceExtras = JSON.parse(localStorage.getItem('studio_invoice_extras') || 
 let invoiceSent = JSON.parse(localStorage.getItem('studio_invoice_sent') || '{}');
 // What was received and when, kept when you tick Paid: { "label|date": { pupilId: {date, n, rate, tuition, hire, extras} } }
 let incomeLog = JSON.parse(localStorage.getItem('studio_income_log') || '{}');
+// When you sent a "payment received" thank-you: { "label|date": { pupilId: "YYYY-MM-DD" } }
+let invoiceThanks = JSON.parse(localStorage.getItem('studio_invoice_thanks') || '{}');
 // Violaness: Vanessa's own arranged exercises & technical sheets.
 // Each sheet: { id, title, cat, note }. Categories are a simple editable list.
 let violanessSheets = JSON.parse(localStorage.getItem('studio_violaness_sheets') || '[]');
@@ -2438,6 +2440,7 @@ function save() {
   localStorage.setItem('studio_invoice_extras', JSON.stringify(invoiceExtras));
   localStorage.setItem('studio_invoice_sent', JSON.stringify(invoiceSent));
   localStorage.setItem('studio_income_log', JSON.stringify(incomeLog));
+  localStorage.setItem('studio_invoice_thanks', JSON.stringify(invoiceThanks));
   localStorage.setItem('studio_violaness_sheets', JSON.stringify(violanessSheets));
   localStorage.setItem('studio_violaness_cats', JSON.stringify(violanessCats));
   // Keep the Library tile counts in step with the banks
@@ -11477,6 +11480,13 @@ function renderBilling() {
       ? '<span style="display:block;font-size:0.7rem;color:#2F5C1A;margin-top:2px">👪 with ' + esc(famList.filter(function(x){ return x.id !== s.id; }).map(function(x){ return x.name; }).join(', ')) + '</span>'
       : '';
     const famBill = famList.length > 1 ? invSum(invFamLines(s, block)) : total;
+    const thanked = (invoiceThanks[billingKey(block)] || {})[s.id];
+    const hasEm = invEmails(s).length > 0;
+    const thanksPill = paid
+      ? '<a href="' + esc(thanksMailto(s, block)) + '" onclick="markThanked(\'' + s.id + '\')" title="' + (hasEm ? 'Email a payment thank-you' : 'No email saved in Edit') + '" style="flex:0 0 auto;display:flex;align-items:center;gap:4px;padding:5px 9px;border-radius:999px;font-family:\'Special Elite\',cursive;font-size:0.72rem;text-decoration:none;white-space:nowrap;'
+        + 'border:1.5px solid ' + (thanked ? '#a8c8e8' : '#29789E') + ';background:' + (thanked ? '#eef6ff' : '#fff') + ';color:#29789E">'
+        + (thanked ? '✉️ Thanked ✓' : '✉️ Thank you') + '</a>'
+      : '';
     const pd = paidMap[s.id];
     const paidLine = paid
       ? '<label title="Tap to change the date the money came in" style="position:relative;display:block;font-size:0.7rem;color:' + (pd === true ? '#b7791f' : 'var(--viola)') + ';margin-top:2px;cursor:pointer">💷 '
@@ -11510,7 +11520,7 @@ function renderBilling() {
       '<span style="font-size:0.92rem;color:var(--ink);line-height:1.2;min-width:0">' + instrDot(s.instrument) + esc(s.name) + (s.scheme === 'latestarter' ? ' <span style="font-size:0.65rem;background:#fff3e0;color:#b7791f;border-radius:999px;padding:1px 6px;white-space:nowrap">Late Starter</span>' : '') + famNote + sentNote + paidLine + flag + '</span>' +
       owed +
       (famBill ? '<button onclick="openInvoiceModal(\'' + s.id + '\')" title="Make invoice" style="flex:0 0 auto;padding:4px 7px;border-radius:999px;cursor:pointer;border:1.5px solid #a8c8e8;background:#eef6ff;font-size:0.95rem;line-height:1">🧾</button>' : '') +
-      paidBtn +
+      thanksPill + paidBtn +
     '</div>';
   }).join('');
 
@@ -12122,6 +12132,29 @@ function invMessage(s, block) {
     .replace(/\{names?\}/gi, invNames(invFamily(s)))
     .replace(/\{term\}/gi, block.label);
 }
+// The "payment received" note: {names}, {term} and {amount} fill in by themselves.
+const THANKS_MESSAGE_DEFAULT = 'Hello,\n\nThank you very much, I have received your payment of {amount} for {names} for {term}.\n\nBest wishes,\nVanessa';
+function thanksTemplate() {
+  return (invoiceSettings && typeof invoiceSettings.thanks === 'string') ? invoiceSettings.thanks : THANKS_MESSAGE_DEFAULT;
+}
+function thanksMailto(s, block) {
+  const amt = invPounds(invSum(invFamLines(s, block)));
+  const body = thanksTemplate()
+    .replace(/\{names?\}/gi, invNames(invFamily(s)))
+    .replace(/\{term\}/gi, block.label)
+    .replace(/\{amount\}/gi, amt);
+  const subject = 'Payment received - Invoice ' + invNumber(s, block) + ' - ' + block.label + ' ' + block.start.getFullYear() + ' - ' + invNames(invFamily(s));
+  return 'mailto:' + invEmails(s).join(',') + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+}
+// Remember the thank-you went (whole family), then let Mail open
+function markThanked(pupilId) {
+  const block = termBlocks()[billingBlockIdx()]; const s = getStudent(pupilId); if (!block || !s) return;
+  const k = billingKey(block);
+  const m = invoiceThanks[k] = invoiceThanks[k] || {};
+  invFamily(s).forEach(function(x){ m[x.id] = toInputDate(effectiveNow()); });
+  save();
+  setTimeout(renderBilling, 300);
+}
 function invoiceFileName(s, block) {
   return block.start.getFullYear() + ' - ' + block.label + ' - ' + invNames(invFamily(s)) + ' - ' + invNumber(s, block);
 }
@@ -12218,6 +12251,9 @@ function renderInvoiceSettings() {
   + '<label style="grid-column:1/-1;display:flex;flex-direction:column;gap:4px;font-size:0.75rem;color:#1a4a6b;font-weight:700">💬 Email message'
   + '<span style="font-weight:400;color:var(--muted);font-size:0.7rem">Goes in the email with each invoice. {names} and {term} fill in by themselves.</span>'
   + '<textarea rows="6" oninput="setInvoiceSetting(\'message\',this.value)" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:\'Special Elite\',cursive;font-size:0.9rem;background:var(--paper);box-sizing:border-box;resize:vertical">' + esc(invMessageTemplate()) + '</textarea></label>'
+  + '<label style="grid-column:1/-1;display:flex;flex-direction:column;gap:4px;font-size:0.75rem;color:#1a4a6b;font-weight:700">💌 Payment thank-you message'
+  + '<span style="font-weight:400;color:var(--muted);font-size:0.7rem">Sent with ✉️ Thank you on the billing sheet. {names}, {term} and {amount} fill in by themselves.</span>'
+  + '<textarea rows="5" oninput="setInvoiceSetting(\'thanks\',this.value)" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:\'Special Elite\',cursive;font-size:0.9rem;background:var(--paper);box-sizing:border-box;resize:vertical">' + esc(thanksTemplate()) + '</textarea></label>'
   + '<div style="grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:4px">'
   + '<img src="' + (st.logo || INVOICE_LOGO) + '" alt="Invoice picture" style="height:64px;border-radius:6px;border:1.5px solid #a8c8e8">'
   + '<label style="background:#1a4a6b;color:#fff;border-radius:10px;padding:9px 14px;font-size:0.82rem;cursor:pointer">🖼️ Change picture'
@@ -13696,6 +13732,7 @@ function backupData() {
     studio_invoice_extras: localStorage.getItem('studio_invoice_extras') || '{}',
     studio_invoice_sent:  localStorage.getItem('studio_invoice_sent')  || '{}',
     studio_income_log:    localStorage.getItem('studio_income_log')    || '{}',
+    studio_invoice_thanks: localStorage.getItem('studio_invoice_thanks') || '{}',
     studio_violaness_sheets: localStorage.getItem('studio_violaness_sheets') || '[]',
     studio_violaness_cats:   localStorage.getItem('studio_violaness_cats')   || '',
     studio_cal_url:       localStorage.getItem('studio_cal_url')       || '',
@@ -13726,7 +13763,7 @@ function restoreData(event) {
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
         'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links','studio_video_cats_removed','studio_video_teachers','studio_hidden_pieces','studio_hidden_piece_cats',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
-        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_technique_sets','studio_study_book_bank','studio_method_book_bank','studio_album_bank','studio_rates','studio_billing_paid','studio_invoice_settings','studio_invoice_nos','studio_invoice_extras','studio_invoice_sent','studio_income_log','studio_violaness_sheets','studio_violaness_cats','studio_cal_url','studio_dark_mode_REMOVED'];
+        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_technique_sets','studio_study_book_bank','studio_method_book_bank','studio_album_bank','studio_rates','studio_billing_paid','studio_invoice_settings','studio_invoice_nos','studio_invoice_extras','studio_invoice_sent','studio_income_log','studio_invoice_thanks','studio_violaness_sheets','studio_violaness_cats','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
 
       // Reload state
@@ -13764,6 +13801,7 @@ function restoreData(event) {
       invoiceExtras   = JSON.parse(localStorage.getItem('studio_invoice_extras')    || '{}');
       invoiceSent     = JSON.parse(localStorage.getItem('studio_invoice_sent')      || '{}');
       incomeLog       = JSON.parse(localStorage.getItem('studio_income_log')        || '{}');
+      invoiceThanks   = JSON.parse(localStorage.getItem('studio_invoice_thanks')    || '{}');
       violanessSheets = JSON.parse(localStorage.getItem('studio_violaness_sheets')  || '[]');
       violanessCats   = JSON.parse(localStorage.getItem('studio_violaness_cats')    || 'null') || violanessCats;
       repairStudentIDs();
