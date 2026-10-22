@@ -2299,6 +2299,8 @@ let methodBookBank = JSON.parse(localStorage.getItem('studio_method_book_bank') 
 let albumBank = JSON.parse(localStorage.getItem('studio_album_bank') || '[]');
 // Standard lesson rates by length (minutes -> £). A pupil's own rate (Edit) overrides these.
 let studioRates = JSON.parse(localStorage.getItem('studio_rates') || '{}');
+// Who has paid, per half-term: { "<half-term label>|<start date>": { pupilId: true } }
+let billingPaid = JSON.parse(localStorage.getItem('studio_billing_paid') || '{}');
 // Violaness: Vanessa's own arranged exercises & technical sheets.
 // Each sheet: { id, title, cat, note }. Categories are a simple editable list.
 let violanessSheets = JSON.parse(localStorage.getItem('studio_violaness_sheets') || '[]');
@@ -2336,6 +2338,7 @@ function save() {
   localStorage.setItem('studio_method_book_bank', JSON.stringify(methodBookBank));
   localStorage.setItem('studio_album_bank', JSON.stringify(albumBank));
   localStorage.setItem('studio_rates', JSON.stringify(studioRates));
+  localStorage.setItem('studio_billing_paid', JSON.stringify(billingPaid));
   localStorage.setItem('studio_violaness_sheets', JSON.stringify(violanessSheets));
   localStorage.setItem('studio_violaness_cats', JSON.stringify(violanessCats));
   // Keep the Library tile counts in step with the banks
@@ -11207,6 +11210,18 @@ function closeTechniqueSections(pupilId) {
 
 // The Admin billing sheet: every active pupil with their chargeable lesson
 // count for the chosen half-term, totals down the right. Read-only invoicing aid.
+function billingKey(block) { return block.label + '|' + toInputDate(block.start); }
+function togglePaid(pupilId) {
+  const blocks = termBlocks();
+  const sel = document.getElementById('billing-term-select');
+  const block = blocks[sel ? parseInt(sel.value, 10) : -1]; if (!block) return;
+  const k = billingKey(block);
+  const m = billingPaid[k] = billingPaid[k] || {};
+  if (m[pupilId]) delete m[pupilId]; else m[pupilId] = true;
+  save();
+  renderBilling();
+}
+
 function renderBilling() {
   const sheet = document.getElementById('billing-sheet');
   const sel = document.getElementById('billing-term-select');
@@ -11237,10 +11252,23 @@ function renderBilling() {
     return;
   }
 
-  let grand = 0;
+  let grand = 0, grandMoney = 0, missingRate = 0, paidMoney = 0;
+  const paidMap = billingPaid[billingKey(block)] || {};
   const rows = roster.map(function(s) {
     const n = countChargeable(s, block);
     grand += n;
+    const rate = pupilRate(s);
+    if (rate) grandMoney += n * rate; else if (n) missingRate++;
+    const paid = !!paidMap[s.id];
+    if (paid && rate) paidMoney += n * rate;
+    const paidBtn = n
+      ? '<button onclick="togglePaid(\'' + s.id + '\')" title="' + (paid ? 'Paid - tap to undo' : 'Tap when paid') + '" style="flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.72rem;'
+        + 'border:1.5px solid ' + (paid ? 'var(--viola)' : '#d6ddd2') + ';background:' + (paid ? 'var(--viola)' : '#fff') + ';color:' + (paid ? '#fff' : 'var(--muted)') + '">'
+        + (paid ? '✓ Paid' : '☐ Paid') + '</button>'
+      : '';
+    const owed = rate
+      ? '<span style="margin-left:auto;flex:0 0 auto;font-size:1rem;font-weight:800;color:#1a4a6b;white-space:nowrap" title="' + n + ' × £' + rate + '">' + money(n * rate) + '</span>'
+      : (n ? '<span style="margin-left:auto;flex:0 0 auto;font-size:0.72rem;color:#e67e22;white-space:nowrap" title="Add a rate (Edit, or Standard lesson rates below)">no rate</span>' : '');
     // Flag any week in this half-term with two or more chargeable lessons
     const perWeek = {};
     (s.log || []).forEach(function(e) {
@@ -11255,9 +11283,10 @@ function renderBilling() {
       ? '<span style="display:block;font-size:0.7rem;color:#b7791f;margin-top:2px" title="Two lessons logged in one week - check it isn\'t a mistake">⚠ 2 in one week: ' + esc(doubles.map(function(wk){ return perWeek[wk].join(' & '); }).join('; ')) + '</span>'
       : '';
     // Number first (left), in a fixed-width box, so it sits right next to the name
-    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 6px;background:var(--card-bg);border:1.5px solid var(--warm);border-radius:12px">' +
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 6px;background:' + (paid ? '#e8f5e0' : 'var(--card-bg)') + ';border:1.5px solid ' + (paid ? 'var(--string)' : 'var(--warm)') + ';border-radius:12px">' +
       '<span style="flex:0 0 auto;width:2em;height:2em;display:flex;align-items:center;justify-content:center;background:#eef6ff;border:1.5px solid #a8c8e8;border-radius:10px;font-size:1rem;font-weight:800;color:#1a4a6b">' + n + '</span>' +
-      '<span style="font-size:0.92rem;color:var(--ink);line-height:1.2">' + instrDot(s.instrument) + esc(s.name) + flag + '</span>' +
+      '<span style="font-size:0.92rem;color:var(--ink);line-height:1.2;min-width:0">' + instrDot(s.instrument) + esc(s.name) + flag + '</span>' +
+      owed + paidBtn +
     '</div>';
   }).join('');
 
@@ -11265,7 +11294,12 @@ function renderBilling() {
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' + rows + '</div>' +
     '<div style="display:flex;align-items:center;gap:14px;padding:14px 6px 4px;margin-top:10px;border-top:2px solid var(--warm);font-weight:800;color:var(--viola)">' +
       '<span style="flex:0 0 auto;width:2em;height:2em;display:flex;align-items:center;justify-content:center;background:var(--viola);color:#fff;border-radius:10px;font-size:1rem">' + grand + '</span>' +
-      '<span>Total chargeable lessons</span></div>';
+      '<span>Total chargeable lessons</span>' +
+      '<span style="margin-left:auto;font-size:1.15rem;color:#1a4a6b;white-space:nowrap">' + money(grandMoney) + '</span></div>' +
+      (grandMoney ? '<div style="display:flex;justify-content:flex-end;gap:16px;flex-wrap:wrap;font-size:0.85rem;padding:4px 6px 0">'
+        + '<span style="color:var(--viola)">✓ Received <strong>' + money(paidMoney) + '</strong></span>'
+        + '<span style="color:#b7791f">⏳ Still to come <strong>' + money(grandMoney - paidMoney) + '</strong></span></div>' : '') +
+      (missingRate ? '<div style="font-size:0.72rem;color:#e67e22;text-align:right;padding:0 6px">' + missingRate + ' pupil' + (missingRate === 1 ? ' has' : 's have') + ' lessons but no rate, so ' + (missingRate === 1 ? 'isn’t' : 'aren’t') + ' in the £ total</div>' : '');
 }
 
 
@@ -12712,6 +12746,7 @@ function backupData() {
     studio_method_book_bank: localStorage.getItem('studio_method_book_bank') || '[]',
     studio_album_bank:    localStorage.getItem('studio_album_bank')    || '[]',
     studio_rates:         localStorage.getItem('studio_rates')         || '{}',
+    studio_billing_paid:  localStorage.getItem('studio_billing_paid')  || '{}',
     studio_violaness_sheets: localStorage.getItem('studio_violaness_sheets') || '[]',
     studio_violaness_cats:   localStorage.getItem('studio_violaness_cats')   || '',
     studio_cal_url:       localStorage.getItem('studio_cal_url')       || '',
@@ -12742,7 +12777,7 @@ function restoreData(event) {
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
         'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links','studio_video_cats_removed','studio_video_teachers','studio_hidden_pieces','studio_hidden_piece_cats',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
-        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_technique_sets','studio_study_book_bank','studio_method_book_bank','studio_album_bank','studio_rates','studio_violaness_sheets','studio_violaness_cats','studio_cal_url','studio_dark_mode_REMOVED'];
+        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_technique_sets','studio_study_book_bank','studio_method_book_bank','studio_album_bank','studio_rates','studio_billing_paid','studio_violaness_sheets','studio_violaness_cats','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
 
       // Reload state
@@ -12774,6 +12809,7 @@ function restoreData(event) {
       methodBookBank  = JSON.parse(localStorage.getItem('studio_method_book_bank')  || '[]');
       albumBank       = JSON.parse(localStorage.getItem('studio_album_bank')        || '[]');
       studioRates     = JSON.parse(localStorage.getItem('studio_rates')             || '{}');
+      billingPaid     = JSON.parse(localStorage.getItem('studio_billing_paid')      || '{}');
       violanessSheets = JSON.parse(localStorage.getItem('studio_violaness_sheets')  || '[]');
       violanessCats   = JSON.parse(localStorage.getItem('studio_violaness_cats')    || 'null') || violanessCats;
       repairStudentIDs();
