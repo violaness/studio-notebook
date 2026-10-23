@@ -552,7 +552,7 @@
   /* Phone: hide the Pencil buttons (Undo, Cap...) - they're for the iPad and cover the page on a small screen */
   @media (max-width: 600px) { #pencil-kb { display: none !important; } }
   /* iPad: keep the billing sheet's Paid buttons clear of the Pencil buttons on the right */
-  @media (min-width: 601px) { #billing-sheet { padding-right: 58px; } }
+  @media (min-width: 601px) { #panel-billing { padding-right: 70px; } }
   @media (max-width: 480px) {
     header h1 { font-size: 1.1rem; }
     .detail-name { font-size: 1.3rem; }
@@ -1219,16 +1219,29 @@
         style="background:#1a4a6b;color:#fff;border:none;border-radius:10px;padding:9px 14px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;white-space:nowrap">🧾 All invoices</button>
     </div>
     <div id="billing-sheet"></div>
-    <details id="income-box" style="margin-top:16px" ontoggle="if(this.open)renderIncomePanel()">
+    <details id="income-box" style="margin-top:16px" ontoggle="if(this.open){renderIncomePanel();renderOtherIncome();}">
       <summary style="font-size:0.8rem;font-weight:700;color:#1a4a6b;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:2px solid var(--warm)">
         <span>📊 Income for tax</span><span style="font-weight:400;font-size:0.7rem;color:var(--muted)">tap to open</span>
       </summary>
       <div style="font-size:0.72rem;color:var(--muted);margin:4px 0 10px">Everything ticked Paid, by the date it arrived. For Making Tax Digital, or your accountant.</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <select id="income-period" style="font-family:'Special Elite',cursive;font-size:0.85rem;color:#1a4a6b;background:var(--paper);border:1.5px solid #a8c8e8;border-radius:10px;padding:8px 12px;flex:1;min-width:200px"></select>
+        <select id="income-period" onchange="renderOtherIncome()" style="font-family:'Special Elite',cursive;font-size:0.85rem;color:#1a4a6b;background:var(--paper);border:1.5px solid #a8c8e8;border-radius:10px;padding:8px 12px;flex:1;min-width:200px"></select>
         <button onclick="exportIncomeSpreadsheet()" style="background:#1a4a6b;color:#fff;border:none;border-radius:10px;padding:9px 14px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;white-space:nowrap">📥 Download spreadsheet</button>
       </div>
       <div id="income-undated" style="font-size:0.72rem;color:#b7791f;margin-top:8px"></div>
+      <div style="margin-top:14px;padding:12px;background:#eef6ff;border-radius:12px">
+        <div style="font-size:0.8rem;font-weight:700;color:#1a4a6b;margin-bottom:4px">🎻 Other work (NYSO, one-off jobs…)</div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">Add each payment when it arrives. It goes in the spreadsheet with your lessons.</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;align-items:end">
+          <label style="display:flex;flex-direction:column;gap:3px;font-size:0.7rem;color:#1a4a6b">📅 Date received<input type="date" id="other-income-date" style="padding:8px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);box-sizing:border-box;width:100%"></label>
+          <label style="display:flex;flex-direction:column;gap:3px;font-size:0.7rem;color:#1a4a6b">🏛️ From<input type="text" id="other-income-from" list="other-income-from-list" placeholder="e.g. NYSO" style="padding:8px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);box-sizing:border-box;width:100%"></label>
+          <label style="display:flex;flex-direction:column;gap:3px;font-size:0.7rem;color:#1a4a6b">📝 What for<input type="text" id="other-income-what" placeholder="e.g. Autumn course" style="padding:8px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);box-sizing:border-box;width:100%"></label>
+          <label style="display:flex;flex-direction:column;gap:3px;font-size:0.7rem;color:#1a4a6b">💷 Amount<input type="text" id="other-income-amount" inputmode="decimal" placeholder="£" style="padding:8px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);box-sizing:border-box;width:100%"></label>
+        </div>
+        <datalist id="other-income-from-list"></datalist>
+        <div style="text-align:right;margin:10px 0"><button onclick="addOtherIncome()" style="background:#1a4a6b;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">＋ Add payment</button></div>
+        <div id="other-income-list" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
     </details>
     <details id="invoice-settings-box" style="margin-top:16px" ontoggle="if(this.open)renderInvoiceSettings()">
       <summary style="font-size:0.8rem;font-weight:700;color:#1a4a6b;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:2px solid var(--warm)">
@@ -2397,6 +2410,8 @@ let invoiceSent = JSON.parse(localStorage.getItem('studio_invoice_sent') || '{}'
 let incomeLog = JSON.parse(localStorage.getItem('studio_income_log') || '{}');
 // When you sent a "payment received" thank-you: { "label|date": { pupilId: "YYYY-MM-DD" } }
 let invoiceThanks = JSON.parse(localStorage.getItem('studio_invoice_thanks') || '{}');
+// Other work (NYSO etc.): [{ id, date: "YYYY-MM-DD", from, what, amount }]
+let otherIncome = JSON.parse(localStorage.getItem('studio_other_income') || '[]');
 // Violaness: Vanessa's own arranged exercises & technical sheets.
 // Each sheet: { id, title, cat, note }. Categories are a simple editable list.
 let violanessSheets = JSON.parse(localStorage.getItem('studio_violaness_sheets') || '[]');
@@ -2441,6 +2456,7 @@ function save() {
   localStorage.setItem('studio_invoice_sent', JSON.stringify(invoiceSent));
   localStorage.setItem('studio_income_log', JSON.stringify(incomeLog));
   localStorage.setItem('studio_invoice_thanks', JSON.stringify(invoiceThanks));
+  localStorage.setItem('studio_other_income', JSON.stringify(otherIncome));
   localStorage.setItem('studio_violaness_sheets', JSON.stringify(violanessSheets));
   localStorage.setItem('studio_violaness_cats', JSON.stringify(violanessCats));
   // Keep the Library tile counts in step with the banks
@@ -11626,6 +11642,59 @@ function renderIncomePanel() {
   if (note) note.textContent = undated ? '⚠️ ' + undated + ' payment' + (undated === 1 ? ' has' : 's have') + ' no date yet, so ' + (undated === 1 ? 'it isn’t' : 'they aren’t') + ' in the spreadsheet. Tap "Paid: add date" on the billing sheet.' : '';
 }
 
+// ── OTHER WORK (NYSO, one-off jobs...) ───────────────────────────────────
+// Payments that aren't pupils on the billing sheet, for the income spreadsheet.
+function otherInRange(p) {
+  const to = new Date(p.to); to.setHours(23, 59, 59, 999);
+  return otherIncome.filter(function(o){ const d = ymdLocal(o.date); return d >= p.from && d <= to; })
+    .sort(function(a, b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+}
+function renderOtherIncome() {
+  const el = document.getElementById('other-income-list'); if (!el) return;
+  const p = _taxPeriods[parseInt((document.getElementById('income-period') || {}).value, 10)];
+  const dl = document.getElementById('other-income-from-list');
+  if (dl) {
+    const seen = {};
+    dl.innerHTML = otherIncome.map(function(o){ return o.from; }).filter(function(f){ if (!f || seen[f]) return false; seen[f] = true; return true; })
+      .map(function(f){ return '<option value="' + esc(f) + '">'; }).join('');
+  }
+  const d = document.getElementById('other-income-date');
+  if (d && !d.value) d.value = toInputDate(effectiveNow());
+  const list = p ? otherInRange(p) : [];
+  el.innerHTML = list.length
+    ? list.map(function(o) {
+        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--card-bg);border:1.5px solid var(--warm);border-radius:10px;font-size:0.85rem">'
+          + '<span style="flex:0 0 auto;color:var(--muted);font-size:0.75rem">' + ymdLocal(o.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + '</span>'
+          + '<span style="flex:1;min-width:0"><strong>' + esc(o.from) + '</strong>' + (o.what ? ' <span style="color:var(--muted)">· ' + esc(o.what) + '</span>' : '') + '</span>'
+          + '<strong style="color:#1a4a6b;white-space:nowrap">' + money(o.amount) + '</strong>'
+          + '<button onclick="deleteOtherIncome(\'' + o.id + '\')" title="Remove" style="background:none;border:none;cursor:pointer;font-size:0.95rem">🗑️</button></div>';
+      }).join('')
+      + '<div style="text-align:right;font-size:0.8rem;color:#1a4a6b;font-weight:700;padding:2px 4px">Other work this period: ' + money(list.reduce(function(a, o){ return a + o.amount; }, 0)) + '</div>'
+    : '<div style="font-size:0.75rem;color:var(--muted)">Nothing added for this period yet.</div>';
+}
+function addOtherIncome() {
+  const date = document.getElementById('other-income-date').value;
+  const from = document.getElementById('other-income-from').value.trim();
+  const what = document.getElementById('other-income-what').value.trim();
+  const amount = parseFloat(String(document.getElementById('other-income-amount').value).replace(/[£,\s]/g, ''));
+  if (!date || !from || isNaN(amount)) { alert('Please fill in the date, who it’s from and the amount.'); return; }
+  otherIncome.push({ id: 'oi' + Date.now(), date: date, from: from, what: what, amount: amount });
+  save();
+  document.getElementById('other-income-what').value = '';
+  document.getElementById('other-income-amount').value = '';
+  // Show the period that payment falls in, so you can see it was added
+  const dt = ymdLocal(date), sel = document.getElementById('income-period');
+  const i = _taxPeriods.findIndex(function(p){ const to = new Date(p.to); to.setHours(23, 59, 59, 999); return / Q\d/.test(p.label) && dt >= p.from && dt <= to; });
+  if (sel && i >= 0) sel.value = String(i);
+  renderOtherIncome();
+}
+function deleteOtherIncome(id) {
+  const o = otherIncome.find(function(x){ return x.id === id; }); if (!o) return;
+  if (!confirm('Remove ' + o.from + ' ' + money(o.amount) + '?')) return;
+  otherIncome = otherIncome.filter(function(x){ return x.id !== id; });
+  save(); renderOtherIncome();
+}
+
 function exportIncomeSpreadsheet() {
   const p = _taxPeriods[parseInt((document.getElementById('income-period') || {}).value, 10)];
   if (!p) return;
@@ -11642,36 +11711,43 @@ function exportIncomeSpreadsheet() {
       if (!rec) return;
       const lead = s ? invLead(s) : null;
       items.push({ dt: dt, name: s ? s.name : '(pupil removed)', term: block ? block.label + ' ' + block.start.getFullYear() : k.split('|')[0],
-        inv: lead ? ((invoiceNos[k] || {})[lead.id] || '') : '', rec: rec });
+        inv: lead ? ((invoiceNos[k] || {})[lead.id] || '') : '', rec: rec, other: 0 });
     });
+  });
+  // Other work: NYSO etc.
+  otherInRange(p).forEach(function(o) {
+    items.push({ dt: ymdLocal(o.date), name: o.from, term: o.what || '', inv: '', rec: { n: 0, rate: 0, tuition: 0, hire: 0, extras: 0 }, other: o.amount, isOther: true });
   });
   items.sort(function(a, b){ return a.dt - b.dt || a.name.localeCompare(b.name); });
   if (!items.length) { alert('No payments dated in ' + p.label + '.'); return; }
-  const head = ['Date received', 'Pupil', 'Half-term', 'Invoice no.', 'Lessons', 'Rate', 'Tuition', 'Instrument hire', 'Extras', 'Total'].map(function(h){ return { v: h, s: 'head' }; });
-  const rows = [[{ v: 'Income received: ' + p.label, s: 'title' }], [{ v: 'Studio Notebook · every payment you ticked as Paid, by the date it arrived. All of this is turnover.', s: 'muted' }], [], head];
+  const head = ['Date received', 'Pupil / from', 'Half-term / what for', 'Invoice no.', 'Lessons', 'Rate', 'Tuition', 'Instrument hire', 'Extras', 'Other work', 'Total'].map(function(h){ return { v: h, s: 'head' }; });
+  const rows = [[{ v: 'Income received: ' + p.label, s: 'title' }], [{ v: 'Studio Notebook · every payment ticked as Paid, plus other work you added, by the date it arrived.', s: 'muted' }], [], head];
   items.forEach(function(it, i) {
     const r = rows.length + 1;
     const serial = Math.round((Date.UTC(it.dt.getFullYear(), it.dt.getMonth(), it.dt.getDate()) - Date.UTC(1899, 11, 30)) / 86400000);
-    const row = [{ v: serial, s: 'date' }, it.name, it.term, it.inv ? Number(it.inv) : '', it.rec.n || 0,
-      { v: it.rec.rate || 0, s: 'money' }, { v: it.rec.tuition || 0, s: 'money' }, { v: it.rec.hire || 0, s: 'money' }, { v: it.rec.extras || 0, s: 'money' },
-      { f: 'G' + r + '+H' + r + '+I' + r, s: 'money' }];
+    const row = [{ v: serial, s: 'date' }, it.name, it.term, it.inv ? Number(it.inv) : '', it.isOther ? '' : (it.rec.n || 0),
+      it.isOther ? '' : { v: it.rec.rate || 0, s: 'money' }, { v: it.rec.tuition || 0, s: 'money' }, { v: it.rec.hire || 0, s: 'money' }, { v: it.rec.extras || 0, s: 'money' },
+      { v: it.other || 0, s: 'money' }, { f: 'G' + r + '+H' + r + '+I' + r + '+J' + r, s: 'money' }];
     rows.push(i % 2 ? xlsxStripe(row) : row);
   });
   const a = 5, z = rows.length;
   rows.push([{ v: 'Total', s: 'bold' }, '', '', '', { f: 'SUM(E' + a + ':E' + z + ')', s: 'bold' }, '',
     { f: 'SUM(G' + a + ':G' + z + ')', s: 'moneyBold' }, { f: 'SUM(H' + a + ':H' + z + ')', s: 'moneyBold' },
-    { f: 'SUM(I' + a + ':I' + z + ')', s: 'moneyBold' }, { f: 'SUM(J' + a + ':J' + z + ')', s: 'moneyBold' }]);
+    { f: 'SUM(I' + a + ':I' + z + ')', s: 'moneyBold' }, { f: 'SUM(J' + a + ':J' + z + ')', s: 'moneyBold' },
+    { f: 'SUM(K' + a + ':K' + z + ')', s: 'moneyBold' }]);
   const tot = rows.length;
   const summary = { name: 'Summary', widths: [34, 16], rows: [
     [{ v: 'Income summary: ' + p.label, s: 'title' }], [],
     ['Tuition', { f: "Income!G" + tot, s: 'money' }],
     ['Instrument hire', { f: "Income!H" + tot, s: 'money' }],
     ['Extras (exam fees etc.)', { f: "Income!I" + tot, s: 'money' }],
-    [{ v: 'Total turnover', s: 'bold' }, { f: "Income!J" + tot, s: 'moneyBold' }], [],
+    ['Other work (NYSO etc.)', { f: "Income!J" + tot, s: 'money' }],
+    [{ v: 'Total income', s: 'bold' }, { f: "Income!K" + tot, s: 'moneyBold' }], [],
     [{ v: 'Number of payments', s: 'muted' }, items.length],
-    [{ v: 'Expenses aren’t included: add those from your bank account.', s: 'muted' }]
+    [{ v: 'Expenses aren’t included: add those from your bank account.', s: 'muted' }],
+    [{ v: 'Only include work you’re paid for as self-employed (not wages taxed through PAYE).', s: 'muted' }]
   ] };
-  const blob = buildXlsx([{ name: 'Income', rows: rows, widths: [14, 18, 16, 12, 9, 10, 12, 15, 11, 12], freeze: { rows: 4 } }, summary]);
+  const blob = buildXlsx([{ name: 'Income', rows: rows, widths: [14, 20, 22, 12, 9, 10, 12, 15, 11, 12, 12], freeze: { rows: 4 } }, summary]);
   const el = document.createElement('a');
   el.href = URL.createObjectURL(blob);
   el.download = 'Income ' + p.file + '.xlsx';
@@ -13743,6 +13819,7 @@ function backupData() {
     studio_invoice_sent:  localStorage.getItem('studio_invoice_sent')  || '{}',
     studio_income_log:    localStorage.getItem('studio_income_log')    || '{}',
     studio_invoice_thanks: localStorage.getItem('studio_invoice_thanks') || '{}',
+    studio_other_income:  localStorage.getItem('studio_other_income')  || '[]',
     studio_violaness_sheets: localStorage.getItem('studio_violaness_sheets') || '[]',
     studio_violaness_cats:   localStorage.getItem('studio_violaness_cats')   || '',
     studio_cal_url:       localStorage.getItem('studio_cal_url')       || '',
@@ -13773,7 +13850,7 @@ function restoreData(event) {
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
         'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links','studio_video_cats_removed','studio_video_teachers','studio_hidden_pieces','studio_hidden_piece_cats',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
-        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_technique_sets','studio_study_book_bank','studio_method_book_bank','studio_album_bank','studio_rates','studio_billing_paid','studio_invoice_settings','studio_invoice_nos','studio_invoice_extras','studio_invoice_sent','studio_income_log','studio_invoice_thanks','studio_violaness_sheets','studio_violaness_cats','studio_cal_url','studio_dark_mode_REMOVED'];
+        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_technique_sets','studio_study_book_bank','studio_method_book_bank','studio_album_bank','studio_rates','studio_billing_paid','studio_invoice_settings','studio_invoice_nos','studio_invoice_extras','studio_invoice_sent','studio_income_log','studio_invoice_thanks','studio_other_income','studio_violaness_sheets','studio_violaness_cats','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
 
       // Reload state
@@ -13812,6 +13889,7 @@ function restoreData(event) {
       invoiceSent     = JSON.parse(localStorage.getItem('studio_invoice_sent')      || '{}');
       incomeLog       = JSON.parse(localStorage.getItem('studio_income_log')        || '{}');
       invoiceThanks   = JSON.parse(localStorage.getItem('studio_invoice_thanks')    || '{}');
+      otherIncome     = JSON.parse(localStorage.getItem('studio_other_income')      || '[]');
       violanessSheets = JSON.parse(localStorage.getItem('studio_violaness_sheets')  || '[]');
       violanessCats   = JSON.parse(localStorage.getItem('studio_violaness_cats')    || 'null') || violanessCats;
       repairStudentIDs();
