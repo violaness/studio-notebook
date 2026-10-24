@@ -551,6 +551,13 @@
 
   /* Phone: hide the Pencil buttons (Undo, Cap...) - they're for the iPad and cover the page on a small screen */
   @media (max-width: 600px) { #pencil-kb { display: none !important; } }
+  /* Other work form: a neat 2 x 2 grid, every box the same size (iPad date boxes like to grow) */
+  .oi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; align-items: start; }
+  .oi-lab { display: flex; flex-direction: column; gap: 4px; font-size: 0.72rem; color: #1a4a6b; min-width: 0; }
+  .oi-in { display: block; width: 100%; min-width: 0; max-width: 100%; height: 42px; box-sizing: border-box; margin: 0;
+    padding: 8px 10px; border-radius: 8px; border: 1.5px solid #a8c8e8; background: var(--paper); color: var(--ink);
+    font-family: 'Special Elite', cursive; font-size: 0.9rem; -webkit-appearance: none; appearance: none; text-align: left; }
+  .oi-in::-webkit-date-and-time-value { text-align: left; }
   /* iPad: keep the billing sheet's Paid buttons clear of the Pencil buttons on the right */
   @media (min-width: 601px) { #panel-billing { padding-right: 70px; } }
   @media (max-width: 480px) {
@@ -1232,11 +1239,11 @@
       <div style="margin-top:14px;padding:12px;background:#eef6ff;border-radius:12px">
         <div style="font-size:0.8rem;font-weight:700;color:#1a4a6b;margin-bottom:4px">🎻 Other work (NYSO, one-off jobs…)</div>
         <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">Add each payment when it arrives. It goes in the spreadsheet with your lessons.</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;align-items:end">
-          <label style="display:flex;flex-direction:column;gap:3px;font-size:0.7rem;color:#1a4a6b">📅 Date received<input type="date" id="other-income-date" style="padding:8px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);box-sizing:border-box;width:100%"></label>
-          <label style="display:flex;flex-direction:column;gap:3px;font-size:0.7rem;color:#1a4a6b">🏛️ From<input type="text" id="other-income-from" list="other-income-from-list" placeholder="e.g. NYSO" style="padding:8px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);box-sizing:border-box;width:100%"></label>
-          <label style="display:flex;flex-direction:column;gap:3px;font-size:0.7rem;color:#1a4a6b">📝 What for<input type="text" id="other-income-what" placeholder="e.g. Autumn course" style="padding:8px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);box-sizing:border-box;width:100%"></label>
-          <label style="display:flex;flex-direction:column;gap:3px;font-size:0.7rem;color:#1a4a6b">💷 Amount<input type="text" id="other-income-amount" inputmode="decimal" placeholder="£" style="padding:8px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);box-sizing:border-box;width:100%"></label>
+        <div class="oi-grid">
+          <label class="oi-lab">📅 Date received<input type="date" id="other-income-date" class="oi-in"></label>
+          <label class="oi-lab">🏛️ From<input type="text" id="other-income-from" list="other-income-from-list" placeholder="e.g. NYSO" class="oi-in"></label>
+          <label class="oi-lab">📝 What for<input type="text" id="other-income-what" placeholder="e.g. Autumn course" class="oi-in"></label>
+          <label class="oi-lab">💷 Amount<input type="text" id="other-income-amount" inputmode="decimal" placeholder="£" class="oi-in"></label>
         </div>
         <datalist id="other-income-from-list"></datalist>
         <div style="text-align:right;margin:10px 0"><button onclick="addOtherIncome()" style="background:#1a4a6b;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">＋ Add payment</button></div>
