@@ -7985,18 +7985,25 @@ function xlsxSheetXML(sheet) {
 }
 function xlsxStylesXML() {
   // fills: 0 none, 1 gray125 (required), then ours
-  const fills = ['none', 'gray125', 'FF05270B', 'FF2F5C1A', 'FFC0392B', 'FFE67E22', 'FFAAAAAA', 'FF29789E', 'FFE8F0E4', 'FFE3EFDA'];
+  // 10-14: soft pastels for the attendance codes (easy on the eye and the printer ink)
+  const fills = ['none', 'gray125', 'FF05270B', 'FF2F5C1A', 'FFC0392B', 'FFE67E22', 'FFAAAAAA', 'FF29789E', 'FFE8F0E4', 'FFE3EFDA',
+    'FFE4F1DA', 'FFF8DEDA', 'FFFCEAD2', 'FFEFEFEF', 'FFDCEDF6'];
   const fillXML = fills.map(function(f, i) {
     if (i === 0) return '<fill><patternFill patternType="none"/></fill>';
     if (i === 1) return '<fill><patternFill patternType="gray125"/></fill>';
     return '<fill><patternFill patternType="solid"><fgColor rgb="' + f + '"/><bgColor indexed="64"/></patternFill></fill>';
   }).join('');
-  // fonts: 0 normal, 1 bold, 2 bold white, 3 bold big, 4 grey
+  // fonts: 0 normal, 1 bold, 2 bold white, 3 bold big, 4 grey, 5-9 bold green/red/orange/grey/blue
   const fonts = '<font><sz val="11"/><name val="Calibri"/></font>'
     + '<font><b/><sz val="11"/><name val="Calibri"/></font>'
     + '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'
     + '<font><b/><sz val="14"/><color rgb="FF05270B"/><name val="Calibri"/></font>'
-    + '<font><i/><sz val="10"/><color rgb="FF6B8A6B"/><name val="Calibri"/></font>';
+    + '<font><i/><sz val="10"/><color rgb="FF6B8A6B"/><name val="Calibri"/></font>'
+    + '<font><b/><sz val="11"/><color rgb="FF2F5C1A"/><name val="Calibri"/></font>'
+    + '<font><b/><sz val="11"/><color rgb="FFA93226"/><name val="Calibri"/></font>'
+    + '<font><b/><sz val="11"/><color rgb="FFB5620E"/><name val="Calibri"/></font>'
+    + '<font><b/><sz val="11"/><color rgb="FF777777"/><name val="Calibri"/></font>'
+    + '<font><b/><sz val="11"/><color rgb="FF1A4A6B"/><name val="Calibri"/></font>';
   const C = '<alignment horizontal="center" vertical="center"/>';
   // cellXfs in XLSX_STYLES order
   const xf = function(font, fill, numFmt, align) {
@@ -8006,16 +8013,16 @@ function xlsxStylesXML() {
   };
   const xfs = [
     xf(0, 0),            // normal
-    xf(2, 2, 0, '<alignment horizontal="center" vertical="center" wrapText="1"/>'), // head
+    xf(5, 8, 0, '<alignment horizontal="center" vertical="center" wrapText="1"/>'), // head (light green, green text)
     xf(1, 0),            // bold
-    xf(2, 3, 0, C),      // P  (green)
-    xf(2, 4, 0, C),      // AL (red)
-    xf(2, 5, 0, C),      // AN (orange)
-    xf(2, 6, 0, C),      // C  (grey)
+    xf(5, 10, 0, C),     // P  (pale green)
+    xf(6, 11, 0, C),     // AL (pale red)
+    xf(7, 12, 0, C),     // AN (pale orange)
+    xf(8, 13, 0, C),     // C  (pale grey)
     xf(0, 0, 164),       // money
     xf(1, 8, 164),       // money bold (totals)
     xf(3, 0),            // title
-    xf(2, 7, 0, C),      // extra (blue)
+    xf(9, 14, 0, C),     // extra (pale blue)
     xf(4, 0),            // muted note
     xf(0, 9),            // stripe (light green row)
     xf(1, 9),            // bold on stripe
@@ -8026,7 +8033,7 @@ function xlsxStylesXML() {
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
     + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
     + '<numFmts count="2"><numFmt numFmtId="164" formatCode="&quot;£&quot;#,##0.00"/><numFmt numFmtId="165" formatCode="dd/mm/yyyy"/></numFmts>'
-    + '<fonts count="5">' + fonts + '</fonts>'
+    + '<fonts count="10">' + fonts + '</fonts>'
     + '<fills count="' + fills.length + '">' + fillXML + '</fills>'
     + '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
     + '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
@@ -8726,7 +8733,9 @@ function exportStudioAttendancePDF() {
     sortedWeeks.some(wk => regularMap[s.id]?.[wk] || extraMap[s.id]?.[wk])
   ).sort((a,b) => a.name.localeCompare(b.name));
 
-  const colMap   = { present:'#2F5C1A', 'absent-late':'#c0392b', 'absent-notice':'#e67e22', cancelled:'#aaa' };
+  // Soft pastel badges with coloured letters (light on printer ink)
+  const colMap   = { present:'#2F5C1A', 'absent-late':'#a93226', 'absent-notice':'#b5620e', cancelled:'#777' };
+  const bgMap    = { present:'#e4f1da', 'absent-late':'#f8deda', 'absent-notice':'#fcead2', cancelled:'#efefef' };
   const labelMap = { present:'P', 'absent-late':'AL', 'absent-notice':'AN', cancelled:'C' };
 
   const periodLabel = (fromVal && toVal)
@@ -8745,8 +8754,8 @@ function exportStudioAttendancePDF() {
       const gapStyle = weekHasGapBefore[wk] ? 'border-left:2px dashed #b5a98a;' : '';
       attended += pres + booked;
       if (!reg && !extra) return `<td style="text-align:center;padding:3px 2px;border-bottom:1px solid #e8e0d0;color:#ccc;${gapStyle}">\u00b7</td>`;
-      const regBadge = reg ? `<span style="display:inline-block;min-width:20px;padding:1px 3px;border-radius:3px;background:${colMap[reg]};color:#fff;font-size:0.62rem;font-weight:700">${labelMap[reg]}</span>` : '';
-      const extraBadge = extra > 0 ? `<span style="display:inline-block;min-width:16px;padding:0 3px;border-radius:3px;background:#29789E;color:#fff;font-size:0.55rem;font-weight:700;margin-top:1px">+${extra}</span>` : '';
+      const regBadge = reg ? `<span style="display:inline-block;min-width:20px;padding:1px 3px;border-radius:3px;background:${bgMap[reg]};color:${colMap[reg]};font-size:0.62rem;font-weight:700">${labelMap[reg]}</span>` : '';
+      const extraBadge = extra > 0 ? `<span style="display:inline-block;min-width:16px;padding:0 3px;border-radius:3px;background:#dcedf6;color:#1a4a6b;font-size:0.55rem;font-weight:700;margin-top:1px">+${extra}</span>` : '';
       return `<td style="text-align:center;padding:3px 2px;border-bottom:1px solid #e8e0d0;${gapStyle}"><div style="display:flex;flex-direction:column;align-items:center;gap:1px">${regBadge}${extraBadge}</div></td>`;
     }).join('');
     const rate = pupilRate(s);
