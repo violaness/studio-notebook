@@ -552,9 +552,16 @@
   /* Phone: hide the Pencil buttons (Undo, Cap...) - they're for the iPad and cover the page on a small screen */
   @media (max-width: 600px) { #pencil-kb { display: none !important; } }
   /* After tab: Lesson notes and Next lesson side by side (stacked on a phone) */
-  .after-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; margin-bottom: 12px; }
+  .after-pair { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; align-items: start; margin-bottom: 12px; }
   .after-pair > .section-card { margin-bottom: 0; min-width: 0; }
   @media (max-width: 600px) { .after-pair { grid-template-columns: 1fr; } }
+  /* Next lesson tick list */
+  .nt-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px dashed #c8ddb8; }
+  .nt-box { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 7px; border: 1.5px solid #8AB640; background: #fff; color: #2F5C1A; font-size: 1rem; line-height: 1; cursor: pointer; padding: 0; }
+  .nt-box.done { background: #8AB640; color: #fff; }
+  .nt-in { flex: 1; min-width: 0; border: none !important; background: transparent !important; font-family: 'Special Elite', cursive; font-size: 0.92rem; padding: 6px 2px; color: var(--ink); box-shadow: none !important; }
+  .nt-in:focus { outline: none; background: #f0fae8 !important; border-radius: 6px; }
+  .nt-row.done .nt-in { color: var(--muted); text-decoration: line-through; }
   /* Other work form: a neat 2 x 2 grid, every box the same size (iPad date boxes like to grow) */
   .oi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; align-items: start; }
   .oi-lab { display: flex; flex-direction: column; gap: 4px; font-size: 0.72rem; color: #1a4a6b; min-width: 0; }
@@ -564,6 +571,7 @@
   .oi-in::-webkit-date-and-time-value { text-align: left; }
   /* iPad: keep the billing sheet's Paid buttons clear of the Pencil buttons on the right */
   @media (min-width: 601px) { #panel-billing { padding-right: 70px; } }
+  @media (min-width: 601px) { .after-pair { margin-right: 62px; } }
   @media (max-width: 480px) {
     header h1 { font-size: 1.1rem; }
     .detail-name { font-size: 1.3rem; }
@@ -3596,10 +3604,8 @@ function renderDetail(s, preserveTab = false) {
           <span>📌 Next lesson - what to focus on</span>
           <button onclick="clearNextLessonCapture('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
         </div>
-        <textarea autocorrect="off" autocapitalize="sentences" spellcheck="false" class="quick-note" style="background:#f0fae8;border-color:#c8ddb8"
-          placeholder="What to do next lesson…"
-          id="next-lesson-capture-${s.id}"
-          oninput="autoGrow(this);autoSaveNextLesson('${s.id}',this.value)">${esc(s.nextWeekNote||'')}</textarea>
+        <div id="next-ticks-${s.id}">${nextTicksHTML(s)}</div>
+        <button type="button" onclick="addNextTickRow('${s.id}')" style="background:none;border:1.5px dashed #8AB640;color:#2F5C1A;border-radius:8px;padding:6px 12px;margin-top:8px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;width:100%">＋ Add line</button>
         <button onclick="saveNextLesson('${s.id}')"
           style="margin-top:10px;background:var(--string);color:#05270B;border:none;border-radius:10px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer;display:block;margin:10px auto 0;min-width:160px">
           ✓ Save to Before tab
@@ -4683,8 +4689,8 @@ function clearNextLessonCapture(id) {
   const s = getStudent(id); if (!s) return;
   s.nextWeekNote = '';
   save();
-  const el = document.getElementById('next-lesson-capture-' + id);
-  if (el) { el.value = ''; autoGrow(el); }
+  const box = document.getElementById('next-ticks-' + id);
+  if (box) box.innerHTML = nextTicksHTML(s);
   const beforeEl = document.getElementById('nextWeeknote-' + id);
   if (beforeEl) { beforeEl.value = ''; }
 }
@@ -4840,6 +4846,57 @@ function applyReplacements(text) {
   return text;
 }
 
+// ── NEXT LESSON TICK LIST (After tab) ──
+// Stored as plain lines ("☐ D major scale" / "☑ Minuet bars 1-8") so the Before
+// tab note and the print-outs carry on working unchanged.
+function nextLessonItems(s) {
+  return String((s && s.nextWeekNote) || '').split('\n').map(function(l){ return l.trim(); }).filter(Boolean).map(function(l) {
+    const m = l.match(/^([☐☑✓✔✅•\-*])\s*/);
+    return { done: !!m && /[☑✓✔✅]/.test(m[1]), text: m ? l.slice(m[0].length) : l };
+  });
+}
+function nextTickRowHTML(id, item, i) {
+  return '<div class="nt-row' + (item.done ? ' done' : '') + '" data-done="' + (item.done ? '1' : '0') + '">'
+    + '<button type="button" class="nt-box' + (item.done ? ' done' : '') + '" onclick="toggleNextTick(\'' + id + '\',this)" aria-label="Tick">' + (item.done ? '✓' : '') + '</button>'
+    + '<input type="text" class="nt-in" autocapitalize="sentences" autocorrect="off" spellcheck="false" placeholder="' + (i === 0 ? 'What to focus on…' : '') + '" value="' + esc(item.text) + '"'
+    + ' oninput="collectNextTicks(\'' + id + '\')" onkeydown="nextTickKey(event,\'' + id + '\',this)"></div>';
+}
+function nextTicksHTML(s) {
+  const items = nextLessonItems(s);
+  while (items.length < 5) items.push({ done: false, text: '' }); // start with five lines
+  return items.map(function(it, i){ return nextTickRowHTML(s.id, it, i); }).join('');
+}
+function collectNextTicks(id) {
+  const s = getStudent(id); const box = document.getElementById('next-ticks-' + id); if (!s || !box) return;
+  const lines = [];
+  box.querySelectorAll('.nt-row').forEach(function(r) {
+    const t = r.querySelector('.nt-in').value.trim();
+    if (t) lines.push((r.dataset.done === '1' ? '☑ ' : '☐ ') + t);
+  });
+  s.nextWeekNote = lines.join('\n');
+  save();
+  const beforeEl = document.getElementById('nextWeeknote-' + id);
+  if (beforeEl) beforeEl.value = s.nextWeekNote;
+}
+function toggleNextTick(id, btn) {
+  const r = btn.closest('.nt-row'); const on = r.dataset.done !== '1';
+  r.dataset.done = on ? '1' : '0'; r.classList.toggle('done', on); btn.classList.toggle('done', on); btn.textContent = on ? '✓' : '';
+  collectNextTicks(id);
+}
+function addNextTickRow(id) {
+  const box = document.getElementById('next-ticks-' + id); if (!box) return;
+  box.insertAdjacentHTML('beforeend', nextTickRowHTML(id, { done: false, text: '' }, box.children.length));
+  const ins = box.querySelectorAll('.nt-in'); ins[ins.length - 1].focus();
+}
+// Return moves to the next line (adding one at the end)
+function nextTickKey(e, id, input) {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  const rows = [...document.querySelectorAll('#next-ticks-' + id + ' .nt-row')];
+  const i = rows.indexOf(input.closest('.nt-row'));
+  if (i === rows.length - 1) addNextTickRow(id); else rows[i + 1].querySelector('.nt-in').focus();
+}
+
 function autoSaveNextLesson(id, value) {
   const s = getStudent(id); if (!s) return;
   s.nextWeekNote = value;
@@ -4848,10 +4905,7 @@ function autoSaveNextLesson(id, value) {
 
 function saveNextLesson(id) {
   const s = getStudent(id); if (!s) return;
-  const el = document.getElementById('next-lesson-capture-' + id);
-  if (!el) return;
-  s.nextWeekNote = el.value.trim();
-  save();
+  collectNextTicks(id);
   // Update the Before tab "Note for next week" textarea immediately
   const beforeEl = document.getElementById('nextWeeknote-' + id);
   if (beforeEl) beforeEl.value = s.nextWeekNote;
