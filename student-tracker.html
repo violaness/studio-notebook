@@ -3381,8 +3381,6 @@ function renderDetail(s, preserveTab = false) {
 
     <!-- BEFORE -->
     <div class="moment-panel active" id="panel-before">
-      <div class="before-pair">
-      <div class="before-col">
       <div class="section-card">
         <div class="section-label">🎵 Pieces &amp; exercises</div>
         <div class="pieces-list" id="pieces-list-${s.id}">${piecesHTML}</div>
@@ -3390,6 +3388,16 @@ function renderDetail(s, preserveTab = false) {
           <button class="add-piece-btn" style="flex:1" onclick="openPieceDB('${s.id}')">＋ From library</button>
           <button class="add-piece-btn" style="flex:1" onclick="addPiece('${s.id}')">＋ Add manually</button>
         </div>
+      </div>
+      <div class="before-pair">
+      <div class="before-col">
+      <div class="section-card" style="background:#eef6ff;border:1.5px solid #a8c8e8">
+        <div class="section-label" style="color:#1a4a6b;display:flex;align-items:center;justify-content:space-between">
+          <span>📋 Focus from last lesson</span>
+          <button onclick="clearNextWeekNote('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
+        </div>
+        <div id="next-ticks-b-${s.id}" class="nt-blue">${nextTicksHTML(s, 'b')}</div>
+        <button type="button" onclick="addNextTickRow('${s.id}','b')" style="background:none;border:1.5px dashed #a8c8e8;color:#1a4a6b;border-radius:8px;padding:6px 12px;margin-top:8px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;width:100%">＋ Add line</button>
       </div>
       <div class="section-card">
         <div class="section-label" style="margin-bottom:8px">🎻 Scales for this week</div>
@@ -3412,14 +3420,6 @@ function renderDetail(s, preserveTab = false) {
       </details>
       </div>
       <div class="before-col">
-      <div class="section-card" style="background:#eef6ff;border:1.5px solid #a8c8e8">
-        <div class="section-label" style="color:#1a4a6b;display:flex;align-items:center;justify-content:space-between">
-          <span>📋 Focus from last lesson</span>
-          <button onclick="clearNextWeekNote('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
-        </div>
-        <div id="next-ticks-b-${s.id}" class="nt-blue">${nextTicksHTML(s, 'b')}</div>
-        <button type="button" onclick="addNextTickRow('${s.id}','b')" style="background:none;border:1.5px dashed #a8c8e8;color:#1a4a6b;border-radius:8px;padding:6px 12px;margin-top:8px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;width:100%">＋ Add line</button>
-      </div>
       <div class="section-card">
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span>📌 Plan for today's lesson</span>
