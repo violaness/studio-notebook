@@ -416,6 +416,8 @@
   .pieces-list { display: flex; flex-direction: column; gap: 7px; }
   .piece-item { display: flex; gap: 9px; align-items: center; }
   .piece-item input { flex: 1; }
+  /* Piece names wrap onto a second line rather than being cut off */
+  .piece-item textarea.piece-name { resize: none; overflow: hidden; min-height: 0; height: auto; line-height: 1.35; display: block; }
   .remove-piece-btn { background: none; border: none; color: var(--muted); font-size: 1.1rem; cursor: pointer; padding: 4px; line-height: 1; flex-shrink: 0; }
   .remove-piece-btn:hover { color: #c0392b; }
   .add-piece-btn {
@@ -555,11 +557,20 @@
   .after-pair { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; align-items: start; margin-bottom: 12px; }
   .after-pair > .section-card { margin-bottom: 0; min-width: 0; }
   @media (max-width: 600px) { .after-pair { grid-template-columns: 1fr; } }
+  /* Before tab: what they play (left) | what to do (right); stacked on a phone */
+  .before-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; margin-bottom: 12px; }
+  .before-col { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  .before-col > .section-card { margin-bottom: 0; }
+  @media (max-width: 600px) { .before-pair { grid-template-columns: 1fr; } }
+  .nt-blue .nt-row { border-bottom-color: #c9dcee; }
+  .nt-blue .nt-box { border-color: #29789E; color: #1a4a6b; }
+  .nt-blue .nt-box.done { background: #29789E; color: #fff; }
+  .nt-blue .nt-in:focus { background: #e3effa !important; }
   /* Next lesson tick list */
-  .nt-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px dashed #c8ddb8; }
-  .nt-box { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 7px; border: 1.5px solid #8AB640; background: #fff; color: #2F5C1A; font-size: 1rem; line-height: 1; cursor: pointer; padding: 0; }
+  .nt-row { display: flex; align-items: flex-start; gap: 8px; padding: 4px 0; border-bottom: 1px dashed #c8ddb8; }
+  .nt-box { flex: 0 0 auto; margin-top: 2px; width: 30px; height: 30px; border-radius: 7px; border: 1.5px solid #8AB640; background: #fff; color: #2F5C1A; font-size: 1rem; line-height: 1; cursor: pointer; padding: 0; }
   .nt-box.done { background: #8AB640; color: #fff; }
-  .nt-in { flex: 1; min-width: 0; border: none !important; background: transparent !important; font-family: 'Special Elite', cursive; font-size: 0.92rem; padding: 6px 2px; color: var(--ink); box-shadow: none !important; }
+  .nt-in { flex: 1; min-width: 0; border: none !important; background: transparent !important; font-family: 'Special Elite', cursive; font-size: 0.92rem; line-height: 1.35; padding: 6px 2px; color: var(--ink); box-shadow: none !important; resize: none; overflow: hidden; min-height: 0; height: auto; display: block; }
   .nt-in:focus { outline: none; background: #f0fae8 !important; border-radius: 6px; }
   .nt-row.done .nt-in { color: var(--muted); text-decoration: line-through; }
   /* Other work form: a neat 2 x 2 grid, every box the same size (iPad date boxes like to grow) */
@@ -571,7 +582,6 @@
   .oi-in::-webkit-date-and-time-value { text-align: left; }
   /* iPad: keep the billing sheet's Paid buttons clear of the Pencil buttons on the right */
   @media (min-width: 601px) { #panel-billing { padding-right: 70px; } }
-  @media (min-width: 601px) { .after-pair { margin-right: 62px; } }
   @media (max-width: 480px) {
     header h1 { font-size: 1.1rem; }
     .detail-name { font-size: 1.3rem; }
@@ -3213,6 +3223,9 @@ function switchMoment(tab, panel) {
     }
   }
   // Rebuild cumulative note every time After tab is opened
+  if (panel === 'panel-after' || panel === 'panel-before') {
+    document.querySelectorAll('#' + panel + ' .nt-in, #' + panel + ' .piece-name').forEach(growTick);
+  }
   if (panel === 'panel-after') {
     const afterTextareas = document.querySelectorAll('[id^="after-note-"]');
     afterTextareas.forEach(el => {
@@ -3368,6 +3381,8 @@ function renderDetail(s, preserveTab = false) {
 
     <!-- BEFORE -->
     <div class="moment-panel active" id="panel-before">
+      <div class="before-pair">
+      <div class="before-col">
       <div class="section-card">
         <div class="section-label">🎵 Pieces &amp; exercises</div>
         <div class="pieces-list" id="pieces-list-${s.id}">${piecesHTML}</div>
@@ -3375,6 +3390,10 @@ function renderDetail(s, preserveTab = false) {
           <button class="add-piece-btn" style="flex:1" onclick="openPieceDB('${s.id}')">＋ From library</button>
           <button class="add-piece-btn" style="flex:1" onclick="addPiece('${s.id}')">＋ Add manually</button>
         </div>
+      </div>
+      <div class="section-card">
+        <div class="section-label" style="margin-bottom:8px">🎻 Scales for this week</div>
+        <div id="scales-week-${s.id}">${scalesForWeekHTML(s)}</div>
       </div>
       <details class="section-card" style="padding:0">
         <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.72rem;font-weight:700;color:var(--muted)">
@@ -3386,11 +3405,21 @@ function renderDetail(s, preserveTab = false) {
           <div style="display:flex;gap:8px;margin-top:10px">
             <input type="text" id="new-tech-chip-${s.id}" placeholder="Add a new focus word…" maxlength="40"
               onkeydown="if(event.key==='Enter')addTechChipForPupil('${s.id}')"
-              style="flex:1;padding:8px 12px;border-radius:999px;font-size:0.88rem">
+              style="flex:1;min-width:0;padding:8px 12px;border-radius:999px;font-size:0.88rem">
             <button onclick="addTechChipForPupil('${s.id}')" style="background:var(--viola);color:#fff;border:none;border-radius:999px;padding:8px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">Add</button>
           </div>
         </div>
       </details>
+      </div>
+      <div class="before-col">
+      <div class="section-card" style="background:#eef6ff;border:1.5px solid #a8c8e8">
+        <div class="section-label" style="color:#1a4a6b;display:flex;align-items:center;justify-content:space-between">
+          <span>📋 Focus from last lesson</span>
+          <button onclick="clearNextWeekNote('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
+        </div>
+        <div id="next-ticks-b-${s.id}" class="nt-blue">${nextTicksHTML(s, 'b')}</div>
+        <button type="button" onclick="addNextTickRow('${s.id}','b')" style="background:none;border:1.5px dashed #a8c8e8;color:#1a4a6b;border-radius:8px;padding:6px 12px;margin-top:8px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;width:100%">＋ Add line</button>
+      </div>
       <div class="section-card">
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span>📌 Plan for today's lesson</span>
@@ -3398,24 +3427,12 @@ function renderDetail(s, preserveTab = false) {
             ${s.nextLesson ? `<button onclick="clearNextLessonPlan('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>` : ''}
           </span>
         </div>
-        <textarea autocorrect="off" autocapitalize="sentences" spellcheck="false" rows="14" placeholder="What you want to cover today…" class="lined-note"
+        <textarea autocorrect="off" autocapitalize="sentences" spellcheck="false" rows="10" placeholder="What you want to cover today…" class="lined-note"
           id="nextlesson-${s.id}"
           oninput="updateField('${s.id}','nextLesson',this.value)">${esc(s.nextLesson||'')}</textarea>
         ${(s.log||[]).filter(e=>e.text).length > 0 ? '<button onclick="copyLastLesson(\'' + s.id + '\')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-size:0.8rem;cursor:pointer;width:100%">\u2191 Copy last lesson notes as plan</button>' : ''}
-        <div style="margin-top:14px">
-          <div class="section-label" style="margin-bottom:8px">🎻 Scales for this week</div>
-          <div id="scales-week-${s.id}">${scalesForWeekHTML(s)}</div>
-        </div>
       </div>
-      <div class="section-card" style="background:#eef6ff;border:1.5px solid #a8c8e8">
-        <div class="section-label" style="color:#1a4a6b;display:flex;align-items:center;justify-content:space-between">
-          <span>📋 Note for next week</span>
-          <button onclick="clearNextWeekNote('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
-        </div>
-        <textarea autocorrect="off" autocapitalize="sentences" spellcheck="false" rows="3" placeholder="Anything to prepare or remember for next lesson…" class="lined-note"
-          id="nextWeeknote-${s.id}"
-          oninput="updateField('${s.id}','nextWeekNote',this.value)"
-          style="background:transparent;border-color:rgba(0,80,140,0.15)">${esc(s.nextWeekNote||'')}</textarea>
+      </div>
       </div>
       <div class="before-tiles">
       <details>
@@ -3604,8 +3621,8 @@ function renderDetail(s, preserveTab = false) {
           <span>📌 Next lesson - what to focus on</span>
           <button onclick="clearNextLessonCapture('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
         </div>
-        <div id="next-ticks-${s.id}">${nextTicksHTML(s)}</div>
-        <button type="button" onclick="addNextTickRow('${s.id}')" style="background:none;border:1.5px dashed #8AB640;color:#2F5C1A;border-radius:8px;padding:6px 12px;margin-top:8px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;width:100%">＋ Add line</button>
+        <div id="next-ticks-${s.id}">${nextTicksHTML(s, 'a')}</div>
+        <button type="button" onclick="addNextTickRow('${s.id}','a')" style="background:none;border:1.5px dashed #8AB640;color:#2F5C1A;border-radius:8px;padding:6px 12px;margin-top:8px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;width:100%">＋ Add line</button>
         <button onclick="saveNextLesson('${s.id}')"
           style="margin-top:10px;background:var(--string);color:#05270B;border:none;border-radius:10px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer;display:block;margin:10px auto 0;min-width:160px">
           ✓ Save to Before tab
@@ -3875,6 +3892,7 @@ function renderDetail(s, preserveTab = false) {
   `;
   // Size any pre-filled auto-grow textareas correctly on render
   setTimeout(function() {
+    document.querySelectorAll('#next-ticks-' + s.id + ' .nt-in, #next-ticks-b-' + s.id + ' .nt-in, #pieces-list-' + s.id + ' .piece-name').forEach(growTick);
     ['during-scratch-' + s.id, 'after-note-' + s.id, 'next-lesson-capture-' + s.id].forEach(function(id) {
       const el = document.getElementById(id);
       if (el) autoGrow(el);
@@ -4189,7 +4207,7 @@ function addPiece(id) {
   s.pieces.push(''); save(); renderDetail(s);
 
   setTimeout(()=>{
-    const inputs=document.querySelectorAll(`#pieces-list-${id} input`);
+    const inputs=document.querySelectorAll(`#pieces-list-${id} .piece-name`); // the new piece's name box
     if(inputs.length)inputs[inputs.length-1].focus();
   },50);
 }
@@ -4689,8 +4707,7 @@ function clearNextLessonCapture(id) {
   const s = getStudent(id); if (!s) return;
   s.nextWeekNote = '';
   save();
-  const box = document.getElementById('next-ticks-' + id);
-  if (box) box.innerHTML = nextTicksHTML(s);
+  refreshNextTicks(s);
   const beforeEl = document.getElementById('nextWeeknote-' + id);
   if (beforeEl) { beforeEl.value = ''; }
 }
@@ -4699,8 +4716,7 @@ function clearNextWeekNote(id) {
   const s = getStudent(id); if (!s) return;
   s.nextWeekNote = '';
   save();
-  const el = document.getElementById('nextWeeknote-' + id);
-  if (el) { el.value = ''; autoGrow(el); }
+  refreshNextTicks(s);
 }
 
 function testMic(btnId, msgId, textareaId) {
@@ -4855,19 +4871,25 @@ function nextLessonItems(s) {
     return { done: !!m && /[☑✓✔✅]/.test(m[1]), text: m ? l.slice(m[0].length) : l };
   });
 }
-function nextTickRowHTML(id, item, i) {
+function nextTicksBoxId(id, where) { return where === 'b' ? 'next-ticks-b-' + id : 'next-ticks-' + id; }
+function nextTickRowHTML(id, item, i, where) {
+  const w = where === 'b' ? 'b' : 'a';
   return '<div class="nt-row' + (item.done ? ' done' : '') + '" data-done="' + (item.done ? '1' : '0') + '">'
-    + '<button type="button" class="nt-box' + (item.done ? ' done' : '') + '" onclick="toggleNextTick(\'' + id + '\',this)" aria-label="Tick">' + (item.done ? '✓' : '') + '</button>'
-    + '<input type="text" class="nt-in" autocapitalize="sentences" autocorrect="off" spellcheck="false" placeholder="' + (i === 0 ? 'What to focus on…' : '') + '" value="' + esc(item.text) + '"'
-    + ' oninput="collectNextTicks(\'' + id + '\')" onkeydown="nextTickKey(event,\'' + id + '\',this)"></div>';
+    + '<button type="button" class="nt-box' + (item.done ? ' done' : '') + '" onclick="toggleNextTick(\'' + id + '\',this,\'' + w + '\')" aria-label="Tick">' + (item.done ? '✓' : '') + '</button>'
+    + '<textarea rows="1" class="nt-in" autocapitalize="sentences" autocorrect="off" spellcheck="false" placeholder="' + (i === 0 ? (w === 'b' ? 'Nothing noted last time' : 'What to focus on…') : '') + '"'
+    + ' oninput="autoGrow(this);collectNextTicks(\'' + id + '\',\'' + w + '\')" onkeydown="nextTickKey(event,\'' + id + '\',this,\'' + w + '\')">' + esc(item.text) + '</textarea></div>';
 }
-function nextTicksHTML(s) {
+function nextTicksHTML(s, where) {
   const items = nextLessonItems(s);
   while (items.length < 5) items.push({ done: false, text: '' }); // start with five lines
-  return items.map(function(it, i){ return nextTickRowHTML(s.id, it, i); }).join('');
+  return items.map(function(it, i){ return nextTickRowHTML(s.id, it, i, where); }).join('');
 }
-function collectNextTicks(id) {
-  const s = getStudent(id); const box = document.getElementById('next-ticks-' + id); if (!s || !box) return;
+// Grow a tick line to fit its text (only when it's on screen - hidden ones measure 0)
+function growTick(el) { if (el && el.offsetParent !== null) autoGrow(el); }
+// Read the list being edited, save it, and refresh the copy on the other tab
+function collectNextTicks(id, where) {
+  const w = where === 'b' ? 'b' : 'a';
+  const s = getStudent(id); const box = document.getElementById(nextTicksBoxId(id, w)); if (!s || !box) return;
   const lines = [];
   box.querySelectorAll('.nt-row').forEach(function(r) {
     const t = r.querySelector('.nt-in').value.trim();
@@ -4875,26 +4897,32 @@ function collectNextTicks(id) {
   });
   s.nextWeekNote = lines.join('\n');
   save();
-  const beforeEl = document.getElementById('nextWeeknote-' + id);
-  if (beforeEl) beforeEl.value = s.nextWeekNote;
+  const other = document.getElementById(nextTicksBoxId(id, w === 'b' ? 'a' : 'b'));
+  if (other) other.innerHTML = nextTicksHTML(s, w === 'b' ? 'a' : 'b');
 }
-function toggleNextTick(id, btn) {
+function toggleNextTick(id, btn, where) {
   const r = btn.closest('.nt-row'); const on = r.dataset.done !== '1';
   r.dataset.done = on ? '1' : '0'; r.classList.toggle('done', on); btn.classList.toggle('done', on); btn.textContent = on ? '✓' : '';
-  collectNextTicks(id);
+  collectNextTicks(id, where);
 }
-function addNextTickRow(id) {
-  const box = document.getElementById('next-ticks-' + id); if (!box) return;
-  box.insertAdjacentHTML('beforeend', nextTickRowHTML(id, { done: false, text: '' }, box.children.length));
+function addNextTickRow(id, where) {
+  const box = document.getElementById(nextTicksBoxId(id, where)); if (!box) return;
+  box.insertAdjacentHTML('beforeend', nextTickRowHTML(id, { done: false, text: '' }, box.children.length, where));
   const ins = box.querySelectorAll('.nt-in'); ins[ins.length - 1].focus();
 }
 // Return moves to the next line (adding one at the end)
-function nextTickKey(e, id, input) {
+function nextTickKey(e, id, input, where) {
   if (e.key !== 'Enter') return;
   e.preventDefault();
-  const rows = [...document.querySelectorAll('#next-ticks-' + id + ' .nt-row')];
+  const rows = [...document.querySelectorAll('#' + nextTicksBoxId(id, where) + ' .nt-row')];
   const i = rows.indexOf(input.closest('.nt-row'));
-  if (i === rows.length - 1) addNextTickRow(id); else rows[i + 1].querySelector('.nt-in').focus();
+  if (i === rows.length - 1) addNextTickRow(id, where); else rows[i + 1].querySelector('.nt-in').focus();
+}
+function refreshNextTicks(s) {
+  ['a', 'b'].forEach(function(w) {
+    const box = document.getElementById(nextTicksBoxId(s.id, w));
+    if (box) { box.innerHTML = nextTicksHTML(s, w); box.querySelectorAll('.nt-in').forEach(growTick); }
+  });
 }
 
 function autoSaveNextLesson(id, value) {
@@ -4905,7 +4933,7 @@ function autoSaveNextLesson(id, value) {
 
 function saveNextLesson(id) {
   const s = getStudent(id); if (!s) return;
-  collectNextTicks(id);
+  collectNextTicks(id, 'a');
   // Update the Before tab "Note for next week" textarea immediately
   const beforeEl = document.getElementById('nextWeeknote-' + id);
   if (beforeEl) beforeEl.value = s.nextWeekNote;
@@ -4998,9 +5026,10 @@ function buildPiecesHTML(s) {
     if (showMvts) seenMvt[mk] = true;
     const mvtRow = showMvts ? '<div id="mvt-ticks-' + s.id + '-' + i + '" style="flex-basis:100%">' + mvtTicksHTML(s, i) + '</div>' : '';
     return '<div class="piece-item" style="flex-wrap:wrap;gap:6px;align-items:center">'
-      + '<input type="text" placeholder="Piece or exercise\u2026" value="' + esc(p) + '" style="flex:2;min-width:120px"'
-      + ' oninput="updatePiece(\'' + s.id + '\',' + i + ',this.value)"'
-      + ' onblur="offerSavePieceToLibrary(\'' + s.id + '\',' + i + ',this.value)">'
+      + '<textarea rows="1" class="piece-name" placeholder="Piece or exercise\u2026" style="flex:2;min-width:120px"'
+      + ' oninput="autoGrow(this);updatePiece(\'' + s.id + '\',' + i + ',this.value)"'
+      + ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}"'
+      + ' onblur="offerSavePieceToLibrary(\'' + s.id + '\',' + i + ',this.value)">' + esc(p) + '</textarea>'
       + '<input type="text" placeholder="No. / mvt. (optional)" value="' + esc(ref) + '" style="flex:1;min-width:80px;font-size:0.82rem"'
       + ' oninput="updatePieceRef(\'' + s.id + '\',' + i + ',this.value)">'
       + '<button class="remove-piece-btn" onclick="removePiece(\'' + s.id + '\',' + i + ')" title="Remove">\u00d7</button>'
@@ -13463,7 +13492,7 @@ function libPickAdd(title, ref) {
     while (s.pieceRefs.length < i) s.pieceRefs.push('');
     s.pieceRefs[i] = ref || '';
     const listEl = document.getElementById('pieces-list-' + s.id);
-    if (listEl) listEl.innerHTML = buildPiecesHTML(s);
+    if (listEl) { listEl.innerHTML = buildPiecesHTML(s); listEl.querySelectorAll('.piece-name').forEach(growTick); }
   }
   save();
   libPickAddedAny = true;
