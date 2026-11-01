@@ -551,6 +551,10 @@
 
   /* Phone: hide the Pencil buttons (Undo, Cap...) - they're for the iPad and cover the page on a small screen */
   @media (max-width: 600px) { #pencil-kb { display: none !important; } }
+  /* After tab: Lesson notes and Next lesson side by side (stacked on a phone) */
+  .after-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; margin-bottom: 12px; }
+  .after-pair > .section-card { margin-bottom: 0; min-width: 0; }
+  @media (max-width: 600px) { .after-pair { grid-template-columns: 1fr; } }
   /* Other work form: a neat 2 x 2 grid, every box the same size (iPad date boxes like to grow) */
   .oi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; align-items: start; }
   .oi-lab { display: flex; flex-direction: column; gap: 4px; font-size: 0.72rem; color: #1a4a6b; min-width: 0; }
@@ -1563,6 +1567,20 @@
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeMoveModal()">Cancel</button>
       <button class="btn-primary" onclick="confirmMove()">Move lesson</button>
+    </div>
+  </div>
+</div>
+
+<!-- LESSON NOTES SUMMARY - pick a period -->
+<div class="modal-overlay" id="notes-summary-modal">
+  <div class="modal">
+    <h2>📝 <span id="notes-sum-name"></span></h2>
+    <div style="font-size:0.8rem;color:var(--muted);margin:-6px 0 12px">All the lesson notes for…</div>
+    <select id="notes-sum-period" onchange="notesSummaryCount()" style="width:100%;font-family:'Special Elite',cursive;font-size:0.95rem;color:#1a4a6b;background:var(--paper);border:1.5px solid #a8c8e8;border-radius:10px;padding:10px 12px"></select>
+    <div id="notes-sum-count" style="font-size:0.75rem;color:var(--muted);margin:8px 2px 0"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeNotesSummary()">Cancel</button>
+      <button class="btn-primary" onclick="makeNotesSummary()">📝 Make summary</button>
     </div>
   </div>
 </div>
@@ -3153,7 +3171,7 @@ function switchMoment(tab, panel) {
   document.getElementById(panel).classList.add('active');
   // Init canvas when During tab opened
   if (panel === 'panel-during') {
-    const canvasEls = document.querySelectorAll('[id^="canvas-"]');
+    const canvasEls = document.querySelectorAll('canvas[id^="canvas-"]'); // only the sketch pad itself, not "canvas-saves-…"
     canvasEls.forEach(c => {
       const id = c.id.replace('canvas-', '');
       setTimeout(() => { initCanvas(id); renderCanvasSaves(id); }, 50);
@@ -3544,6 +3562,7 @@ function renderDetail(s, preserveTab = false) {
     <!-- AFTER -->
     <div class="moment-panel" id="panel-after">
       ${refSummary(s)}
+      <div class="after-pair">
       <div class="section-card">
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span>Lesson notes</span>
@@ -3586,6 +3605,7 @@ function renderDetail(s, preserveTab = false) {
           ✓ Save to Before tab
         </button>
         <div class="save-toast" id="toast-next-${s.id}">✓ Saved to Before tab</div>
+      </div>
       </div>
       <div class="section-card">
         <div class="section-label">Attendance - today's lesson</div>
@@ -3836,8 +3856,8 @@ function renderDetail(s, preserveTab = false) {
         <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
           <span>Lesson history</span>
           <span style="display:flex;align-items:center;gap:10px">
-            <button onclick="event.stopPropagation();exportLessonHistory('${s.id}')"
-              style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-family:'Special Elite',cursive;font-size:0.72rem;cursor:pointer">↓ Export PDF</button>
+            <button onclick="event.preventDefault();event.stopPropagation();openNotesSummary('${s.id}')"
+              style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-family:'Special Elite',cursive;font-size:0.72rem;cursor:pointer">📝 Notes summary</button>
             <span style="font-size:0.7rem;font-weight:400">tap to collapse</span>
           </span>
         </summary>
@@ -11571,6 +11591,197 @@ function renderBilling() {
         return sentN ? '<div style="text-align:right;padding:8px 6px 0"><button onclick="clearAllSent()" style="background:none;border:1.5px solid #a8c8e8;color:#29789E;border-radius:999px;padding:6px 12px;font-family:\'Special Elite\',cursive;font-size:0.75rem;cursor:pointer">📨 Remove all Sent marks (' + sentN + ')</button></div>' : '';
       })() +
       (missingRate ? '<div style="font-size:0.72rem;color:#e67e22;text-align:right;padding:0 6px">' + missingRate + ' pupil' + (missingRate === 1 ? ' has' : 's have') + ' lessons but no rate, so ' + (missingRate === 1 ? 'isn’t' : 'aren’t') + ' in the £ total</div>' : '');
+}
+
+// ── LESSON NOTES SUMMARY ─────────────────────────────────────────────────
+// Every lesson's notes for one pupil over a half-term, whole term, school year
+// or all time, with an attendance count. Saved as a real PDF (no Safari footer).
+let notesSummaryPupil = null;
+
+// Periods to choose from: half-terms, whole terms, school years, all time
+function notePeriods() {
+  const blocks = termBlocks();
+  const out = [];
+  const f = function(d){ return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); };
+  if (blocks.length) {
+    const cur = recentTermIdx();
+    blocks.slice().reverse().forEach(function(b) {
+      out.push({ group: 'Half-terms', label: b.label + ' ' + b.start.getFullYear(), from: b.start, to: b.end, def: blocks.indexOf(b) === cur });
+    });
+    wholeTerms(blocks).slice().reverse().forEach(function(w) {
+      out.push({ group: 'Whole terms', label: w.label + ' term ' + w.start.getFullYear(), from: w.start, to: w.end });
+    });
+    // School years: half-terms starting Sept-Aug grouped together
+    const years = {};
+    blocks.forEach(function(b) {
+      const y = b.start.getMonth() >= 7 ? b.start.getFullYear() : b.start.getFullYear() - 1;
+      const g = years[y] = years[y] || { from: b.start, to: b.end };
+      if (b.start < g.from) g.from = b.start;
+      if (b.end > g.to) g.to = b.end;
+    });
+    Object.keys(years).sort().reverse().forEach(function(y) {
+      out.push({ group: 'School years', label: 'School year ' + y + '/' + String(Number(y) + 1).slice(2), from: years[y].from, to: years[y].to });
+    });
+  }
+  out.push({ group: '', label: 'All time', from: null, to: null, def: !blocks.length });
+  out.forEach(function(p){ p.dates = (p.from ? f(p.from) + ' to ' + f(p.to) : 'Every lesson logged'); });
+  return out;
+}
+let _notePeriods = [];
+
+function openNotesSummary(id) {
+  const s = getStudent(id); if (!s) return;
+  notesSummaryPupil = id;
+  _notePeriods = notePeriods();
+  document.getElementById('notes-sum-name').textContent = s.name;
+  const sel = document.getElementById('notes-sum-period');
+  let html = '', group = null;
+  _notePeriods.forEach(function(p, i) {
+    if (p.group !== group) { if (group) html += '</optgroup>'; group = p.group; if (group) html += '<optgroup label="' + esc(group) + '">'; }
+    html += '<option value="' + i + '"' + (p.def ? ' selected' : '') + '>' + esc(p.label) + '</option>';
+  });
+  if (group) html += '</optgroup>';
+  sel.innerHTML = html;
+  notesSummaryCount();
+  document.getElementById('notes-summary-modal').classList.add('open');
+}
+function closeNotesSummary() { document.getElementById('notes-summary-modal').classList.remove('open'); notesSummaryPupil = null; }
+
+function notesInPeriod(s, p) {
+  const to = p.to ? new Date(p.to) : null; if (to) to.setHours(23, 59, 59, 999);
+  return (s.log || []).filter(function(e) {
+    if (!e.text && !e.attendance) return false;
+    const d = parseLogDate(e.date); if (!d) return false;
+    return (!p.from || d >= p.from) && (!to || d <= to);
+  }).sort(function(a, b){ return parseLogDate(a.date) - parseLogDate(b.date); });
+}
+// Live "x lessons, y with notes" under the picker
+function notesSummaryCount() {
+  const s = getStudent(notesSummaryPupil); const p = _notePeriods[parseInt(document.getElementById('notes-sum-period').value, 10)];
+  const el = document.getElementById('notes-sum-count'); if (!s || !p || !el) return;
+  const list = notesInPeriod(s, p);
+  const withNotes = list.filter(function(e){ return (e.text || '').trim(); }).length;
+  el.textContent = p.dates + ' · ' + list.length + ' lesson' + (list.length === 1 ? '' : 's') + ', ' + withNotes + ' with notes';
+}
+
+const NOTE_ATT = { present: 'Present', 'absent-late': 'Absent (late cancel)', 'absent-notice': 'Absent (good notice)', cancelled: 'Cancelled' };
+
+function makeNotesSummary() {
+  const s = getStudent(notesSummaryPupil); const p = _notePeriods[parseInt(document.getElementById('notes-sum-period').value, 10)];
+  if (!s || !p) return;
+  const list = notesInPeriod(s, p);
+  if (!list.length) { alert('No lessons logged for ' + s.name + ' in ' + p.label + '.'); return; }
+  closeNotesSummary();
+  const counts = { present: 0, 'absent-late': 0, 'absent-notice': 0, cancelled: 0 };
+  list.forEach(function(e){ if (counts[e.attendance] !== undefined) counts[e.attendance]++; });
+  const slot = effectiveSlot(s);
+  const sub = [s.instrument ? s.instrument.charAt(0).toUpperCase() + s.instrument.slice(1) : '', slot.day ? slot.day + (slot.time ? ' ' + slot.time : '') : ''].filter(Boolean).join(' · ');
+  const stats = [counts.present + ' attended', counts['absent-late'] ? counts['absent-late'] + ' late cancel' : '', counts['absent-notice'] ? counts['absent-notice'] + ' good notice' : '', counts.cancelled ? counts.cancelled + ' cancelled' : ''].filter(Boolean).join(' · ');
+  const lessons = list.map(function(e) {
+    return { date: e.date, att: NOTE_ATT[e.attendance] || '', att2: e.attendance || '',
+      lines: (e.text || '').split('\n').map(function(l){ return l.trim(); }).filter(Boolean) };
+  });
+  const data = { name: s.name, sub: sub, period: p.label, dates: p.dates, stats: stats, lessons: lessons };
+  const fileName = (s.name + ' - lesson notes - ' + p.label).replace(/[\/\\:*?"<>|]/g, '-');
+  // Preview page with a Save PDF button (the PDF itself has no web address on it)
+  const col = { present: '#2F5C1A', 'absent-late': '#a93226', 'absent-notice': '#b5620e', cancelled: '#777' };
+  const bg  = { present: '#e4f1da', 'absent-late': '#f8deda', 'absent-notice': '#fcead2', cancelled: '#efefef' };
+  const rows = lessons.map(function(l) {
+    return '<div class="les"><div class="d">' + esc(l.date)
+      + (l.att ? ' <span class="b" style="background:' + bg[l.att2] + ';color:' + col[l.att2] + '">' + esc(l.att) + '</span>' : '') + '</div>'
+      + (l.lines.length ? l.lines.map(function(t){ return '<div class="n">• ' + esc(t) + '</div>'; }).join('') : '<div class="n none">No notes</div>')
+      + '</div>';
+  }).join('');
+  const html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
+    + '<meta name="theme-color" content="#05270B"><title>' + esc(fileName) + '</title>'
+    + '<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet"><style>'
+    + 'html{background:#05270B}body{margin:0;min-height:100vh;background:#e9e9e9;font-family:"Special Elite","Courier New",monospace;color:#05270B}'
+    + '.bar{position:sticky;top:0;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:10px;padding-top:calc(10px + env(safe-area-inset-top));background:#05270B}'
+    + '.bar button{font-family:inherit;font-size:14px;padding:9px 18px;border-radius:8px;border:none;cursor:pointer}'
+    + '.page{box-sizing:border-box;max-width:210mm;margin:12px auto;padding:18mm 18mm;background:#fff}'
+    + 'h1{margin:0;font-size:22px}.sub{color:#6b8a6b;font-size:13px;margin-top:2px}'
+    + '.per{margin-top:14px;padding:10px 0;border-top:2px solid #2F5C1A;border-bottom:1px solid #d6e3cc;font-size:14px}'
+    + '.per .dt{color:#6b8a6b;font-size:12px}.st{font-size:13px;color:#1a4a6b;margin-top:4px}'
+    + '.les{padding:10px 0;border-bottom:1px solid #e8f0e0}.d{font-weight:700;color:#2F5C1A;font-size:14px;margin-bottom:4px}'
+    + '.b{font-size:11px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:6px}.n{font-size:13px;line-height:1.45;margin-left:8px}.none{color:#999;font-style:italic}'
+    + '</style></head><body>'
+    + '<div class="bar"><button onclick="saveNotesPdf()" style="background:#29789E;color:#fff">📤 Save PDF</button><button onclick="window.close()" style="background:#fff;color:#2F5C1A">← Close</button></div>'
+    + '<div class="page"><h1>' + esc(s.name) + '</h1><div class="sub">' + esc(sub) + '</div>'
+    + '<div class="per"><strong>Lesson notes: ' + esc(p.label) + '</strong><div class="dt">' + esc(p.dates) + '</div><div class="st">' + esc(stats) + '</div></div>'
+    + rows + '</div></body></html>';
+  const w = window.open('', '_blank');
+  if (!w) { alert('Please allow pop-ups to see the summary.'); return; }
+  w.document.write(html); w.document.close();
+  w.saveNotesPdf = function() {
+    try {
+      const bytes = notesSummaryPdf(data);
+      const file = new w.File([bytes], fileName + '.pdf', { type: 'application/pdf' });
+      const nav = w.navigator;
+      if (nav.canShare && nav.canShare({ files: [file] })) { nav.share({ files: [file] }).catch(function(){}); return; }
+      const a = w.document.createElement('a'); a.href = w.URL.createObjectURL(file); a.download = file.name;
+      w.document.body.appendChild(a); a.click(); a.remove();
+    } catch (e) { w.alert('Sorry, the PDF could not be made: ' + e.message); }
+  };
+}
+
+// Split text into lines that fit a width (in points) at a font size
+function pdfWrap(str, size, maxW) {
+  const words = String(str).split(/\s+/).filter(Boolean); const out = []; let line = '';
+  words.forEach(function(w) {
+    while (pdfWidth(w, size) > maxW) { // very long word: break it
+      let cut = w.length; while (cut > 1 && pdfWidth(w.slice(0, cut), size) > maxW) cut--;
+      if (line) { out.push(line); line = ''; }
+      out.push(w.slice(0, cut)); w = w.slice(cut);
+    }
+    const tryLine = line ? line + ' ' + w : w;
+    if (pdfWidth(tryLine, size) <= maxW) line = tryLine; else { if (line) out.push(line); line = w; }
+  });
+  if (line) out.push(line);
+  return out.length ? out : [''];
+}
+// Strip emoji and anything the built-in font can't show (rather than printing "?")
+function pdfClean(str) {
+  let o = '';
+  for (const ch of String(str)) { const c = ch.charCodeAt(0); if ((c >= 32 && c <= 126) || (c >= 160 && c <= 255) || PDF_WINANSI[c]) o += ch; }
+  return o.replace(/\s{2,}/g, ' ').trim();
+}
+
+function notesSummaryPdf(d) {
+  const W = 595.28, H = 841.89, k = 2.83465, L = 18 * k, R = W - 18 * k, TOP = 18 * k, BOT = H - 16 * k;
+  const pages = []; let c = '', y = TOP;
+  const green = '0.184 0.361 0.102', ink = '0.02 0.153 0.043', muted = '0.42 0.54 0.42', blue = '0.102 0.29 0.42';
+  const text = function(str, x, size, col) { c += 'BT ' + col + ' rg /F1 ' + size + ' Tf ' + x.toFixed(2) + ' ' + (H - y).toFixed(2) + ' Td (' + pdfStr(str) + ') Tj ET\n'; };
+  const rule = function(yy, wd, col) { c += col + ' RG ' + wd + ' w ' + L.toFixed(2) + ' ' + (H - yy).toFixed(2) + ' m ' + R.toFixed(2) + ' ' + (H - yy).toFixed(2) + ' l S\n'; };
+  const newPage = function() {
+    pages.push(c); c = ''; y = TOP;
+    text(pdfClean(d.name) + ' · ' + pdfClean(d.period) + ' (continued)', L, 9, muted); y += 14;
+  };
+  const need = function(h) { if (y + h > BOT) newPage(); };
+  // Heading
+  y += 20; text(pdfClean(d.name), L, 20, ink);
+  if (d.sub) { y += 15; text(pdfClean(d.sub), L, 10, muted); }
+  y += 12; rule(y, 1.2, green);
+  y += 16; text('Lesson notes: ' + pdfClean(d.period), L, 12, ink);
+  y += 13; text(pdfClean(d.dates), L, 9, muted);
+  y += 13; text(pdfClean(d.stats), L, 10, blue);
+  y += 9; rule(y, 0.5, '0.84 0.89 0.8');
+  y += 6;
+  // Lessons
+  d.lessons.forEach(function(l) {
+    const bodyLines = [];
+    (l.lines.length ? l.lines : ['No notes']).forEach(function(t) {
+      pdfWrap(pdfClean(t), 10, R - L - 16).forEach(function(w, i){ bodyLines.push((i === 0 && l.lines.length ? '• ' : '  ') + w); });
+    });
+    need(30 + Math.min(bodyLines.length, 3) * 14); // keep a date with its first lines
+    y += 18; text(pdfClean(l.date), L, 11, green);
+    if (l.att) text(l.att, L + pdfWidth(pdfClean(l.date), 11) + 10, 9, muted);
+    bodyLines.forEach(function(t) {
+      need(14); y += 14; text(t, L + 8, 10, l.lines.length ? ink : muted);
+    });
+    y += 7; rule(y, 0.4, '0.9 0.94 0.88');
+  });
+  pages.push(c);
+  return pdfBuild(pages, null);
 }
 
 // ── INCOME RECORD (for tax / Making Tax Digital) ─────────────────────────
