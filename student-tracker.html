@@ -2241,7 +2241,10 @@ snApplyTheme();
     </div>
     <div class="field-group">
       <label class="field-label">Movements (optional)</label>
-      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">A number (e.g. 3) for Mvt. 1 to 3, or one named movement per line. Start a line with # to make a heading, e.g. # Suite No. 1. Leave empty for none.</div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">A number (e.g. 3) for 1 to 3, or one named movement per line. Mix them if you like, e.g. Theme then 40. Start a line with # to make a heading, e.g. # Suite No. 1. Leave empty for none.</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:0.75rem;color:var(--muted);margin:2px 0 8px">Numbers are:
+        <span id="edit-lib-piece-numlabel" style="display:flex;gap:6px;flex-wrap:wrap"></span>
+      </div>
       <textarea id="edit-lib-piece-mvts" rows="3" placeholder="3&#10;or&#10;I. Allegro&#10;II. Adagio" style="width:100%;padding:8px 12px;border-radius:8px;font-size:0.88rem;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;box-sizing:border-box;resize:vertical;background:var(--paper)"></textarea>
     </div>
     <div class="field-group">
@@ -5006,10 +5009,21 @@ function collectNextTicks(id, where) {
   const other = document.getElementById(nextTicksBoxId(id, w === 'b' ? 'a' : 'b'));
   if (other) other.innerHTML = nextTicksHTML(s, w === 'b' ? 'a' : 'b');
 }
+// First tap: ✓ ticked. Second tap: done, so the line goes away.
 function toggleNextTick(id, btn, where) {
-  const r = btn.closest('.nt-row'); const on = r.dataset.done !== '1';
-  r.dataset.done = on ? '1' : '0'; r.classList.toggle('done', on); btn.classList.toggle('done', on); btn.textContent = on ? '✓' : '';
-  collectNextTicks(id, where);
+  const r = btn.closest('.nt-row');
+  if (!r.querySelector('.nt-in').value.trim()) return; // nothing written on this line yet
+  if (r.dataset.done !== '1') {
+    r.dataset.done = '1'; r.classList.add('done'); btn.classList.add('done'); btn.textContent = '✓';
+    collectNextTicks(id, where);
+    return;
+  }
+  r.style.transition = 'opacity 0.25s'; r.style.opacity = '0';
+  setTimeout(function() {
+    r.remove();
+    collectNextTicks(id, where);
+    const s = getStudent(id); if (s) refreshNextTicks(s); // tidy both lists (always five lines to write on)
+  }, 250);
 }
 function addNextTickRow(id, where) {
   const box = document.getElementById(nextTicksBoxId(id, where)); if (!box) return;
@@ -5054,6 +5068,17 @@ function pieceMovements(title) {
   });
   return hit ? hit.movements : null;
 }
+// What a plain number means in a piece: "Mvt. 3", "No. 3" or "Var. 3"
+const PIECE_NUM_LABELS = ['Mvt.', 'No.', 'Var.', 'Page'];
+function pieceNumLabelOf(p) { return p && PIECE_NUM_LABELS.indexOf(p.numLabel) >= 0 ? p.numLabel : 'Mvt.'; }
+function pieceNumLabel(title) {
+  const t = normPieceCat(String(title || '').trim()).toLowerCase();
+  if (!t) return 'Mvt.';
+  const hit = visibleLibraryPieces().find(function(x) {
+    return x.movements && x.movements.length && normPieceCat(x.title).toLowerCase() === t;
+  });
+  return pieceNumLabelOf(hit);
+}
 
 // Which movement rows are unfolded (kept while the app is open; folded by default)
 const openMvtRows = new Set();
@@ -5068,12 +5093,31 @@ function toggleMvtRow(sid, i) {
 // Per-pupil movement ticks, kept by piece title: s.pieceMvtTicks[title][mvt] = 0/1/2
 // Short names of the movements marked "working on" (orange), e.g. "1. Exercise 1"
 function mvtShortName(t) {
-  let x = String(t).split(/\s*[:(]\s*|\s+-\s+/)[0].trim() || String(t);
+  const full = String(t);
+  let x;
+  const colon = full.indexOf(':');
+  if (colon > 0) {
+    // "7. Otakar Ševčík - Spiccato Study (First): Off-the-string…" -> "7. Spiccato Study (First)"
+    x = full.slice(0, colon).trim();
+    let depth = 0, cut = -1;
+    for (let k = 0; k < x.length; k++) {
+      const ch = x[k];
+      if (ch === '(') depth++; else if (ch === ')') depth = Math.max(0, depth - 1);
+      else if (depth === 0 && x.substr(k, 3) === ' - ') cut = k;
+    }
+    if (cut > 0) {
+      const num = (x.match(/^\d+[.)]\s+/) || [''])[0];
+      x = num + x.slice(cut + 3).trim();
+    }
+  } else {
+    // "1. Variation 1 - Detache bowing…" -> "1. Variation 1"
+    x = full.split(/\s*\(\s*|\s+-\s+/)[0].trim() || full;
+  }
   // "3. No. 3" -> "No. 3", "1. Exercise 1" -> "Exercise 1" (the name has its own number);
   // "1. Overture" keeps its number
   const m = x.match(/^\d+[.)]\s+(.*\d.*)$/);
   if (m) x = m[1];
-  return x.length > 28 ? x.slice(0, 27).trim() + '…' : x;
+  return x.length > 34 ? x.slice(0, 33).trim() + '…' : x;
 }
 // Is the No. / mvt. box yours (typed or picked) rather than filled by the ticks?
 // Older entries with something already in them count as yours.
@@ -5102,7 +5146,7 @@ function mvtShortLabel(head, item, numLabel) {
 function tidyPieceRef(title, ref) {
   const r = String(ref || '').trim(); if (!r) return ref;
   const lists = [];
-  const mv = pieceMovements(title); if (mv) lists.push({ items: mv, num: 'Mvt.' });
+  const mv = pieceMovements(title); if (mv) lists.push({ items: mv, num: pieceNumLabel(title) });
   [].concat(typeof studyBookBank !== 'undefined' ? studyBookBank : [], typeof methodBookBank !== 'undefined' ? methodBookBank : [], typeof albumBank !== 'undefined' ? albumBank : [])
     .forEach(function(bk){ if (bk && bk.name === title) lists.push({ items: bk.studies || bk.items || [], num: bk.numLabel || 'No.' }); });
   for (let L = 0; L < lists.length; L++) {
@@ -5125,7 +5169,7 @@ function mvtWorkingLabels(s, i) {
   mvts.forEach(function(m, n) {
     if (!isHeadingItem(m) && bookTickLevel(ticks[mkeys[n]]) === 1) {
       const h = headingFor(mvts, n);
-      out.push((h ? mvtShortName(h.split(',')[0]) + ': ' : '') + (/^\d+$/.test(m) ? 'Mvt. ' + m : mvtShortName(m)));
+      out.push((h ? mvtShortName(h.split(',')[0]) + ': ' : '') + (/^\d+$/.test(m) ? pieceNumLabel(title) + ' ' + m : mvtShortName(m)));
     }
   });
   return out;
@@ -5142,12 +5186,13 @@ function mvtTicksHTML(s, i) {
   // What's in progress, so the folded line is still useful at a glance
   // Just the short name of each one ("1. Exercise 1"), not its long description
   const shortName = mvtShortName;
+  const numLbl = pieceNumLabel(title);
   const working = [];
   mvts.forEach(function(m, n) {
     if (!isHeadingItem(m) && bookTickLevel(ticks[mkeys[n]]) === 1) {
       const h = headingFor(mvts, n);
       const shortH = h ? shortName(h.split(',')[0]) + ': ' : '';
-      working.push(shortH + (/^\d+$/.test(m) ? 'Mvt. ' + m : shortName(m)));
+      working.push(shortH + (/^\d+$/.test(m) ? numLbl + ' ' + m : shortName(m)));
     }
   });
   const toggle = '<button onclick="toggleMvtRow(\'' + s.id + '\',' + i + ')" style="display:flex;align-items:center;gap:6px;background:none;border:none;padding:2px 0;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.72rem;color:var(--muted);text-align:left">'
@@ -5162,12 +5207,14 @@ function mvtTicksHTML(s, i) {
         if (isHeadingItem(m)) return '<span style="flex-basis:100%;font-size:0.72rem;font-weight:700;color:var(--deep);margin-top:6px">' + esc(headingText(m)) + '</span>';
         const lv = bookTickLevel(ticks[mkeys[idx]]);
         const st = BOOK_TICK_STYLE[lv];
-        const label = /^\d+$/.test(m) ? 'Mvt. ' + m : m;
+        const label = /^\d+$/.test(m) ? numLbl + ' ' + m : m;
+        // Numbers-only movements stay as small pills; named ones are a neat left-aligned list
+        const isNum = /^\d+$/.test(m);
         return '<button onclick="mvtTick(\'' + s.id + '\',' + i + ',' + idx + ')" title="' + st.label + '" '
-          + 'style="display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.75rem;'
+          + 'style="' + (isNum ? 'display:inline-flex;' : 'display:flex;flex-basis:100%;width:100%;text-align:left;justify-content:flex-start;') + 'align-items:flex-start;gap:7px;padding:5px 10px;border-radius:' + (isNum ? '999px' : '10px') + ';cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.75rem;line-height:1.35;'
           + 'border:1.5px solid ' + (lv ? st.border : '#d6ddd2') + ';background:' + (lv ? st.rowBg : '#fff') + ';color:var(--ink)">'
-          + '<span style="width:14px;height:14px;border-radius:4px;border:1.5px solid ' + st.border + ';background:' + st.bg + ';color:' + st.fg + ';font-size:0.55rem;display:inline-flex;align-items:center;justify-content:center">' + st.mark + '</span>'
-          + esc(label) + '</button>';
+          + '<span style="flex:0 0 auto;width:14px;height:14px;margin-top:1px;border-radius:4px;border:1.5px solid ' + st.border + ';background:' + st.bg + ';color:' + st.fg + ';font-size:0.55rem;display:inline-flex;align-items:center;justify-content:center">' + st.mark + '</span>'
+          + '<span style="flex:1;min-width:0">' + esc(label) + '</span></button>';
       }).join('')
     + '</div>';
 }
@@ -9949,6 +9996,7 @@ function deletePieceCat(cat) {
     if (!customPieces.some(cp => cp.cat === 'My Library' && cp.title.toLowerCase() === (p.title || '').toLowerCase())) {
       const copy = { title: p.title, composer: p.composer || '', grade: p.grade || '', cat: 'My Library' };
       if (p.movements && p.movements.length) copy.movements = p.movements.slice();
+      if (p.numLabel) copy.numLabel = p.numLabel;
       customPieces.push(copy);
     }
   });
@@ -10220,9 +10268,22 @@ function editLibPieceByKey(key) {
   document.getElementById('edit-lib-piece-mvts').value     = studiesToText(p.movements || []);
   editAlsoCats = (p.also || []).slice();
   renderEditAlsoCats();
+  editNumLabel = pieceNumLabelOf(p);
+  renderEditNumLabel();
   document.getElementById('edit-lib-piece-modal').classList.add('open');
 }
 
+// "Numbers are: Mvt. / No. / Var." chips in the Edit piece window
+let editNumLabel = 'Mvt.';
+function renderEditNumLabel() {
+  const el = document.getElementById('edit-lib-piece-numlabel'); if (!el) return;
+  el.innerHTML = PIECE_NUM_LABELS.map(function(l) {
+    const on = l === editNumLabel;
+    return '<button type="button" onclick="editNumLabel=\'' + l + '\';renderEditNumLabel()" style="padding:6px 12px;border-radius:999px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.8rem;'
+      + 'border:1.5px solid ' + (on ? 'var(--viola)' : '#d6ddd2') + ';background:' + (on ? 'var(--viola)' : '#fff') + ';color:' + (on ? '#fff' : 'var(--ink)') + '">'
+      + (on ? '✓ ' : '') + l + ' 1</button>';
+  }).join('');
+}
 // Extra categories chosen in the Edit piece window
 let editAlsoCats = [];
 function renderEditAlsoCats() {
@@ -10256,6 +10317,7 @@ function saveEditLibPiece() {
   };
   const mvts = parseStudiesInput(document.getElementById('edit-lib-piece-mvts').value);
   if (mvts.length) updated.movements = mvts;
+  if (mvts.length && editNumLabel !== 'Mvt.') updated.numLabel = editNumLabel;
   const also = editAlsoCats.filter(c => c && c !== updated.cat);
   if (also.length) updated.also = also;
   if (!updated.title) return; // don't save a blank title
@@ -13682,7 +13744,7 @@ function libPickPieceWithMvtsHTML(p) {
           if (isHeadingItem(m)) return headingLabelHTML(m);
           const isNum = /^\d+$/.test(m);
           return '<button onclick="libPickAddMvt(\'' + k + '\',' + idx + ')" style="' + (isNum ? 'display:inline-block;min-width:64px;margin:0 5px 5px 0;' : 'display:flex;width:100%;margin-bottom:4px;text-align:left;') + 'align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.85rem;border:1.5px solid #e0ddd8;background:#fff;color:var(--ink)">'
-            + '<span style="color:var(--viola);font-weight:700">＋</span> ' + esc(isNum ? 'Mvt. ' + m : m) + '</button>';
+            + '<span style="color:var(--viola);font-weight:700">＋</span> ' + esc(isNum ? pieceNumLabelOf(p) + ' ' + m : m) + '</button>';
         }).join('')
       + '</div>';
   }
@@ -13693,7 +13755,7 @@ function libPickAddMvt(key, idx) {
   const p = visibleLibraryPieces().find(function(x){ return pieceKey(x) === key; });
   if (!p || !p.movements) return;
   const m = p.movements[idx]; if (m === undefined || isHeadingItem(m)) return;
-  libPickAdd(p.title, mvtShortLabel(headingFor(p.movements, idx), m, 'Mvt.'));
+  libPickAdd(p.title, mvtShortLabel(headingFor(p.movements, idx), m, pieceNumLabelOf(p)));
 }
 
 // The pupil's own copies of this kind of book, plus the studio bank (minus
