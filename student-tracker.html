@@ -850,7 +850,7 @@
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:6px 0 14px">
     <button class="admin-tile lib-tile" style="background:#1a4a6b;min-height:92px" onclick="showLibrarySection('pieces')">
       <span class="admin-tile-icon">📚</span>
-      <span class="admin-tile-label">Piece library</span>
+      <span class="admin-tile-label">Full library</span>
     </button>
     <button class="admin-tile lib-tile" style="background:#1a4a6b;min-height:92px" onclick="showLibrarySection('violaness')">
       <span class="admin-tile-icon">🎻</span>
@@ -1084,7 +1084,7 @@
 
   <!-- PIECES BY CATEGORY -->
   <section class="admin-panel" id="lib-panel-pieces" style="display:none">
-    <div class="admin-panel-head"><span>📚 My piece library</span><button class="admin-panel-close" onclick="closeLibrarySections()">✕ Close</button></div>
+    <div class="admin-panel-head"><span>📚 Full library</span><button class="admin-panel-close" onclick="closeLibrarySections()">✕ Close</button></div>
     <div style="margin-top:6px">
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <select id="lib-cat-filter" onchange="renderLibPieces()" style="flex:1">
@@ -3379,7 +3379,7 @@ function renderDetail(s, preserveTab = false) {
     <!-- BEFORE -->
     <div class="moment-panel active" id="panel-before">
       <div class="section-card">
-        <div class="section-label">🎵 Pieces &amp; exercises</div>
+        <div class="section-label">🎵 Music Library</div>
         <div class="pieces-list" id="pieces-list-${s.id}">${piecesHTML}</div>
         <div style="display:flex;gap:8px;margin-top:6px">
           <button class="add-piece-btn" style="flex:1" onclick="openPieceDB('${s.id}')">＋ From library</button>
@@ -13181,7 +13181,7 @@ let libPickDestMem = null;        // fallback if browser storage is unavailable
 let libPickToastTimer = null;
 
 const LIBPICK_SOURCES = [
-  { id: 'pieces',  icon: '📚', label: 'Pieces',  bg: 'var(--ink)',    fg: '#fff' },
+  { id: 'pieces',  icon: '📚', label: 'Full library',  bg: 'var(--ink)',    fg: '#fff' },
   { id: 'studies', icon: '📖', label: 'Studies', bg: 'var(--string)', fg: 'var(--ink)' },
   { id: 'methods', icon: '📘', label: 'Methods', bg: '#46C6E5',       fg: 'var(--ink)' },
   { id: 'albums',  icon: '🎵', label: 'Albums',  bg: 'var(--viola)',  fg: '#fff' },
@@ -13253,7 +13253,7 @@ function renderLibPickChrome() {
       return '<button onclick="libPickSetDest(\'' + val + '\')" style="flex:1;padding:7px 8px;border-radius:999px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.78rem;'
         + 'border:1.5px solid var(--viola);background:' + (on ? 'var(--viola)' : 'transparent') + ';color:' + (on ? '#fff' : 'var(--viola)') + ';font-weight:' + (on ? '700' : '500') + '">' + label + '</button>';
     };
-    dest.innerHTML = chip('pieces', '🎵 Pieces &amp; exercises') + chip('plan', '📌 Today’s plan');
+    dest.innerHTML = chip('pieces', '🎵 Music Library') + chip('plan', '📌 Today’s plan');
   }
   const cat = document.getElementById('piece-cat-filter');
   if (cat) cat.style.display = libPickSource === 'pieces' ? '' : 'none';
@@ -13512,7 +13512,7 @@ function libPickAdd(title, ref) {
   }
   save();
   libPickAddedAny = true;
-  const where = libPickGetDest() === 'plan' ? 'today’s plan' : 'Pieces & exercises';
+  const where = libPickGetDest() === 'plan' ? 'today’s plan' : 'Music Library';
   const toast = document.getElementById('libpick-toast');
   if (toast) {
     toast.textContent = '✓ ' + label + ' → ' + where;
@@ -13702,7 +13702,7 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
     var piecesSection = '';
     if (pieces.length > 0) {
       piecesSection = '<div style="margin-bottom:16px">'
-        + '<div style="font-size:0.6rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">Pieces &amp; exercises</div>'
+        + '<div style="font-size:0.6rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">Music Library</div>'
         + pieces.map(function(p) {
             return '<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid #e8f0e0">'
               + '<div style="width:5px;height:5px;border-radius:50%;background:#8AB640;flex-shrink:0;margin-top:2px"></div>'
