@@ -565,6 +565,11 @@
   /* Same text size as the Working On list in the After tab summary */
   .wo-group .piece-item textarea, .wo-group .piece-item input { font-size: 0.8rem !important; line-height: 1.4; padding: 7px 10px; box-sizing: border-box; }
   .wo-group .piece-item input { height: 34px; }
+  /* Technical boxes blue, Pieces stay green */
+  .wo-tech .piece-item textarea, .wo-tech .piece-item input { background: #eef6ff; border-color: #a8c8e8; }
+  .wo-tech .piece-item textarea:focus, .wo-tech .piece-item input:focus { background: #fff; border-color: #29789E; }
+  .wo-piece .piece-item textarea, .wo-piece .piece-item input { background: #eef6e6; border-color: #c8ddb8; }
+  .wo-piece .piece-item textarea:focus, .wo-piece .piece-item input:focus { background: #fff; border-color: var(--viola); }
   .wo-group .piece-item textarea { min-height: 34px; }
   .wo-label { font-size: 0.85rem; }
   .wo-add { background: none; border: none; color: var(--viola); font-family: 'Special Elite', cursive; font-size: 0.78rem; cursor: pointer; padding: 4px 2px; }
@@ -5059,7 +5064,7 @@ function buildPiecesHTML(s) {
       + '</div>');
   });
   const group = function(g, label) {
-    return '<div class="wo-group"><div class="wo-label"><span>' + label + '</span>'
+    return '<div class="wo-group wo-' + g + '"><div class="wo-label"><span>' + label + '</span>'
       + '<button class="wo-add" onclick="addPiece(\'' + s.id + '\',\'' + g + '\')">＋ Add</button></div>'
       + rows[g].join('') + '</div>';
   };
