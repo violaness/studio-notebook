@@ -1181,6 +1181,7 @@ snApplyTheme();
   <section class="admin-panel" id="lib-panel-pieces" style="display:none">
     <div class="admin-panel-head"><span>📚 Full library</span><button class="admin-panel-close" onclick="closeLibrarySections()">✕ Close</button></div>
     <div style="margin-top:6px">
+    <div id="lib-kind-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <select id="lib-cat-filter" onchange="renderLibPieces()" style="flex:1">
         <option value="">All categories</option>
@@ -1199,12 +1200,18 @@ snApplyTheme();
     </div>
     <div id="lib-pieces-list" style="max-height:400px;overflow-y:auto"></div>
     <div style="border-top:1px solid var(--warm);margin-top:14px;padding-top:14px">
-      <div class="section-label" style="margin-bottom:8px">Add to My Library</div>
+      <div class="section-label" style="margin-bottom:8px">Add to the library</div>
       <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:0.75rem;color:var(--muted)">It's a:
+          <span id="lib-new-piece-kind" style="display:flex;gap:6px;flex-wrap:wrap"></span>
+        </div>
         <input type="text" id="lib-new-piece-title" placeholder="Title" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <input type="text" id="lib-new-piece-composer" placeholder="Composer (optional)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <input type="text" id="lib-new-piece-grade" placeholder="Grade (optional)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
-        <textarea id="lib-new-piece-mvts" rows="2" placeholder="Movements (optional): a number, e.g. 3, or one per line. Start a line with # for a heading, e.g. # Suite No. 1" style="width:100%;padding:8px 12px;border-radius:8px;font-size:0.88rem;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;box-sizing:border-box;resize:vertical;background:var(--paper)"></textarea>
+        <textarea id="lib-new-piece-mvts" rows="2" placeholder="Movements or studies (optional): a number, e.g. 40, or one per line. Mix them, e.g. Theme then 40. Start a line with # for a heading" style="width:100%;padding:8px 12px;border-radius:8px;font-size:0.88rem;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;box-sizing:border-box;resize:vertical;background:var(--paper)"></textarea>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:0.75rem;color:var(--muted)">Numbers are:
+          <span id="lib-new-piece-numlabel" style="display:flex;gap:6px;flex-wrap:wrap"></span>
+        </div>
         <select id="lib-new-piece-cat" onchange="toggleNewCatInput(this.value)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
           <option value="My Library">My Library</option>
           <option value="Scalability">Scalability</option>
@@ -2240,6 +2247,10 @@ snApplyTheme();
       <input type="text" id="edit-lib-piece-grade" placeholder="Grade">
     </div>
     <div class="field-group">
+      <label class="field-label">It's a</label>
+      <div id="edit-lib-piece-kind" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    </div>
+    <div class="field-group">
       <label class="field-label">Movements (optional)</label>
       <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">A number (e.g. 3) for 1 to 3, or one named movement per line. Mix them if you like, e.g. Theme then 40. Start a line with # to make a heading, e.g. # Suite No. 1. Leave empty for none.</div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:0.75rem;color:var(--muted);margin:2px 0 8px">Numbers are:
@@ -2618,6 +2629,7 @@ function save() {
   try { techniqueDefaults = starterTechSet().items.slice(); } catch (e) {}
   localStorage.setItem('studio_technique_defaults', JSON.stringify(techniqueDefaults));
   localStorage.setItem('studio_technique_sets', JSON.stringify(techniqueSets));
+  try { rebuildBanksFromLibrary(); } catch (e) {}
   localStorage.setItem('studio_study_book_bank', JSON.stringify(studyBookBank));
   localStorage.setItem('studio_method_book_bank', JSON.stringify(methodBookBank));
   localStorage.setItem('studio_album_bank', JSON.stringify(albumBank));
@@ -5059,6 +5071,142 @@ function saveNextLesson(id) {
   if (beforeEl) beforeEl.value = s.nextWeekNote;
   showToast('toast-next-' + id);
 }
+// ── ONE LIBRARY ──────────────────────────────────────────────────────────
+// Everything lives once in the Full library. Each item has a kind:
+// a piece, a study book, a method book or an album. The Study books, Method
+// books and Albums tiles just open the Full library showing that kind, and
+// the old "banks" are now made from the library (kept so everything that
+// reads them still works).
+const LIB_KINDS = [
+  { id: 'piece',  icon: '🎶', label: 'Pieces',       one: 'Piece',       unit: ['movement', 'movements'] },
+  { id: 'study',  icon: '📖', label: 'Study books',  one: 'Study book',  unit: ['study', 'studies'] },
+  { id: 'method', icon: '📘', label: 'Method books', one: 'Method book', unit: ['item', 'items'] },
+  { id: 'album',  icon: '🎵', label: 'Albums',       one: 'Album',       unit: ['piece', 'pieces'] }
+];
+function libKind(p) { const k = p && p.kind; return (k === 'study' || k === 'method' || k === 'album') ? k : 'piece'; }
+function libKindInfo(k) { return LIB_KINDS.find(function(x){ return x.id === k; }) || LIB_KINDS[0]; }
+function libTitleKey(t) { return normPieceCat(String(t || '').trim()).toLowerCase(); }
+function newLibBid() { return 'lb' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+// Make the study / method / album banks from the library
+function rebuildBanksFromLibrary() {
+  const lib = visibleLibraryPieces();
+  const mk = function(kind) {
+    return lib.filter(function(p){ return libKind(p) === kind && p.bid; }).map(function(p) {
+      return { id: p.bid, name: p.title, studies: (p.movements || []).slice(), numLabel: pieceNumLabelOf(p) };
+    });
+  };
+  studyBookBank = mk('study');
+  methodBookBank = mk('method');
+  albumBank = mk('album');
+}
+
+// Bring any books from the old banks into the library (only the ones not
+// already there, so it's safe to run every time), and put each pupil's book
+// ticks into the shared ticks.
+function mergeBanksIntoLibrary() {
+  const banks = [[studyBookBank || [], 'study'], [methodBookBank || [], 'method'], [albumBank || [], 'album']];
+  const idMap = {};
+  banks.forEach(function(pair) {
+    const kind = pair[1];
+    pair[0].forEach(function(bk) {
+      if (!bk || !bk.name) return;
+      if (customPieces.some(function(p){ return p.bid === bk.id; })) return;
+      const t = libTitleKey(bk.name);
+      let hit = customPieces.find(function(p){ return libTitleKey(p.title) === t && libKind(p) === kind; })
+             || customPieces.find(function(p){ return libTitleKey(p.title) === t; });
+      if (!hit) {
+        const bi = visibleLibraryPieces().find(function(p){ return libTitleKey(p.title) === t; });
+        if (bi) {
+          // A built-in piece: keep your own copy instead, like editing does
+          hit = Object.assign({}, bi);
+          customPieces.push(hit);
+          if (hiddenPieces.indexOf(pieceKey(bi)) === -1) hiddenPieces.push(pieceKey(bi));
+        }
+      }
+      const studies = (bk.studies && bk.studies.length) ? bk.studies.slice() : [];
+      if (hit) {
+        if (libKind(hit) === 'piece') hit.kind = kind;
+        if (!hit.movements || !hit.movements.length) { if (studies.length) hit.movements = studies; }
+        if (!hit.numLabel && bk.numLabel) hit.numLabel = bk.numLabel;
+        if (!hit.bid) hit.bid = bk.id; else if (hit.bid !== bk.id) idMap[bk.id] = hit.bid;
+      } else {
+        customPieces.push({ title: bk.name, composer: '', grade: '', cat: 'My Library', kind: kind, bid: bk.id,
+                            movements: studies, numLabel: bk.numLabel || 'No.' });
+      }
+    });
+  });
+  // Every book in the library needs an id so pupils' copies can link to it
+  customPieces.forEach(function(p){ if (libKind(p) !== 'piece' && !p.bid) p.bid = newLibBid(); });
+  (students || []).forEach(function(s) {
+    ['studyBooks', 'methodBooks', 'albums'].forEach(function(f) {
+      (s[f] || []).forEach(function(b) {
+        if (b.bankId && idMap[b.bankId]) b.bankId = idMap[b.bankId];
+        if (b.ticks && Object.keys(b.ticks).length) {
+          const store = sharedTicks(s, b.name, true);
+          Object.keys(b.ticks).forEach(function(k) {
+            const lv = bookTickLevel(b.ticks[k]);
+            if (lv > bookTickLevel(store[k])) store[k] = lv;
+          });
+        }
+        delete b.ticks;
+      });
+    });
+  });
+  rebuildBanksFromLibrary();
+}
+
+// One set of ticks per pupil per book / piece, shared by Working On and the
+// Technique tab: s.pieceMvtTicks[title in lower case][item] = 0/1/2
+function sharedTicks(s, title, create) {
+  const k = libTitleKey(title);
+  if (!create) return ((s.pieceMvtTicks || {})[k]) || {};
+  if (!s.pieceMvtTicks) s.pieceMvtTicks = {};
+  if (!s.pieceMvtTicks[k]) s.pieceMvtTicks[k] = {};
+  return s.pieceMvtTicks[k];
+}
+// The library item a pupil's book comes from (by its link, or by its title)
+function libItemForBook(book) {
+  if (!book) return null;
+  const lib = visibleLibraryPieces();
+  if (book.bankId) { const byId = lib.find(function(p){ return p.bid === book.bankId; }); if (byId) return byId; }
+  const t = libTitleKey(book.name);
+  return lib.find(function(p){ return libTitleKey(p.title) === t && p.movements && p.movements.length; }) || null;
+}
+function bookTitle(book) { const lib = libItemForBook(book); return lib ? lib.title : (book && book.name) || ''; }
+
+// After a tick, redraw both places that show it
+function refreshWorkingOnTicks(s) {
+  (s.pieces || []).forEach(function(t, i) {
+    if (!refIsManual(s, i) && pieceMovements(t)) {
+      autoPieceRef(s, i);
+      const box = document.querySelector('#pieces-list-' + s.id + ' .piece-item[data-i="' + i + '"] input');
+      if (box) box.value = s.pieceRefs[i];
+    }
+    const el = document.getElementById('mvt-ticks-' + s.id + '-' + i);
+    if (el) el.innerHTML = mvtTicksHTML(s, i);
+  });
+}
+function refreshBookLists(s) {
+  if (document.getElementById('study-books-' + s.id)) rerenderKeepOpen('study-books-' + s.id, studyBooksHTML(s));
+  if (document.getElementById('method-books-' + s.id)) rerenderKeepOpen('method-books-' + s.id, methodBooksHTML(s));
+  if (document.getElementById('albums-' + s.id)) rerenderKeepOpen('albums-' + s.id, albumsHTML(s));
+}
+// A book typed straight onto a pupil also goes into the library, so it's
+// only ever entered once
+function libAddBookFromPupil(name, studies, kind) {
+  const t = libTitleKey(name);
+  const hit = visibleLibraryPieces().find(function(p){ return libTitleKey(p.title) === t; });
+  if (hit) {
+    if (hit.bid) return hit.bid;
+    const own = customPieces.indexOf(hit) >= 0 ? hit : null;
+    if (own) { own.bid = newLibBid(); if (libKind(own) === 'piece') own.kind = kind; if (!own.movements || !own.movements.length) own.movements = studies.slice(); return own.bid; }
+  }
+  const bid = newLibBid();
+  customPieces.push({ title: name, composer: '', grade: '', cat: 'My Library', kind: kind, bid: bid, movements: studies.slice(), numLabel: 'No.' });
+  return bid;
+}
+
 // Movements for a piece title, if your library has that piece with movements
 function pieceMovements(title) {
   const t = normPieceCat(String(title || '').trim()).toLowerCase();
@@ -5069,8 +5217,11 @@ function pieceMovements(title) {
   return hit ? hit.movements : null;
 }
 // What a plain number means in a piece: "Mvt. 3", "No. 3" or "Var. 3"
-const PIECE_NUM_LABELS = ['Mvt.', 'No.', 'Var.', 'Page'];
-function pieceNumLabelOf(p) { return p && PIECE_NUM_LABELS.indexOf(p.numLabel) >= 0 ? p.numLabel : 'Mvt.'; }
+const PIECE_NUM_LABELS = ['Mvt.', 'No.', 'Var.', 'Page', 'Ex.'];
+function pieceNumLabelOf(p) {
+  if (p && PIECE_NUM_LABELS.indexOf(p.numLabel) >= 0) return p.numLabel;
+  return libKind(p) === 'piece' ? 'Mvt.' : 'No.';
+}
 function pieceNumLabel(title) {
   const t = normPieceCat(String(title || '').trim()).toLowerCase();
   if (!t) return 'Mvt.';
@@ -5239,6 +5390,7 @@ function mvtTick(sid, i, idx) {
   save();
   const el = document.getElementById('mvt-ticks-' + sid + '-' + i);
   if (el) el.innerHTML = mvtTicksHTML(s, i);
+  refreshBookLists(s);
 }
 
 // ── WORKING ON: Technical / Pieces groups ──
@@ -5251,6 +5403,8 @@ function pieceAutoGroup(title) {
   const lt = t.toLowerCase();
   const lib = visibleLibraryPieces().find(function(p){ return (p.title || '').toLowerCase() === lt; });
   if (lib) {
+    if (libKind(lib) === 'study' || libKind(lib) === 'method') return 'tech';
+    if (libKind(lib) === 'album') return 'piece';
     const cats = pieceCats(lib).join(' ');
     if (/technique|scalab|stud/i.test(cats)) return 'tech';
     if (/repertoire/i.test(cats)) return 'piece';
@@ -6422,6 +6576,12 @@ function normalisePieceCats() {
   });
 }
 normalisePieceCats();
+try {
+  mergeBanksIntoLibrary();
+  localStorage.setItem('studio_custom_pieces', JSON.stringify(customPieces));
+  localStorage.setItem('studio_hidden_pieces', JSON.stringify(hiddenPieces));
+  localStorage.setItem('studio_students', JSON.stringify(students));
+} catch (e) { console.error('Library merge', e); }
 
 function buildCumulativeNote(s) {
   const parts = [];
@@ -6688,6 +6848,8 @@ function sortByName(list) {
 // Get a book's list of studies - supports the new `studies` array and the old
 // `count` form (auto-numbered 1..n) for backward compatibility.
 function bookStudies(book) {
+  const lib = libItemForBook(book);
+  if (lib && lib.movements && lib.movements.length) return lib.movements;
   if (Array.isArray(book.studies) && book.studies.length) return book.studies;
   const count = parseInt(book.count) || 0;
   return Array.from({length: count}, function(_, i) { return String(i + 1); });
@@ -6813,7 +6975,7 @@ function studyBooksHTML(s) {
   const books = s.studyBooks || [];
   if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No study books yet - tap “＋ Add study book” to pull one from your bank.</p>';
   return books.map(function(book, bIdx) {
-    const ticks = book.ticks || {};
+    const ticks = sharedTicks(s, bookTitle(book));
     const studies = bookStudies(book);
     const total = tickableCount(studies);
     const tkeys = uniqueItemKeys(studies).filter(function(k, n){ return !isHeadingItem(studies[n]); });
@@ -6822,7 +6984,7 @@ function studyBooksHTML(s) {
     const ticksHTML = bookTicksHTML(studies, ticks, 'studyBookTick', s.id, bIdx);
     return '<details style="margin-top:10px">'
       + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
-      + '<span>' + esc(book.name) + '</span>'
+      + '<span>' + esc(bookTitle(book)) + '</span>'
       + '<span style="display:flex;align-items:center;gap:10px">'
       + '<span style="font-size:0.7rem;font-weight:400">' + done + ' / ' + total + '</span>'
       + '<button onclick="event.stopPropagation();removeStudyBook(\'' + s.id + '\',' + bIdx + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:0 4px">×</button>'
@@ -6872,7 +7034,7 @@ function addBankBookToPupil(bankId) {
   if (!bk) return;
   if (!s.studyBooks) s.studyBooks = [];
   if (s.studyBooks.some(function(b){ return b.bankId === bk.id; }) && !confirm('"' + bk.name + '" is already on ' + s.name + '’s list. Add another copy?')) return;
-  s.studyBooks.push({ id: Date.now().toString(), bankId: bk.id, name: bk.name, studies: (bk.studies||[]).slice(), ticks: {} });
+  s.studyBooks.push({ id: Date.now().toString(), bankId: bk.id, name: bk.name, studies: (bk.studies||[]).slice() });
   save();
   // Stay open so several books can be picked in one go; Done closes it
   renderBankPicker();
@@ -6916,7 +7078,7 @@ function confirmAddStudyBook() {
   if (!name || studies.length === 0) { alert('Give the book a name and either a number of studies or a list of named studies.'); return; }
   const s = getStudent(id); if (!s) return;
   if (!s.studyBooks) s.studyBooks = [];
-  s.studyBooks.push({ id: Date.now().toString(), name: name, studies: studies, ticks: {} });
+  s.studyBooks.push({ id: Date.now().toString(), bankId: libAddBookFromPupil(name, studies, 'study'), name: name, studies: studies });
   save();
   document.getElementById('add-study-book-modal').classList.remove('open');
   const el = document.getElementById('study-books-' + id);
@@ -6937,15 +7099,16 @@ function rerenderKeepOpen(containerId, html) {
 function studyBookTick(studentId, bookIdx, item) {
   const s = getStudent(studentId); if (!s || !s.studyBooks) return;
   const book = s.studyBooks[bookIdx]; if (!book) return;
-  if (!book.ticks) book.ticks = {};
-  book.ticks[item] = bookTickNext(book.ticks[item]);
+  const store = sharedTicks(s, bookTitle(book), true);
+  store[item] = bookTickNext(store[item]);
   save();
   rerenderKeepOpen('study-books-' + studentId, studyBooksHTML(s));
+  refreshWorkingOnTicks(s);
 }
 
 function removeStudyBook(studentId, bookIdx) {
   const s = getStudent(studentId); if (!s || !s.studyBooks) return;
-  if (!confirm('Remove "' + s.studyBooks[bookIdx].name + '"? Ticks will be lost.')) return;
+  if (!confirm('Take "' + s.studyBooks[bookIdx].name + '" off ' + s.name + '’s list? Their ticks are kept, so they come back if you add it again.')) return;
   s.studyBooks.splice(bookIdx, 1);
   save();
   document.getElementById('study-books-' + studentId).innerHTML = studyBooksHTML(s);
@@ -7063,7 +7226,7 @@ function methodBooksHTML(s) {
   const books = s.methodBooks || [];
   if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No method books yet - tap “＋ Add method book” to pull one from your bank.</p>';
   return books.map(function(book, bIdx) {
-    const ticks = book.ticks || {};
+    const ticks = sharedTicks(s, bookTitle(book));
     const studies = bookStudies(book);
     const total = tickableCount(studies);
     const tkeys = uniqueItemKeys(studies).filter(function(k, n){ return !isHeadingItem(studies[n]); });
@@ -7072,7 +7235,7 @@ function methodBooksHTML(s) {
     const ticksHTML = bookTicksHTML(studies, ticks, 'methodBookTick', s.id, bIdx);
     return '<details style="margin-top:10px">'
       + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
-      + '<span>' + esc(book.name) + '</span>'
+      + '<span>' + esc(bookTitle(book)) + '</span>'
       + '<span style="display:flex;align-items:center;gap:10px">'
       + '<span style="font-size:0.7rem;font-weight:400">' + done + ' / ' + total + '</span>'
       + '<button onclick="event.stopPropagation();removeMethodBook(\'' + s.id + '\',' + bIdx + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:0 4px">×</button>'
@@ -7120,7 +7283,7 @@ function addMethodBankBookToPupil(bankId) {
   if (!bk) return;
   if (!s.methodBooks) s.methodBooks = [];
   if (s.methodBooks.some(function(b){ return b.bankId === bk.id; }) && !confirm('"' + bk.name + '" is already on ' + s.name + '’s list. Add another copy?')) return;
-  s.methodBooks.push({ id: Date.now().toString(), bankId: bk.id, name: bk.name, studies: (bk.studies||[]).slice(), ticks: {} });
+  s.methodBooks.push({ id: Date.now().toString(), bankId: bk.id, name: bk.name, studies: (bk.studies||[]).slice() });
   save();
   // Stay open so several books can be picked in one go; Done closes it
   renderMethodBankPicker();
@@ -7139,7 +7302,7 @@ function confirmAddMethodBook() {
   if (!name || studies.length === 0) { alert('Give the book a name and either a number of units or a list of named units.'); return; }
   const s = getStudent(id); if (!s) return;
   if (!s.methodBooks) s.methodBooks = [];
-  s.methodBooks.push({ id: Date.now().toString(), name: name, studies: studies, ticks: {} });
+  s.methodBooks.push({ id: Date.now().toString(), bankId: libAddBookFromPupil(name, studies, 'method'), name: name, studies: studies });
   save();
   document.getElementById('add-method-book-modal').classList.remove('open');
   const el = document.getElementById('method-books-' + id);
@@ -7149,15 +7312,16 @@ function confirmAddMethodBook() {
 function methodBookTick(studentId, bookIdx, item) {
   const s = getStudent(studentId); if (!s || !s.methodBooks) return;
   const book = s.methodBooks[bookIdx]; if (!book) return;
-  if (!book.ticks) book.ticks = {};
-  book.ticks[item] = bookTickNext(book.ticks[item]);
+  const store = sharedTicks(s, bookTitle(book), true);
+  store[item] = bookTickNext(store[item]);
   save();
   rerenderKeepOpen('method-books-' + studentId, methodBooksHTML(s));
+  refreshWorkingOnTicks(s);
 }
 
 function removeMethodBook(studentId, bookIdx) {
   const s = getStudent(studentId); if (!s || !s.methodBooks) return;
-  if (!confirm('Remove "' + s.methodBooks[bookIdx].name + '"? Ticks will be lost.')) return;
+  if (!confirm('Take "' + s.methodBooks[bookIdx].name + '" off ' + s.name + '’s list? Their ticks are kept, so they come back if you add it again.')) return;
   s.methodBooks.splice(bookIdx, 1);
   save();
   document.getElementById('method-books-' + studentId).innerHTML = methodBooksHTML(s);
@@ -7248,7 +7412,7 @@ function albumsHTML(s) {
   const books = s.albums || [];
   if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No albums yet - tap “＋ Add album” to pull one from your bank.</p>';
   return books.map(function(book, bIdx) {
-    const ticks = book.ticks || {};
+    const ticks = sharedTicks(s, bookTitle(book));
     const studies = bookStudies(book);
     const total = tickableCount(studies);
     const tkeys = uniqueItemKeys(studies).filter(function(k, n){ return !isHeadingItem(studies[n]); });
@@ -7257,7 +7421,7 @@ function albumsHTML(s) {
     const ticksHTML = bookTicksHTML(studies, ticks, 'albumTick', s.id, bIdx);
     return '<details style="margin-top:10px">'
       + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
-      + '<span>' + esc(book.name) + '</span>'
+      + '<span>' + esc(bookTitle(book)) + '</span>'
       + '<span style="display:flex;align-items:center;gap:10px">'
       + '<span style="font-size:0.7rem;font-weight:400">' + done + ' / ' + total + '</span>'
       + '<button onclick="event.stopPropagation();removeAlbum(\'' + s.id + '\',' + bIdx + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:0 4px">×</button>'
@@ -7305,7 +7469,7 @@ function addAlbumBankToPupil(bankId) {
   if (!bk) return;
   if (!s.albums) s.albums = [];
   if (s.albums.some(function(b){ return b.bankId === bk.id; }) && !confirm('"' + bk.name + '" is already on ' + s.name + '’s list. Add another copy?')) return;
-  s.albums.push({ id: Date.now().toString(), bankId: bk.id, name: bk.name, studies: (bk.studies||[]).slice(), ticks: {} });
+  s.albums.push({ id: Date.now().toString(), bankId: bk.id, name: bk.name, studies: (bk.studies||[]).slice() });
   save();
   // Stay open so several books can be picked in one go; Done closes it
   renderAlbumBankPicker();
@@ -7324,7 +7488,7 @@ function confirmAddAlbum() {
   if (!name || studies.length === 0) { alert('Give the album a name and either a number of pieces or a list of named pieces.'); return; }
   const s = getStudent(id); if (!s) return;
   if (!s.albums) s.albums = [];
-  s.albums.push({ id: Date.now().toString(), name: name, studies: studies, ticks: {} });
+  s.albums.push({ id: Date.now().toString(), bankId: libAddBookFromPupil(name, studies, 'album'), name: name, studies: studies });
   save();
   document.getElementById('add-album-modal').classList.remove('open');
   const el = document.getElementById('albums-' + id);
@@ -7334,15 +7498,16 @@ function confirmAddAlbum() {
 function albumTick(studentId, bookIdx, item) {
   const s = getStudent(studentId); if (!s || !s.albums) return;
   const book = s.albums[bookIdx]; if (!book) return;
-  if (!book.ticks) book.ticks = {};
-  book.ticks[item] = bookTickNext(book.ticks[item]);
+  const store = sharedTicks(s, bookTitle(book), true);
+  store[item] = bookTickNext(store[item]);
   save();
   rerenderKeepOpen('albums-' + studentId, albumsHTML(s));
+  refreshWorkingOnTicks(s);
 }
 
 function removeAlbum(studentId, bookIdx) {
   const s = getStudent(studentId); if (!s || !s.albums) return;
-  if (!confirm('Remove "' + s.albums[bookIdx].name + '"? Ticks will be lost.')) return;
+  if (!confirm('Take "' + s.albums[bookIdx].name + '" off ' + s.name + '’s list? Their ticks are kept, so they come back if you add it again.')) return;
   s.albums.splice(bookIdx, 1);
   save();
   document.getElementById('albums-' + studentId).innerHTML = albumsHTML(s);
@@ -9891,12 +10056,17 @@ function closeAdminSections() {
 
 // Open one Library section panel, hide the rest, highlight its tile, scroll to it
 function showLibrarySection(name) {
+  const kindFor = { studybank: 'study', methodbank: 'method', albumbank: 'album' }[name];
+  const tileName = name;
+  if (name === 'pieces') libKindFilter = '';
+  if (kindFor) { libKindFilter = kindFor; name = 'pieces'; }
+  if (name === 'pieces') { libNewKind = libKindFilter || 'piece'; libNewNumLabel = ''; renderLibKindChips(); renderLibNewChips(); renderLibPieces(); }
   document.querySelectorAll('#library-panels .admin-panel').forEach(p => {
     p.style.display = (p.id === 'lib-panel-' + name) ? 'block' : 'none';
   });
   const tiles = document.querySelectorAll('#view-library .lib-tile');
   tiles.forEach(t => t.classList.remove('active'));
-  const activeTile = document.querySelector('#view-library .lib-tile[onclick*="\'' + name + '\'"]');
+  const activeTile = document.querySelector('#view-library .lib-tile[onclick*="\'' + tileName + '\'"]');
   if (activeTile) activeTile.classList.add('active');
   // Book banks: fill the editor fresh each time it's opened
   if (name === 'violaness') { editingVioId = null; renderViolaness(); }
@@ -10178,12 +10348,46 @@ function visibleLibraryPieces() {
   return [...customPieces, ...builtins];
 }
 
+// Which kind the Full library is showing ('' = everything)
+let libKindFilter = '';
+let libNewKind = 'piece';
+let libNewNumLabel = '';
+function kindChipHTML(on, label, onclick) {
+  return '<button type="button" onclick="' + onclick + '" style="padding:6px 12px;border-radius:999px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.8rem;'
+    + 'border:1.5px solid ' + (on ? 'var(--viola)' : '#d6ddd2') + ';background:' + (on ? 'var(--viola)' : '#fff') + ';color:' + (on ? '#fff' : 'var(--ink)') + '">'
+    + (on ? '✓ ' : '') + label + '</button>';
+}
+function renderLibKindChips() {
+  const el = document.getElementById('lib-kind-chips'); if (!el) return;
+  const lib = visibleLibraryPieces();
+  el.innerHTML = kindChipHTML(!libKindFilter, '📚 Everything', 'setLibKindFilter(\'\')')
+    + LIB_KINDS.map(function(k) {
+        const n = lib.filter(function(p){ return libKind(p) === k.id; }).length;
+        return kindChipHTML(libKindFilter === k.id, k.icon + ' ' + k.label + ' <span style="opacity:0.7;font-size:0.7rem">' + n + '</span>', 'setLibKindFilter(\'' + k.id + '\')');
+      }).join('');
+}
+function setLibKindFilter(k) {
+  libKindFilter = k;
+  libNewKind = k || 'piece'; libNewNumLabel = '';
+  renderLibKindChips(); renderLibNewChips(); renderLibPieces();
+}
+// "It's a" and "Numbers are" chips in the Add form
+function renderLibNewChips() {
+  const kEl = document.getElementById('lib-new-piece-kind');
+  if (kEl) kEl.innerHTML = LIB_KINDS.map(function(k){ return kindChipHTML(libNewKind === k.id, k.icon + ' ' + k.one, 'libNewKind=\'' + k.id + '\';libNewNumLabel=\'\';renderLibNewChips()'); }).join('');
+  const nEl = document.getElementById('lib-new-piece-numlabel');
+  const cur = libNewNumLabel || (libNewKind === 'piece' ? 'Mvt.' : 'No.');
+  if (nEl) nEl.innerHTML = PIECE_NUM_LABELS.map(function(l){ return kindChipHTML(cur === l, l + ' 1', 'libNewNumLabel=\'' + l + '\';renderLibNewChips()'); }).join('');
+}
+
 function renderLibPieces() {
   renderPieceCatManage(); // keep category piece-counts in step
   const list = document.getElementById('lib-pieces-list'); if (!list) return;
+  renderLibKindChips();
   const search = (document.getElementById('lib-piece-search').value || '').toLowerCase();
   const cat = document.getElementById('lib-cat-filter').value;
   const filtered = visibleLibraryPieces().filter(p => {
+    if (libKindFilter && libKind(p) !== libKindFilter) return false;
     const matchSearch = !search || p.title.toLowerCase().includes(search) || (p.composer||'').toLowerCase().includes(search) || (p.grade||'').toLowerCase().includes(search);
     const matchCat = !cat || pieceInCat(p, cat);
     return matchSearch && matchCat;
@@ -10202,7 +10406,7 @@ function renderLibPieces() {
           <div style="flex:1">
             <div style="font-size:0.88rem;font-weight:600">${esc(p.title)}</div>
             ${pieceCats(p).length > 1 ? `<div style="font-size:0.68rem;color:var(--violin)">📂 Also in: ${pieceCats(p).filter(c => c !== cat).map(esc).join(', ')}</div>` : ''}
-            ${p.composer||p.grade||(p.movements&&p.movements.length) ? `<div style="font-size:0.75rem;color:var(--muted)">${[p.composer,p.grade].filter(Boolean).map(esc).concat(p.movements&&p.movements.length ? ['<span style="color:var(--violin)">🎼 ' + tickableCount(p.movements) + ' movement' + (tickableCount(p.movements)===1?'':'s') + '</span>'] : []).join(' · ')}</div>` : ''}
+            <div style="font-size:0.75rem;color:var(--muted)">${(libKindFilter ? [] : [libKindInfo(libKind(p)).icon + ' ' + libKindInfo(libKind(p)).one]).concat([p.composer,p.grade].filter(Boolean).map(esc)).concat(p.movements&&p.movements.length ? ['<span style="color:var(--violin)">🎼 ' + tickableCount(p.movements) + ' ' + libKindInfo(libKind(p)).unit[tickableCount(p.movements)===1?0:1] + '</span>'] : []).join(' · ')}</div>
           </div>
           <button onclick="editLibPieceByKey('${key}')" style="background:none;border:1.5px solid var(--viola);border-radius:6px;padding:3px 8px;color:var(--viola);cursor:pointer;font-size:0.75rem;flex-shrink:0">Edit</button>
           <button onclick="removeLibPieceByKey('${key}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px;flex-shrink:0">×</button>
@@ -10235,7 +10439,10 @@ function addLibPiece() {
   const mvEl = document.getElementById('lib-new-piece-mvts');
   const movements = parseStudiesInput(mvEl ? mvEl.value : '');
   const piece = { title, composer, grade, cat };
+  if (libNewKind !== 'piece') { piece.kind = libNewKind; piece.bid = newLibBid(); }
   if (movements.length) piece.movements = movements;
+  const nl = libNewNumLabel || (libNewKind === 'piece' ? 'Mvt.' : 'No.');
+  if (movements.length && nl !== (libNewKind === 'piece' ? 'Mvt.' : 'No.')) piece.numLabel = nl;
   customPieces.push(piece);
   save();
   if (mvEl) mvEl.value = '';
@@ -10268,6 +10475,7 @@ function editLibPieceByKey(key) {
   document.getElementById('edit-lib-piece-mvts').value     = studiesToText(p.movements || []);
   editAlsoCats = (p.also || []).slice();
   renderEditAlsoCats();
+  editKind = libKind(p);
   editNumLabel = pieceNumLabelOf(p);
   renderEditNumLabel();
   document.getElementById('edit-lib-piece-modal').classList.add('open');
@@ -10275,7 +10483,15 @@ function editLibPieceByKey(key) {
 
 // "Numbers are: Mvt. / No. / Var." chips in the Edit piece window
 let editNumLabel = 'Mvt.';
+let editKind = 'piece';
+function setEditKind(k) {
+  // Swap the usual number word over too, if it hadn't been changed
+  if (editNumLabel === (editKind === 'piece' ? 'Mvt.' : 'No.')) editNumLabel = (k === 'piece' ? 'Mvt.' : 'No.');
+  editKind = k; renderEditNumLabel();
+}
 function renderEditNumLabel() {
+  const kEl = document.getElementById('edit-lib-piece-kind');
+  if (kEl) kEl.innerHTML = LIB_KINDS.map(function(k){ return kindChipHTML(editKind === k.id, k.icon + ' ' + k.one, 'setEditKind(\'' + k.id + '\')'); }).join('');
   const el = document.getElementById('edit-lib-piece-numlabel'); if (!el) return;
   el.innerHTML = PIECE_NUM_LABELS.map(function(l) {
     const on = l === editNumLabel;
@@ -10307,6 +10523,21 @@ function closeEditLibPiece() {
   document.getElementById('edit-lib-piece-modal').classList.remove('open');
 }
 
+function renameLibTitleForPupils(oldT, newT) {
+  const ok = libTitleKey(oldT), nk = libTitleKey(newT);
+  (students || []).forEach(function(s) {
+    if (Array.isArray(s.pieces)) s.pieces = s.pieces.map(function(x){ return libTitleKey(x) === ok ? newT : x; });
+    if (s.pieceMvtTicks && s.pieceMvtTicks[ok]) {
+      const to = s.pieceMvtTicks[nk] || (s.pieceMvtTicks[nk] = {});
+      Object.keys(s.pieceMvtTicks[ok]).forEach(function(k){ if (bookTickLevel(s.pieceMvtTicks[ok][k]) > bookTickLevel(to[k])) to[k] = s.pieceMvtTicks[ok][k]; });
+      delete s.pieceMvtTicks[ok];
+    }
+    ['studyBooks', 'methodBooks', 'albums'].forEach(function(f) {
+      (s[f] || []).forEach(function(b){ if (libTitleKey(b.name) === ok) b.name = newT; });
+    });
+  });
+}
+
 function saveEditLibPiece() {
   const origKey = document.getElementById('edit-lib-piece-idx').value;
   const updated = {
@@ -10317,7 +10548,13 @@ function saveEditLibPiece() {
   };
   const mvts = parseStudiesInput(document.getElementById('edit-lib-piece-mvts').value);
   if (mvts.length) updated.movements = mvts;
-  if (mvts.length && editNumLabel !== 'Mvt.') updated.numLabel = editNumLabel;
+  if (editKind !== 'piece') updated.kind = editKind;
+  const before = findLibPieceByKey(origKey);
+  if (editKind !== 'piece') updated.bid = (before && before.bid) || newLibBid();
+  else if (before && before.bid) updated.bid = before.bid; // pupils' copies stay linked
+  if (mvts.length && editNumLabel !== (editKind === 'piece' ? 'Mvt.' : 'No.')) updated.numLabel = editNumLabel;
+  // Renamed? Move pupils' lists and ticks over to the new name
+  if (before && before.title && libTitleKey(before.title) !== libTitleKey(updated.title)) renameLibTitleForPupils(before.title, updated.title);
   const also = editAlsoCats.filter(c => c && c !== updated.cat);
   if (also.length) updated.also = also;
   if (!updated.title) return; // don't save a blank title
@@ -13765,7 +14002,7 @@ function libPickBookSets(s) {
   const bank  = { studies: studyBookBank, methods: methodBookBank, albums: albumBank }[libPickSource] || [];
   const mine = ((s && s[field]) || []).map(function(b, i) {
     const fromBank = b.bankId ? bank.find(function(x){ return x.id === b.bankId; }) : null;
-    return { key: 'p' + i, name: b.name, items: bookStudies(b), ticks: b.ticks || {}, bankId: b.bankId || null,
+    return { key: 'p' + i, name: bookTitle(b), items: bookStudies(b), ticks: sharedTicks(s, bookTitle(b)), bankId: b.bankId || null,
              numLabel: b.numLabel || (fromBank && fromBank.numLabel) || 'No.' };
   });
   const mineBankIds = new Set(mine.map(function(b){ return b.bankId; }).filter(Boolean));
@@ -14636,6 +14873,7 @@ function restoreData(event) {
       studyBookBank   = JSON.parse(localStorage.getItem('studio_study_book_bank')   || '[]');
       methodBookBank  = JSON.parse(localStorage.getItem('studio_method_book_bank')  || '[]');
       albumBank       = JSON.parse(localStorage.getItem('studio_album_bank')        || '[]');
+      try { mergeBanksIntoLibrary(); } catch (e) { console.error('Library merge', e); }
       studioRates     = JSON.parse(localStorage.getItem('studio_rates')             || '{}');
       billingPaid     = JSON.parse(localStorage.getItem('studio_billing_paid')      || '{}');
       invoiceSettings = JSON.parse(localStorage.getItem('studio_invoice_settings')  || 'null') || invoiceSettings;
