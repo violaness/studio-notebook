@@ -557,6 +557,13 @@
   .after-pair { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; align-items: start; margin-bottom: 12px; }
   .after-pair > .section-card { margin-bottom: 0; min-width: 0; }
   @media (max-width: 600px) { .after-pair { grid-template-columns: 1fr; } }
+  /* Working On: Scales / Technical / Pieces */
+  .wo-group { padding: 8px 0 10px; border-bottom: 1px dashed var(--warm); }
+  .wo-group:last-child { border-bottom: none; }
+  .wo-label { font-size: 0.72rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+  .wo-group .piece-item { margin-bottom: 8px; }
+  .wo-add { background: none; border: none; color: var(--viola); font-family: 'Special Elite', cursive; font-size: 0.78rem; cursor: pointer; padding: 4px 2px; }
+  .move-piece-btn { background: none; border: none; color: var(--muted); font-size: 0.95rem; cursor: pointer; padding: 2px 4px; }
   /* Before tab: what they play (left) | what to do (right); stacked on a phone */
   .before-pair { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; align-items: start; margin-bottom: 12px; }
   .before-col { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
@@ -3379,12 +3386,12 @@ function renderDetail(s, preserveTab = false) {
     <!-- BEFORE -->
     <div class="moment-panel active" id="panel-before">
       <div class="section-card">
-        <div class="section-label">🎵 Music Library</div>
-        <div class="pieces-list" id="pieces-list-${s.id}">${piecesHTML}</div>
-        <div style="display:flex;gap:8px;margin-top:6px">
-          <button class="add-piece-btn" style="flex:1" onclick="openPieceDB('${s.id}')">＋ From library</button>
-          <button class="add-piece-btn" style="flex:1" onclick="addPiece('${s.id}')">＋ Add manually</button>
+        <div class="section-label">🎵 Working On</div>
+        <div class="wo-group"><div class="wo-label">🎻 Scales</div>
+          <div id="scales-week-${s.id}">${scalesForWeekHTML(s)}</div>
         </div>
+        <div class="pieces-list" id="pieces-list-${s.id}">${piecesHTML}</div>
+        <button class="add-piece-btn" style="width:100%;margin-top:8px" onclick="openPieceDB('${s.id}')">＋ From library</button>
       </div>
       <div class="before-pair">
       <div class="before-col">
@@ -3395,10 +3402,6 @@ function renderDetail(s, preserveTab = false) {
         </div>
         <div id="next-ticks-b-${s.id}" class="nt-blue">${nextTicksHTML(s, 'b')}</div>
         <button type="button" onclick="addNextTickRow('${s.id}','b')" style="background:none;border:1.5px dashed #a8c8e8;color:#1a4a6b;border-radius:8px;padding:6px 12px;margin-top:8px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;width:100%">＋ Add line</button>
-      </div>
-      <div class="section-card">
-        <div class="section-label" style="margin-bottom:8px">🎻 Scales for this week</div>
-        <div id="scales-week-${s.id}">${scalesForWeekHTML(s)}</div>
       </div>
       <details class="section-card" style="padding:0">
         <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.72rem;font-weight:700;color:var(--muted)">
@@ -4168,22 +4171,27 @@ function piecesDisplay(s) {
   }).filter(Boolean);
 }
 
-function addPiece(id) {
+function addPiece(id, group) {
   const s=getStudent(id); if(!s)return;
   if(!s.pieces)s.pieces=[];
-  s.pieces.push(''); save(); renderDetail(s);
+  s.pieces.push('');
+  const i = s.pieces.length - 1;
+  setPieceGroup(s, i, group === 'tech' ? 'tech' : 'piece');
+  save(); renderDetail(s, true);
 
   setTimeout(()=>{
-    const inputs=document.querySelectorAll(`#pieces-list-${id} .piece-name`); // the new piece's name box
-    if(inputs.length)inputs[inputs.length-1].focus();
-  },50);
+    // focus the new, empty name box in the right group
+    const box = document.querySelector('#pieces-list-' + id + ' .piece-item[data-i="' + i + '"] .piece-name');
+    if (box) box.focus();
+  },80);
 }
 function removePiece(id, i) {
   const s=getStudent(id); if(!s)return;
   s.pieces.splice(i,1);
   if(s.pieceRefs) s.pieceRefs.splice(i,1);
+  if(s.pieceGroups) s.pieceGroups.splice(i,1);
   if(s.pieces.length===0)s.pieces=[''];
-  save(); renderDetail(s);
+  save(); renderDetail(s, true);
 }
 
 function toggleTech(id, tech, btn) {
@@ -4987,28 +4995,70 @@ function mvtTick(sid, i, idx) {
   if (el) el.innerHTML = mvtTicksHTML(s, i);
 }
 
+// ── WORKING ON: Technical / Pieces groups ──
+// Each item in s.pieces is either 'tech' or 'piece'. You can move one with ⇅
+// (saved in s.pieceGroups, index-aligned with s.pieces); otherwise it's worked out
+// from the library category, the study/method book lists, or words in the title.
+const TECH_WORDS = /(stud(y|ies)|[ée]tudes?|exercis|scale|technique|technical|sevcik|ševčík|schradieck|wohlfahrt|kreutzer|kayser|mazas|dont\b|campagnoli|position|bowing|vibrato|shifting|scalability|arpeggi|caprice)/i;
+function pieceAutoGroup(title) {
+  const t = String(title || '').trim(); if (!t) return 'piece';
+  const lt = t.toLowerCase();
+  const lib = visibleLibraryPieces().find(function(p){ return (p.title || '').toLowerCase() === lt; });
+  if (lib) {
+    const cats = pieceCats(lib).join(' ');
+    if (/technique|scalab|stud/i.test(cats)) return 'tech';
+    if (/repertoire/i.test(cats)) return 'piece';
+  }
+  const books = [].concat(typeof studyBookBank !== 'undefined' ? studyBookBank : [], typeof methodBookBank !== 'undefined' ? methodBookBank : []);
+  if (books.some(function(bk){ const n = String(bk.name || '').toLowerCase(); return n && lt.indexOf(n) === 0; })) return 'tech';
+  return TECH_WORDS.test(t) ? 'tech' : 'piece';
+}
+function pieceGroupOf(s, i) {
+  const g = (s.pieceGroups || [])[i];
+  return (g === 'tech' || g === 'piece') ? g : pieceAutoGroup((s.pieces || [])[i]);
+}
+function setPieceGroup(s, i, g) {
+  if (!s.pieceGroups) s.pieceGroups = [];
+  while (s.pieceGroups.length < i) s.pieceGroups.push(null);
+  s.pieceGroups[i] = g;
+}
+function movePieceGroup(id, i) {
+  const s = getStudent(id); if (!s) return;
+  setPieceGroup(s, i, pieceGroupOf(s, i) === 'tech' ? 'piece' : 'tech');
+  save(); renderDetail(s, true);
+}
+
 function buildPiecesHTML(s) {
   const pieces = s.pieces && s.pieces.length ? s.pieces : [''];
   const refs   = s.pieceRefs || [];
   const seenMvt = {};
-  return pieces.map(function(p, i) {
+  const rows = { tech: [], piece: [] };
+  pieces.forEach(function(p, i) {
+    const g = pieceGroupOf(s, i);
     const ref = refs[i] || '';
     // Movement ticks under the first row of each piece that has movements
     const mk = normPieceCat(String(p || '')).toLowerCase();
     const showMvts = p && !seenMvt[mk] && pieceMovements(p);
     if (showMvts) seenMvt[mk] = true;
     const mvtRow = showMvts ? '<div id="mvt-ticks-' + s.id + '-' + i + '" style="flex-basis:100%">' + mvtTicksHTML(s, i) + '</div>' : '';
-    return '<div class="piece-item" style="flex-wrap:wrap;gap:6px;align-items:center">'
+    rows[g].push('<div class="piece-item" data-i="' + i + '" style="flex-wrap:wrap;gap:6px;align-items:center">'
       + '<textarea rows="1" class="piece-name" placeholder="Piece or exercise\u2026" style="flex:1;min-width:120px"'
       + ' oninput="autoGrow(this);updatePiece(\'' + s.id + '\',' + i + ',this.value)"'
       + ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}"'
       + ' onblur="offerSavePieceToLibrary(\'' + s.id + '\',' + i + ',this.value)">' + esc(p) + '</textarea>'
       + '<input type="text" placeholder="No. / mvt. (optional)" value="' + esc(ref) + '" style="flex:1;min-width:80px;font-size:0.82rem"'
       + ' oninput="updatePieceRef(\'' + s.id + '\',' + i + ',this.value)">'
+      + '<button class="move-piece-btn" onclick="movePieceGroup(\'' + s.id + '\',' + i + ')" title="Move to ' + (g === 'tech' ? 'Pieces' : 'Technical') + '">\u21c5</button>'
       + '<button class="remove-piece-btn" onclick="removePiece(\'' + s.id + '\',' + i + ')" title="Remove">\u00d7</button>'
       + mvtRow
-      + '</div>';
-  }).join('');
+      + '</div>');
+  });
+  const group = function(g, label) {
+    return '<div class="wo-group"><div class="wo-label">' + label + '</div>'
+      + rows[g].join('')
+      + '<button class="wo-add" onclick="addPiece(\'' + s.id + '\',\'' + g + '\')">＋ Add</button></div>';
+  };
+  return group('tech', '🔧 Technical') + group('piece', '🎵 Pieces');
 }
 
 function allTechCategories() {
@@ -12801,10 +12851,11 @@ function completePiece(id, title, fullTitle) {
   if (idx >= 0) {
     s.pieces.splice(idx, 1);
     if (s.pieceRefs) s.pieceRefs.splice(idx, 1);
+    if (s.pieceGroups) s.pieceGroups.splice(idx, 1);
   }
   if (!s.pieces || s.pieces.length === 0) s.pieces = [''];
   save(); renderDetail(s);
-  document.querySelectorAll('.moment-tab').forEach((t,i) => { if(i===4) t.click(); });
+  document.querySelectorAll('.moment-tab').forEach(t => { if (t.textContent.trim() === 'History') t.click(); });
 }
 function restorePiece(id, idx) {
   const s = getStudent(id); if (!s) return;
@@ -13253,7 +13304,7 @@ function renderLibPickChrome() {
       return '<button onclick="libPickSetDest(\'' + val + '\')" style="flex:1;padding:7px 8px;border-radius:999px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.78rem;'
         + 'border:1.5px solid var(--viola);background:' + (on ? 'var(--viola)' : 'transparent') + ';color:' + (on ? '#fff' : 'var(--viola)') + ';font-weight:' + (on ? '700' : '500') + '">' + label + '</button>';
     };
-    dest.innerHTML = chip('pieces', '🎵 Music Library') + chip('plan', '📌 Today’s plan');
+    dest.innerHTML = chip('pieces', '🎵 Working On') + chip('plan', '📌 Today’s plan');
   }
   const cat = document.getElementById('piece-cat-filter');
   if (cat) cat.style.display = libPickSource === 'pieces' ? '' : 'none';
@@ -13507,12 +13558,17 @@ function libPickAdd(title, ref) {
     s.pieces[i] = title;
     while (s.pieceRefs.length < i) s.pieceRefs.push('');
     s.pieceRefs[i] = ref || '';
+    // Study / method books and your own sheets are technical, albums are pieces;
+    // from the Full library it's worked out from the category.
+    const g = (libPickSource === 'studies' || libPickSource === 'methods' || libPickSource === 'violaness') ? 'tech'
+            : libPickSource === 'albums' ? 'piece' : null;
+    setPieceGroup(s, i, g);
     const listEl = document.getElementById('pieces-list-' + s.id);
     if (listEl) { listEl.innerHTML = buildPiecesHTML(s); listEl.querySelectorAll('.piece-name').forEach(growTick); }
   }
   save();
   libPickAddedAny = true;
-  const where = libPickGetDest() === 'plan' ? 'today’s plan' : 'Music Library';
+  const where = libPickGetDest() === 'plan' ? 'today’s plan' : 'Working On';
   const toast = document.getElementById('libpick-toast');
   if (toast) {
     toast.textContent = '✓ ' + label + ' → ' + where;
@@ -13702,7 +13758,7 @@ function exportHTML(pupils, term, includeScales, includeSevcik) {
     var piecesSection = '';
     if (pieces.length > 0) {
       piecesSection = '<div style="margin-bottom:16px">'
-        + '<div style="font-size:0.6rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">Music Library</div>'
+        + '<div style="font-size:0.6rem;font-weight:700;color:#6b8a6b;letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">Working On</div>'
         + pieces.map(function(p) {
             return '<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid #e8f0e0">'
               + '<div style="width:5px;height:5px;border-radius:50%;background:#8AB640;flex-shrink:0;margin-top:2px"></div>'
