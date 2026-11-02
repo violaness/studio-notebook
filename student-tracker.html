@@ -3577,6 +3577,30 @@ function renderDetail(s, preserveTab = false) {
         <div class="save-toast" id="toast-next-${s.id}">✓ Saved to Before tab</div>
       </div>
       </div>
+      <div class="section-card">
+        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Attendance - today's lesson <span class="save-toast" id="toast-attendance-${s.id}" style="display:inline;margin:0 0 0 8px;font-size:0.72rem">✓ Saved</span></span>
+          ${(()=>{ const last=(s.log||[]).slice(-1)[0]; return last&&last.attendance?`<button onclick="clearAttendance('${s.id}')" style="background:none;border:none;font-size:0.72rem;font-weight:400;color:var(--muted);cursor:pointer;padding:2px 6px;text-decoration:underline">Clear attendance</button>`:''; })()}
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${attendanceButtonsHTML(s)}
+        </div>
+      </div>
+      <div class="section-card">
+        <div class="section-label">Last lesson</div>
+        <div id="last-lesson-panel-${s.id}">${(function() {
+          const last = (s.log||[]).filter(e => e.text || e.attendance).slice(-1)[0];
+          if (!last) return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No previous lesson recorded yet.</p>';
+          const attLabels = {present:'✓ Present','absent-late':'✕ Late cancel','absent-notice':'– Good notice',cancelled:'– Cancelled'};
+          const att = last.attendance ? ' · <span style="font-size:0.75rem;color:var(--muted)">' + (attLabels[last.attendance]||'') + '</span>' : '';
+          const lines = (last.text||'').split('\n').filter(function(l){ return l.trim(); });
+          const textHTML = lines.length
+            ? lines.map(function(l){ return '<div style="display:flex;gap:6px;margin-bottom:3px"><span style="color:var(--viola);flex-shrink:0">•</span><span>' + linkify(l.trim()) + '</span></div>'; }).join('')
+            : '<div style="color:var(--muted);font-style:italic;font-size:0.82rem">No notes</div>';
+          return '<div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:6px">' + esc(last.date) + att + '</div>'
+            + '<div style="font-size:0.88rem;line-height:1.6">' + textHTML + '</div>';
+        })()}</div>
+      </div>
       <details style="margin-bottom:10px" ontoggle="if(this.open){initCanvas('${s.id}');renderCanvasSaves('${s.id}');}">
         <summary style="font-size:0.88rem;color:var(--viola);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
           <span>Sketch - bowings, fingerings, notation</span>
@@ -3610,39 +3634,13 @@ function renderDetail(s, preserveTab = false) {
           <div class="save-toast" id="toast-canvas-${s.id}">✓ Sketch saved</div>
         </div>
       </details>
-      <div class="section-card">
-        <div class="section-label">Attendance - today's lesson</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">
-          ${attendanceButtonsHTML(s)}
-        </div>
-        <div class="save-toast" id="toast-attendance-${s.id}">✓ Attendance saved</div>
-        ${(()=>{ const last=(s.log||[]).slice(-1)[0]; return last&&last.attendance?`<button onclick="clearAttendance('${s.id}')" style="background:none;border:none;font-size:0.78rem;color:var(--muted);cursor:pointer;margin-top:4px;padding:0">Clear attendance</button>`:''; })()}
-      </div>
-      <div class="section-card">
-        <div class="section-label">Last lesson</div>
-        <div id="last-lesson-panel-${s.id}">${(function() {
-          const last = (s.log||[]).filter(e => e.text || e.attendance).slice(-1)[0];
-          if (!last) return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No previous lesson recorded yet.</p>';
-          const attLabels = {present:'✓ Present','absent-late':'✕ Late cancel','absent-notice':'– Good notice',cancelled:'– Cancelled'};
-          const att = last.attendance ? ' · <span style="font-size:0.75rem;color:var(--muted)">' + (attLabels[last.attendance]||'') + '</span>' : '';
-          const lines = (last.text||'').split('\n').filter(function(l){ return l.trim(); });
-          const textHTML = lines.length
-            ? lines.map(function(l){ return '<div style="display:flex;gap:6px;margin-bottom:3px"><span style="color:var(--viola);flex-shrink:0">•</span><span>' + linkify(l.trim()) + '</span></div>'; }).join('')
-            : '<div style="color:var(--muted);font-style:italic;font-size:0.82rem">No notes</div>';
-          return '<div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:6px">' + esc(last.date) + att + '</div>'
-            + '<div style="font-size:0.88rem;line-height:1.6">' + textHTML + '</div>';
-        })()}</div>
-      </div>
     </div>
 
     <!-- SCALES / TECHNIQUE -->
     <div class="moment-panel" id="panel-scales">
 
-      <!-- TECHNIQUE tile grid: checklist spans the top, then greens left / blues right -->
+      <!-- TECHNIQUE tile grid: greens left / blues right, checklist full width at the bottom -->
       <div class="admin-grid" style="grid-template-rows:none;grid-auto-flow:row">
-        <button class="admin-tile" style="background:#1a4a6b;grid-column:1 / -1" onclick="showTechniqueSection('${s.id}','technique')">
-          <span class="admin-tile-icon">🛠</span><span class="admin-tile-label">Technique checklist</span>
-        </button>
         <button class="admin-tile" style="background:var(--string);color:var(--ink)" onclick="showTechniqueSection('${s.id}','studybooks')">
           <span class="admin-tile-icon">📖</span><span class="admin-tile-label">Study books</span>
         </button>
@@ -3655,7 +3653,10 @@ function renderDetail(s, preserveTab = false) {
         <button class="admin-tile" style="background:var(--violin)" onclick="showTechniqueSection('${s.id}','methodbooks')">
           <span class="admin-tile-icon">📘</span><span class="admin-tile-label">Method books</span>
         </button>
-        <!-- top: dark blue like Billing (full width) · middle: light green|light blue · bottom: mid green|mid blue -->
+        <button class="admin-tile" style="background:#1a4a6b;grid-column:1 / -1" onclick="showTechniqueSection('${s.id}','technique')">
+          <span class="admin-tile-icon">🛠</span><span class="admin-tile-label">Technique checklist</span>
+        </button>
+        <!-- light green|light blue · mid green|mid blue · then the checklist full width at the bottom -->
       </div>
 
       <div id="technique-panels-${s.id}">
@@ -6236,11 +6237,24 @@ function refSummary(s) {
 
   if (!pieces.length && !scales.length && !scalesWeek.length && !tech.length && !plan && !pupilNote) return '';
 
-  var piecesHTML = pieces.map(function(p) {
-    return '<span onclick="insertIntoScratch(\'' + s.id + '\',\'' + escJs(p) + '\')" '
-      + 'style="display:inline-block;background:var(--card-bg);border-radius:6px;padding:3px 8px;font-size:0.78rem;margin:2px;cursor:pointer;border:1px solid transparent" '
-      + 'title="Tap to insert into notes">' + esc(p) + '</span>';
-  }).join('');
+  // Working On, split like the Before tab: Technical (blue) and Pieces (green)
+  var woPill = function(label, g) {
+    var c = g === 'tech' ? 'background:#eef6ff;border:1px solid #a8c8e8;color:#1a4a6b' : 'background:#eef6e6;border:1px solid #c8ddb8;color:#1a3a0a';
+    return '<span onclick="insertIntoScratch(\'' + s.id + '\',\'' + escJs(label) + '\')" '
+      + 'style="display:inline-block;border-radius:6px;padding:3px 8px;font-size:0.78rem;margin:2px;cursor:pointer;' + c + '" '
+      + 'title="Tap to insert into notes">' + esc(label) + '</span>';
+  };
+  var woTech = [], woPieces = [];
+  (s.pieces || []).forEach(function(p, i) {
+    if (!p || !String(p).trim()) return;
+    (pieceGroupOf(s, i) === 'tech' ? woTech : woPieces).push(woPill(pieceDisplayTitle(s, i), pieceGroupOf(s, i)));
+  });
+  var woSub = function(label, html) {
+    return '<div style="display:flex;align-items:flex-start;gap:8px;margin:3px 0"><span style="flex:0 0 7em;white-space:nowrap;font-size:0.72rem;font-weight:700;color:var(--muted);padding-top:5px">' + label + '</span><div style="flex:1;min-width:0">' + html + '</div></div>';
+  };
+  var piecesHTML = (scalesWeek.length ? woSub('🎻 Scales', scalesWeek.map(function(k){ return '<span style="display:inline-block;background:var(--card-bg);border:1.5px solid var(--viola);border-radius:999px;padding:2px 10px;font-size:0.78rem;font-weight:700;color:var(--viola);margin:2px">' + esc(k) + '</span>'; }).join('')) : '')
+    + (woTech.length ? woSub('🔧 Technical', woTech.join('')) : '')
+    + (woPieces.length ? woSub('🎵 Pieces', woPieces.join('')) : '');
 
   var scaleTagsHTML = scales.map(function(sc) {
     var col = {'Working on it':'#29789E','Getting there':'#e67e22','Secure':'#2F5C1A','Needs review':'#c0392b'}[sc.progress] || 'var(--muted)';
@@ -6259,9 +6273,8 @@ function refSummary(s) {
       : linkify(plan);
     inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83d\udccc PLAN FOR TODAY</div><div style="font-size:0.88rem;line-height:1.5;color:var(--ink)">' + planHTML + '</div></div>';
   }
-  if (pieces.length) inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83c\udfb5 PIECES &amp; EXERCISES</div><div>' + piecesHTML + '</div></div>';
+  if (piecesHTML) inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83c\udfb5 WORKING ON</div><div>' + piecesHTML + '</div></div>';
   if (tech.length)       inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83d\udd27 TECHNICAL FOCUS</div><div>' + techHTML + '</div></div>';
-  if (scalesWeek.length) inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--viola);margin-bottom:4px">🎻 SCALES THIS WEEK</div><div style="display:flex;flex-wrap:wrap;gap:6px">' + scalesWeek.map(function(k){ return '<span style="background:var(--card-bg);border:1.5px solid var(--viola);border-radius:999px;padding:3px 10px;font-size:0.82rem;font-weight:700;color:var(--viola)">' + esc(k) + '</span>'; }).join('') + '</div></div>';
   if (scales.length)     inner += '<div style="margin-bottom:8px"><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83c\udfbc SCALES</div><div>' + scaleTagsHTML + '</div></div>';
   if (pupilNote)         inner += '<div><div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px">\ud83d\udcd3 PUPIL NOTES</div><div style="font-size:0.82rem;line-height:1.5;color:var(--muted);font-style:italic">' + esc(pupilNote) + '</div></div>';
 
