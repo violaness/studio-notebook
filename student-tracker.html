@@ -2123,8 +2123,8 @@
       <textarea id="edit-lib-piece-mvts" rows="3" placeholder="3&#10;or&#10;I. Allegro&#10;II. Adagio" style="width:100%;padding:8px 12px;border-radius:8px;font-size:0.88rem;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;box-sizing:border-box;resize:vertical;background:var(--paper)"></textarea>
     </div>
     <div class="field-group">
-      <label class="field-label">Category</label>
-      <select id="edit-lib-piece-cat">
+      <label class="field-label">Main category</label>
+      <select id="edit-lib-piece-cat" onchange="renderEditAlsoCats()">
         <option value="My Library">My Library</option>
         <option value="Scalability">Scalability</option>
         <option value="Technique">Technique</option>
@@ -2135,6 +2135,11 @@
         <option value="Beginner Repertoire - Viola">Beginner Repertoire - Viola</option>
         <option value="Beginner Repertoire - Violin">Beginner Repertoire - Violin</option>
       </select>
+    </div>
+    <div class="field-group">
+      <label class="field-label">📂 Also show in (optional)</label>
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">Tick any other categories, e.g. a duet that's also a study.</div>
+      <div id="edit-lib-piece-also" style="display:flex;flex-wrap:wrap;gap:6px"></div>
     </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeEditLibPiece()">Cancel</button>
@@ -9639,7 +9644,7 @@ const BUILTIN_CATS = ['My Library','Scalability','Technique','Studies - Viola','
 // Add any custom categories (created via "+ New category…") to both filter
 // dropdowns, so pieces filed under them can still be found/filtered.
 function populateCatFilters() {
-  const customCats = [...new Set(customPieces.map(p => p.cat).filter(c => c && !BUILTIN_CATS.includes(c)))].sort();
+  const customCats = [...new Set([].concat(...customPieces.map(pieceCats)).filter(c => c && !BUILTIN_CATS.includes(c)))].sort();
   // Rebuild all four category selects (filter dropdowns + add + edit modals)
   // from their original built-in options, leaving out any you've deleted,
   // then add your own categories (before "+ New category…" where present).
@@ -9673,8 +9678,8 @@ function pieceCatList() {
   const all = visibleLibraryPieces();
   const cats = [];
   BUILTIN_CATS.forEach(c => { if (!hiddenPieceCats.includes(c)) cats.push(c); });
-  all.forEach(p => { if (p.cat && !cats.includes(p.cat) && !hiddenPieceCats.includes(p.cat)) cats.push(p.cat); });
-  return cats.map(c => ({ name: c, count: all.filter(p => p.cat === c).length }));
+  all.forEach(p => pieceCats(p).forEach(c => { if (!cats.includes(c) && !hiddenPieceCats.includes(c)) cats.push(c); }));
+  return cats.map(c => ({ name: c, count: all.filter(p => pieceInCat(p, c)).length }));
 }
 
 function renderPieceCatManage() {
@@ -9715,6 +9720,7 @@ function deletePieceCat(cat) {
       customPieces.push(copy);
     }
   });
+  customPieces.forEach(cp => { if (cp.also) cp.also = cp.also.filter(c => c !== cat); }); // extra places only
   if (!hiddenPieceCats.includes(cat)) hiddenPieceCats.push(cat);
   save();
   const f1 = document.getElementById('lib-cat-filter'); if (f1 && f1.value === cat) f1.value = '';
@@ -9860,6 +9866,26 @@ function removeLibChip(idx) {
   renderLibChips();
 }
 
+// A piece can sit in extra categories too (p.also), e.g. a duet that's also a study.
+function pieceCats(p) {
+  const out = [];
+  [p && p.cat].concat((p && p.also) || []).forEach(function(c){ if (c && out.indexOf(c) === -1) out.push(c); });
+  return out;
+}
+function pieceInCat(p, c) { return pieceCats(p).indexOf(c) !== -1; }
+// Group pieces under every category they belong to (or just the chosen one)
+function groupPiecesByCat(pieces, onlyCat) {
+  const groups = {};
+  pieces.forEach(function(p) {
+    pieceCats(p).forEach(function(c) {
+      if (onlyCat && c !== onlyCat) return;
+      if (c !== p.cat && hiddenPieceCats.includes(c)) return; // an extra category you've deleted
+      (groups[c] = groups[c] || []).push(p);
+    });
+  });
+  return groups;
+}
+
 // Key a piece by title + category, used to match overrides and hidden entries.
 function pieceKey(p) { return (p.title||'') + '|||' + (p.cat||''); }
 
@@ -9879,13 +9905,12 @@ function renderLibPieces() {
   const cat = document.getElementById('lib-cat-filter').value;
   const filtered = visibleLibraryPieces().filter(p => {
     const matchSearch = !search || p.title.toLowerCase().includes(search) || (p.composer||'').toLowerCase().includes(search) || (p.grade||'').toLowerCase().includes(search);
-    const matchCat = !cat || p.cat === cat;
+    const matchCat = !cat || pieceInCat(p, cat);
     return matchSearch && matchCat;
   });
   if (filtered.length === 0) { list.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">No results.</p>'; return; }
-  // Group by category
-  const groups = {};
-  filtered.forEach(p => { if (!groups[p.cat]) groups[p.cat] = []; groups[p.cat].push(p); });
+  // Group by category (a piece in two categories shows under both)
+  const groups = groupPiecesByCat(filtered, cat);
   list.innerHTML = Object.entries(groups).map(([cat, pieces]) => `
     <div style="margin-bottom:14px">
       <div style="font-size:0.78rem;font-weight:700;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${cat.replace(' - ',' - ')}</div>
@@ -9896,6 +9921,7 @@ function renderLibPieces() {
         return `<div style="padding:8px 0;border-bottom:1px solid var(--warm);display:flex;align-items:center;gap:8px">
           <div style="flex:1">
             <div style="font-size:0.88rem;font-weight:600">${esc(p.title)}</div>
+            ${pieceCats(p).length > 1 ? `<div style="font-size:0.68rem;color:var(--violin)">📂 Also in: ${pieceCats(p).filter(c => c !== cat).map(esc).join(', ')}</div>` : ''}
             ${p.composer||p.grade||(p.movements&&p.movements.length) ? `<div style="font-size:0.75rem;color:var(--muted)">${[p.composer,p.grade].filter(Boolean).map(esc).concat(p.movements&&p.movements.length ? ['<span style="color:var(--violin)">🎼 ' + tickableCount(p.movements) + ' movement' + (tickableCount(p.movements)===1?'':'s') + '</span>'] : []).join(' · ')}</div>` : ''}
           </div>
           <button onclick="editLibPieceByKey('${key}')" style="background:none;border:1.5px solid var(--viola);border-radius:6px;padding:3px 8px;color:var(--viola);cursor:pointer;font-size:0.75rem;flex-shrink:0">Edit</button>
@@ -9960,7 +9986,28 @@ function editLibPieceByKey(key) {
   document.getElementById('edit-lib-piece-grade').value    = p.grade    || '';
   document.getElementById('edit-lib-piece-cat').value      = p.cat      || 'My Library';
   document.getElementById('edit-lib-piece-mvts').value     = studiesToText(p.movements || []);
+  editAlsoCats = (p.also || []).slice();
+  renderEditAlsoCats();
   document.getElementById('edit-lib-piece-modal').classList.add('open');
+}
+
+// Extra categories chosen in the Edit piece window
+let editAlsoCats = [];
+function renderEditAlsoCats() {
+  const el = document.getElementById('edit-lib-piece-also'); if (!el) return;
+  const main = document.getElementById('edit-lib-piece-cat').value;
+  const cats = pieceCatList().map(c => c.name).filter(c => c !== main);
+  el.innerHTML = cats.map(c => {
+    const on = editAlsoCats.includes(c);
+    return '<button type="button" onclick="toggleEditAlsoCat(\'' + escJs(c) + '\')" style="padding:6px 10px;border-radius:999px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.78rem;'
+      + 'border:1.5px solid ' + (on ? 'var(--viola)' : '#d6ddd2') + ';background:' + (on ? 'var(--viola)' : '#fff') + ';color:' + (on ? '#fff' : 'var(--ink)') + '">'
+      + (on ? '✓ ' : '') + esc(c) + '</button>';
+  }).join('');
+}
+function toggleEditAlsoCat(c) {
+  const i = editAlsoCats.indexOf(c);
+  if (i === -1) editAlsoCats.push(c); else editAlsoCats.splice(i, 1);
+  renderEditAlsoCats();
 }
 
 function closeEditLibPiece() {
@@ -9977,6 +10024,8 @@ function saveEditLibPiece() {
   };
   const mvts = parseStudiesInput(document.getElementById('edit-lib-piece-mvts').value);
   if (mvts.length) updated.movements = mvts;
+  const also = editAlsoCats.filter(c => c && c !== updated.cat);
+  if (also.length) updated.also = also;
   if (!updated.title) return; // don't save a blank title
 
   const existingIdx = customPieces.findIndex(cp => pieceKey(cp) === origKey);
@@ -13252,21 +13301,20 @@ function filterPieceDB() {
   const allPieces = visibleLibraryPieces();
   const filtered = allPieces.filter(p => {
     const matchSearch = !search || p.title.toLowerCase().includes(search) || (p.composer||'').toLowerCase().includes(search) || (p.grade||'').toLowerCase().includes(search);
-    const matchCat = !cat || p.cat === cat;
+    const matchCat = !cat || pieceInCat(p, cat);
     return matchSearch && matchCat;
   });
-  renderPieceDB(filtered);
+  renderPieceDB(filtered, cat);
 }
 
-function renderPieceDB(items) {
+function renderPieceDB(items, onlyCat) {
   const list = document.getElementById('piece-db-list');
   if (items.length === 0) {
     list.innerHTML = '<p style="color:var(--muted);font-size:0.88rem;text-align:center;padding:20px">No results</p>';
     return;
   }
-  // Group by category
-  const groups = {};
-  items.forEach(p => { if (!groups[p.cat]) groups[p.cat] = []; groups[p.cat].push(p); });
+  // Group by category (a piece in two categories shows under both)
+  const groups = groupPiecesByCat(items, onlyCat);
   list.innerHTML = Object.entries(groups).map(([cat, pieces]) => `
     <div style="margin-bottom:14px">
       <div style="font-size:0.68rem;font-weight:800;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${esc(cat.replace(' - ',' - '))}</div>
