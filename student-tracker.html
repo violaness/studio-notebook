@@ -558,7 +558,7 @@
   .after-pair > .section-card { margin-bottom: 0; min-width: 0; }
   @media (max-width: 600px) { .after-pair { grid-template-columns: 1fr; } }
   /* Before tab: what they play (left) | what to do (right); stacked on a phone */
-  .before-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; margin-bottom: 12px; }
+  .before-pair { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; align-items: start; margin-bottom: 12px; }
   .before-col { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
   .before-col > .section-card { margin-bottom: 0; }
   @media (max-width: 600px) { .before-pair { grid-template-columns: 1fr; } }
@@ -940,7 +940,7 @@
     </div>
     <details style="margin-top:14px">
       <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-        <span>🗂 Manage categories</span><span style="font-weight:400">tap to expand</span>
+        <span>🗂 Manage categories</span><span style="font-weight:400">▾</span>
       </summary>
       <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
         <div id="vio-cat-manage"></div>
@@ -1039,7 +1039,7 @@
       <details style="margin-top:10px">
         <summary style="cursor:pointer;font-size:0.72rem;font-weight:700;color:var(--muted);list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 0">
           <span>🎨 Edit categories</span>
-          <span style="font-weight:400">tap to expand</span>
+          <span style="font-weight:400">▾</span>
         </summary>
         <div style="margin-top:10px">
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
@@ -1128,7 +1128,7 @@
     </div>
     <details style="margin-top:14px">
       <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-        <span>🗂 Manage categories</span><span style="font-weight:400">tap to expand</span>
+        <span>🗂 Manage categories</span><span style="font-weight:400">▾</span>
       </summary>
       <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
         <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">Delete a category you don’t use. Any pieces in it move to “My Library”, nothing is lost.</div>
@@ -3331,7 +3331,7 @@ function renderDetail(s, preserveTab = false) {
         <div style="grid-column:1/-1">
           <details>
             <summary style="font-size:0.68rem;font-weight:700;color:#e67e22;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-              <span>🚩 Follow-up note</span><span style="font-weight:400;font-size:0.65rem">tap to expand</span>
+              <span>🚩 Follow-up note</span><span style="font-weight:400;font-size:0.65rem">▾</span>
             </summary>
             <textarea placeholder="Reason for flag…"
               oninput="autoGrow(this);updateLittleDetail('${s.id}','followUpNote',this.value)"
@@ -3339,7 +3339,7 @@ function renderDetail(s, preserveTab = false) {
           </details>
           <details style="margin-top:8px">
             <summary style="font-size:0.68rem;font-weight:700;color:#29789E;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-              <span>👁 Observations</span><span style="font-weight:400;font-size:0.65rem">tap to expand</span>
+              <span>👁 Observations</span><span style="font-weight:400;font-size:0.65rem">▾</span>
             </summary>
             <textarea placeholder="Things you've noticed… learning style, what works, patterns, moments…"
               oninput="autoGrow(this);updateLittleDetail('${s.id}','observations',this.value)"
@@ -3347,7 +3347,7 @@ function renderDetail(s, preserveTab = false) {
           </details>
           <details style="margin-top:8px">
             <summary style="font-size:0.68rem;font-weight:700;color:#c0622f;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-              <span>🎁 Gifts</span><span style="font-weight:400;font-size:0.65rem">tap to expand</span>
+              <span>🎁 Gifts</span><span style="font-weight:400;font-size:0.65rem">▾</span>
             </summary>
             <div id="gift-list-${s.id}">${giftListHTML(s)}</div>
             <div style="display:flex;gap:6px;margin-top:8px">
@@ -3359,7 +3359,7 @@ function renderDetail(s, preserveTab = false) {
           </details>
           <details style="margin-top:8px">
             <summary style="font-size:0.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-              <span>📝 Free notes</span><span style="font-weight:400;font-size:0.65rem">tap to expand</span>
+              <span>📝 Free notes</span><span style="font-weight:400;font-size:0.65rem">▾</span>
             </summary>
             <textarea placeholder="Anything else to remember…"
               oninput="autoGrow(this);updateLittleDetail('${s.id}','freeNotes',this.value)"
@@ -3403,7 +3403,7 @@ function renderDetail(s, preserveTab = false) {
       <details class="section-card" style="padding:0">
         <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.72rem;font-weight:700;color:var(--muted)">
           <span>🔧 Technical focus</span>
-          <span style="font-size:0.7rem;font-weight:400;color:var(--muted)">tap to expand</span>
+          <span style="font-size:0.7rem;font-weight:400;color:var(--muted)">▾</span>
         </summary>
         <div style="padding:0 14px 14px">
           <div class="tech-chips">${techHTML}</div>
@@ -3427,7 +3427,7 @@ function renderDetail(s, preserveTab = false) {
         <textarea autocorrect="off" autocapitalize="sentences" spellcheck="false" rows="10" placeholder="What you want to cover today…" class="lined-note"
           id="nextlesson-${s.id}"
           oninput="updateField('${s.id}','nextLesson',this.value)">${esc(s.nextLesson||'')}</textarea>
-        ${(s.log||[]).filter(e=>e.text).length > 0 ? '<button onclick="copyLastLesson(\'' + s.id + '\')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-size:0.8rem;cursor:pointer;width:100%">\u2191 Copy last lesson notes as plan</button>' : ''}
+        ${(s.log||[]).filter(e=>e.text).length > 0 && !(s.nextLesson||'').trim() ? '<button onclick="copyLastLesson(\'' + s.id + '\')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-size:0.8rem;cursor:pointer;width:100%">\u2191 Copy last lesson notes as plan</button>' : ''}
       </div>
       </div>
       </div>
@@ -3524,13 +3524,11 @@ function renderDetail(s, preserveTab = false) {
           id="after-note-${s.id}"
           oninput="autoGrow(this);fixupListContinuation('after-note-${s.id}');this.dataset.edited='1';saveAfterDraft('${s.id}',this.value)"
           onkeydown="if(event.key==='Enter')handleListEnter(event)">${(typeof s.afterDraft === 'string' && s.afterDraft.length) ? esc(s.afterDraft) : buildCumulativeNote(s)}</textarea>
-        <div style="display:flex;gap:6px;margin-top:6px">
-          <button type="button" onclick="insertLinePrefix('after-note-${s.id}','•')" title="Bullet point" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;color:var(--muted)">• Bullet</button>
-          <button type="button" onclick="insertLinePrefix('after-note-${s.id}','☐')" title="Tick box" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;color:var(--muted)">☐ Tick box</button>
-        </div>
-        <div style="margin-top:10px">
-          <div class="section-label" style="margin-bottom:8px">Tap to add to notes</div>
-          <div class="tech-chips" style="margin-bottom:8px">
+        <details style="margin-top:10px">
+          <summary style="list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:0.7rem;font-weight:700;color:var(--muted);padding:4px 0">
+            <span>🏷️ Tap to add to notes</span><span style="font-weight:400">▾</span>
+          </summary>
+          <div class="tech-chips" style="margin:8px 0">
             ${allTech.filter(t => TECH_OPTIONS.includes(t) ? !deletedBuiltins.includes(t) : true).map(t => {
               const color = techChipColor(t);
               const border = color || '#e0ddd8';
@@ -3538,7 +3536,7 @@ function renderDetail(s, preserveTab = false) {
               return `<button class="tech-chip" onclick="insertIntoScratch('${s.id}','${escJs(t)}')" style="border-left:4px solid ${border};background:${bg}">${esc(t)}</button>`;
             }).join('')}
           </div>
-        </div>
+        </details>
 
         ${(()=>{
           const today = todayLogDate();
@@ -3569,7 +3567,7 @@ function renderDetail(s, preserveTab = false) {
       <details style="margin-bottom:10px" ontoggle="if(this.open){initCanvas('${s.id}');renderCanvasSaves('${s.id}');}">
         <summary style="font-size:0.88rem;color:var(--viola);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
           <span>Sketch - bowings, fingerings, notation</span>
-          <span style="font-size:0.7rem;color:var(--muted)">tap to expand</span>
+          <span style="font-size:0.7rem;color:var(--muted)">▾</span>
         </summary>
         <div class="section-card" style="margin-top:6px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -3742,7 +3740,7 @@ function renderDetail(s, preserveTab = false) {
       <!-- GOALS -->
       <details class="section-card" style="padding:0">
         <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
-          <span>🎯 Goals</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+          <span>🎯 Goals</span><span style="font-size:0.7rem;font-weight:400">▾</span>
         </summary>
         <div style="padding:0 14px 14px">
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
@@ -3769,7 +3767,7 @@ function renderDetail(s, preserveTab = false) {
       <!-- COMPLETED PIECES -->
       <details class="section-card" style="padding:0">
         <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
-          <span>✓ Completed pieces</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+          <span>✓ Completed pieces</span><span style="font-size:0.7rem;font-weight:400">▾</span>
         </summary>
         <div style="padding:0 14px 14px">${completedPiecesHTML(s)}</div>
       </details>
@@ -3777,7 +3775,7 @@ function renderDetail(s, preserveTab = false) {
       <!-- COMPLETED STUDIES -->
       <details class="section-card" style="padding:0">
         <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
-          <span>📖 Completed studies</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+          <span>📖 Completed studies</span><span style="font-size:0.7rem;font-weight:400">▾</span>
         </summary>
         <div style="padding:0 14px 14px">${completedStudiesHTML(s)}</div>
       </details>
@@ -3785,7 +3783,7 @@ function renderDetail(s, preserveTab = false) {
       <!-- COMPLETED SCALES -->
       <details class="section-card" style="padding:0">
         <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
-          <span>🎼 Completed scales</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+          <span>🎼 Completed scales</span><span style="font-size:0.7rem;font-weight:400">▾</span>
         </summary>
         <div style="padding:0 14px 14px">${completedScalesHTML(s)}</div>
       </details>
@@ -3793,7 +3791,7 @@ function renderDetail(s, preserveTab = false) {
       <!-- BOOKS PURCHASED -->
       <details class="section-card" style="padding:0">
         <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
-          <span>📚 Books purchased</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+          <span>📚 Books purchased</span><span style="font-size:0.7rem;font-weight:400">▾</span>
         </summary>
         <div style="padding:0 14px 14px">
           <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">Keep track of which books this pupil already owns, so you don't recommend a duplicate.</div>
@@ -3823,7 +3821,7 @@ function renderDetail(s, preserveTab = false) {
       <!-- ATTENDANCE -->
       <details class="section-card" style="padding:0">
         <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
-          <span>Attendance</span><span style="font-size:0.7rem;font-weight:400">tap to expand</span>
+          <span>Attendance</span><span style="font-size:0.7rem;font-weight:400">▾</span>
         </summary>
         <div style="padding:0 14px 14px">
           <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
@@ -3850,7 +3848,7 @@ function renderDetail(s, preserveTab = false) {
           <span style="display:flex;align-items:center;gap:10px">
             <button onclick="event.preventDefault();event.stopPropagation();openNotesSummary('${s.id}')"
               style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-family:'Special Elite',cursive;font-size:0.72rem;cursor:pointer">📝 Notes summary</button>
-            <span style="font-size:0.7rem;font-weight:400">tap to collapse</span>
+            <span style="font-size:0.7rem;font-weight:400">▴</span>
           </span>
         </summary>
         <div style="padding:0 14px 14px">
@@ -4939,19 +4937,24 @@ function mvtTicksHTML(s, i) {
   const done = mkeys.filter(function(k, n){ return !isHeadingItem(mvts[n]) && bookTickLevel(ticks[k]) === 2; }).length;
   const isOpen = openMvtRows.has(s.id + '|' + normPieceCat(title).toLowerCase());
   // What's in progress, so the folded line is still useful at a glance
+  // Just the short name of each one ("1. Exercise 1"), not its long description
+  const shortName = function(t) {
+    let x = String(t).split(/\s*[:(]\s*|\s+-\s+/)[0].trim() || String(t);
+    return x.length > 28 ? x.slice(0, 27).trim() + '…' : x;
+  };
   const working = [];
   mvts.forEach(function(m, n) {
     if (!isHeadingItem(m) && bookTickLevel(ticks[mkeys[n]]) === 1) {
       const h = headingFor(mvts, n);
-      const shortH = h ? h.split(',')[0] + ': ' : '';
-      working.push(shortH + (/^\d+$/.test(m) ? 'Mvt. ' + m : m));
+      const shortH = h ? shortName(h.split(',')[0]) + ': ' : '';
+      working.push(shortH + (/^\d+$/.test(m) ? 'Mvt. ' + m : shortName(m)));
     }
   });
   const toggle = '<button onclick="toggleMvtRow(\'' + s.id + '\',' + i + ')" style="display:flex;align-items:center;gap:6px;background:none;border:none;padding:2px 0;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.72rem;color:var(--muted);text-align:left">'
     + '<span style="display:inline-block;transform:rotate(' + (isOpen ? '90' : '0') + 'deg);transition:transform 0.15s;font-size:0.65rem">▶</span>'
-    + '<span>🎼 ' + done + '/' + tickableCount(mvts) + ' movements'
-    + (working.length ? ' · <span style="color:#b7791f">working on: ' + esc(working.slice(0, 3).join(', ')) + (working.length > 3 ? ' +' + (working.length - 3) : '') + '</span>' : '')
-    + (isOpen ? '' : ' <span style="text-decoration:underline">show</span>') + '</span></button>';
+    + '<span>🎼 ' + done + '/' + tickableCount(mvts)
+    + (working.length ? ' · <span style="color:#b7791f">working on: ' + esc(working.slice(0, 2).join(', ')) + (working.length > 2 ? ' +' + (working.length - 2) : '') + '</span>' : '')
+    + '</span></button>';
   if (!isOpen) return '<div style="margin:-2px 0 4px 2px">' + toggle + '</div>';
   return '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:-2px 0 4px 2px">'
     + '<div style="flex-basis:100%">' + toggle + '</div>'
@@ -4996,7 +4999,7 @@ function buildPiecesHTML(s) {
     if (showMvts) seenMvt[mk] = true;
     const mvtRow = showMvts ? '<div id="mvt-ticks-' + s.id + '-' + i + '" style="flex-basis:100%">' + mvtTicksHTML(s, i) + '</div>' : '';
     return '<div class="piece-item" style="flex-wrap:wrap;gap:6px;align-items:center">'
-      + '<textarea rows="1" class="piece-name" placeholder="Piece or exercise\u2026" style="flex:2;min-width:120px"'
+      + '<textarea rows="1" class="piece-name" placeholder="Piece or exercise\u2026" style="flex:1;min-width:120px"'
       + ' oninput="autoGrow(this);updatePiece(\'' + s.id + '\',' + i + ',this.value)"'
       + ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}"'
       + ' onblur="offerSavePieceToLibrary(\'' + s.id + '\',' + i + ',this.value)">' + esc(p) + '</textarea>'
@@ -6205,7 +6208,7 @@ function refSummary(s) {
   return '<details open style="margin-bottom:10px">'
     + '<summary style="font-size:0.75rem;font-weight:700;color:var(--muted);cursor:pointer;padding:8px 12px;background:var(--warm);border-radius:10px;list-style:none;display:flex;align-items:center;justify-content:space-between">'
     + '<span>\ud83d\udccb Before - your plan &amp; notes</span>'
-    + '<span style="font-size:0.7rem;font-weight:400">tap to collapse</span>'
+    + '<span style="font-size:0.7rem;font-weight:400">▴</span>'
     + '</summary>'
     + '<div style="background:var(--warm);border-radius:0 0 10px 10px;padding:10px 12px;margin-top:2px">'
     + inner
