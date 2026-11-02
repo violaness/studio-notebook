@@ -3192,22 +3192,15 @@ function switchMoment(tab, panel) {
   document.querySelectorAll('.moment-panel').forEach(p => p.classList.remove('active'));
   tab.classList.add('active');
   document.getElementById(panel).classList.add('active');
-  // Init canvas when During tab opened
-  if (panel === 'panel-during') {
-    const canvasEls = document.querySelectorAll('canvas[id^="canvas-"]'); // only the sketch pad itself, not "canvas-saves-…"
-    canvasEls.forEach(c => {
-      const id = c.id.replace('canvas-', '');
-      setTimeout(() => { initCanvas(id); renderCanvasSaves(id); }, 50);
-    });
-  }
-  // Refresh refSummary on During and After tabs so piece refs are always current
-  if (panel === 'panel-during' || panel === 'panel-after') {
+  // (The sketch pad now lives on the After tab and starts up when you open it.)
+  // Refresh refSummary on the After tab so piece refs are always current
+  if (panel === 'panel-after') {
     const duringEl = document.getElementById('panel-during');
     const afterEl  = document.getElementById('panel-after');
     // Find student id from a known element
-    const scratchEl = document.querySelector('[id^="during-scratch-"]');
+    const scratchEl = document.querySelector('[id^="after-note-"]');
     if (scratchEl) {
-      const id = scratchEl.id.replace('during-scratch-', '');
+      const id = scratchEl.id.replace('after-note-', '');
       const s = getStudent(id);
       if (s) {
         const summary = refSummary(s);
@@ -3378,7 +3371,6 @@ function renderDetail(s, preserveTab = false) {
 
     <div class="moment-tabs" style="flex-wrap:wrap">
       <button class="moment-tab active" onclick="switchMoment(this,'panel-before')">Before</button>
-      <button class="moment-tab" onclick="switchMoment(this,'panel-during')">During</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-after')">After</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-scales')">Technique</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-history')">History</button>
@@ -3516,31 +3508,26 @@ function renderDetail(s, preserveTab = false) {
       </div><!-- /before-tiles -->
     </div>
 
-    <!-- DURING -->
-    <div class="moment-panel" id="panel-during">
+    <!-- AFTER -->
+    <div class="moment-panel" id="panel-after">
       ${refSummary(s)}
-      ${s.nextLesson ? `
-      <div class="section-card" style="background:#f8fdf5;border:1.5px solid #c8ddb8">
-        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
-          <span>📌 Plan (from before lesson)</span>
-          <button onclick="clearNextLessonPlan('${s.id}', true)" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
-        </div>
-        <p style="white-space:pre-wrap;font-size:0.88rem;color:var(--ink);margin:4px 0 0">${linkify(s.nextLesson)}</p>
-      </div>` : ''}
+      <div class="after-pair">
       <div class="section-card">
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
-          <span>Quick notes - right now</span>
+          <span>Lesson notes</span>
+          <span style="display:flex;gap:6px;align-items:center">
+            <button onclick="document.getElementById('after-note-${s.id}').value='';document.getElementById('after-note-${s.id}').dataset.edited='1';saveAfterDraft('${s.id}','');autoGrow(document.getElementById('after-note-${s.id}'))" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
+          </span>
         </div>
-        <textarea autocorrect="off" autocapitalize="sentences" spellcheck="false" class="quick-note"
-          placeholder="Jot anything - key words, reminders, 'try this'…"
-          id="during-scratch-${s.id}"
-          oninput="autoGrow(this);fixupListContinuation('during-scratch-${s.id}');saveDuring('${s.id}')"
-          onkeydown="if(event.key==='Enter')handleListEnter(event)">${esc(s.duringScratch || '')}</textarea>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">Starts with your plan - edit freely, then save to the log.</div>
+        <textarea autocorrect="off" autocapitalize="sentences" spellcheck="false" class="quick-note" placeholder="What went well, what to remember for next time…"
+          id="after-note-${s.id}"
+          oninput="autoGrow(this);fixupListContinuation('after-note-${s.id}');this.dataset.edited='1';saveAfterDraft('${s.id}',this.value)"
+          onkeydown="if(event.key==='Enter')handleListEnter(event)">${(typeof s.afterDraft === 'string' && s.afterDraft.length) ? esc(s.afterDraft) : buildCumulativeNote(s)}</textarea>
         <div style="display:flex;gap:6px;margin-top:6px">
-          <button type="button" onclick="insertLinePrefix('during-scratch-${s.id}','•');saveDuring('${s.id}')" title="Bullet point" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;color:var(--muted)">• Bullet</button>
-          <button type="button" onclick="insertLinePrefix('during-scratch-${s.id}','☐');saveDuring('${s.id}')" title="Tick box" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;color:var(--muted)">☐ Tick box</button>
+          <button type="button" onclick="insertLinePrefix('after-note-${s.id}','•')" title="Bullet point" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;color:var(--muted)">• Bullet</button>
+          <button type="button" onclick="insertLinePrefix('after-note-${s.id}','☐')" title="Tick box" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;color:var(--muted)">☐ Tick box</button>
         </div>
-        <div class="save-toast" id="toast-during-${s.id}" style="opacity:0">✓ Saved</div>
         <div style="margin-top:10px">
           <div class="section-label" style="margin-bottom:8px">Tap to add to notes</div>
           <div class="tech-chips" style="margin-bottom:8px">
@@ -3552,9 +3539,34 @@ function renderDetail(s, preserveTab = false) {
             }).join('')}
           </div>
         </div>
-      </div>
 
-      <details style="margin-bottom:10px">
+        ${(()=>{
+          const today = todayLogDate();
+          const todayEntry = (s.log||[]).find(e => e.date === today);
+          const sketches = todayEntry && todayEntry.sketches || s.canvasSaves && s.canvasSaves.filter(sv => sv.date === today).map(sv => sv.img) || [];
+          if (!sketches.length) return '';
+          return '<div style="margin-top:12px"><div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">📎 Sketches from this lesson</div>'
+            + sketches.map((img,i) => '<div style="margin-bottom:8px"><img src="' + img + '" style="width:100%;border-radius:8px;border:1px solid #e0ddd8;display:block"></div>').join('')
+            + '</div>';
+        })()}
+        <button class="save-btn" onclick="saveLog('${s.id}')">Save to lesson log</button>
+        <div class="save-toast" id="toast-after-${s.id}">✓ Added to log</div>
+      </div>
+      <div class="section-card" style="background:#f8fdf5;border:1.5px solid #c8ddb8">
+        <div class="section-label" style="color:var(--string);display:flex;align-items:center;justify-content:space-between">
+          <span>📌 Next lesson - what to focus on</span>
+          <button onclick="clearNextLessonCapture('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
+        </div>
+        <div id="next-ticks-${s.id}">${nextTicksHTML(s, 'a')}</div>
+        <button type="button" onclick="addNextTickRow('${s.id}','a')" style="background:none;border:1.5px dashed #8AB640;color:#2F5C1A;border-radius:8px;padding:6px 12px;margin-top:8px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;width:100%">＋ Add line</button>
+        <button onclick="saveNextLesson('${s.id}')"
+          style="margin-top:10px;background:var(--string);color:#05270B;border:none;border-radius:10px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer;display:block;margin:10px auto 0;min-width:160px">
+          ✓ Save to Before tab
+        </button>
+        <div class="save-toast" id="toast-next-${s.id}">✓ Saved to Before tab</div>
+      </div>
+      </div>
+      <details style="margin-bottom:10px" ontoggle="if(this.open){initCanvas('${s.id}');renderCanvasSaves('${s.id}');}">
         <summary style="font-size:0.88rem;color:var(--viola);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
           <span>Sketch - bowings, fingerings, notation</span>
           <span style="font-size:0.7rem;color:var(--muted)">tap to expand</span>
@@ -3587,54 +3599,6 @@ function renderDetail(s, preserveTab = false) {
           <div class="save-toast" id="toast-canvas-${s.id}">✓ Sketch saved</div>
         </div>
       </details>
-    </div>
-
-    <!-- AFTER -->
-    <div class="moment-panel" id="panel-after">
-      ${refSummary(s)}
-      <div class="after-pair">
-      <div class="section-card">
-        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
-          <span>Lesson notes</span>
-          <span style="display:flex;gap:6px;align-items:center">
-            <button onclick="document.getElementById('after-note-${s.id}').value='';document.getElementById('after-note-${s.id}').dataset.edited='1';saveAfterDraft('${s.id}','');autoGrow(document.getElementById('after-note-${s.id}'))" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
-          </span>
-        </div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">Built from your plan and during-lesson notes - edit freely before saving to the log.</div>
-        <textarea autocorrect="off" autocapitalize="sentences" spellcheck="false" class="quick-note" placeholder="What went well, what to remember for next time…"
-          id="after-note-${s.id}"
-          oninput="autoGrow(this);fixupListContinuation('after-note-${s.id}');this.dataset.edited='1';saveAfterDraft('${s.id}',this.value)"
-          onkeydown="if(event.key==='Enter')handleListEnter(event)">${(typeof s.afterDraft === 'string' && s.afterDraft.length) ? esc(s.afterDraft) : buildCumulativeNote(s)}</textarea>
-        <div style="display:flex;gap:6px;margin-top:6px">
-          <button type="button" onclick="insertLinePrefix('after-note-${s.id}','•')" title="Bullet point" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;color:var(--muted)">• Bullet</button>
-          <button type="button" onclick="insertLinePrefix('after-note-${s.id}','☐')" title="Tick box" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;color:var(--muted)">☐ Tick box</button>
-        </div>
-        ${(()=>{
-          const today = todayLogDate();
-          const todayEntry = (s.log||[]).find(e => e.date === today);
-          const sketches = todayEntry && todayEntry.sketches || s.canvasSaves && s.canvasSaves.filter(sv => sv.date === today).map(sv => sv.img) || [];
-          if (!sketches.length) return '';
-          return '<div style="margin-top:12px"><div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">📎 Sketches from this lesson</div>'
-            + sketches.map((img,i) => '<div style="margin-bottom:8px"><img src="' + img + '" style="width:100%;border-radius:8px;border:1px solid #e0ddd8;display:block"></div>').join('')
-            + '</div>';
-        })()}
-        <button class="save-btn" onclick="saveLog('${s.id}')">Save to lesson log</button>
-        <div class="save-toast" id="toast-after-${s.id}">✓ Added to log</div>
-      </div>
-      <div class="section-card" style="background:#f8fdf5;border:1.5px solid #c8ddb8">
-        <div class="section-label" style="color:var(--string);display:flex;align-items:center;justify-content:space-between">
-          <span>📌 Next lesson - what to focus on</span>
-          <button onclick="clearNextLessonCapture('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
-        </div>
-        <div id="next-ticks-${s.id}">${nextTicksHTML(s, 'a')}</div>
-        <button type="button" onclick="addNextTickRow('${s.id}','a')" style="background:none;border:1.5px dashed #8AB640;color:#2F5C1A;border-radius:8px;padding:6px 12px;margin-top:8px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;width:100%">＋ Add line</button>
-        <button onclick="saveNextLesson('${s.id}')"
-          style="margin-top:10px;background:var(--string);color:#05270B;border:none;border-radius:10px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer;display:block;margin:10px auto 0;min-width:160px">
-          ✓ Save to Before tab
-        </button>
-        <div class="save-toast" id="toast-next-${s.id}">✓ Saved to Before tab</div>
-      </div>
-      </div>
       <div class="section-card">
         <div class="section-label">Attendance - today's lesson</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">
@@ -3918,7 +3882,7 @@ function renderDetail(s, preserveTab = false) {
       document.querySelectorAll('.moment-tab').forEach(function(t) { t.classList.remove('active'); });
       document.querySelectorAll('.moment-panel').forEach(function(p) { p.classList.remove('active'); });
       // Add active to the correct tab and panel
-      const targetPanel = document.getElementById(activePanelId);
+      const targetPanel = document.getElementById(activePanelId) || document.getElementById('panel-before');
       if (targetPanel) targetPanel.classList.add('active');
       document.querySelectorAll('.moment-tab').forEach(function(t) {
         if ((t.getAttribute('onclick')||'').includes(activePanelId)) t.classList.add('active');
@@ -4321,6 +4285,7 @@ function insertIntoScratch(id, text) {
   if (s) {
     if (afterPanel && afterPanel.classList.contains('active')) {
       el.dataset.edited = '1';
+      saveAfterDraft(id, el.value); // keep it if you leave the page before saving to the log
     } else {
       s.duringScratch = el.value; save();
     }
