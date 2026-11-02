@@ -4272,7 +4272,13 @@ function updateGoal(id, key, val) {
   showToast('toast-goals-' + id);
 }
 function updatePiece(id, i, val)    { const s=getStudent(id); if(s){if(!s.pieces)s.pieces=[];s.pieces[i]=val;save();} }
-function updatePieceRef(id, i, val) { const s=getStudent(id); if(s){if(!s.pieceRefs)s.pieceRefs=[];s.pieceRefs[i]=val;save();} }
+function updatePieceRef(id, i, val) {
+  const s=getStudent(id); if(!s) return;
+  if(!s.pieceRefs)s.pieceRefs=[]; s.pieceRefs[i]=val;
+  if(!s.pieceRefManual)s.pieceRefManual=[]; while(s.pieceRefManual.length<i)s.pieceRefManual.push(false);
+  s.pieceRefManual[i] = !!String(val).trim(); // typed by you: the movement ticks leave it alone
+  save();
+}
 
 function pieceDisplayTitle(s, i) {
   const title = (s.pieces||[])[i] || '';
@@ -4306,6 +4312,7 @@ function removePiece(id, i) {
   s.pieces.splice(i,1);
   if(s.pieceRefs) s.pieceRefs.splice(i,1);
   if(s.pieceGroups) s.pieceGroups.splice(i,1);
+  if(s.pieceRefManual) s.pieceRefManual.splice(i,1);
   if(s.pieces.length===0)s.pieces=[''];
   save(); renderDetail(s, true);
 }
@@ -5059,6 +5066,47 @@ function toggleMvtRow(sid, i) {
 }
 
 // Per-pupil movement ticks, kept by piece title: s.pieceMvtTicks[title][mvt] = 0/1/2
+// Short names of the movements marked "working on" (orange), e.g. "1. Exercise 1"
+function mvtShortName(t) {
+  let x = String(t).split(/\s*[:(]\s*|\s+-\s+/)[0].trim() || String(t);
+  // "3. No. 3" -> "No. 3", "1. Exercise 1" -> "Exercise 1" (the name has its own number);
+  // "1. Overture" keeps its number
+  const m = x.match(/^\d+[.)]\s+(.*\d.*)$/);
+  if (m) x = m[1];
+  return x.length > 28 ? x.slice(0, 27).trim() + '…' : x;
+}
+// Is the No. / mvt. box yours (typed or picked) rather than filled by the ticks?
+// Older entries with something already in them count as yours.
+function refIsManual(s, i) {
+  const f = (s.pieceRefManual || [])[i];
+  if (f === true || f === false) return f;
+  return !!String((s.pieceRefs || [])[i] || '').trim();
+}
+// Fill the box from the orange "working on" movements (unless it's yours)
+function autoPieceRef(s, i) {
+  if (refIsManual(s, i) || !pieceMovements((s.pieces || [])[i])) return;
+  if (!s.pieceRefs) s.pieceRefs = [];
+  while (s.pieceRefs.length < i) s.pieceRefs.push('');
+  s.pieceRefs[i] = mvtWorkingLabels(s, i).join(', ');
+  if (!s.pieceRefManual) s.pieceRefManual = [];
+  while (s.pieceRefManual.length < i) s.pieceRefManual.push(undefined);
+  s.pieceRefManual[i] = false;
+}
+function mvtWorkingLabels(s, i) {
+  const title = (s.pieces || [])[i];
+  const mvts = pieceMovements(title); if (!mvts) return [];
+  const ticks = ((s.pieceMvtTicks || {})[normPieceCat(title).toLowerCase()]) || {};
+  const mkeys = uniqueItemKeys(mvts);
+  const out = [];
+  mvts.forEach(function(m, n) {
+    if (!isHeadingItem(m) && bookTickLevel(ticks[mkeys[n]]) === 1) {
+      const h = headingFor(mvts, n);
+      out.push((h ? mvtShortName(h.split(',')[0]) + ': ' : '') + (/^\d+$/.test(m) ? 'Mvt. ' + m : mvtShortName(m)));
+    }
+  });
+  return out;
+}
+
 function mvtTicksHTML(s, i) {
   const title = (s.pieces || [])[i];
   const mvts = pieceMovements(title);
@@ -5069,10 +5117,7 @@ function mvtTicksHTML(s, i) {
   const isOpen = openMvtRows.has(s.id + '|' + normPieceCat(title).toLowerCase());
   // What's in progress, so the folded line is still useful at a glance
   // Just the short name of each one ("1. Exercise 1"), not its long description
-  const shortName = function(t) {
-    let x = String(t).split(/\s*[:(]\s*|\s+-\s+/)[0].trim() || String(t);
-    return x.length > 28 ? x.slice(0, 27).trim() + '…' : x;
-  };
+  const shortName = mvtShortName;
   const working = [];
   mvts.forEach(function(m, n) {
     if (!isHeadingItem(m) && bookTickLevel(ticks[mkeys[n]]) === 1) {
@@ -5113,6 +5158,13 @@ function mvtTick(sid, i, idx) {
   if (!s.pieceMvtTicks) s.pieceMvtTicks = {};
   if (!s.pieceMvtTicks[key]) s.pieceMvtTicks[key] = {};
   s.pieceMvtTicks[key][m] = bookTickNext(s.pieceMvtTicks[key][m]);
+  // Show what's being worked on in the No. / mvt. box next to the title,
+  // unless you've typed something there yourself
+  if (!refIsManual(s, i)) {
+    autoPieceRef(s, i);
+    const box = document.querySelector('#pieces-list-' + sid + ' .piece-item[data-i="' + i + '"] input');
+    if (box) box.value = s.pieceRefs[i];
+  }
   save();
   const el = document.getElementById('mvt-ticks-' + sid + '-' + i);
   if (el) el.innerHTML = mvtTicksHTML(s, i);
@@ -5158,7 +5210,8 @@ function buildPiecesHTML(s) {
   const rows = { tech: [], piece: [] };
   pieces.forEach(function(p, i) {
     const g = pieceGroupOf(s, i);
-    const ref = refs[i] || '';
+    autoPieceRef(s, i); // movements already ticked orange show in the box too
+    const ref = (s.pieceRefs || [])[i] || '';
     // Movement ticks under the first row of each piece that has movements
     const mk = normPieceCat(String(p || '')).toLowerCase();
     const showMvts = p && !seenMvt[mk] && pieceMovements(p);
@@ -13084,6 +13137,7 @@ function completePiece(id, title, fullTitle) {
     s.pieces.splice(idx, 1);
     if (s.pieceRefs) s.pieceRefs.splice(idx, 1);
     if (s.pieceGroups) s.pieceGroups.splice(idx, 1);
+    if (s.pieceRefManual) s.pieceRefManual.splice(idx, 1);
   }
   if (!s.pieces || s.pieces.length === 0) s.pieces = [''];
   save(); renderDetail(s);
@@ -13790,6 +13844,9 @@ function libPickAdd(title, ref) {
     s.pieces[i] = title;
     while (s.pieceRefs.length < i) s.pieceRefs.push('');
     s.pieceRefs[i] = ref || '';
+    if (!s.pieceRefManual) s.pieceRefManual = [];
+    while (s.pieceRefManual.length < i) s.pieceRefManual.push(false);
+    s.pieceRefManual[i] = !!ref; // a movement you picked counts as your own choice
     // Study / method books and your own sheets are technical, albums are pieces;
     // from the Full library it's worked out from the category.
     const g = (libPickSource === 'studies' || libPickSource === 'methods' || libPickSource === 'violaness') ? 'tech'
