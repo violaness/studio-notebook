@@ -24,6 +24,21 @@
     --muted:    #6b8a6b;
     --advanced: #123A5E;
     --card-bg:  #ffffff;
+    --sky: #46C6E5;
+    --deep: #1a4a6b;
+    --tech-bg: #eef6ff;
+    --tech-bd: #a8c8e8;
+    --piece-bg: #eef6e6;
+    --piece-bd: #c8ddb8;
+    --soft-green: #f8fdf5;
+    --soft-green2: #e8f5e0;
+    --soft-green3: #f0fae8;
+    --soft-green4: #dff0d8;
+    --muted-light: #8aaa7a;
+    --ink-soft: #1a3a0a;
+    --soft-blue: #dcedf6;
+    --soft-blue2: #e3effa;
+    --tech-line: #c9dcee;
     --shadow:   0 2px 12px rgba(5,39,11,0.08);
     --radius:   14px;
   }
@@ -88,7 +103,7 @@
     display: flex; flex-direction: column;
     position: sticky; top: 0; z-index: 101;
     /* green spine line sits BETWEEN the tabs and the white page */
-    border-bottom: 3px solid #8AB640;
+    border-bottom: 3px solid var(--string);
     box-shadow: 0 3px 10px rgba(0,0,0,0.35);
   }
 
@@ -141,11 +156,11 @@
     padding-bottom: 10px;
   }
   /* Per-tab colours when active */
-  .folder-tab.tab-today.active    { background: #8AB640; }
-  .folder-tab.tab-week.active     { background: #123A5E; color: #d0f0ff; }
-  .folder-tab.tab-roster.active   { background: #2F5C1A; color: #d4f0a0; }
+  .folder-tab.tab-today.active    { background: var(--string); }
+  .folder-tab.tab-week.active     { background: var(--advanced); color: #d0f0ff; }
+  .folder-tab.tab-roster.active   { background: var(--viola); color: #d4f0a0; }
   .folder-tab.tab-admin.active    { background: #8a6d3b; color: #fbeecb; }
-  .folder-tab.tab-library.active  { background: #29789E; color: #d0f0ff; }
+  .folder-tab.tab-library.active  { background: var(--violin); color: #d0f0ff; }
 
   /* ── VIEWS ── */
   .view { display: none; padding: 20px 24px; max-width: 900px; margin: 0 auto; box-sizing: border-box; }
@@ -214,7 +229,7 @@
     font-family: 'Special Elite', cursive; font-size: 0.85rem; font-weight: 600;
     cursor: pointer; text-align: center;
   }
-  .open-notes-btn:hover { background: #2F5C1A; }
+  .open-notes-btn:hover { background: var(--viola); }
   .open-notes-btn.violin-btn { background: var(--violin); }
   .open-notes-btn.violin-btn:hover { background: #1f6080; }
 
@@ -281,7 +296,7 @@
 
   /* ── ROSTER ── */
   #add-btn {
-    width: 100%; background: #29789E; color: #fff; border: none;
+    width: 100%; background: var(--violin); color: #fff; border: none;
     border-radius: var(--radius); padding: 15px;
     font-family: 'Special Elite', cursive; font-size: 1rem; font-weight: 600;
     cursor: pointer; margin-bottom: 18px; 
@@ -313,8 +328,8 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 1.1rem; flex-shrink: 0; font-weight: 700;
   }
-  .avatar-viola  { background: #dff0d8; color: #2F5C1A; }
-  .avatar-violin { background: #d4eaf5; color: #29789E; }
+  .avatar-viola  { background: var(--soft-green4); color: var(--viola); }
+  .avatar-violin { background: #d4eaf5; color: var(--violin); }
 
   .student-info { flex: 1; min-width: 0; }
   .student-name { font-size: 1rem; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -323,11 +338,11 @@
     font-size: 0.7rem; font-weight: 600; padding: 2px 8px;
     border-radius: 999px;  
   }
-  .badge-beginner    { background: #dff0d8; color: #2F5C1A; }
-  .badge-intermediate{ background: #d4eaf5; color: #29789E; }
-  .badge-advanced    { background: #d0dce8; color: #123A5E; }
-  .badge-viola       { background: #dff0d8; color: #2F5C1A; }
-  .badge-violin      { background: #d4eaf5; color: #29789E; }
+  .badge-beginner    { background: var(--soft-green4); color: var(--viola); }
+  .badge-intermediate{ background: #d4eaf5; color: var(--violin); }
+  .badge-advanced    { background: #d0dce8; color: var(--advanced); }
+  .badge-viola       { background: var(--soft-green4); color: var(--viola); }
+  .badge-violin      { background: #d4eaf5; color: var(--violin); }
   .student-snippet { font-size: 0.8rem; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* ── STUDENT DETAIL ── */
@@ -380,10 +395,10 @@
   .goal-emoji { font-size: 1.3rem; width: 30px; flex-shrink: 0; text-align: center; margin-top: 2px; }
   .goal-block { flex: 1; }
   .goal-label { font-size: 0.68rem; font-weight: 700;   margin-bottom: 4px; }
-  .goal-label.long-term { color: #123A5E; }
-  .goal-label.medium    { color: #2F5C1A; }
-  .goal-label.short     { color: #29789E; }
-  .goal-label.this-week { color: #8AB640; }
+  .goal-label.long-term { color: var(--advanced); }
+  .goal-label.medium    { color: var(--viola); }
+  .goal-label.short     { color: var(--violin); }
+  .goal-label.this-week { color: var(--string); }
 
   /* ── INPUTS ── */
   textarea, input[type="text"] {
@@ -425,7 +440,7 @@
     border-radius: 8px; padding: 7px 13px; font-family: 'Special Elite', cursive;
     font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 6px; width: 100%;
   }
-  .add-piece-btn:hover { background: #dff0d8; }
+  .add-piece-btn:hover { background: var(--soft-green4); }
 
   /* ── TECH CHIPS ── */
   .tech-chips { display: flex; flex-wrap: wrap; gap: 7px; }
@@ -468,7 +483,7 @@
     font-family: 'Special Elite', cursive; font-size: 0.85rem; font-weight: 600;
     cursor: pointer;
   }
-  .save-btn:hover { background: #2F5C1A; }
+  .save-btn:hover { background: var(--viola); }
   .save-toast { text-align: center; color: var(--viola); font-weight: 600; font-size: 0.88rem; margin-top: 7px; opacity: 0; transition: opacity 0.3s; }
   .save-toast.show { opacity: 1; }
 
@@ -503,7 +518,7 @@
     border-radius: 10px; padding: 12px; font-family: 'Special Elite', cursive;
     font-size: 0.92rem; font-weight: 600; cursor: pointer;
   }
-  .btn-primary:hover { background: #2F5C1A; }
+  .btn-primary:hover { background: var(--viola); }
   .btn-ghost {
     padding: 12px 16px; background: none; border: 1.5px solid #e0ddd8;
     border-radius: 10px; font-family: 'Special Elite', cursive;
@@ -544,8 +559,8 @@
     padding: 9px 12px; border-radius: 9px; margin-bottom: 7px;
     font-size: 0.85rem;
   }
-  .import-result-row.matched  { background: #dff0d8; color: #2F5C1A; }
-  .import-result-row.unmatched{ background: #d4eaf5; color: #29789E; }
+  .import-result-row.matched  { background: var(--soft-green4); color: var(--viola); }
+  .import-result-row.unmatched{ background: #d4eaf5; color: var(--violin); }
   .import-result-row.skipped  { background: var(--warm); color: var(--muted); }
   .import-result-icon { font-size: 1rem; flex-shrink: 0; }
   .import-result-name { font-weight: 600; }
@@ -558,6 +573,8 @@
   .after-pair > .section-card { margin-bottom: 0; min-width: 0; }
   @media (max-width: 600px) { .after-pair { grid-template-columns: 1fr; } }
   /* Working On: Scales / Technical / Pieces */
+  .theme-make { display: grid; grid-template-columns: 1fr 220px; gap: 14px; }
+  @media (max-width: 600px) { .theme-make { grid-template-columns: 1fr; } }
   .wo-group { padding: 8px 0 10px; border-bottom: 1px dashed var(--warm); }
   .wo-group:last-child { border-bottom: none; }
   .wo-label { font-size: 0.72rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
@@ -566,9 +583,9 @@
   .wo-group .piece-item textarea, .wo-group .piece-item input { font-size: 0.8rem !important; line-height: 1.4; padding: 7px 10px; box-sizing: border-box; }
   .wo-group .piece-item input { height: 34px; }
   /* Technical boxes blue, Pieces stay green */
-  .wo-tech .piece-item textarea, .wo-tech .piece-item input { background: #eef6ff; border-color: #a8c8e8; }
-  .wo-tech .piece-item textarea:focus, .wo-tech .piece-item input:focus { background: #fff; border-color: #29789E; }
-  .wo-piece .piece-item textarea, .wo-piece .piece-item input { background: #eef6e6; border-color: #c8ddb8; }
+  .wo-tech .piece-item textarea, .wo-tech .piece-item input { background: var(--tech-bg); border-color: var(--tech-bd); }
+  .wo-tech .piece-item textarea:focus, .wo-tech .piece-item input:focus { background: #fff; border-color: var(--violin); }
+  .wo-piece .piece-item textarea, .wo-piece .piece-item input { background: var(--piece-bg); border-color: var(--piece-bd); }
   .wo-piece .piece-item textarea:focus, .wo-piece .piece-item input:focus { background: #fff; border-color: var(--viola); }
   .wo-group .piece-item textarea { min-height: 34px; }
   .wo-label { font-size: 0.85rem; }
@@ -579,22 +596,22 @@
   .before-col { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
   .before-col > .section-card { margin-bottom: 0; }
   @media (max-width: 600px) { .before-pair { grid-template-columns: 1fr; } }
-  .nt-blue .nt-row { border-bottom-color: #c9dcee; }
-  .nt-blue .nt-box { border-color: #29789E; color: #1a4a6b; }
-  .nt-blue .nt-box.done { background: #29789E; color: #fff; }
-  .nt-blue .nt-in:focus { background: #e3effa !important; }
+  .nt-blue .nt-row { border-bottom-color: var(--tech-line); }
+  .nt-blue .nt-box { border-color: var(--violin); color: var(--deep); }
+  .nt-blue .nt-box.done { background: var(--violin); color: #fff; }
+  .nt-blue .nt-in:focus { background: var(--soft-blue2) !important; }
   /* Next lesson tick list */
-  .nt-row { display: flex; align-items: flex-start; gap: 8px; padding: 4px 0; border-bottom: 1px dashed #c8ddb8; }
-  .nt-box { flex: 0 0 auto; margin-top: 2px; width: 30px; height: 30px; border-radius: 7px; border: 1.5px solid #8AB640; background: #fff; color: #2F5C1A; font-size: 1rem; line-height: 1; cursor: pointer; padding: 0; }
-  .nt-box.done { background: #8AB640; color: #fff; }
+  .nt-row { display: flex; align-items: flex-start; gap: 8px; padding: 4px 0; border-bottom: 1px dashed var(--piece-bd); }
+  .nt-box { flex: 0 0 auto; margin-top: 2px; width: 30px; height: 30px; border-radius: 7px; border: 1.5px solid var(--string); background: #fff; color: var(--viola); font-size: 1rem; line-height: 1; cursor: pointer; padding: 0; }
+  .nt-box.done { background: var(--string); color: #fff; }
   .nt-in { flex: 1; min-width: 0; border: none !important; background: transparent !important; font-family: 'Special Elite', cursive; font-size: 0.92rem; line-height: 1.35; padding: 6px 2px; color: var(--ink); box-shadow: none !important; resize: none; overflow: hidden; min-height: 0; height: auto; display: block; }
-  .nt-in:focus { outline: none; background: #f0fae8 !important; border-radius: 6px; }
+  .nt-in:focus { outline: none; background: var(--soft-green3) !important; border-radius: 6px; }
   .nt-row.done .nt-in { color: var(--muted); text-decoration: line-through; }
   /* Other work form: a neat 2 x 2 grid, every box the same size (iPad date boxes like to grow) */
   .oi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; align-items: start; }
-  .oi-lab { display: flex; flex-direction: column; gap: 4px; font-size: 0.72rem; color: #1a4a6b; min-width: 0; }
+  .oi-lab { display: flex; flex-direction: column; gap: 4px; font-size: 0.72rem; color: var(--deep); min-width: 0; }
   .oi-in { display: block; width: 100%; min-width: 0; max-width: 100%; height: 42px; box-sizing: border-box; margin: 0;
-    padding: 8px 10px; border-radius: 8px; border: 1.5px solid #a8c8e8; background: var(--paper); color: var(--ink);
+    padding: 8px 10px; border-radius: 8px; border: 1.5px solid var(--tech-bd); background: var(--paper); color: var(--ink);
     font-family: 'Special Elite', cursive; font-size: 0.9rem; -webkit-appearance: none; appearance: none; text-align: left; }
   .oi-in::-webkit-date-and-time-value { text-align: left; }
   /* iPad: keep the billing sheet's Paid buttons clear of the Pencil buttons on the right */
@@ -697,7 +714,7 @@
   }
   .idea-btn-sm.dark { background: var(--ink); color: #fff; }
   .idea-btn-sm.blue { background: var(--violin); color: #fff; }
-  .idea-btn-sm.green { background: var(--string); color: #05270B; }
+  .idea-btn-sm.green { background: var(--string); color: var(--ink); }
   .idea-board-selector-row {
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 0 16px 10px;
   }
@@ -757,6 +774,67 @@
     color: var(--muted); font-size: 0.85rem; font-style: italic; text-align: center; width: 260px;
   }
 </style>
+<script>
+// ── COLOUR THEMES ──────────────────────────────────────────────────────────
+// Every colour in the app comes from the CSS variables in :root. A theme is
+// just five colours (darkest, main, bright, second, light accent); all the
+// in-between shades are worked out from those so everything matches.
+// Runs here in <head> so the chosen colours are on before the app appears.
+function snHex(h) {
+  h = String(h || '').replace('#', '').trim();
+  if (h.length === 3) h = h.split('').map(function(x){ return x + x; }).join('');
+  return [0, 2, 4].map(function(i){ return parseInt(h.substr(i, 2), 16) || 0; });
+}
+function snMix(a, b, t) { // t = how much of b
+  const pa = snHex(a), pb = snHex(b);
+  return '#' + pa.map(function(v, i){ return Math.round(v + (pb[i] - v) * t).toString(16).padStart(2, '0'); }).join('');
+}
+const SN_THEME_VARS = ['--ink','--viola','--string','--violin','--sky','--paper','--warm','--muted','--muted-light','--advanced','--deep','--ink-soft',
+  '--tech-bg','--tech-bd','--tech-line','--soft-blue','--soft-blue2','--piece-bg','--piece-bd','--soft-green','--soft-green2','--soft-green3','--soft-green4'];
+function snThemeVars(c, ov) {
+  const W = '#ffffff';
+  const v = {
+    '--ink': c.dark, '--viola': c.main, '--string': c.bright, '--violin': c.second, '--sky': c.light,
+    '--paper': snMix(c.main, W, 0.95), '--warm': snMix(c.main, W, 0.87),
+    '--muted': snMix(c.dark, W, 0.42), '--muted-light': snMix(c.dark, W, 0.55),
+    '--advanced': snMix(c.second, c.dark, 0.45), '--deep': snMix(c.second, '#000000', 0.35), '--ink-soft': snMix(c.dark, c.main, 0.3),
+    '--tech-bg': snMix(c.second, W, 0.93), '--tech-bd': snMix(c.second, W, 0.6), '--tech-line': snMix(c.second, W, 0.75),
+    '--soft-blue': snMix(c.second, W, 0.85), '--soft-blue2': snMix(c.second, W, 0.89),
+    '--piece-bg': snMix(c.main, W, 0.92), '--piece-bd': snMix(c.main, W, 0.7),
+    '--soft-green': snMix(c.main, W, 0.96), '--soft-green2': snMix(c.main, W, 0.88), '--soft-green3': snMix(c.main, W, 0.93), '--soft-green4': snMix(c.main, W, 0.84)
+  };
+  return Object.assign(v, ov || {});
+}
+// Ready-made palettes. "greens" is the original look (nothing changed at all).
+const SN_THEMES = [
+  { id: 'greens', name: 'Studio greens', c: { dark: '#05270B', main: '#2F5C1A', bright: '#8AB640', second: '#29789E', light: '#46C6E5' }, original: true },
+  { id: 'peacock-teal', name: 'Peacock teal', c: { dark: '#0B3542', main: '#4E8C76', bright: '#8DCB9E', second: '#0F5E78', light: '#7CC6DE' },
+    ov: { '--paper': '#f2f7f7', '--warm': '#e1eeee', '--muted': '#5f8086' } },
+  { id: 'peacock-feather', name: 'Peacock feather', c: { dark: '#123B2E', main: '#34986E', bright: '#4AE5A2', second: '#296FEB', light: '#9EC5FF' },
+    ov: { '--paper': '#FFF8EE', '--warm': '#D0FDEE' } }
+];
+function snThemeSettings() {
+  try { return JSON.parse(localStorage.getItem('studio_theme') || 'null') || { current: 'greens', custom: [] }; }
+  catch (e) { return { current: 'greens', custom: [] }; }
+}
+function snAllThemes(st) { return SN_THEMES.concat(((st || snThemeSettings()).custom) || []); }
+// Put a theme on the page (also used to try a palette out)
+function snApplyColours(theme) {
+  const root = document.documentElement;
+  SN_THEME_VARS.forEach(function(k){ root.style.removeProperty(k); });
+  if (theme && !theme.original) {
+    const v = snThemeVars(theme.c, theme.ov);
+    Object.keys(v).forEach(function(k){ root.style.setProperty(k, v[k]); });
+  }
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', theme && theme.c ? theme.c.dark : '#05270B');
+}
+function snApplyTheme() {
+  const st = snThemeSettings();
+  snApplyColours(snAllThemes(st).find(function(t){ return t.id === st.current; }) || SN_THEMES[0]);
+}
+snApplyTheme();
+</script>
 </head>
 <body>
 
@@ -773,7 +851,7 @@
     </div>
     <div id="cover-eod-reminder" style="display:none;margin-top:16px;cursor:pointer" onclick="event.stopPropagation();openNotebookCover();setTimeout(openEodModal,400)">
       <div id="cover-eod-box" style="background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.25);border-radius:12px;padding:18px 22px;width:280px;min-height:280px;display:flex;flex-direction:column;text-align:left">
-        <div id="cover-eod-label" style="font-size:0.78rem;font-weight:700;color:#8AB640;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px">☑️ To do</div>
+        <div id="cover-eod-label" style="font-size:0.78rem;font-weight:700;color:var(--string);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px">☑️ To do</div>
         <div id="cover-eod-items" style="font-size:1rem;color:#fff;line-height:2;flex:1;font-weight:500"></div>
         <div style="font-size:0.78rem;color:rgba(255,255,255,0.7);margin-top:10px">tap to open checklist</div>
       </div>
@@ -850,7 +928,7 @@
         Download your weekly schedule to add to your phone's Calendar app.
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
-        <button class="import-btn" style="background:#29789E" onclick="exportThisWeekIcs()">📅 This week (with moves)</button>
+        <button class="import-btn" style="background:var(--violin)" onclick="exportThisWeekIcs()">📅 This week (with moves)</button>
         <button class="import-btn" style="background:var(--muted)" onclick="exportTimetableIcs()">📆 Regular schedule</button>
       </div>
     </div>
@@ -865,16 +943,16 @@
 
   <!-- TOP ROW: the main banks, dark blue like the Billing sheet -->
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:6px 0 14px">
-    <button class="admin-tile lib-tile" style="background:#1a4a6b;min-height:92px" onclick="showLibrarySection('pieces')">
+    <button class="admin-tile lib-tile" style="background:var(--deep);min-height:92px" onclick="showLibrarySection('pieces')">
       <span class="admin-tile-icon">📚</span>
       <span class="admin-tile-label">Full library</span>
     </button>
-    <button class="admin-tile lib-tile" style="background:#1a4a6b;min-height:92px" onclick="showLibrarySection('violaness')">
+    <button class="admin-tile lib-tile" style="background:var(--deep);min-height:92px" onclick="showLibrarySection('violaness')">
       <span class="admin-tile-icon">🎻</span>
       <span class="admin-tile-label">Violaness</span>
       <span class="admin-tile-badge" id="tile-violaness-badge"></span>
     </button>
-    <button class="admin-tile lib-tile" style="background:#1a4a6b;min-height:92px" onclick="showLibrarySection('techsets')">
+    <button class="admin-tile lib-tile" style="background:var(--deep);min-height:92px" onclick="showLibrarySection('techsets')">
       <span class="admin-tile-icon">🛠</span>
       <span class="admin-tile-label">Checklist sets</span>
       <span class="admin-tile-badge" id="tile-techsets-badge"></span>
@@ -901,7 +979,7 @@
       <span class="admin-tile-label">Technical focus</span>
     </button>
     <!-- RIGHT COLUMN: blues, lightest at top -->
-    <button class="admin-tile lib-tile" style="background:#46C6E5;color:var(--ink)" onclick="showLibrarySection('methodbank')">
+    <button class="admin-tile lib-tile" style="background:var(--sky);color:var(--ink)" onclick="showLibrarySection('methodbank')">
       <span class="admin-tile-icon">📘</span>
       <span class="admin-tile-label">Method books</span>
       <span class="admin-tile-badge" id="tile-methodbank-badge"></span>
@@ -929,7 +1007,7 @@
       <div style="display:flex;gap:8px">
         <input type="text" id="techset-new-name" placeholder="Set name, e.g. Grade 3" maxlength="40"
           onkeydown="if(event.key==='Enter')addTechSet()" style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box">
-        <button onclick="addTechSet()" style="background:#1a4a6b;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ New set</button>
+        <button onclick="addTechSet()" style="background:var(--deep);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ New set</button>
       </div>
     </div>
   </section>
@@ -952,7 +1030,7 @@
         <select id="vio-new-cat" onchange="this.style.borderColor='';toggleVioNewCat(this.value)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem"></select>
         <input type="text" id="vio-new-cat-custom" placeholder="New category name" style="display:none;padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <input type="text" id="vio-new-note" placeholder="Note (optional), e.g. level, where it's filed" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
-        <button onclick="addViolanessSheet()" style="background:#1a4a6b;color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">＋ Add to Violaness</button>
+        <button onclick="addViolanessSheet()" style="background:var(--deep);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">＋ Add to Violaness</button>
       </div>
     </div>
     <details style="margin-top:14px">
@@ -965,7 +1043,7 @@
           <input type="text" id="vio-cat-new" placeholder="Add a category…" maxlength="40"
             onkeydown="if(event.key==='Enter')addViolanessCat()"
             style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box">
-          <button onclick="addViolanessCat()" style="background:#1a4a6b;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ Add</button>
+          <button onclick="addViolanessCat()" style="background:var(--deep);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ Add</button>
         </div>
       </div>
     </details>
@@ -1011,7 +1089,7 @@
           <option value="Ex.">Ex. 1, Ex. 2…</option>
         </select>
       </label>
-      <button onclick="addMethodBankBook()" style="background:#46C6E5;color:var(--ink);border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:8px auto 0;min-width:160px">＋ Add to bank</button>
+      <button onclick="addMethodBankBook()" style="background:var(--sky);color:var(--ink);border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:8px auto 0;min-width:160px">＋ Add to bank</button>
     </div>
   </section>
 
@@ -1060,11 +1138,11 @@
         </summary>
         <div style="margin-top:10px">
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
-            <span style="padding:4px 10px;border-radius:999px;background:#C9B8E8;font-size:0.75rem;font-weight:700;color:#05270B">Left hand</span>
-            <span style="padding:4px 10px;border-radius:999px;background:#B8D4E8;font-size:0.75rem;font-weight:700;color:#05270B">Right hand & bowing</span>
-            <span style="padding:4px 10px;border-radius:999px;background:#E8DCCC;font-size:0.75rem;font-weight:700;color:#05270B">Posture & setup</span>
-            <span style="padding:4px 10px;border-radius:999px;background:#E8B8C4;font-size:0.75rem;font-weight:700;color:#05270B">Interpretation</span>
-            <span style="padding:4px 10px;border-radius:999px;background:#B8E0C4;font-size:0.75rem;font-weight:700;color:#05270B">Technique</span>
+            <span style="padding:4px 10px;border-radius:999px;background:#C9B8E8;font-size:0.75rem;font-weight:700;color:var(--ink)">Left hand</span>
+            <span style="padding:4px 10px;border-radius:999px;background:#B8D4E8;font-size:0.75rem;font-weight:700;color:var(--ink)">Right hand & bowing</span>
+            <span style="padding:4px 10px;border-radius:999px;background:#E8DCCC;font-size:0.75rem;font-weight:700;color:var(--ink)">Posture & setup</span>
+            <span style="padding:4px 10px;border-radius:999px;background:#E8B8C4;font-size:0.75rem;font-weight:700;color:var(--ink)">Interpretation</span>
+            <span style="padding:4px 10px;border-radius:999px;background:#B8E0C4;font-size:0.75rem;font-weight:700;color:var(--ink)">Technique</span>
           </div>
           <!-- Custom categories -->
           <div style="border-top:1px solid #e0ddd8;padding-top:10px;margin-bottom:10px">
@@ -1211,7 +1289,7 @@
 <div id="view-admin" class="view">
 
   <!-- BILLING TILE (full width, the main invoicing sheet) -->
-  <button class="admin-tile" style="background:#1a4a6b;width:100%;min-height:92px;margin:6px 0 14px" onclick="showAdminSection('billing')">
+  <button class="admin-tile" style="background:var(--deep);width:100%;min-height:92px;margin:6px 0 14px" onclick="showAdminSection('billing')">
     <span class="admin-tile-icon">💷</span>
     <span class="admin-tile-label">Billing sheet - lessons per pupil</span>
   </button>
@@ -1234,7 +1312,7 @@
       <span class="admin-tile-badge" id="tile-lending-badge"></span>
     </button>
     <!-- RIGHT COLUMN (top→bottom): Term dates, Waiting list, Gifts received - blues light→dark -->
-    <button class="admin-tile" style="background:#46C6E5;color:var(--ink)" onclick="showAdminSection('terms')">
+    <button class="admin-tile" style="background:var(--sky);color:var(--ink)" onclick="showAdminSection('terms')">
       <span class="admin-tile-icon">📅</span>
       <span class="admin-tile-label">Term dates</span>
     </button>
@@ -1249,9 +1327,36 @@
       <span class="admin-tile-badge" id="tile-gifts-badge"></span>
     </button>
   </div>
+  <button class="admin-tile" style="background:linear-gradient(90deg,var(--ink),var(--viola),var(--violin));width:100%;min-height:64px;margin:-6px 0 18px;flex-direction:row" onclick="showAdminSection('theme')">
+    <span class="admin-tile-icon" style="font-size:1.3rem">🎨</span>
+    <span class="admin-tile-label">Colour theme</span>
+  </button>
 
   <!-- ADMIN PANELS -->
   <div id="admin-panels">
+
+  <!-- COLOUR THEME -->
+  <section class="admin-panel" id="panel-theme" style="display:none">
+    <div class="admin-panel-head"><span>🎨 Colour theme</span><button class="admin-panel-close" onclick="cancelThemeTry();closeAdminSections()">✕ Close</button></div>
+    <div style="font-size:0.75rem;color:var(--muted);margin:4px 0 10px">Tap a palette to use it. Your notes and pupils aren't affected.</div>
+    <div id="theme-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px"></div>
+    <details style="margin-top:16px" ontoggle="if(!this.open)cancelThemeTry()">
+      <summary style="font-size:0.85rem;font-weight:700;color:var(--ink);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:2px solid var(--warm)">
+        <span>✏️ Make my own palette</span><span style="font-weight:400;font-size:0.8rem;color:var(--muted)">▾</span>
+      </summary>
+      <div style="font-size:0.72rem;color:var(--muted);margin:0 0 10px">Choose five colours, or type their codes (like #34986E). All the lighter shades are made for you.</div>
+      <div class="theme-make">
+        <div id="theme-maker"></div>
+        <div id="theme-preview" style="border-radius:12px;overflow:hidden;box-shadow:var(--shadow);align-self:start"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px">
+        <input type="text" id="theme-name" placeholder="Name it, e.g. Peacock 2" style="flex:1;min-width:160px">
+        <button onclick="tryThemeDraft()" style="background:none;border:1.5px solid var(--violin);color:var(--violin);border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.82rem;cursor:pointer">👁 Try on the app</button>
+        <button onclick="cancelThemeTry()" style="background:none;border:1.5px solid var(--warm);color:var(--muted);border-radius:10px;padding:8px 12px;font-family:'Special Elite',cursive;font-size:0.82rem;cursor:pointer">↩ Undo try</button>
+        <button onclick="saveCustomTheme()" style="background:var(--viola);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">💾 Save palette</button>
+      </div>
+    </details>
+  </section>
 
   <!-- BILLING SHEET -->
   <section class="admin-panel" id="panel-billing" style="display:none">
@@ -1260,23 +1365,23 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
       <label style="font-size:0.75rem;color:var(--muted)">Half-term:</label>
       <select id="billing-term-select" onchange="renderBilling()"
-        style="font-family:'Special Elite',cursive;font-size:0.85rem;color:#1a4a6b;background:var(--paper);border:1.5px solid #a8c8e8;border-radius:10px;padding:8px 12px;cursor:pointer;flex:1;min-width:140px"></select>
+        style="font-family:'Special Elite',cursive;font-size:0.85rem;color:var(--deep);background:var(--paper);border:1.5px solid var(--tech-bd);border-radius:10px;padding:8px 12px;cursor:pointer;flex:1;min-width:140px"></select>
       <button onclick="makeAllInvoices()" title="Every pupil's invoice, one per page"
-        style="background:#1a4a6b;color:#fff;border:none;border-radius:10px;padding:9px 14px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;white-space:nowrap">🧾 All invoices</button>
+        style="background:var(--deep);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;white-space:nowrap">🧾 All invoices</button>
     </div>
     <div id="billing-sheet"></div>
     <details id="income-box" style="margin-top:16px" ontoggle="if(this.open){renderIncomePanel();renderOtherIncome();}">
-      <summary style="font-size:0.8rem;font-weight:700;color:#1a4a6b;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:2px solid var(--warm)">
+      <summary style="font-size:0.8rem;font-weight:700;color:var(--deep);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:2px solid var(--warm)">
         <span>📊 Income for tax</span><span style="font-weight:400;font-size:0.7rem;color:var(--muted)">tap to open</span>
       </summary>
       <div style="font-size:0.72rem;color:var(--muted);margin:4px 0 10px">Everything ticked Paid, by the date it arrived. For Making Tax Digital, or your accountant.</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <select id="income-period" onchange="renderOtherIncome()" style="font-family:'Special Elite',cursive;font-size:0.85rem;color:#1a4a6b;background:var(--paper);border:1.5px solid #a8c8e8;border-radius:10px;padding:8px 12px;flex:1;min-width:200px"></select>
-        <button onclick="exportIncomeSpreadsheet()" style="background:#1a4a6b;color:#fff;border:none;border-radius:10px;padding:9px 14px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;white-space:nowrap">📥 Download spreadsheet</button>
+        <select id="income-period" onchange="renderOtherIncome()" style="font-family:'Special Elite',cursive;font-size:0.85rem;color:var(--deep);background:var(--paper);border:1.5px solid var(--tech-bd);border-radius:10px;padding:8px 12px;flex:1;min-width:200px"></select>
+        <button onclick="exportIncomeSpreadsheet()" style="background:var(--deep);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;white-space:nowrap">📥 Download spreadsheet</button>
       </div>
       <div id="income-undated" style="font-size:0.72rem;color:#b7791f;margin-top:8px"></div>
-      <div style="margin-top:14px;padding:12px;background:#eef6ff;border-radius:12px">
-        <div style="font-size:0.8rem;font-weight:700;color:#1a4a6b;margin-bottom:4px">🎻 Other work (NYSO, one-off jobs…)</div>
+      <div style="margin-top:14px;padding:12px;background:var(--tech-bg);border-radius:12px">
+        <div style="font-size:0.8rem;font-weight:700;color:var(--deep);margin-bottom:4px">🎻 Other work (NYSO, one-off jobs…)</div>
         <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">Add each payment when it arrives. It goes in the spreadsheet with your lessons.</div>
         <div class="oi-grid">
           <label class="oi-lab">📅 Date received<input type="date" id="other-income-date" class="oi-in"></label>
@@ -1285,19 +1390,19 @@
           <label class="oi-lab">💷 Amount<input type="text" id="other-income-amount" inputmode="decimal" placeholder="£" class="oi-in"></label>
         </div>
         <datalist id="other-income-from-list"></datalist>
-        <div style="text-align:right;margin:10px 0"><button onclick="addOtherIncome()" style="background:#1a4a6b;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">＋ Add payment</button></div>
+        <div style="text-align:right;margin:10px 0"><button onclick="addOtherIncome()" style="background:var(--deep);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">＋ Add payment</button></div>
         <div id="other-income-list" style="display:flex;flex-direction:column;gap:6px"></div>
       </div>
     </details>
     <details id="invoice-settings-box" style="margin-top:16px" ontoggle="if(this.open)renderInvoiceSettings()">
-      <summary style="font-size:0.8rem;font-weight:700;color:#1a4a6b;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:2px solid var(--warm)">
+      <summary style="font-size:0.8rem;font-weight:700;color:var(--deep);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:2px solid var(--warm)">
         <span>🧾 Invoice details</span><span style="font-weight:400;font-size:0.7rem;color:var(--muted)">tap to set</span>
       </summary>
       <div style="font-size:0.72rem;color:var(--muted);margin:4px 0 10px">🔒 Saved on this iPad (and in backups) only, never in the app online.</div>
       <div id="invoice-settings-form" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
     </details>
     <details style="margin-top:16px" ontoggle="if(this.open)renderRatesEditor()">
-      <summary style="font-size:0.8rem;font-weight:700;color:#1a4a6b;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:2px solid var(--warm)">
+      <summary style="font-size:0.8rem;font-weight:700;color:var(--deep);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:2px solid var(--warm)">
         <span>💷 Standard lesson rates</span><span style="font-weight:400;font-size:0.7rem;color:var(--muted)">tap to set</span>
       </summary>
       <div style="font-size:0.72rem;color:var(--muted);margin:4px 0 10px">Set the price for each lesson length once. Every pupil uses the rate for their lesson length, unless you’ve given them their own rate in ✏️ Edit.</div>
@@ -1312,7 +1417,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 4px">
       <label for="att-range-select" style="font-size:0.75rem;color:var(--muted)">Showing:</label>
       <select id="att-range-select" onchange="attRangePick(this.value)"
-        style="font-family:'Special Elite',cursive;font-size:0.85rem;color:#1a4a6b;background:var(--paper);border:1.5px solid #a8c8e8;border-radius:10px;padding:8px 12px;cursor:pointer;flex:1;min-width:160px"></select>
+        style="font-family:'Special Elite',cursive;font-size:0.85rem;color:var(--deep);background:var(--paper);border:1.5px solid var(--tech-bd);border-radius:10px;padding:8px 12px;cursor:pointer;flex:1;min-width:160px"></select>
     </div>
     <div style="font-size:0.68rem;color:var(--muted);margin-bottom:4px">Remembered for next time. Change the dates below for your own range.</div>
     <div style="display:flex;flex-direction:column;gap:8px;margin:10px 0">
@@ -1350,23 +1455,23 @@
     <div class="admin-panel-head">
       <span>📚 Books on loan</span>
       <span style="display:flex;align-items:center;gap:10px">
-        <button onclick="toggleLendingForm()" style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:7px 16px;font-family:'Special Elite',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">＋ Log a loan</button>
+        <button onclick="toggleLendingForm()" style="background:var(--string);color:var(--ink);border:none;border-radius:8px;padding:7px 16px;font-family:'Special Elite',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">＋ Log a loan</button>
         <button class="admin-panel-close" onclick="closeAdminSections()">✕ Close</button>
       </span>
     </div>
     <span id="lending-summary-count" style="display:none"></span>
-    <div id="lending-form" style="display:none;background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:12px;margin-bottom:12px">
+    <div id="lending-form" style="display:none;background:var(--soft-green);border:1.5px solid var(--piece-bd);border-radius:10px;padding:12px;margin-bottom:12px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
         <div>
           <div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase">Book title</div>
-          <input type="text" id="lend-book" placeholder="Book name…" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box">
+          <input type="text" id="lend-book" placeholder="Book name…" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid var(--piece-bd);font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box">
         </div>
         <div>
           <div style="font-size:0.68rem;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase">Lent to</div>
-          <input type="text" id="lend-to" placeholder="Pupil name…" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box">
+          <input type="text" id="lend-to" placeholder="Pupil name…" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid var(--piece-bd);font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box">
         </div>
       </div>
-      <button onclick="addLendingEntry()" style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">✓ Save loan</button>
+      <button onclick="addLendingEntry()" style="background:var(--string);color:var(--ink);border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">✓ Save loan</button>
     </div>
     <div id="lending-list"></div>
   </section>
@@ -1386,7 +1491,7 @@
     <div style="margin-top:10px">
     <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Add your terms and holidays - the week view will show term week numbers and grey out pupils during holidays.</div>
     <div id="term-dates-list"></div>
-    <div style="background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:12px;margin-top:10px">
+    <div style="background:var(--soft-green);border:1.5px solid var(--piece-bd);border-radius:10px;padding:12px;margin-top:10px">
       <div style="display:flex;gap:16px;margin-bottom:10px">
         <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer">
           <input type="radio" name="td-type" value="term" checked> Term
@@ -1396,18 +1501,18 @@
         </label>
       </div>
       <input type="text" id="td-label" placeholder="e.g. Autumn Term 2026 or Summer Holidays"
-        style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:'Special Elite',cursive;font-size:0.85rem;margin-bottom:8px;box-sizing:border-box">
+        style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid var(--piece-bd);font-family:'Special Elite',cursive;font-size:0.85rem;margin-bottom:8px;box-sizing:border-box">
       <div style="display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:8px">
         <div>
           <label for="td-start" style="display:block;font-size:0.68rem;color:var(--muted);margin-bottom:3px">Start date</label>
-          <input type="date" id="td-start" style="width:auto;min-width:11em;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none">
+          <input type="date" id="td-start" style="width:auto;min-width:11em;padding:8px 10px;border-radius:8px;border:1.5px solid var(--piece-bd);font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none">
         </div>
         <div>
           <label for="td-end" style="display:block;font-size:0.68rem;color:var(--muted);margin-bottom:3px">End date</label>
-          <input type="date" id="td-end" style="width:auto;min-width:11em;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none">
+          <input type="date" id="td-end" style="width:auto;min-width:11em;padding:8px 10px;border-radius:8px;border:1.5px solid var(--piece-bd);font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none">
         </div>
       </div>
-      <button onclick="addTermDate()" style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">+ Add</button>
+      <button onclick="addTermDate()" style="background:var(--string);color:var(--ink);border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">+ Add</button>
     </div>
     </div>
   </section>
@@ -1469,8 +1574,8 @@
   </div>
   <div class="filter-row">
     <button class="filter-chip active" data-filter="all" onclick="setFilter(this,'all')">All</button>
-    <button class="filter-chip" data-filter="viola" onclick="setFilter(this,'viola')"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2F5C1A;margin-right:5px;vertical-align:middle"></span>Viola</button>
-    <button class="filter-chip" data-filter="violin" onclick="setFilter(this,'violin')"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#29789E;margin-right:5px;vertical-align:middle"></span>Violin</button>
+    <button class="filter-chip" data-filter="viola" onclick="setFilter(this,'viola')"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--viola);margin-right:5px;vertical-align:middle"></span>Viola</button>
+    <button class="filter-chip" data-filter="violin" onclick="setFilter(this,'violin')"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--violin);margin-right:5px;vertical-align:middle"></span>Violin</button>
     <button class="filter-chip" data-filter="child" onclick="setFilter(this,'child')">School age</button>
     <button class="filter-chip" data-filter="adult" onclick="setFilter(this,'adult')">Adults</button>
     <button class="filter-chip" data-filter="beginner" onclick="setFilter(this,'beginner')">Beginner</button>
@@ -1498,8 +1603,8 @@
     <div class="field-group">
       <label class="field-label">Instrument</label>
       <div class="radio-group">
-        <div class="radio-opt"><input type="radio" name="instrument" id="inst-viola" value="viola" checked><label for="inst-viola"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2F5C1A;margin-right:5px;vertical-align:middle"></span>Viola</label></div>
-        <div class="radio-opt"><input type="radio" name="instrument" id="inst-violin" value="violin"><label for="inst-violin"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#29789E;margin-right:5px;vertical-align:middle"></span>Violin</label></div>
+        <div class="radio-opt"><input type="radio" name="instrument" id="inst-viola" value="viola" checked><label for="inst-viola"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--viola);margin-right:5px;vertical-align:middle"></span>Viola</label></div>
+        <div class="radio-opt"><input type="radio" name="instrument" id="inst-violin" value="violin"><label for="inst-violin"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--violin);margin-right:5px;vertical-align:middle"></span>Violin</label></div>
       </div>
     </div>
     <div class="field-group">
@@ -1611,7 +1716,7 @@
   <div class="modal">
     <h2>📝 <span id="notes-sum-name"></span></h2>
     <div style="font-size:0.8rem;color:var(--muted);margin:-6px 0 12px">All the lesson notes for…</div>
-    <select id="notes-sum-period" onchange="notesSummaryCount()" style="width:100%;font-family:'Special Elite',cursive;font-size:0.95rem;color:#1a4a6b;background:var(--paper);border:1.5px solid #a8c8e8;border-radius:10px;padding:10px 12px"></select>
+    <select id="notes-sum-period" onchange="notesSummaryCount()" style="width:100%;font-family:'Special Elite',cursive;font-size:0.95rem;color:var(--deep);background:var(--paper);border:1.5px solid var(--tech-bd);border-radius:10px;padding:10px 12px"></select>
     <div id="notes-sum-count" style="font-size:0.75rem;color:var(--muted);margin:8px 2px 0"></div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeNotesSummary()">Cancel</button>
@@ -1627,7 +1732,7 @@
     <div id="inv-term" style="font-size:0.8rem;color:var(--muted);margin:-6px 0 12px"></div>
     <div id="inv-lines" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px"></div>
     <div id="inv-arrears" style="margin-bottom:6px"></div>
-    <div style="font-size:0.75rem;font-weight:700;color:#1a4a6b;margin-bottom:6px">＋ Extra lines (optional)</div>
+    <div style="font-size:0.75rem;font-weight:700;color:var(--deep);margin-bottom:6px">＋ Extra lines (optional)</div>
     <div style="display:grid;grid-template-columns:1fr 6em;gap:8px;margin-bottom:12px">
       <input type="text" id="inv-x1" placeholder="e.g. Exam entry" oninput="invUpdateTotal()">
       <input type="text" id="inv-x1p" placeholder="£" inputmode="decimal" oninput="invUpdateTotal()">
@@ -1635,7 +1740,7 @@
       <input type="text" id="inv-x2p" placeholder="£" inputmode="decimal" oninput="invUpdateTotal()">
     </div>
     <div style="font-size:0.7rem;color:var(--muted);margin:-6px 0 12px">To take money off, put a minus in front, e.g. -26</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;border-top:2px solid var(--warm);padding-top:10px;font-weight:800;color:#1a4a6b;font-size:1.05rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;border-top:2px solid var(--warm);padding-top:10px;font-weight:800;color:var(--deep);font-size:1.05rem">
       <span>Total</span><span id="inv-total"></span>
     </div>
     <div class="modal-actions">
@@ -1672,7 +1777,7 @@
         <option value="Beginner Repertoire - Violin">Beginner Repertoire - Violin</option>
       </select>
     </div>
-    <div id="libpick-toast" style="display:none;background:#e8f5e0;color:var(--viola);border-radius:8px;padding:7px 12px;font-size:0.82rem;font-weight:600;margin-bottom:8px"></div>
+    <div id="libpick-toast" style="display:none;background:var(--soft-green2);color:var(--viola);border-radius:8px;padding:7px 12px;font-size:0.82rem;font-weight:600;margin-bottom:8px"></div>
     <div id="piece-db-list" style="overflow-y:auto;flex:1;margin-bottom:12px;-webkit-overflow-scrolling:touch"></div>
     <button class="btn-primary" onclick="closePieceDB()">Done</button>
   </div>
@@ -1880,8 +1985,8 @@
     <div class="field-group">
       <label class="field-label">Instrument</label>
       <div class="radio-group">
-        <div class="radio-opt"><input type="radio" name="edit-instrument" id="edit-inst-viola" value="viola"><label for="edit-inst-viola"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2F5C1A;margin-right:5px;vertical-align:middle"></span>Viola</label></div>
-        <div class="radio-opt"><input type="radio" name="edit-instrument" id="edit-inst-violin" value="violin"><label for="edit-inst-violin"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#29789E;margin-right:5px;vertical-align:middle"></span>Violin</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-instrument" id="edit-inst-viola" value="viola"><label for="edit-inst-viola"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--viola);margin-right:5px;vertical-align:middle"></span>Viola</label></div>
+        <div class="radio-opt"><input type="radio" name="edit-instrument" id="edit-inst-violin" value="violin"><label for="edit-inst-violin"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--violin);margin-right:5px;vertical-align:middle"></span>Violin</label></div>
       </div>
     </div>
     <div class="field-group">
@@ -1955,9 +2060,9 @@
       <div id="edit-rate-hint" style="font-size:0.72rem;color:var(--muted);margin-bottom:5px">Leave empty to use your standard rate (Admin → 💷 Billing sheet).</div>
       <input type="number" id="edit-rate" placeholder="Standard rate" min="0" step="0.50" style="width:100%;font-family:'Special Elite',cursive;font-size:0.93rem;border:1.5px solid #e0ddd8;border-radius:8px;padding:9px 11px;background:var(--paper);color:var(--ink)">
     </div>
-    <div class="field-group" style="background:#f4f8f2;border-radius:10px;padding:10px 12px">
+    <div class="field-group" style="background:var(--paper);border-radius:10px;padding:10px 12px">
       <label style="display:flex;align-items:center;gap:10px;font-size:0.9rem;cursor:pointer;font-weight:600;color:var(--ink)">
-        <input type="checkbox" id="edit-rents" onchange="document.getElementById('edit-rent-fields').style.display=this.checked?'block':'none'" style="width:20px;height:20px;accent-color:#2F5C1A">
+        <input type="checkbox" id="edit-rents" onchange="document.getElementById('edit-rent-fields').style.display=this.checked?'block':'none'" style="width:20px;height:20px;accent-color:var(--viola)">
         🎻 Rents an instrument from me
       </label>
       <div id="edit-rent-fields" style="display:none;margin-top:10px">
@@ -1968,9 +2073,9 @@
         <div style="font-size:0.7rem;color:var(--muted);margin-top:5px">The fee is added to their total on the billing sheet each half-term.</div>
       </div>
     </div>
-    <div class="field-group" style="background:#eef6ff;border-radius:10px;padding:10px 12px">
+    <div class="field-group" style="background:var(--tech-bg);border-radius:10px;padding:10px 12px">
       <label class="field-label" for="edit-billwith">👪 Same invoice as</label>
-      <select id="edit-billwith" style="width:100%;font-family:'Special Elite',cursive;font-size:0.93rem;border:1.5px solid #a8c8e8;border-radius:8px;padding:9px 11px;background:var(--paper);color:var(--ink);box-sizing:border-box"></select>
+      <select id="edit-billwith" style="width:100%;font-family:'Special Elite',cursive;font-size:0.93rem;border:1.5px solid var(--tech-bd);border-radius:8px;padding:9px 11px;background:var(--paper);color:var(--ink);box-sizing:border-box"></select>
       <div style="font-size:0.7rem;color:var(--muted);margin-top:5px">For brothers and sisters, or parent and child: one invoice, one Paid tick.</div>
     </div>
     <div class="field-group">
@@ -2044,8 +2149,8 @@
     <div class="field-group"><label class="field-label" for="wait-parent">Parent / carer name</label><input type="text" id="wait-parent" placeholder="Parent or carer's name"></div>
     <div class="field-group"><label class="field-label">Instrument</label>
       <div class="radio-group">
-        <div class="radio-opt"><input type="radio" name="wait-inst" id="wait-viola" value="Viola" checked><label for="wait-viola"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2F5C1A;margin-right:5px;vertical-align:middle"></span>Viola</label></div>
-        <div class="radio-opt"><input type="radio" name="wait-inst" id="wait-violin" value="Violin"><label for="wait-violin"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#29789E;margin-right:5px;vertical-align:middle"></span>Violin</label></div>
+        <div class="radio-opt"><input type="radio" name="wait-inst" id="wait-viola" value="Viola" checked><label for="wait-viola"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--viola);margin-right:5px;vertical-align:middle"></span>Viola</label></div>
+        <div class="radio-opt"><input type="radio" name="wait-inst" id="wait-violin" value="Violin"><label for="wait-violin"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--violin);margin-right:5px;vertical-align:middle"></span>Violin</label></div>
       </div>
     </div>
     <div class="field-group"><label class="field-label" for="wait-email">Email</label><input type="text" id="wait-email" placeholder="Email address"></div>
@@ -2202,7 +2307,7 @@
     <button onclick="stopFloatingTimer()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:1rem;cursor:pointer;flex-shrink:0;padding:0">×</button>
   </div>
   <div id="ft-bar-wrap" style="height:4px;background:rgba(255,255,255,0.2)">
-    <div id="ft-bar" style="height:100%;background:#8AB640;width:100%;transition:width 1s linear"></div>
+    <div id="ft-bar" style="height:100%;background:var(--string);width:100%;transition:width 1s linear"></div>
   </div>
 </div>
 
@@ -2223,24 +2328,24 @@
 <!-- PENCIL KEYBOARD TOOLBAR -->
 <div id="pencil-kb" style="position:fixed;bottom:360px;right:10px;z-index:148;display:flex;flex-direction:column;gap:6px">
   <button onpointerdown="event.preventDefault();pencilKey('Undo')" title="Undo"
-    style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">↩<br>Undo</button>
+    style="background:var(--violin);color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">↩<br>Undo</button>
   <button onpointerdown="event.preventDefault();pencilKey('Redo')" title="Redo"
-    style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">↪<br>Redo</button>
+    style="background:var(--violin);color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">↪<br>Redo</button>
   <button onpointerdown="event.preventDefault();pencilKey('Capitalise')" title="Capitalise selection"
-    style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">⇧<br>Cap</button>
+    style="background:var(--violin);color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">⇧<br>Cap</button>
   <button onpointerdown="event.preventDefault();pencilKey('Backspace')" title="Backspace"
-    style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">⌫<br>Delete</button>
+    style="background:var(--violin);color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">⌫<br>Delete</button>
   <button onpointerdown="event.preventDefault();pencilKey('Space')" title="Space"
-    style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">⎵<br>Space</button>
+    style="background:var(--violin);color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">⎵<br>Space</button>
   <button onpointerdown="event.preventDefault();pencilKey('Return')" title="Return"
-    style="background:#29789E;color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">↵<br>Return</button>
+    style="background:var(--violin);color:#fff;border:none;border-radius:10px;width:52px;height:44px;font-size:0.75rem;font-family:'Special Elite',cursive;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);line-height:1.2">↵<br>Return</button>
 </div>
 
 <div style="position:fixed;bottom:80px;right:16px;z-index:148;display:flex;flex-direction:column;gap:8px" id="floating-btns">
-  <button onclick="openQuickCapture()" title="Quick note" style="background:#29789E;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">✏️</button>
-  <button onclick="openEodModal()" title="End of day checklist" style="background:#8AB640;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">☑️</button>
-  <button onclick="openCalcModal()" title="Calculator" style="background:#29789E;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">🧮</button>
-  <button onclick="openSpellModal()" title="Check spelling" style="background:#8AB640;color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">🔤</button>
+  <button onclick="openQuickCapture()" title="Quick note" style="background:var(--violin);color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">✏️</button>
+  <button onclick="openEodModal()" title="End of day checklist" style="background:var(--string);color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">☑️</button>
+  <button onclick="openCalcModal()" title="Calculator" style="background:var(--violin);color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">🧮</button>
+  <button onclick="openSpellModal()" title="Check spelling" style="background:var(--string);color:#fff;border:none;border-radius:999px;width:48px;height:48px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">🔤</button>
 </div>
 
 <!-- SPELL CHECK MODAL -->
@@ -2267,26 +2372,26 @@
       <h2 style="margin:0">Calculator</h2>
       <button onclick="closeCalcModal()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted)">×</button>
     </div>
-    <div id="calc-display" style="background:#f0f0e8;border-radius:8px;padding:12px 16px;text-align:right;font-size:1.6rem;font-family:'Special Elite',cursive;color:#05270B;min-height:52px;margin-bottom:10px;word-break:break-all">0</div>
+    <div id="calc-display" style="background:#f0f0e8;border-radius:8px;padding:12px 16px;text-align:right;font-size:1.6rem;font-family:'Special Elite',cursive;color:var(--ink);min-height:52px;margin-bottom:10px;word-break:break-all">0</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
       <button onclick="calcInput('C')"    style="grid-column:span 2;background:#e8ddd8;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer;color:#c0392b;font-weight:700">C</button>
       <button onclick="calcInput('⌫')"   style="background:#e8ddd8;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">⌫</button>
-      <button onclick="calcInput('÷')"   style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">÷</button>
+      <button onclick="calcInput('÷')"   style="background:var(--violin);color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">÷</button>
       <button onclick="calcInput('7')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">7</button>
       <button onclick="calcInput('8')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">8</button>
       <button onclick="calcInput('9')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">9</button>
-      <button onclick="calcInput('×')"   style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">×</button>
+      <button onclick="calcInput('×')"   style="background:var(--violin);color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">×</button>
       <button onclick="calcInput('4')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">4</button>
       <button onclick="calcInput('5')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">5</button>
       <button onclick="calcInput('6')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">6</button>
-      <button onclick="calcInput('−')"   style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">−</button>
+      <button onclick="calcInput('−')"   style="background:var(--violin);color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">−</button>
       <button onclick="calcInput('1')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">1</button>
       <button onclick="calcInput('2')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">2</button>
       <button onclick="calcInput('3')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">3</button>
-      <button onclick="calcInput('+')"   style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">+</button>
+      <button onclick="calcInput('+')"   style="background:var(--violin);color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">+</button>
       <button onclick="calcInput('0')"   style="grid-column:span 2;background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">0</button>
       <button onclick="calcInput('.')"   style="background:var(--warm);border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer">.</button>
-      <button onclick="calcInput('=')"   style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer;font-weight:700">=</button>
+      <button onclick="calcInput('=')"   style="background:var(--violin);color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Special Elite',cursive;font-size:1rem;cursor:pointer;font-weight:700">=</button>
     </div>
   </div>
 </div>
@@ -2357,7 +2462,7 @@ async function toggleWakeLock() {
   }
   try {
     wakeLockSentinel = await navigator.wakeLock.request('screen');
-    if (btn) { btn.textContent = '☀️ Awake'; btn.style.background = '#8AB640'; btn.style.color = '#05270B'; }
+    if (btn) { btn.textContent = '☀️ Awake'; btn.style.background = 'var(--string)'; btn.style.color = 'var(--ink)'; }
     wakeLockSentinel.addEventListener('release', function() {
       wakeLockSentinel = null;
       if (btn) { btn.textContent = '☀️ Keep awake'; btn.style.background = 'none'; btn.style.color = 'var(--muted)'; }
@@ -2530,7 +2635,7 @@ function save() {
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
 function instrDot(instrument) {
-  const col = instrument === 'viola' ? '#2F5C1A' : '#29789E';
+  const col = instrument === 'viola' ? 'var(--viola)' : 'var(--violin)';
   return `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${col};margin-right:4px;vertical-align:middle;flex-shrink:0"></span>`;
 }
 
@@ -2565,7 +2670,7 @@ function linkify(str) {
     const isAudio = /soundcloud\.com|spotify\.com|music\./i.test(href);
     const label = isVideo ? '[ Watch ]' : isAudio ? '[ Listen ]' : '[ Link ]';
     return '<a href="' + href + '" target="_blank" rel="noopener" '
-      + 'style="color:#29789E;text-decoration:none;font-size:0.85rem;white-space:nowrap" '
+      + 'style="color:var(--violin);text-decoration:none;font-size:0.85rem;white-space:nowrap" '
       + 'onclick="event.stopPropagation()">' + label + '</a>';
   });
 }
@@ -2823,7 +2928,7 @@ function todayCardMainHTML(s, lastLog) {
       ago = days <= 0 ? 'today' : days === 1 ? 'yesterday' : days < 14 ? days + ' days ago' : Math.round(days / 7) + ' weeks ago';
     }
     const dateTxt = (parseLogDate(lastLog.date) || new Date()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-    lastCol = label('📝 Last lesson · ' + esc(dateTxt) + (ago ? ' <span style="text-transform:none;font-weight:400">(' + ago + ')</span>' : ''), '#1a4a6b')
+    lastCol = label('📝 Last lesson · ' + esc(dateTxt) + (ago ? ' <span style="text-transform:none;font-weight:400">(' + ago + ')</span>' : ''), 'var(--deep)')
       + '<div style="display:flex;flex-direction:column;gap:5px">' + shown.map(function(l) {
           const m = l.match(/^(.{2,80}?):\s+(.+)$/);
           const body = m ? '<strong style="font-weight:700">' + esc(m[1]) + ':</strong> ' + esc(m[2]) : esc(l);
@@ -2832,7 +2937,7 @@ function todayCardMainHTML(s, lastLog) {
       + (lines.length > 6 ? '<div style="font-size:0.75rem;color:var(--muted);padding-left:16px">+' + (lines.length - 6) + ' more in full notes</div>' : '')
       + '</div>';
   } else {
-    lastCol = label('📝 Last lesson', '#1a4a6b') + '<div style="font-size:0.82rem;color:var(--muted);font-style:italic">No lessons logged yet</div>';
+    lastCol = label('📝 Last lesson', 'var(--deep)') + '<div style="font-size:0.82rem;color:var(--muted);font-style:italic">No lessons logged yet</div>';
   }
   return '<div style="display:flex;flex-wrap:wrap;gap:14px 18px;margin-top:12px">'
     + '<div style="flex:2 1 220px;min-width:0">' + piecesCol + '</div>'
@@ -2960,11 +3065,11 @@ function renderWeek() {
       });
       const att = lessonLog ? lessonLog.attendance : null;
       const attBadge = att === 'present'
-        ? `<span style="font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:999px;border:1.5px solid #2F5C1A;color:#2F5C1A;margin-left:6px;vertical-align:middle" title="Present">✓</span>`
+        ? `<span style="font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:999px;border:1.5px solid var(--viola);color:var(--viola);margin-left:6px;vertical-align:middle" title="Present">✓</span>`
         : att === 'absent-late'
         ? `<span style="font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:999px;border:1.5px solid #A0522D;color:#A0522D;margin-left:6px;vertical-align:middle" title="Late cancel">✕</span>`
         : att === 'absent-notice'
-        ? `<span style="font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:999px;border:1.5px solid #29789E;color:#29789E;margin-left:6px;vertical-align:middle" title="Good notice">–</span>`
+        ? `<span style="font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:999px;border:1.5px solid var(--violin);color:var(--violin);margin-left:6px;vertical-align:middle" title="Good notice">–</span>`
         : att === 'cancelled'
         ? `<span style="font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:999px;border:1.5px dashed #ccc;color:#999;margin-left:6px;vertical-align:middle" title="Cancelled">–</span>`
         : '';
@@ -2978,7 +3083,7 @@ function renderWeek() {
         </div>
         <div class="slot-actions">
           
-          ${s.frequency==='fortnightly' ? `<button class="slot-btn" onclick="event.stopPropagation();skipWeek('${s.id}')" style="background:#e8f0e4;color:var(--muted);border:1.5px solid #ccc">Not this week</button>` : ''}
+          ${s.frequency==='fortnightly' ? `<button class="slot-btn" onclick="event.stopPropagation();skipWeek('${s.id}')" style="background:var(--warm);color:var(--muted);border:1.5px solid #ccc">Not this week</button>` : ''}
         </div>
       </div>`;
     }
@@ -2997,7 +3102,7 @@ function renderWeek() {
         <div class="slot-time">${ex.time||'-'}</div>
         <div class="slot-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
         <div class="slot-info">
-          <div class="slot-name">${s.name} <span style="font-size:0.68rem;color:var(--string);font-weight:700;background:#dff0d8;padding:1px 6px;border-radius:999px">extra</span></div>
+          <div class="slot-name">${s.name} <span style="font-size:0.68rem;color:var(--string);font-weight:700;background:var(--soft-green4);padding:1px 6px;border-radius:999px">extra</span></div>
         </div>
         <div class="slot-actions">
           <button class="slot-btn" onclick="event.stopPropagation();removeExtraLesson(${exIdx})" style="border-color:#c0392b;color:#c0392b">Remove</button>
@@ -3307,8 +3412,8 @@ function renderDetail(s, preserveTab = false) {
             <span class="badge badge-${s.level}">${s.level}</span>
             <span class="badge" style="background:var(--warm);color:var(--muted)">${(s.pupilType||'child')==='adult'?'Adult':'School age'}</span>
             ${s.scheme==='latestarter' ? '<span class="badge" style="background:#fff3e0;color:#b7791f">Late Starter</span>' : ''}
-            ${s.rental && s.rental.on ? `<span class="badge" style="background:#e3f2fa;color:#1a4a6b">🎻 Renting${s.rental.what ? ': ' + esc(s.rental.what) : ''}</span>` : ''}
-            ${pupilRate(s) ? `<span class="badge" style="background:#dff0d8;color:#2F5C1A">£${pupilRate(s)} per lesson</span>` : ''}
+            ${s.rental && s.rental.on ? `<span class="badge" style="background:#e3f2fa;color:var(--deep)">🎻 Renting${s.rental.what ? ': ' + esc(s.rental.what) : ''}</span>` : ''}
+            ${pupilRate(s) ? `<span class="badge" style="background:var(--soft-green4);color:var(--viola)">£${pupilRate(s)} per lesson</span>` : ''}
             ${slot.day?`<span style="font-size:0.78rem;color:var(--muted)">◷ ${slot.day}${slot.time?' '+slot.time:''}${s.duration?' · '+s.duration+'min':''}</span>`:''}
           </div>
           ${pupilMetaHTML(s)}
@@ -3318,8 +3423,8 @@ function renderDetail(s, preserveTab = false) {
         ${termPickerHTML(s)}
         <button onclick="toggleLittleDetails('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 14px;height:38px;font-family:'Special Elite',cursive;font-size:0.82rem;color:var(--muted);cursor:pointer" title="Little details about this pupil">🐢 Details</button>
         <button onclick="openEditModal('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 14px;height:38px;font-family:'Special Elite',cursive;font-size:0.82rem;color:var(--viola);cursor:pointer" title="Edit pupil">✏️ Edit</button>
-        <button onclick="openExtraLessonModal('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 14px;height:38px;font-family:'Special Elite',cursive;font-size:0.82rem;color:#2F5C1A;cursor:pointer" title="Add extra lesson this week">+ Extra</button>
-        <button onclick="exportSinglePupil('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 14px;height:38px;font-family:'Special Elite',cursive;font-size:0.82rem;color:#29789E;cursor:pointer" title="Practice plan">✉ Plan</button>
+        <button onclick="openExtraLessonModal('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 14px;height:38px;font-family:'Special Elite',cursive;font-size:0.82rem;color:var(--viola);cursor:pointer" title="Add extra lesson this week">+ Extra</button>
+        <button onclick="exportSinglePupil('${s.id}')" style="background:#f0ede8;border:none;border-radius:10px;padding:0 14px;height:38px;font-family:'Special Elite',cursive;font-size:0.82rem;color:var(--violin);cursor:pointer" title="Practice plan">✉ Plan</button>
         <button onclick="toggleFollowUp('${s.id}')" title="${s.followUp?'Clear follow-up flag':'Flag for follow-up'}"
           style="background:${s.followUp?'#e67e22':'#f0ede8'};color:${s.followUp?'#fff':'var(--muted)'};border:none;border-radius:10px;padding:0 14px;height:38px;font-family:'Special Elite',cursive;font-size:0.9rem;cursor:pointer;margin-left:auto">🚩</button>
       </div>
@@ -3346,16 +3451,16 @@ function renderDetail(s, preserveTab = false) {
           </div>
         `).join('')}
         <div style="grid-column:1/-1">
-          <details>
+          <details id="followup-box-${s.id}">
             <summary style="font-size:0.68rem;font-weight:700;color:#e67e22;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
               <span>🚩 Follow-up note</span><span style="font-weight:400;font-size:0.65rem">▾</span>
             </summary>
-            <textarea placeholder="Reason for flag…"
+            <textarea placeholder="Reason for flag…" id="followup-note-${s.id}"
               oninput="autoGrow(this);updateLittleDetail('${s.id}','followUpNote',this.value)"
               style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #f5c99a;font-family:'Special Elite',cursive;font-size:0.85rem;background:#fffaf5;color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:50px;margin-top:4px">${esc((s.littleDetails||{}).followUpNote||'')}</textarea>
           </details>
           <details style="margin-top:8px">
-            <summary style="font-size:0.68rem;font-weight:700;color:#29789E;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+            <summary style="font-size:0.68rem;font-weight:700;color:var(--violin);text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
               <span>👁 Observations</span><span style="font-weight:400;font-size:0.65rem">▾</span>
             </summary>
             <textarea placeholder="Things you've noticed… learning style, what works, patterns, moments…"
@@ -3405,13 +3510,13 @@ function renderDetail(s, preserveTab = false) {
       </div>
       <div class="before-pair">
       <div class="before-col">
-      <div class="section-card" style="background:#eef6ff;border:1.5px solid #a8c8e8">
-        <div class="section-label" style="color:#1a4a6b;display:flex;align-items:center;justify-content:space-between">
+      <div class="section-card" style="background:var(--tech-bg);border:1.5px solid var(--tech-bd)">
+        <div class="section-label" style="color:var(--deep);display:flex;align-items:center;justify-content:space-between">
           <span>📋 Focus from last lesson</span>
           <button onclick="clearNextWeekNote('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
         </div>
         <div id="next-ticks-b-${s.id}" class="nt-blue">${nextTicksHTML(s, 'b')}</div>
-        <button type="button" onclick="addNextTickRow('${s.id}','b')" style="background:none;border:1.5px dashed #a8c8e8;color:#1a4a6b;border-radius:8px;padding:6px 12px;margin-top:8px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;width:100%">＋ Add line</button>
+        <button type="button" onclick="addNextTickRow('${s.id}','b')" style="background:none;border:1.5px dashed var(--tech-bd);color:var(--deep);border-radius:8px;padding:6px 12px;margin-top:8px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;width:100%">＋ Add line</button>
       </div>
       <details class="section-card" style="padding:0">
         <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.72rem;font-weight:700;color:var(--muted)">
@@ -3563,15 +3668,15 @@ function renderDetail(s, preserveTab = false) {
         <button class="save-btn" onclick="saveLog('${s.id}')">Save to lesson log</button>
         <div class="save-toast" id="toast-after-${s.id}">✓ Added to log</div>
       </div>
-      <div class="section-card" style="background:#f8fdf5;border:1.5px solid #c8ddb8">
+      <div class="section-card" style="background:var(--soft-green);border:1.5px solid var(--piece-bd)">
         <div class="section-label" style="color:var(--string);display:flex;align-items:center;justify-content:space-between">
           <span>📌 Next lesson - what to focus on</span>
           <button onclick="clearNextLessonCapture('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>
         </div>
         <div id="next-ticks-${s.id}">${nextTicksHTML(s, 'a')}</div>
-        <button type="button" onclick="addNextTickRow('${s.id}','a')" style="background:none;border:1.5px dashed #8AB640;color:#2F5C1A;border-radius:8px;padding:6px 12px;margin-top:8px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;width:100%">＋ Add line</button>
+        <button type="button" onclick="addNextTickRow('${s.id}','a')" style="background:none;border:1.5px dashed var(--string);color:var(--viola);border-radius:8px;padding:6px 12px;margin-top:8px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;width:100%">＋ Add line</button>
         <button onclick="saveNextLesson('${s.id}')"
-          style="margin-top:10px;background:var(--string);color:#05270B;border:none;border-radius:10px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer;display:block;margin:10px auto 0;min-width:160px">
+          style="margin-top:10px;background:var(--string);color:var(--ink);border:none;border-radius:10px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer;display:block;margin:10px auto 0;min-width:160px">
           ✓ Save to Before tab
         </button>
         <div class="save-toast" id="toast-next-${s.id}">✓ Saved to Before tab</div>
@@ -3644,7 +3749,7 @@ function renderDetail(s, preserveTab = false) {
         <button class="admin-tile" style="background:var(--string);color:var(--ink)" onclick="showTechniqueSection('${s.id}','studybooks')">
           <span class="admin-tile-icon">📖</span><span class="admin-tile-label">Study books</span>
         </button>
-        <button class="admin-tile" style="background:#46C6E5;color:var(--ink)" onclick="showTechniqueSection('${s.id}','scales')">
+        <button class="admin-tile" style="background:var(--sky);color:var(--ink)" onclick="showTechniqueSection('${s.id}','scales')">
           <span class="admin-tile-icon">🎼</span><span class="admin-tile-label">Scale checklist</span>
         </button>
         <button class="admin-tile" style="background:var(--viola)" onclick="showTechniqueSection('${s.id}','albums')">
@@ -3653,7 +3758,7 @@ function renderDetail(s, preserveTab = false) {
         <button class="admin-tile" style="background:var(--violin)" onclick="showTechniqueSection('${s.id}','methodbooks')">
           <span class="admin-tile-icon">📘</span><span class="admin-tile-label">Method books</span>
         </button>
-        <button class="admin-tile" style="background:#1a4a6b;grid-column:1 / -1" onclick="showTechniqueSection('${s.id}','technique')">
+        <button class="admin-tile" style="background:var(--deep);grid-column:1 / -1" onclick="showTechniqueSection('${s.id}','technique')">
           <span class="admin-tile-icon">🛠</span><span class="admin-tile-label">Technique checklist</span>
         </button>
         <!-- light green|light blue · mid green|mid blue · then the checklist full width at the bottom -->
@@ -3861,7 +3966,7 @@ function renderDetail(s, preserveTab = false) {
           <span>Lesson history</span>
           <span style="display:flex;align-items:center;gap:10px">
             <button onclick="event.preventDefault();event.stopPropagation();openNotesSummary('${s.id}')"
-              style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-family:'Special Elite',cursive;font-size:0.72rem;cursor:pointer">📝 Notes summary</button>
+              style="background:var(--violin);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-family:'Special Elite',cursive;font-size:0.72rem;cursor:pointer">📝 Notes summary</button>
             <span style="font-size:0.7rem;font-weight:400">▴</span>
           </span>
         </summary>
@@ -3923,7 +4028,7 @@ function absencesHTML(s) {
     var fillBtn = '';
     if (!isPast) {
       fillBtn = '<button onclick="openFillSlotModal(\'' + s.id + '\',' + i + ',\'' + ab.date + '\',\'' + (s.lessonTime||'') + '\',\'' + dayName + '\')" '
-        + 'style="background:var(--string);color:#05270B;border:none;border-radius:6px;padding:4px 9px;font-family:\'Special Elite\',cursive;font-size:0.72rem;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap">Fill slot</button>';
+        + 'style="background:var(--string);color:var(--ink);border:none;border-radius:6px;padding:4px 9px;font-family:\'Special Elite\',cursive;font-size:0.72rem;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap">Fill slot</button>';
     }
     var removeBtn = '<button onclick="removeAbsence(\'' + s.id + '\',' + i + ')" '
       + 'style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1;flex-shrink:0">\u00d7</button>';
@@ -4687,7 +4792,14 @@ function toggleFollowUp(id) {
   const s = getStudent(id); if (!s) return;
   s.followUp = !s.followUp;
   save();
-  renderDetail(s);
+  renderDetail(s, true);
+  // Flagging: open the "Reason for flag" box straight away, ready to type
+  if (s.followUp) setTimeout(function() {
+    const panel = document.getElementById('little-details-' + id); if (panel) panel.open = true;
+    const box = document.getElementById('followup-box-' + id); if (box) box.open = true;
+    const ta = document.getElementById('followup-note-' + id);
+    if (ta) { ta.scrollIntoView({ behavior: 'smooth', block: 'center' }); ta.focus(); }
+  }, 120);
 }
 
 function clearNextLessonCapture(id) {
@@ -4778,7 +4890,7 @@ function testMic(btnId, msgId, textareaId) {
       if (btn._recognition) {
         btn._recognition = null;
         if (btn) { btn.textContent = '🎤'; btn.style.background = '#f0ede8'; }
-        if (msg) { msg.textContent = '✓ Done. Tap to dictate again.'; msg.style.color = '#2F5C1A'; }
+        if (msg) { msg.textContent = '✓ Done. Tap to dictate again.'; msg.style.color = 'var(--viola)'; }
       }
     } catch(e) { console.error('mic onend error', e); }
   };
@@ -4978,7 +5090,7 @@ function mvtTicksHTML(s, i) {
   return '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:-2px 0 4px 2px">'
     + '<div style="flex-basis:100%">' + toggle + '</div>'
     + mvts.map(function(m, idx) {
-        if (isHeadingItem(m)) return '<span style="flex-basis:100%;font-size:0.72rem;font-weight:700;color:#1a4a6b;margin-top:6px">' + esc(headingText(m)) + '</span>';
+        if (isHeadingItem(m)) return '<span style="flex-basis:100%;font-size:0.72rem;font-weight:700;color:var(--deep);margin-top:6px">' + esc(headingText(m)) + '</span>';
         const lv = bookTickLevel(ticks[mkeys[idx]]);
         const st = BOOK_TICK_STYLE[lv];
         const label = /^\d+$/.test(m) ? 'Mvt. ' + m : m;
@@ -5092,7 +5204,7 @@ function buildTechHTML(s, allTech) {
     const color = techChipColor(t);
     const borderColor = selected ? (color || 'var(--viola)') : (color || '#e0ddd8');
     const bg = selected ? (color || 'var(--viola)') : (color ? color + '33' : 'transparent');
-    const textColor = '#05270B';
+    const textColor = 'var(--ink)';
     var btn = '<button class="tech-chip' + (isCustom?' custom-chip':'') + (selected?' selected':'') + '"'
       + ' onclick="toggleTech(\'' + s.id + '\',\'' + escJs(t) + '\',this)"'
       + ' style="border-left: 4px solid ' + borderColor + ';background:' + bg + ';color:' + textColor + '">'
@@ -6056,11 +6168,11 @@ function offerSavePieceToLibrary(studentId, idx, value) {
   if (old) old.remove();
   const toast = document.createElement('div');
   toast.id = toastId;
-  toast.style.cssText = 'background:#05270B;color:#fff;border-radius:10px;padding:10px 14px;font-size:0.82rem;margin-top:6px;display:flex;align-items:center;justify-content:space-between;gap:10px;';
+  toast.style.cssText = 'background:var(--ink);color:#fff;border-radius:10px;padding:10px 14px;font-size:0.82rem;margin-top:6px;display:flex;align-items:center;justify-content:space-between;gap:10px;';
   toast.innerHTML = `<span>Add "<strong>${val}</strong>" to your library?</span>
     <div style="display:flex;gap:6px;flex-shrink:0">
       <button onclick="savePieceToLibrary('${studentId}',${idx},'${val.replace(/'/g,"\\'")}');document.getElementById('${toastId}').remove()"
-        style="background:#8AB640;color:#05270B;border:none;border-radius:6px;padding:5px 10px;font-size:0.8rem;font-weight:700;cursor:pointer">Yes</button>
+        style="background:var(--string);color:var(--ink);border:none;border-radius:6px;padding:5px 10px;font-size:0.8rem;font-weight:700;cursor:pointer">Yes</button>
       <button onclick="document.getElementById('${toastId}').remove()"
         style="background:none;border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:6px;padding:5px 10px;font-size:0.8rem;cursor:pointer">No</button>
     </div>`;
@@ -6239,7 +6351,7 @@ function refSummary(s) {
 
   // Working On, split like the Before tab: Technical (blue) and Pieces (green)
   var woPill = function(label, g) {
-    var c = g === 'tech' ? 'background:#eef6ff;border:1px solid #a8c8e8;color:#1a4a6b' : 'background:#eef6e6;border:1px solid #c8ddb8;color:#1a3a0a';
+    var c = g === 'tech' ? 'background:var(--tech-bg);border:1px solid var(--tech-bd);color:var(--deep)' : 'background:var(--piece-bg);border:1px solid var(--piece-bd);color:var(--ink-soft)';
     return '<span onclick="insertIntoScratch(\'' + s.id + '\',\'' + escJs(label) + '\')" '
       + 'style="display:inline-block;border-radius:6px;padding:3px 8px;font-size:0.78rem;margin:2px;cursor:pointer;' + c + '" '
       + 'title="Tap to insert into notes">' + esc(label) + '</span>';
@@ -6257,7 +6369,7 @@ function refSummary(s) {
     + (woPieces.length ? woSub('🎵 Pieces', woPieces.join('')) : '');
 
   var scaleTagsHTML = scales.map(function(sc) {
-    var col = {'Working on it':'#29789E','Getting there':'#e67e22','Secure':'#2F5C1A','Needs review':'#c0392b'}[sc.progress] || 'var(--muted)';
+    var col = {'Working on it':'var(--violin)','Getting there':'#e67e22','Secure':'var(--viola)','Needs review':'#c0392b'}[sc.progress] || 'var(--muted)';
     return '<span style="display:inline-block;background:var(--card-bg);border-radius:6px;padding:3px 8px;font-size:0.78rem;margin:2px;border-left:3px solid ' + col + '">' + esc(sc.key||'') + ' ' + esc(sc.type||'') + ' \u00b7 ' + esc(sc.octaves||'') + ' \u00b7 ' + esc(sc.bowing||'') + '</span>';
   }).join('');
 
@@ -6339,9 +6451,9 @@ function deletePastNote(date) {
 
 
 const PROGRESS_COLOURS = {
-  'Working on it': '#29789E',
+  'Working on it': 'var(--violin)',
   'Getting there': '#e67e22',
-  'Secure':        '#2F5C1A',
+  'Secure':        'var(--viola)',
   'Needs review':  '#c0392b'
 };
 const PROGRESS_DOTS = {
@@ -6489,7 +6601,7 @@ function headingFor(list, idx) {
   return '';
 }
 function headingLabelHTML(it) {
-  return '<div style="font-size:0.72rem;font-weight:700;color:#1a4a6b;margin:10px 0 4px;padding-bottom:3px;border-bottom:1px solid var(--warm)">' + esc(headingText(it)) + '</div>';
+  return '<div style="font-size:0.72rem;font-weight:700;color:var(--deep);margin:10px 0 4px;padding-bottom:3px;border-bottom:1px solid var(--warm)">' + esc(headingText(it)) + '</div>';
 }
 
 function uniqueItemKeys(list) {
@@ -6505,7 +6617,7 @@ function bookTickNext(v) { return (bookTickLevel(v) + 1) % 3; }
 const BOOK_TICK_STYLE = [
   { border: '#e0ddd8', bg: 'transparent', fg: '#ccc', mark: '',  rowBg: 'transparent', label: 'Not started' },
   { border: '#e67e22', bg: '#e67e22',     fg: '#fff', mark: '•', rowBg: '#fff3e0',     label: 'Working on it' },
-  { border: '#2F5C1A', bg: '#2F5C1A',     fg: '#fff', mark: '✓', rowBg: '#e8f5e0',     label: 'Finished' }
+  { border: 'var(--viola)', bg: 'var(--viola)',     fg: '#fff', mark: '✓', rowBg: 'var(--soft-green2)',     label: 'Finished' }
 ];
 
 // One tick-box, numbered-grid style (compact, label beside box).
@@ -6593,7 +6705,7 @@ function studyBooksHTML(s) {
       + '<div class="section-card" style="margin-top:6px">'
       + '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center">'
       + '<span>' + done + ' of ' + total + ' finished' + (working ? ' · <span style="color:#b7791f">' + working + ' working on</span>' : '') + '</span>'
-      + '<span style="font-size:0.68rem">Tap: <span style="color:#e67e22">■</span> working on it → <span style="color:#2F5C1A">■</span> finished → clear</span></div>'
+      + '<span style="font-size:0.68rem">Tap: <span style="color:#e67e22">■</span> working on it → <span style="color:var(--viola)">■</span> finished → clear</span></div>'
       + ticksHTML
       + '</div></details>';
   }).join('');
@@ -6621,7 +6733,7 @@ function renderBankPicker() {
     const n = tickableCount(bk.studies);
     const pupil = getStudent((document.getElementById('study-book-student-id') || {}).value);
     const onList = !!(pupil && (pupil.studyBooks || []).some(function(b){ return b.bankId === bk.id; }));
-    return '<button onclick="addBankBookToPupil(\'' + bk.id + '\')" style="width:100%;text-align:left;background:' + (onList ? '#e8f5e0' : 'var(--paper)') + ';border:1.5px solid ' + (onList ? 'var(--string)' : 'var(--warm)') + ';border-radius:10px;padding:10px 12px;margin-bottom:6px;font-family:\'Special Elite\',cursive;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px">'
+    return '<button onclick="addBankBookToPupil(\'' + bk.id + '\')" style="width:100%;text-align:left;background:' + (onList ? 'var(--soft-green2)' : 'var(--paper)') + ';border:1.5px solid ' + (onList ? 'var(--string)' : 'var(--warm)') + ';border-radius:10px;padding:10px 12px;margin-bottom:6px;font-family:\'Special Elite\',cursive;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px">'
       + '<span style="font-size:0.88rem;color:var(--ink)">' + (onList ? '<span style="color:var(--viola);font-weight:700">✓ </span>' : '') + esc(bk.name) + '</span>'
       + '<span style="font-size:0.72rem;color:' + (onList ? 'var(--viola)' : 'var(--muted)') + ';white-space:nowrap">' + (onList ? 'added' : n + ' stud' + (n===1?'y':'ies')) + '</span>'
       + '</button>';
@@ -6843,7 +6955,7 @@ function methodBooksHTML(s) {
       + '<div class="section-card" style="margin-top:6px">'
       + '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center">'
       + '<span>' + done + ' of ' + total + ' finished' + (working ? ' · <span style="color:#b7791f">' + working + ' working on</span>' : '') + '</span>'
-      + '<span style="font-size:0.68rem">Tap: <span style="color:#e67e22">■</span> working on it → <span style="color:#2F5C1A">■</span> finished → clear</span></div>'
+      + '<span style="font-size:0.68rem">Tap: <span style="color:#e67e22">■</span> working on it → <span style="color:var(--viola)">■</span> finished → clear</span></div>'
       + ticksHTML
       + '</div></details>';
   }).join('');
@@ -6869,7 +6981,7 @@ function renderMethodBankPicker() {
     const n = tickableCount(bk.studies);
     const pupil = getStudent((document.getElementById('method-book-student-id') || {}).value);
     const onList = !!(pupil && (pupil.methodBooks || []).some(function(b){ return b.bankId === bk.id; }));
-    return '<button onclick="addMethodBankBookToPupil(\'' + bk.id + '\')" style="width:100%;text-align:left;background:' + (onList ? '#e8f5e0' : 'var(--paper)') + ';border:1.5px solid ' + (onList ? 'var(--string)' : 'var(--warm)') + ';border-radius:10px;padding:10px 12px;margin-bottom:6px;font-family:\'Special Elite\',cursive;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px">'
+    return '<button onclick="addMethodBankBookToPupil(\'' + bk.id + '\')" style="width:100%;text-align:left;background:' + (onList ? 'var(--soft-green2)' : 'var(--paper)') + ';border:1.5px solid ' + (onList ? 'var(--string)' : 'var(--warm)') + ';border-radius:10px;padding:10px 12px;margin-bottom:6px;font-family:\'Special Elite\',cursive;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px">'
       + '<span style="font-size:0.88rem;color:var(--ink)">' + (onList ? '<span style="color:var(--viola);font-weight:700">✓ </span>' : '') + esc(bk.name) + '</span>'
       + '<span style="font-size:0.72rem;color:' + (onList ? 'var(--viola)' : 'var(--muted)') + ';white-space:nowrap">' + (onList ? 'added' : n + ' unit' + (n===1?'':'s')) + '</span>'
       + '</button>';
@@ -7028,7 +7140,7 @@ function albumsHTML(s) {
       + '<div class="section-card" style="margin-top:6px">'
       + '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center">'
       + '<span>' + done + ' of ' + total + ' finished' + (working ? ' · <span style="color:#b7791f">' + working + ' working on</span>' : '') + '</span>'
-      + '<span style="font-size:0.68rem">Tap: <span style="color:#e67e22">■</span> working on it → <span style="color:#2F5C1A">■</span> finished → clear</span></div>'
+      + '<span style="font-size:0.68rem">Tap: <span style="color:#e67e22">■</span> working on it → <span style="color:var(--viola)">■</span> finished → clear</span></div>'
       + ticksHTML
       + '</div></details>';
   }).join('');
@@ -7054,7 +7166,7 @@ function renderAlbumBankPicker() {
     const n = tickableCount(bk.studies);
     const pupil = getStudent((document.getElementById('album-student-id') || {}).value);
     const onList = !!(pupil && (pupil.albums || []).some(function(b){ return b.bankId === bk.id; }));
-    return '<button onclick="addAlbumBankToPupil(\'' + bk.id + '\')" style="width:100%;text-align:left;background:' + (onList ? '#e8f5e0' : 'var(--paper)') + ';border:1.5px solid ' + (onList ? 'var(--string)' : 'var(--warm)') + ';border-radius:10px;padding:10px 12px;margin-bottom:6px;font-family:\'Special Elite\',cursive;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px">'
+    return '<button onclick="addAlbumBankToPupil(\'' + bk.id + '\')" style="width:100%;text-align:left;background:' + (onList ? 'var(--soft-green2)' : 'var(--paper)') + ';border:1.5px solid ' + (onList ? 'var(--string)' : 'var(--warm)') + ';border-radius:10px;padding:10px 12px;margin-bottom:6px;font-family:\'Special Elite\',cursive;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px">'
       + '<span style="font-size:0.88rem;color:var(--ink)">' + (onList ? '<span style="color:var(--viola);font-weight:700">✓ </span>' : '') + esc(bk.name) + '</span>'
       + '<span style="font-size:0.72rem;color:' + (onList ? 'var(--viola)' : 'var(--muted)') + ';white-space:nowrap">' + (onList ? 'added' : n + ' piece' + (n===1?'':'s')) + '</span>'
       + '</button>';
@@ -7255,7 +7367,7 @@ function removeDoubleStopKey(studentId, key) {
 const TECH_LEVELS = [
   { label: 'Not started', bg: '#f0ede8', fg: 'var(--muted)', dot: '#ccc' },
   { label: 'Working on it', bg: '#fff3e0', fg: '#b7791f', dot: '#e67e22' },
-  { label: 'Secure', bg: '#e8f5e0', fg: '#2F5C1A', dot: '#2F5C1A' }
+  { label: 'Secure', bg: 'var(--soft-green2)', fg: 'var(--viola)', dot: 'var(--viola)' }
 ];
 
 function seedTechniqueIfNeeded(s) {
@@ -7367,7 +7479,7 @@ function renderTechSets() {
   el.innerHTML = techniqueSets.map(function(set) {
     const id = escJs(set.id);
     const open = openTechSetId === set.id;
-    let html = '<div style="border:1.5px solid ' + (open ? '#1a4a6b' : 'var(--warm)') + ';border-radius:10px;margin-bottom:8px;overflow:hidden">'
+    let html = '<div style="border:1.5px solid ' + (open ? 'var(--deep)' : 'var(--warm)') + ';border-radius:10px;margin-bottom:8px;overflow:hidden">'
       + '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:' + (open ? '#eef4fa' : 'var(--paper)') + '">'
       + '<button onclick="toggleTechSet(\'' + id + '\')" style="flex:1;text-align:left;background:none;border:none;font-family:\'Special Elite\',cursive;cursor:pointer;padding:4px 0;display:flex;align-items:center;gap:8px;color:var(--ink)">'
       + '<span style="font-size:0.75rem;color:var(--muted);display:inline-block;transform:rotate(' + (open ? '90' : '0') + 'deg);transition:transform 0.15s">▶</span>'
@@ -7390,7 +7502,7 @@ function renderTechSets() {
         + '<div style="display:flex;gap:8px;margin-top:6px">'
         + '<input type="text" id="techset-item-' + esc(set.id) + '" placeholder="Add a technique…" maxlength="40" onkeydown="if(event.key===\'Enter\')addTechSetItem(\'' + id + '\')" '
         + 'style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box">'
-        + '<button onclick="addTechSetItem(\'' + id + '\')" style="background:#1a4a6b;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:\'Special Elite\',cursive;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ Add</button>'
+        + '<button onclick="addTechSetItem(\'' + id + '\')" style="background:var(--deep);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:\'Special Elite\',cursive;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ Add</button>'
         + '</div></div>';
     }
     return html + '</div>';
@@ -7898,7 +8010,7 @@ function initCanvas(id) {
     img.src = s.canvasCurrent;
   }
 
-  canvasState[id] = { colour: '#05270B', size: 3, drawing: false, eraser: false, lastX: 0, lastY: 0 };
+  canvasState[id] = { colour: 'var(--ink)', size: 3, drawing: false, eraser: false, lastX: 0, lastY: 0 };
 
   function getPos(e) {
     const r = canvas.getBoundingClientRect();
@@ -7953,7 +8065,7 @@ function initCanvas(id) {
   canvas.addEventListener('touchmove',  draw,      {passive:false});
   canvas.addEventListener('touchend',   endDraw);
 
-  highlightColourBtn(id, '#05270B');
+  highlightColourBtn(id, 'var(--ink)');
 }
 
 function undoCanvas(id) {
@@ -8513,13 +8625,13 @@ function renderRatesEditor() {
     return '<div style="font-size:0.78rem;font-weight:700;color:' + col + ';margin:10px 0 6px">' + title + '</div>'
       + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">' + ['30','45','60','90'].map(function(m) {
         const k = prefix + m;
-        return '<label style="display:flex;flex-direction:column;gap:4px;font-size:0.75rem;color:#1a4a6b;font-weight:700">' + m + ' min'
+        return '<label style="display:flex;flex-direction:column;gap:4px;font-size:0.75rem;color:var(--deep);font-weight:700">' + m + ' min'
           + '<span style="font-weight:400;color:var(--muted);font-size:0.68rem">' + (counts[k] || 0) + ' pupil' + (counts[k] === 1 ? '' : 's') + '</span>'
           + '<span style="display:flex;align-items:center;gap:4px"><span>£</span><input type="number" min="0" step="0.50" inputmode="decimal" value="' + (studioRates[k] != null ? esc(studioRates[k]) : '') + '" placeholder="-" '
-          + 'oninput="setStudioRate(\'' + k + '\',this.value)" style="' + "width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:'Special Elite',cursive;font-size:0.95rem;background:var(--paper);box-sizing:border-box" + '"></span></label>';
+          + 'oninput="setStudioRate(\'' + k + '\',this.value)" style="' + "width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid var(--tech-bd);font-family:'Special Elite',cursive;font-size:0.95rem;background:var(--paper);box-sizing:border-box" + '"></span></label>';
       }).join('') + '</div>';
   };
-  el.innerHTML = row('🎻 Private pupils', '', '#2F5C1A') + row('🌱 Late Starter scheme', 'ls', '#b7791f');
+  el.innerHTML = row('🎻 Private pupils', '', 'var(--viola)') + row('🌱 Late Starter scheme', 'ls', '#b7791f');
   const own = students.filter(function(s){ return !s.retired && pupilRateIsOwn(s); });
   const note = document.getElementById('rates-own-note');
   if (note) note.innerHTML = own.length
@@ -8686,7 +8798,7 @@ function renderStudioAttendance() {
     sortedWeeks.some(wk => regularMap[s.id]?.[wk] || extraMap[s.id]?.[wk])
   ).sort((a,b) => a.name.localeCompare(b.name));
 
-  const colMap   = { present:'#2F5C1A', 'absent-late':'#c0392b', 'absent-notice':'#e67e22', cancelled:'#aaa' };
+  const colMap   = { present:'var(--viola)', 'absent-late':'#c0392b', 'absent-notice':'#e67e22', cancelled:'#aaa' };
   const labelMap = { present:'P', 'absent-late':'AL', 'absent-notice':'AN', cancelled:'C' };
   const fullLabel = { present:'Present', 'absent-late':'Absent - last min', 'absent-notice':'Absent - notice', cancelled:'Cancelled' };
 
@@ -8698,8 +8810,8 @@ function renderStudioAttendance() {
   el.innerHTML = `
     <div style="font-size:0.8rem;color:var(--muted);margin-bottom:10px;display:flex;gap:16px;flex-wrap:wrap">
       <span>📅 <strong style="color:var(--ink)">${sortedWeeks.length}</strong> week${sortedWeeks.length !== 1 ? 's' : ''} recorded</span>
-      <span>✅ <strong style="color:#2F5C1A">${totalPresentSlots}</strong> lesson${totalPresentSlots !== 1 ? 's' : ''} attended</span>
-      <span>💷 <strong style="color:#1a4a6b">${money(activePupils.reduce((sum, s) => sum + chargeableInRange(s, fromDate, toDate) * pupilRate(s), 0))}</strong> chargeable</span>
+      <span>✅ <strong style="color:var(--viola)">${totalPresentSlots}</strong> lesson${totalPresentSlots !== 1 ? 's' : ''} attended</span>
+      <span>💷 <strong style="color:var(--deep)">${money(activePupils.reduce((sum, s) => sum + chargeableInRange(s, fromDate, toDate) * pupilRate(s), 0))}</strong> chargeable</span>
     </div>
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:10px">
       <table style="border-collapse:collapse;font-size:0.78rem;min-width:100%;font-family:'Special Elite',cursive">
@@ -8708,8 +8820,8 @@ function renderStudioAttendance() {
             <th style="text-align:left;padding:6px 8px;background:var(--warm);position:sticky;left:0;z-index:2;min-width:100px;border-radius:8px 0 0 0">Pupil</th>
             ${sortedWeeks.map(wk => `<th style="padding:4px 6px;background:var(--warm);text-align:center;white-space:nowrap;min-width:44px;line-height:1.3${weekHasGapBefore[wk] ? ';border-left:3px dashed #b5a98a;padding-left:9px' : ''}">${fmtWeek(wk)}</th>`).join('')}
             <th style="padding:4px 8px;background:var(--warm);text-align:center;white-space:nowrap" title="Lessons attended in this period">#</th>
-            <th style="padding:4px 8px;background:#eef6ff;color:#1a4a6b;text-align:center;white-space:nowrap" title="Rate per lesson (set in the pupil's Edit)">Rate</th>
-            <th style="padding:4px 8px;background:#eef6ff;color:#1a4a6b;text-align:center;white-space:nowrap;border-radius:0 8px 0 0" title="Chargeable lessons × rate">£</th>
+            <th style="padding:4px 8px;background:var(--tech-bg);color:var(--deep);text-align:center;white-space:nowrap" title="Rate per lesson (set in the pupil's Edit)">Rate</th>
+            <th style="padding:4px 8px;background:var(--tech-bg);color:var(--deep);text-align:center;white-space:nowrap;border-radius:0 8px 0 0" title="Chargeable lessons × rate">£</th>
           </tr>
         </thead>
         <tbody>
@@ -8731,7 +8843,7 @@ function renderStudioAttendance() {
                 ? `<span style="display:inline-block;width:26px;height:20px;line-height:20px;border-radius:4px;background:${colMap[reg]};color:#fff;font-size:0.68rem;font-weight:700" title="${fullLabel[reg]||reg}">${labelMap[reg]}</span>`
                 : '';
               const extraBadge = extra > 0
-                ? `<span onclick="removeExtraFromOverview('${s.id}','${wk}')" style="display:inline-block;width:20px;height:16px;line-height:16px;border-radius:4px;background:#29789E;color:#fff;font-size:0.6rem;font-weight:700;margin-top:2px;cursor:pointer" title="${booked ? 'Tap to remove one booked extra lesson' : 'Extra lesson(s) logged'}">+${extra}</span>`
+                ? `<span onclick="removeExtraFromOverview('${s.id}','${wk}')" style="display:inline-block;width:20px;height:16px;line-height:16px;border-radius:4px;background:var(--violin);color:#fff;font-size:0.6rem;font-weight:700;margin-top:2px;cursor:pointer" title="${booked ? 'Tap to remove one booked extra lesson' : 'Extra lesson(s) logged'}">+${extra}</span>`
                 : '';
               return `<td style="text-align:center;padding:4px 2px;border-bottom:1px solid var(--warm);vertical-align:middle;background:${rowBg};${gapStyle}">
                 <div style="display:flex;flex-direction:column;align-items:center;gap:1px">${regBadge}${extraBadge}</div>
@@ -8745,7 +8857,7 @@ function renderStudioAttendance() {
                 const rate = pupilRate(s);
                 const ch = chargeableInRange(s, fromDate, toDate);
                 return `<td style="text-align:center;padding:4px 8px;border-bottom:1px solid var(--warm);color:var(--muted);background:${rowBg};white-space:nowrap">${rate ? money(rate) : '<span title="Add a rate in the pupil\'s Edit" style="color:#e67e22">-</span>'}</td>
-                <td style="text-align:center;padding:4px 8px;border-bottom:1px solid var(--warm);font-weight:700;color:#1a4a6b;background:${rowBg};white-space:nowrap" title="${ch} chargeable × ${rate ? money(rate) : 'no rate'}">${rate ? money(ch * rate) : '-'}</td>`;
+                <td style="text-align:center;padding:4px 8px;border-bottom:1px solid var(--warm);font-weight:700;color:var(--deep);background:${rowBg};white-space:nowrap" title="${ch} chargeable × ${rate ? money(rate) : 'no rate'}">${rate ? money(ch * rate) : '-'}</td>`;
               })()}
             </tr>`;
           }).join('')}
@@ -8753,16 +8865,16 @@ function renderStudioAttendance() {
       </table>
     </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:0.75rem;margin-top:8px;margin-bottom:14px">
-      <span><span style="display:inline-block;width:20px;height:16px;border-radius:3px;background:#2F5C1A;vertical-align:middle;margin-right:4px"></span>P = Present</span>
+      <span><span style="display:inline-block;width:20px;height:16px;border-radius:3px;background:var(--viola);vertical-align:middle;margin-right:4px"></span>P = Present</span>
       <span><span style="display:inline-block;width:22px;height:16px;border-radius:3px;background:#c0392b;vertical-align:middle;margin-right:4px"></span>AL = Absent late</span>
       <span><span style="display:inline-block;width:22px;height:16px;border-radius:3px;background:#e67e22;vertical-align:middle;margin-right:4px"></span>AN = Absent notice</span>
       <span><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#aaa;vertical-align:middle;margin-right:4px"></span>C = Cancelled</span>
-      <span><span style="display:inline-block;width:20px;height:16px;border-radius:3px;background:#29789E;vertical-align:middle;margin-right:4px"></span>+n = Extra lesson(s)</span>
+      <span><span style="display:inline-block;width:20px;height:16px;border-radius:3px;background:var(--violin);vertical-align:middle;margin-right:4px"></span>+n = Extra lesson(s)</span>
       <span><span style="display:inline-block;width:0;height:16px;border-left:3px dashed #b5a98a;vertical-align:middle;margin-right:6px"></span>Gap = week(s) not taught</span>
     </div>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-      <button onclick="exportAttendanceSpreadsheet()" style="background:#2F5C1A;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">📥 Download spreadsheet</button>
-      <button onclick="exportStudioAttendancePDF()" style="background:#29789E;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">🖨️ Download PDF</button>
+      <button onclick="exportAttendanceSpreadsheet()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">📥 Download spreadsheet</button>
+      <button onclick="exportStudioAttendancePDF()" style="background:var(--violin);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">🖨️ Download PDF</button>
     </div>
     <div style="font-size:0.68rem;color:var(--muted);text-align:center;margin-top:6px">The spreadsheet opens in Google Sheets, Numbers or Excel. It covers the dates shown above, with a Summary tab of lessons and £.</div>`;
 }
@@ -9183,13 +9295,13 @@ function renderVideoLibrary() {
           + '<input type="text" id="vid-edit-url" value="' + esc(o.v.url || '') + '" placeholder="Link" inputmode="url" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #bcdcea;font-family:\'Special Elite\',cursive;font-size:0.85rem;margin-bottom:6px;box-sizing:border-box">'
           + '<select id="vid-edit-cat" style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #bcdcea;font-family:\'Special Elite\',cursive;font-size:0.85rem;margin-bottom:8px;box-sizing:border-box">' + catOpts + '</select>'
           + '<div style="display:flex;gap:8px;justify-content:center">'
-          + '<button onclick="saveVideoEdit(' + o.i + ')" style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:7px 18px;font-family:\'Special Elite\',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">✓ Save</button>'
+          + '<button onclick="saveVideoEdit(' + o.i + ')" style="background:var(--string);color:var(--ink);border:none;border-radius:8px;padding:7px 18px;font-family:\'Special Elite\',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">✓ Save</button>'
           + '<button onclick="cancelVideoEdit()" style="background:#f0ede8;color:var(--muted);border:none;border-radius:8px;padding:7px 18px;font-family:\'Special Elite\',cursive;font-size:0.82rem;cursor:pointer">Cancel</button>'
           + '</div></div>';
       }
       const url = escJs(normaliseUrl(o.v.url));
       return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--card-bg);border-radius:8px;margin-bottom:6px;box-shadow:var(--shadow)">'
-        + '<input type="checkbox" class="vid-select" data-idx="' + o.i + '" ' + (selectedVideoIdxs.has(o.i) ? 'checked ' : '') + 'onchange="toggleVideoSelect(' + o.i + ',this.checked)" style="width:18px;height:18px;flex-shrink:0;accent-color:#2F5C1A;cursor:pointer" title="Select to email">'
+        + '<input type="checkbox" class="vid-select" data-idx="' + o.i + '" ' + (selectedVideoIdxs.has(o.i) ? 'checked ' : '') + 'onchange="toggleVideoSelect(' + o.i + ',this.checked)" style="width:18px;height:18px;flex-shrink:0;accent-color:var(--viola);cursor:pointer" title="Select to email">'
         + '<span style="font-size:1rem;flex-shrink:0">▶️</span>'
         + '<div style="flex:1;min-width:0">'
         + '<button onclick="openVideoLink(\'' + url + '\')" style="text-align:left;background:none;border:none;font-family:\'Special Elite\',cursive;font-size:0.85rem;color:var(--violin);cursor:pointer;padding:0;text-decoration:underline;word-break:break-word;display:block">'
@@ -9414,7 +9526,7 @@ function renderViolaness() {
     const inCat = sortByTitle(items.filter(function(sh){ return sh.cat === c; }));
     if (!inCat.length) return '';
     return '<div style="margin-bottom:14px">'
-      + '<div style="font-size:0.78rem;font-weight:700;color:#1a4a6b;padding:4px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">' + esc(c) + ' <span style="font-weight:400;color:var(--muted)">(' + inCat.length + ')</span></div>'
+      + '<div style="font-size:0.78rem;font-weight:700;color:var(--deep);padding:4px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">' + esc(c) + ' <span style="font-weight:400;color:var(--muted)">(' + inCat.length + ')</span></div>'
       + inCat.map(vioRowHTML).join('') + '</div>';
   }).join('');
 }
@@ -9428,19 +9540,19 @@ function sortByTitle(list) {
 function vioRowHTML(sh) {
   const id = escJs(sh.id);
   if (editingVioId === sh.id) {
-    return '<div style="padding:8px 10px;border-radius:8px;background:var(--paper);margin-bottom:6px;border:1.5px solid #1a4a6b">'
+    return '<div style="padding:8px 10px;border-radius:8px;background:var(--paper);margin-bottom:6px;border:1.5px solid var(--deep)">'
       + '<input type="text" id="vio-edit-title" value="' + esc(sh.title) + '" style="width:100%;padding:7px 10px;border-radius:8px;font-size:0.85rem;box-sizing:border-box;margin-bottom:6px">'
       + '<select id="vio-edit-cat" style="width:100%;padding:7px 10px;border-radius:8px;font-size:0.85rem;margin-bottom:6px">' + vioCatOptions(sh.cat, false) + '</select>'
       + '<input type="text" id="vio-edit-note" value="' + esc(sh.note || '') + '" placeholder="Note (optional)" style="width:100%;padding:7px 10px;border-radius:8px;font-size:0.85rem;box-sizing:border-box">'
       + '<div style="display:flex;gap:8px;margin-top:6px">'
-      + '<button onclick="saveVioEdit(\'' + id + '\')" style="flex:1;background:#1a4a6b;color:#fff;border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">Save</button>'
+      + '<button onclick="saveVioEdit(\'' + id + '\')" style="flex:1;background:var(--deep);color:#fff;border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">Save</button>'
       + '<button onclick="cancelVioEdit()" style="flex:1;background:var(--warm);color:var(--muted);border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;cursor:pointer">Cancel</button>'
       + '</div></div>';
   }
   return '<div style="padding:8px 0;border-bottom:1px solid var(--warm);display:flex;align-items:center;gap:8px">'
     + '<div style="flex:1"><div style="font-size:0.88rem;font-weight:600">' + esc(sh.title) + '</div>'
     + (sh.note ? '<div style="font-size:0.75rem;color:var(--muted)">' + esc(sh.note) + '</div>' : '') + '</div>'
-    + '<button onclick="startVioEdit(\'' + id + '\')" style="background:none;border:1.5px solid #1a4a6b;border-radius:6px;padding:3px 8px;color:#1a4a6b;cursor:pointer;font-size:0.75rem;flex-shrink:0">Edit</button>'
+    + '<button onclick="startVioEdit(\'' + id + '\')" style="background:none;border:1.5px solid var(--deep);border-radius:6px;padding:3px 8px;color:var(--deep);cursor:pointer;font-size:0.75rem;flex-shrink:0">Edit</button>'
     + '<button onclick="removeViolanessSheet(\'' + id + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px;flex-shrink:0">×</button>'
     + '</div>';
 }
@@ -9514,7 +9626,7 @@ function renderVioCatManage() {
     return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">'
       + '<span style="flex:1;font-size:0.85rem">' + esc(c) + '</span>'
       + '<span style="font-size:0.7rem;color:var(--muted)">' + n + '</span>'
-      + '<button onclick="renameViolanessCat(' + i + ')" title="Rename" style="background:none;border:none;color:#1a4a6b;font-size:0.9rem;cursor:pointer">✏️</button>'
+      + '<button onclick="renameViolanessCat(' + i + ')" title="Rename" style="background:none;border:none;color:var(--deep);font-size:0.9rem;cursor:pointer">✏️</button>'
       + '<button onclick="removeViolanessCat(' + i + ')" title="Remove category" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>'
       + '</div>';
   }).join('');
@@ -9633,6 +9745,7 @@ function updateAdminBadges() {
 
 // Open one Admin section panel, hide the rest, highlight its tile, scroll to it
 function showAdminSection(name) {
+  if (name === 'theme') { themeDraft = null; renderThemePanel(); }
   const panels = document.querySelectorAll('#admin-panels .admin-panel');
   panels.forEach(p => { p.style.display = (p.id === 'panel-' + name) ? 'block' : 'none'; });
   const tiles = document.querySelectorAll('.admin-grid .admin-tile');
@@ -9783,7 +9896,7 @@ function renderLibChips() {
       const deleted = deletedBuiltins.includes(t);
       const color = techChipColor(t);
       const border = deleted ? '#e0ddd8' : (color || '#e0ddd8');
-      return `<span style="padding:6px 12px;border-radius:999px;border:1.5px solid ${border};border-left:4px solid ${border};font-size:0.8rem;color:${deleted?'#ccc':'var(--muted)'};display:inline-flex;align-items:center;gap:4px;${deleted?'text-decoration:line-through;':''}">${esc(t)}<button onclick="toggleBuiltinChip('${escJs(t)}')" style="background:none;border:none;cursor:pointer;font-size:0.9rem;padding:0;color:${deleted?'#8AB640':'#ccc'}" title="${deleted?'Restore':'Hide'}">${deleted?'↩':'×'}</button></span>`;
+      return `<span style="padding:6px 12px;border-radius:999px;border:1.5px solid ${border};border-left:4px solid ${border};font-size:0.8rem;color:${deleted?'#ccc':'var(--muted)'};display:inline-flex;align-items:center;gap:4px;${deleted?'text-decoration:line-through;':''}">${esc(t)}<button onclick="toggleBuiltinChip('${escJs(t)}')" style="background:none;border:none;cursor:pointer;font-size:0.9rem;padding:0;color:${deleted?'var(--string)':'#ccc'}" title="${deleted?'Restore':'Hide'}">${deleted?'↩':'×'}</button></span>`;
     }).join('');
   }
   const custom = document.getElementById('lib-custom-chips');
@@ -9795,7 +9908,7 @@ function renderLibChips() {
         const color = techChipColor(t);
         const border = color || '#e0ddd8';
         const bg = color ? color + '33' : 'transparent';
-        return `<span style="padding:6px 12px;border-radius:999px;border:1.5px solid ${border};border-left:4px solid ${border};font-size:0.8rem;color:#05270B;display:flex;align-items:center;gap:6px;background:${bg}">
+        return `<span style="padding:6px 12px;border-radius:999px;border:1.5px solid ${border};border-left:4px solid ${border};font-size:0.8rem;color:var(--ink);display:flex;align-items:center;gap:6px;background:${bg}">
           ${esc(t)}
           <button onclick="removeLibChip(${i})" style="background:none;border:none;color:rgba(0,0,0,0.4);cursor:pointer;font-size:0.9rem;padding:0;line-height:1">×</button>
         </span>`;
@@ -9816,7 +9929,7 @@ function renderCategoryEditor() {
     return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <span style="width:110px;flex-shrink:0;font-size:0.82rem;padding:4px 8px;border-left:4px solid ${color||'#e0ddd8'};border-radius:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t)}</span>
       <select onchange="setTechCategory('${esc(t)}',this.value)"
-        style="flex:1;font-size:0.78rem;padding:4px 6px;border-radius:6px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;background:${color||'#fff'};color:#05270B">
+        style="flex:1;font-size:0.78rem;padding:4px 6px;border-radius:6px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;background:${color||'#fff'};color:var(--ink)">
         <option value="" ${!currentCat?'selected':''}>None</option>
         ${allCats.map(c => `<option value="${c.id}" ${currentCat===c.id?'selected':''} style="background:${c.color}">${c.label}</option>`).join('')}
       </select>
@@ -10210,7 +10323,7 @@ function nextPupilHTML(s) {
     imminent = diff >= 0 && diff <= 5;
   }
   const bg = imminent ? '#e67e22' : 'var(--string)';
-  const fg = imminent ? '#fff' : '#05270B';
+  const fg = imminent ? '#fff' : 'var(--ink)';
   return `<div style="margin-top:10px">
     <button onclick="openStudentFrom('${next.id}','today')"
       style="width:100%;background:${bg};color:${fg};border:none;border-radius:10px;padding:12px 16px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
@@ -10294,7 +10407,7 @@ function updateFloatingTimer() {
     String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
   const pct = timerTotal > 0 ? (timerSeconds / timerTotal) * 100 : 100;
   document.getElementById('ft-bar').style.width = pct + '%';
-  const col = pct > 50 ? '#8AB640' : pct > 20 ? '#e67e22' : '#c0392b';
+  const col = pct > 50 ? 'var(--string)' : pct > 20 ? '#e67e22' : '#c0392b';
   document.getElementById('ft-bar').style.background = col;
 }
 
@@ -11103,9 +11216,9 @@ async function checkSpelling() {
       const correctWord = entry.word;
       const meaning = entry.meanings && entry.meanings[0];
       const def = meaning && meaning.definitions && meaning.definitions[0].definition;
-      result.innerHTML = '<div style="background:#dff0d8;border-radius:8px;padding:10px 12px;margin-bottom:8px">'
-        + '<div style="font-size:1.1rem;font-weight:700;color:#2F5C1A">' + correctWord + '</div>'
-        + (meaning ? '<div style="font-size:0.78rem;color:#6b8a6b;margin-top:2px;font-style:italic">' + meaning.partOfSpeech + '</div>' : '')
+      result.innerHTML = '<div style="background:var(--soft-green4);border-radius:8px;padding:10px 12px;margin-bottom:8px">'
+        + '<div style="font-size:1.1rem;font-weight:700;color:var(--viola)">' + correctWord + '</div>'
+        + (meaning ? '<div style="font-size:0.78rem;color:var(--muted);margin-top:2px;font-style:italic">' + meaning.partOfSpeech + '</div>' : '')
         + '</div>'
         + (def ? '<div style="font-size:0.88rem;color:var(--muted);line-height:1.5">' + def + '</div>' : '');
     } else {
@@ -11331,22 +11444,22 @@ function renderTermDates() {
       const isHol = !!t.holidayStart;
       const start = t.termStart || t.holidayStart || '';
       const end = t.termEnd || t.holidayEnd || '';
-      return '<div style="background:#f8fdf5;border:1.5px solid #c8ddb8;border-radius:10px;padding:12px;margin-bottom:8px">'
+      return '<div style="background:var(--soft-green);border:1.5px solid var(--piece-bd);border-radius:10px;padding:12px;margin-bottom:8px">'
         + '<div style="display:flex;gap:16px;margin-bottom:10px">'
         + '<label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer">'
         + '<input type="radio" name="ted-type" value="term"' + (isHol ? '' : ' checked') + '> Term</label>'
         + '<label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer">'
         + '<input type="radio" name="ted-type" value="holiday"' + (isHol ? ' checked' : '') + '> Holiday</label>'
         + '</div>'
-        + '<input type="text" id="ted-label" value="' + esc(t.label || '') + '" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:\'Special Elite\',cursive;font-size:0.85rem;margin-bottom:8px;box-sizing:border-box">'
+        + '<input type="text" id="ted-label" value="' + esc(t.label || '') + '" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid var(--piece-bd);font-family:\'Special Elite\',cursive;font-size:0.85rem;margin-bottom:8px;box-sizing:border-box">'
         + '<div style="display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:10px">'
         + '<div><label for="ted-start" style="display:block;font-size:0.68rem;color:var(--muted);margin-bottom:3px">Start date</label>'
-        + '<input type="date" id="ted-start" value="' + start + '" style="width:auto;min-width:11em;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:\'Special Elite\',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>'
+        + '<input type="date" id="ted-start" value="' + start + '" style="width:auto;min-width:11em;padding:8px 10px;border-radius:8px;border:1.5px solid var(--piece-bd);font-family:\'Special Elite\',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>'
         + '<div><label for="ted-end" style="display:block;font-size:0.68rem;color:var(--muted);margin-bottom:3px">End date</label>'
-        + '<input type="date" id="ted-end" value="' + end + '" style="width:auto;min-width:11em;padding:8px 10px;border-radius:8px;border:1.5px solid #c8ddb8;font-family:\'Special Elite\',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>'
+        + '<input type="date" id="ted-end" value="' + end + '" style="width:auto;min-width:11em;padding:8px 10px;border-radius:8px;border:1.5px solid var(--piece-bd);font-family:\'Special Elite\',cursive;font-size:0.85rem;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>'
         + '</div>'
         + '<div style="display:flex;gap:8px;justify-content:center">'
-        + '<button onclick="saveTermDateEdit(' + i + ')" style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:8px 20px;font-family:\'Special Elite\',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">✓ Save</button>'
+        + '<button onclick="saveTermDateEdit(' + i + ')" style="background:var(--string);color:var(--ink);border:none;border-radius:8px;padding:8px 20px;font-family:\'Special Elite\',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">✓ Save</button>'
         + '<button onclick="cancelTermDateEdit()" style="background:#f0ede8;color:var(--muted);border:none;border-radius:8px;padding:8px 20px;font-family:\'Special Elite\',cursive;font-size:0.82rem;cursor:pointer">Cancel</button>'
         + '</div>'
         + '</div>';
@@ -11537,7 +11650,7 @@ function lessonCountHTML(s) {
   if (blocks.length === 0) {
     const n = (s.log || []).filter(function(e) { return e.attendance === 'present' || e.attendance === 'absent-late'; }).length;
     if (n === 0) return '';
-    return `<div style="margin:2px 0 10px"><div style="display:inline-block;background:#eef6ff;border:1.5px solid #a8c8e8;color:#1a4a6b;font-size:0.78rem;border-radius:999px;padding:4px 14px">💷 ${n} chargeable (add term dates in Admin)</div></div>`;
+    return `<div style="margin:2px 0 10px"><div style="display:inline-block;background:var(--tech-bg);border:1.5px solid var(--tech-bd);color:var(--deep);font-size:0.78rem;border-radius:999px;padding:4px 14px">💷 ${n} chargeable (add term dates in Admin)</div></div>`;
   }
 
   let sel = (billingTermIdx !== null && blocks[billingTermIdx]) ? billingTermIdx : currentTermIdx();
@@ -11545,13 +11658,13 @@ function lessonCountHTML(s) {
   const n = countChargeable(s, blocks[sel]);
   const noun = n === 1 ? 'lesson' : 'lessons';
   // Count pill: just the number, so it sits neatly beside the picker
-  const pill = `<div style="display:inline-block;background:#eef6ff;border:1.5px solid #a8c8e8;color:#1a4a6b;font-size:0.82rem;font-weight:700;border-radius:999px;padding:4px 14px;white-space:nowrap">💷 ${n} ${noun}</div>`;
+  const pill = `<div style="display:inline-block;background:var(--tech-bg);border:1.5px solid var(--tech-bd);color:var(--deep);font-size:0.82rem;font-weight:700;border-radius:999px;padding:4px 14px;white-space:nowrap">💷 ${n} ${noun}</div>`;
   const opts = blocks.map(function(b, i) {
     return `<option value="${i}"${i === sel ? ' selected' : ''}>${esc(b.label)}</option>`;
   }).join('');
   // Picker carries the half-term name, so the pill doesn't need to repeat it
   const picker = `<select onchange="setBillingTerm(this.value,'${s.id}')" aria-label="Choose half-term to count"
-    style="font-family:'Special Elite',cursive;font-size:0.76rem;color:#1a4a6b;background:var(--paper);border:1.5px solid #a8c8e8;border-radius:999px;padding:4px 10px;cursor:pointer">${opts}</select>`;
+    style="font-family:'Special Elite',cursive;font-size:0.76rem;color:var(--deep);background:var(--paper);border:1.5px solid var(--tech-bd);border-radius:999px;padding:4px 10px;cursor:pointer">${opts}</select>`;
   return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;margin:2px 0 10px">${pill}${picker}</div>`;
 }
 
@@ -11577,7 +11690,7 @@ function termPickerHTML(s) {
     return `<option value="${i}"${i === sel ? ' selected' : ''}>${esc(b.label)}</option>`;
   }).join('');
   return `<select onchange="setBillingTerm(this.value,'${s.id}')" aria-label="Choose half-term"
-    style="height:38px;width:auto;max-width:11em;font-family:'Special Elite',cursive;font-size:0.82rem;color:#1a4a6b;background:#eef6ff;border:1.5px solid #a8c8e8;border-radius:10px;padding:0 10px;cursor:pointer;flex:0 0 auto">${opts}</select>`;
+    style="height:38px;width:auto;max-width:11em;font-family:'Special Elite',cursive;font-size:0.82rem;color:var(--deep);background:var(--tech-bg);border:1.5px solid var(--tech-bd);border-radius:10px;padding:0 10px;cursor:pointer;flex:0 0 auto">${opts}</select>`;
 }
 
 // Change which half-term the pupil page counts, then re-render the pupil.
@@ -11697,19 +11810,19 @@ function renderBilling() {
         + (paid ? '✓ Paid' : '☐ Paid') + '</button>'
       : '';
     const noteSpan = function(t, c) { return '<span style="display:block;font-size:0.66rem;font-weight:400;color:' + c + '">' + t + '</span>'; };
-    const rentNote = ((s.rental && s.rental.on && s.rental.fee) ? noteSpan('incl. £' + s.rental.fee + ' rental', '#1a4a6b') : '')
-      + (manualAmt ? noteSpan('incl. ' + money(manualAmt) + (manualAmt < 0 ? ' adjustment' : ' extras'), '#1a4a6b') : '')
+    const rentNote = ((s.rental && s.rental.on && s.rental.fee) ? noteSpan('incl. £' + s.rental.fee + ' rental', 'var(--deep)') : '')
+      + (manualAmt ? noteSpan('incl. ' + money(manualAmt) + (manualAmt < 0 ? ' adjustment' : ' extras'), 'var(--deep)') : '')
       + arrLines.map(function(l){ return noteSpan('+ ' + money(l.amt) + ' ' + esc(l.text), '#b7791f'); }).join('');
     const famList = invFamily(s);
     const famNote = famList.length > 1
-      ? '<span style="display:block;font-size:0.7rem;color:#2F5C1A;margin-top:2px">👪 with ' + esc(famList.filter(function(x){ return x.id !== s.id; }).map(function(x){ return x.name; }).join(', ')) + '</span>'
+      ? '<span style="display:block;font-size:0.7rem;color:var(--viola);margin-top:2px">👪 with ' + esc(famList.filter(function(x){ return x.id !== s.id; }).map(function(x){ return x.name; }).join(', ')) + '</span>'
       : '';
     const famBill = famList.length > 1 ? invSum(invFamLines(s, block)) : total;
     const thanked = (invoiceThanks[billingKey(block)] || {})[s.id];
     const hasEm = invEmails(s).length > 0;
     const thanksPill = paid
       ? '<a href="' + esc(thanksMailto(s, block)) + '" onclick="markThanked(\'' + s.id + '\')" title="' + (hasEm ? 'Email a payment thank-you' : 'No email saved in Edit') + '" style="flex:0 0 auto;display:flex;align-items:center;gap:4px;padding:5px 9px;border-radius:999px;font-family:\'Special Elite\',cursive;font-size:0.72rem;text-decoration:none;white-space:nowrap;'
-        + 'border:1.5px solid ' + (thanked ? '#a8c8e8' : '#29789E') + ';background:' + (thanked ? '#eef6ff' : '#fff') + ';color:#29789E">'
+        + 'border:1.5px solid ' + (thanked ? 'var(--tech-bd)' : 'var(--violin)') + ';background:' + (thanked ? 'var(--tech-bg)' : '#fff') + ';color:var(--violin)">'
         + (thanked ? '✉️ Thanked ✓' : '✉️ Thank you') + '</a>'
       : '';
     const pd = paidMap[s.id];
@@ -11720,11 +11833,11 @@ function renderBilling() {
       : '';
     const sentOn = (invoiceSent[billingKey(block)] || {})[s.id];
     const sentNote = sentOn
-      ? '<span onclick="clearSent(\'' + s.id + '\')" title="Invoice made - tap to remove" style="display:block;font-size:0.7rem;color:#29789E;margin-top:2px;cursor:pointer">📨 Sent ' + ymdLocal(sentOn).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + '</span>'
+      ? '<span onclick="clearSent(\'' + s.id + '\')" title="Invoice made - tap to remove" style="display:block;font-size:0.7rem;color:var(--violin);margin-top:2px;cursor:pointer">📨 Sent ' + ymdLocal(sentOn).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + '</span>'
       : '';
     const owedAmt = total;
     const owed = (rate || owedAmt)
-      ? '<span style="margin-left:auto;flex:0 0 auto;font-size:1rem;font-weight:800;color:#1a4a6b;white-space:nowrap;text-align:right" title="' + n + ' × £' + rate + '">' + money(owedAmt) + rentNote + '</span>'
+      ? '<span style="margin-left:auto;flex:0 0 auto;font-size:1rem;font-weight:800;color:var(--deep);white-space:nowrap;text-align:right" title="' + n + ' × £' + rate + '">' + money(owedAmt) + rentNote + '</span>'
       : (n ? '<span style="margin-left:auto;flex:0 0 auto;font-size:0.72rem;color:#e67e22;white-space:nowrap" title="Add a rate (Edit, or Standard lesson rates below)">no rate</span>' : '');
     // Flag any week in this half-term with two or more chargeable lessons
     const perWeek = {};
@@ -11740,11 +11853,11 @@ function renderBilling() {
       ? '<span style="display:block;font-size:0.7rem;color:#b7791f;margin-top:2px" title="Two lessons logged in one week - check it isn\'t a mistake">⚠ 2 in one week: ' + esc(doubles.map(function(wk){ return perWeek[wk].join(' & '); }).join('; ')) + '</span>'
       : '';
     // Number first (left), in a fixed-width box, so it sits right next to the name
-    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 6px;background:' + (paid ? '#e8f5e0' : 'var(--card-bg)') + ';border:1.5px solid ' + (paid ? 'var(--string)' : 'var(--warm)') + ';border-radius:12px">' +
-      '<span style="flex:0 0 auto;width:2em;height:2em;display:flex;align-items:center;justify-content:center;background:#eef6ff;border:1.5px solid #a8c8e8;border-radius:10px;font-size:1rem;font-weight:800;color:#1a4a6b">' + n + '</span>' +
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 6px;background:' + (paid ? 'var(--soft-green2)' : 'var(--card-bg)') + ';border:1.5px solid ' + (paid ? 'var(--string)' : 'var(--warm)') + ';border-radius:12px">' +
+      '<span style="flex:0 0 auto;width:2em;height:2em;display:flex;align-items:center;justify-content:center;background:var(--tech-bg);border:1.5px solid var(--tech-bd);border-radius:10px;font-size:1rem;font-weight:800;color:var(--deep)">' + n + '</span>' +
       '<span style="font-size:0.92rem;color:var(--ink);line-height:1.2;min-width:0">' + instrDot(s.instrument) + esc(s.name) + (s.scheme === 'latestarter' ? ' <span style="font-size:0.65rem;background:#fff3e0;color:#b7791f;border-radius:999px;padding:1px 6px;white-space:nowrap">Late Starter</span>' : '') + famNote + sentNote + paidLine + flag + '</span>' +
       owed +
-      (famBill ? '<button onclick="openInvoiceModal(\'' + s.id + '\')" title="Make invoice" style="flex:0 0 auto;padding:4px 7px;border-radius:999px;cursor:pointer;border:1.5px solid #a8c8e8;background:#eef6ff;font-size:0.95rem;line-height:1">🧾</button>' : '') +
+      (famBill ? '<button onclick="openInvoiceModal(\'' + s.id + '\')" title="Make invoice" style="flex:0 0 auto;padding:4px 7px;border-radius:999px;cursor:pointer;border:1.5px solid var(--tech-bd);background:var(--tech-bg);font-size:0.95rem;line-height:1">🧾</button>' : '') +
       thanksPill + paidBtn +
     '</div>';
   }).join('');
@@ -11755,13 +11868,13 @@ function renderBilling() {
     '<div style="display:flex;align-items:center;gap:14px;padding:14px 6px 4px;margin-top:10px;border-top:2px solid var(--warm);font-weight:800;color:var(--viola)">' +
       '<span style="flex:0 0 auto;width:2em;height:2em;display:flex;align-items:center;justify-content:center;background:var(--viola);color:#fff;border-radius:10px;font-size:1rem">' + grand + '</span>' +
       '<span>Total chargeable lessons</span>' +
-      '<span style="margin-left:auto;font-size:1.15rem;color:#1a4a6b;white-space:nowrap">' + money(grandMoney) + '</span></div>' +
+      '<span style="margin-left:auto;font-size:1.15rem;color:var(--deep);white-space:nowrap">' + money(grandMoney) + '</span></div>' +
       (grandMoney ? '<div style="display:flex;justify-content:flex-end;gap:16px;flex-wrap:wrap;font-size:0.85rem;padding:4px 6px 0">'
         + '<span style="color:var(--viola)">✓ Received <strong>' + money(paidMoney) + '</strong></span>'
         + '<span style="color:#b7791f">⏳ Still to come <strong>' + money(grandMoney - paidMoney) + '</strong></span></div>' : '') +
       (function() {
         const sentN = Object.keys(invoiceSent[billingKey(block)] || {}).length;
-        return sentN ? '<div style="text-align:right;padding:8px 6px 0"><button onclick="clearAllSent()" style="background:none;border:1.5px solid #a8c8e8;color:#29789E;border-radius:999px;padding:6px 12px;font-family:\'Special Elite\',cursive;font-size:0.75rem;cursor:pointer">📨 Remove all Sent marks (' + sentN + ')</button></div>' : '';
+        return sentN ? '<div style="text-align:right;padding:8px 6px 0"><button onclick="clearAllSent()" style="background:none;border:1.5px solid var(--tech-bd);color:var(--violin);border-radius:999px;padding:6px 12px;font-family:\'Special Elite\',cursive;font-size:0.75rem;cursor:pointer">📨 Remove all Sent marks (' + sentN + ')</button></div>' : '';
       })() +
       (missingRate ? '<div style="font-size:0.72rem;color:#e67e22;text-align:right;padding:0 6px">' + missingRate + ' pupil' + (missingRate === 1 ? ' has' : 's have') + ' lessons but no rate, so ' + (missingRate === 1 ? 'isn’t' : 'aren’t') + ' in the £ total</div>' : '');
 }
@@ -11957,6 +12070,102 @@ function notesSummaryPdf(d) {
   return pdfBuild(pages, null);
 }
 
+// ── COLOUR THEME PANEL (Admin) ───────────────────────────────────────────
+// The engine (snApplyTheme etc.) lives in <head>. This is the picker.
+let themeSettings = snThemeSettings();
+const THEME_ROLES = [
+  ['dark',   '1. Darkest',      'text, header bar'],
+  ['main',   '2. Main',         'buttons, Pieces'],
+  ['bright', '3. Bright',       'Today tab, highlights'],
+  ['second', '4. Second',       'Technical, links'],
+  ['light',  '5. Light accent', 'small tiles']
+];
+let themeDraft = null;
+function themeSave() { try { localStorage.setItem('studio_theme', JSON.stringify(themeSettings)); } catch (e) {} }
+function themeSwatches(c, h) {
+  return '<div style="display:flex;border-radius:8px;overflow:hidden;height:' + (h || 26) + 'px">'
+    + ['dark', 'main', 'bright', 'second', 'light'].map(function(k){ return '<div style="flex:1;background:' + c[k] + '"></div>'; }).join('') + '</div>';
+}
+function renderThemePanel() {
+  const list = document.getElementById('theme-list'); if (!list) return;
+  themeSettings = snThemeSettings();
+  list.innerHTML = snAllThemes(themeSettings).map(function(t) {
+    const on = themeSettings.current === t.id;
+    const custom = !SN_THEMES.some(function(b){ return b.id === t.id; });
+    return '<div style="border:2px solid ' + (on ? 'var(--viola)' : 'var(--warm)') + ';border-radius:14px;padding:10px;background:#fff;cursor:pointer" onclick="pickTheme(\'' + escJs(t.id) + '\')">'
+      + themeSwatches(t.c, 30)
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:6px">'
+      + '<span style="font-size:0.85rem;font-weight:700;color:var(--ink)">' + (on ? '✓ ' : '') + esc(t.name) + '</span>'
+      + (custom ? '<button onclick="event.stopPropagation();deleteCustomTheme(\'' + escJs(t.id) + '\')" title="Delete this palette" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">🗑️</button>' : '')
+      + '</div></div>';
+  }).join('');
+  // Start "Make my own" from the colours you're using now
+  if (!themeDraft) {
+    const cur = snAllThemes(themeSettings).find(function(t){ return t.id === themeSettings.current; }) || SN_THEMES[0];
+    themeDraft = Object.assign({}, cur.c);
+  }
+  const maker = document.getElementById('theme-maker');
+  if (maker) maker.innerHTML = THEME_ROLES.map(function(r) {
+    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+      + '<input type="color" id="theme-pick-' + r[0] + '" value="' + themeDraft[r[0]] + '" oninput="themeDraftSet(\'' + r[0] + '\',this.value)" style="width:46px;height:40px;padding:0;border:none;background:none;cursor:pointer;flex:0 0 auto">'
+      + '<input type="text" id="theme-hex-' + r[0] + '" value="' + themeDraft[r[0]].toUpperCase() + '" maxlength="7" autocapitalize="characters" autocorrect="off" spellcheck="false" oninput="themeDraftSet(\'' + r[0] + '\',this.value)" style="width:7.5em;flex:0 0 auto;padding:7px 9px;font-size:0.85rem">'
+      + '<span style="font-size:0.78rem;line-height:1.25;color:var(--ink)"><strong>' + r[1] + '</strong><br><span style="color:var(--muted);font-size:0.7rem">' + r[2] + '</span></span>'
+      + '</div>';
+  }).join('');
+  themePreview();
+}
+// A small sample, coloured with the draft palette only
+function themePreview() {
+  const el = document.getElementById('theme-preview'); if (!el || !themeDraft) return;
+  const v = snThemeVars(themeDraft);
+  Object.keys(v).forEach(function(k){ el.style.setProperty(k, v[k]); });
+  el.innerHTML = '<div style="background:var(--ink);color:var(--string);padding:8px 12px;font-weight:700;font-size:0.9rem">🎻 Studio Notebook</div>'
+    + '<div style="background:var(--paper);padding:10px">'
+    + '<div style="background:var(--string);color:var(--ink);border-radius:8px;padding:5px 10px;font-size:0.75rem;font-weight:700;margin-bottom:8px">Next → Hattie · 09:45</div>'
+    + '<div style="background:#fff;border-radius:10px;padding:8px">'
+    + '<div style="font-size:0.7rem;color:var(--muted);font-weight:700">🔧 Technical</div>'
+    + '<div style="background:var(--tech-bg);border:1px solid var(--tech-bd);border-radius:6px;padding:4px 8px;font-size:0.75rem;margin:4px 0 6px">Schradieck Book I</div>'
+    + '<div style="font-size:0.7rem;color:var(--muted);font-weight:700">🎵 Pieces</div>'
+    + '<div style="background:var(--piece-bg);border:1px solid var(--piece-bd);border-radius:6px;padding:4px 8px;font-size:0.75rem;margin-top:4px">Concerto No 1 - Accolay</div></div>'
+    + '<div style="display:flex;gap:6px;margin-top:8px">'
+    + '<span style="background:var(--viola);color:#fff;border-radius:8px;padding:5px 10px;font-size:0.72rem;font-weight:700">Save</span>'
+    + '<span style="background:var(--violin);color:#fff;border-radius:8px;padding:5px 10px;font-size:0.72rem;font-weight:700">📤 PDF</span>'
+    + '<span style="background:var(--sky);color:var(--ink);border-radius:8px;padding:5px 10px;font-size:0.72rem;font-weight:700">Terms</span></div></div>';
+}
+function themeDraftSet(role, val) {
+  let h = String(val || '').trim();
+  if (h && h[0] !== '#') h = '#' + h;
+  if (!/^#([0-9a-fA-F]{6})$/.test(h)) return; // wait until a full colour code is typed
+  themeDraft[role] = h.toLowerCase();
+  const pick = document.getElementById('theme-pick-' + role); if (pick && pick.value.toLowerCase() !== themeDraft[role]) pick.value = themeDraft[role];
+  const hex = document.getElementById('theme-hex-' + role); if (hex && document.activeElement !== hex) hex.value = themeDraft[role].toUpperCase();
+  themePreview();
+}
+function pickTheme(id) {
+  themeSettings.current = id; themeSave(); snApplyTheme();
+  themeDraft = null; renderThemePanel();
+}
+// See the palette on the whole app before saving
+function tryThemeDraft() { snApplyColours({ c: themeDraft }); }
+function cancelThemeTry() { snApplyTheme(); }
+function saveCustomTheme() {
+  const nameEl = document.getElementById('theme-name');
+  const name = (nameEl && nameEl.value.trim()) || 'My palette';
+  const t = { id: 'my-' + Date.now(), name: name, c: Object.assign({}, themeDraft) };
+  themeSettings.custom = (themeSettings.custom || []).concat([t]);
+  themeSettings.current = t.id;
+  themeSave(); snApplyTheme();
+  if (nameEl) nameEl.value = '';
+  themeDraft = null; renderThemePanel();
+}
+function deleteCustomTheme(id) {
+  const t = (themeSettings.custom || []).find(function(x){ return x.id === id; }); if (!t) return;
+  if (!confirm('Delete the palette "' + t.name + '"?')) return;
+  themeSettings.custom = themeSettings.custom.filter(function(x){ return x.id !== id; });
+  if (themeSettings.current === id) themeSettings.current = 'greens';
+  themeSave(); snApplyTheme(); themeDraft = null; renderThemePanel();
+}
+
 // ── INCOME RECORD (for tax / Making Tax Digital) ─────────────────────────
 // When you tick Paid, the date and the amounts are kept, so a later change of
 // rate can't alter what was actually received.
@@ -12066,10 +12275,10 @@ function renderOtherIncome() {
         return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--card-bg);border:1.5px solid var(--warm);border-radius:10px;font-size:0.85rem">'
           + '<span style="flex:0 0 auto;color:var(--muted);font-size:0.75rem">' + ymdLocal(o.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + '</span>'
           + '<span style="flex:1;min-width:0"><strong>' + esc(o.from) + '</strong>' + (o.what ? ' <span style="color:var(--muted)">· ' + esc(o.what) + '</span>' : '') + '</span>'
-          + '<strong style="color:#1a4a6b;white-space:nowrap">' + money(o.amount) + '</strong>'
+          + '<strong style="color:var(--deep);white-space:nowrap">' + money(o.amount) + '</strong>'
           + '<button onclick="deleteOtherIncome(\'' + o.id + '\')" title="Remove" style="background:none;border:none;cursor:pointer;font-size:0.95rem">🗑️</button></div>';
       }).join('')
-      + '<div style="text-align:right;font-size:0.8rem;color:#1a4a6b;font-weight:700;padding:2px 4px">Other work this period: ' + money(list.reduce(function(a, o){ return a + o.amount; }, 0)) + '</div>'
+      + '<div style="text-align:right;font-size:0.8rem;color:var(--deep);font-weight:700;padding:2px 4px">Other work this period: ' + money(list.reduce(function(a, o){ return a + o.amount; }, 0)) + '</div>'
     : '<div style="font-size:0.75rem;color:var(--muted)">Nothing added for this period yet.</div>';
 }
 function addOtherIncome() {
@@ -12329,7 +12538,7 @@ function openInvoiceModal(pupilId) {
   const multi = fam.length > 1;
   document.getElementById('inv-lines').innerHTML = fam.map(function(m) {
     return invBaseLines(m, block).map(function(l) {
-      return '<div style="display:flex;justify-content:space-between;gap:10px;font-size:0.85rem;background:#eef6ff;border-radius:8px;padding:8px 10px"><span>' + (multi ? '<strong>' + esc(m.name) + ':</strong> ' : '') + esc(l.text) + '</span><strong style="color:#1a4a6b">' + invPounds(l.amt) + '</strong></div>';
+      return '<div style="display:flex;justify-content:space-between;gap:10px;font-size:0.85rem;background:var(--tech-bg);border-radius:8px;padding:8px 10px"><span>' + (multi ? '<strong>' + esc(m.name) + ':</strong> ' : '') + esc(l.text) + '</span><strong style="color:var(--deep)">' + invPounds(l.amt) + '</strong></div>';
     }).join('');
   }).join('') || '<div style="font-size:0.8rem;color:#e67e22">No lessons with a rate this half-term.</div>';
   // Unpaid earlier half-terms, ticked if they're on the invoice
@@ -12730,21 +12939,21 @@ function renderInvoiceSettings() {
   const fields = [['name','👤 Your name'],['phone','📞 Phone'],['email','✉️ Email'],['website','🌐 Website'],
     ['bank','🏦 Bank / account name'],['sortCode','🔢 Sort code'],['account','🔢 Account number']];
   el.innerHTML = fields.map(function(f) {
-    return '<label style="display:flex;flex-direction:column;gap:4px;font-size:0.75rem;color:#1a4a6b;font-weight:700">' + f[1]
+    return '<label style="display:flex;flex-direction:column;gap:4px;font-size:0.75rem;color:var(--deep);font-weight:700">' + f[1]
       + '<input type="text" value="' + esc(st[f[0]] || '') + '" ' + (f[0] === 'sortCode' || f[0] === 'account' ? 'inputmode="numeric" ' : '')
-      + 'oninput="setInvoiceSetting(\'' + f[0] + '\',this.value)" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:\'Special Elite\',cursive;font-size:0.9rem;background:var(--paper);box-sizing:border-box"></label>';
+      + 'oninput="setInvoiceSetting(\'' + f[0] + '\',this.value)" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid var(--tech-bd);font-family:\'Special Elite\',cursive;font-size:0.9rem;background:var(--paper);box-sizing:border-box"></label>';
   }).join('')
-  + '<label style="grid-column:1/-1;display:flex;flex-direction:column;gap:4px;font-size:0.75rem;color:#1a4a6b;font-weight:700">💬 Email message'
+  + '<label style="grid-column:1/-1;display:flex;flex-direction:column;gap:4px;font-size:0.75rem;color:var(--deep);font-weight:700">💬 Email message'
   + '<span style="font-weight:400;color:var(--muted);font-size:0.7rem">Goes in the email with each invoice. [names], [term], [invoice number] and [amount] fill in by themselves.</span>'
-  + '<textarea rows="6" oninput="setInvoiceSetting(\'message\',this.value)" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:\'Special Elite\',cursive;font-size:0.9rem;background:var(--paper);box-sizing:border-box;resize:vertical">' + esc(invMessageTemplate()) + '</textarea></label>'
-  + '<label style="grid-column:1/-1;display:flex;flex-direction:column;gap:4px;font-size:0.75rem;color:#1a4a6b;font-weight:700">💌 Payment thank-you message'
+  + '<textarea rows="6" oninput="setInvoiceSetting(\'message\',this.value)" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid var(--tech-bd);font-family:\'Special Elite\',cursive;font-size:0.9rem;background:var(--paper);box-sizing:border-box;resize:vertical">' + esc(invMessageTemplate()) + '</textarea></label>'
+  + '<label style="grid-column:1/-1;display:flex;flex-direction:column;gap:4px;font-size:0.75rem;color:var(--deep);font-weight:700">💌 Payment thank-you message'
   + '<span style="font-weight:400;color:var(--muted);font-size:0.7rem">Sent with ✉️ Thank you on the billing sheet. [names], [term], [invoice number] and [amount] fill in by themselves.</span>'
-  + '<textarea rows="5" oninput="setInvoiceSetting(\'thanks\',this.value)" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #a8c8e8;font-family:\'Special Elite\',cursive;font-size:0.9rem;background:var(--paper);box-sizing:border-box;resize:vertical">' + esc(thanksTemplate()) + '</textarea></label>'
+  + '<textarea rows="5" oninput="setInvoiceSetting(\'thanks\',this.value)" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid var(--tech-bd);font-family:\'Special Elite\',cursive;font-size:0.9rem;background:var(--paper);box-sizing:border-box;resize:vertical">' + esc(thanksTemplate()) + '</textarea></label>'
   + '<div style="grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:4px">'
-  + '<img src="' + (st.logo || INVOICE_LOGO) + '" alt="Invoice picture" style="height:64px;border-radius:6px;border:1.5px solid #a8c8e8">'
-  + '<label style="background:#1a4a6b;color:#fff;border-radius:10px;padding:9px 14px;font-size:0.82rem;cursor:pointer">🖼️ Change picture'
+  + '<img src="' + (st.logo || INVOICE_LOGO) + '" alt="Invoice picture" style="height:64px;border-radius:6px;border:1.5px solid var(--tech-bd)">'
+  + '<label style="background:var(--deep);color:#fff;border-radius:10px;padding:9px 14px;font-size:0.82rem;cursor:pointer">🖼️ Change picture'
   + '<input type="file" accept="image/*" onchange="setInvoiceLogo(this)" style="display:none"></label>'
-  + (st.logo ? '<button onclick="resetInvoiceLogo()" style="background:none;border:1.5px solid #a8c8e8;color:#1a4a6b;border-radius:10px;padding:8px 12px;font-family:\'Special Elite\',cursive;font-size:0.8rem;cursor:pointer">↩ Back to the clef</button>' : '')
+  + (st.logo ? '<button onclick="resetInvoiceLogo()" style="background:none;border:1.5px solid var(--tech-bd);color:var(--deep);border-radius:10px;padding:8px 12px;font-family:\'Special Elite\',cursive;font-size:0.8rem;cursor:pointer">↩ Back to the clef</button>' : '')
   + '</div>';
 }
 function setInvoiceSetting(k, v) { invoiceSettings[k] = v.trim(); save(); }
@@ -12811,14 +13020,14 @@ function attendanceChart(s, fromDate, toDate) {
   const presentPct = Math.round((counts.present / total) * 100);
 
   const dots = [...log].reverse().map(e => {
-    const colours = { 'present':'#2F5C1A', 'absent-late':'#c0392b', 'absent-notice':'#e67e22', 'cancelled':'#aaa' };
+    const colours = { 'present':'var(--viola)', 'absent-late':'#c0392b', 'absent-notice':'#e67e22', 'cancelled':'#aaa' };
     const labels  = { 'present':'Present', 'absent-late':'Absent - late cancel', 'absent-notice':'Absent - good notice', 'cancelled':'Cancelled by teacher' };
     return `<span title="${e.date}: ${labels[e.attendance]||''}"
       style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${colours[e.attendance]||'#ccc'};margin:2px;flex-shrink:0"></span>`;
   }).join('');
 
   const bars = [
-    { label: 'Present',        count: counts.present,           col: '#2F5C1A' },
+    { label: 'Present',        count: counts.present,           col: 'var(--viola)' },
     { label: 'Late cancel',    count: counts['absent-late'],    col: '#c0392b' },
     { label: 'Good notice',    count: counts['absent-notice'],  col: '#e67e22' },
     { label: 'Teacher cancel', count: counts.cancelled,         col: '#aaa'    },
@@ -12915,7 +13124,7 @@ function renderWaiting() {
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
           <button onclick="moveWaitingToPupils(${i})"
-            style="background:var(--string);color:#05270B;border:none;border-radius:8px;padding:5px 10px;font-family:'Special Elite',cursive;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap">
+            style="background:var(--string);color:var(--ink);border:none;border-radius:8px;padding:5px 10px;font-family:'Special Elite',cursive;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap">
             ✓ Add to pupils
           </button>
           <button onclick="editWaiting(${i})"
@@ -13036,7 +13245,7 @@ function renderSpeechReplacements() {
   el.innerHTML = speechReplacements.map(function(r, i) {
     return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--warm)">'
       + '<span style="font-size:0.85rem;flex:1"><span style="color:#c0392b">' + esc(r.from) + '</span>'
-      + ' → <span style="color:#2F5C1A">' + (r.to ? esc(r.to) : '<em style="color:var(--muted)">deleted</em>') + '</span></span>'
+      + ' → <span style="color:var(--viola)">' + (r.to ? esc(r.to) : '<em style="color:var(--muted)">deleted</em>') + '</span></span>'
       + '<button onclick="removeSpeechReplacement(' + i + ')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 4px">×</button>'
       + '</div>';
   }).join('');
@@ -13081,7 +13290,7 @@ function giftListHTML(s) {
     return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f5e5dc">'
       + '<span style="flex:1;font-size:0.85rem;color:var(--ink)">' + esc(g.text || '')
       + (g.date ? '<span style="font-size:0.7rem;color:var(--muted);margin-left:8px">' + esc(g.date) + '</span>' : '')
-      + (g.done ? '<span style="font-size:0.65rem;color:#2F5C1A;margin-left:6px" title="Thank you sent">\u2713</span>' : '')
+      + (g.done ? '<span style="font-size:0.65rem;color:var(--viola);margin-left:6px" title="Thank you sent">\u2713</span>' : '')
       + '</span>'
       + '<button onclick="removeGift(\'' + s.id + '\',' + i + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1;flex-shrink:0">\u00d7</button>'
       + '</div>';
@@ -13141,7 +13350,7 @@ function renderGiftsList() {
     countEl.textContent = outstanding.length > 0
       ? outstanding.length + ' to thank'
       : 'all done \u2713';
-    countEl.style.color = outstanding.length > 0 ? '#e67e22' : '#2F5C1A';
+    countEl.style.color = outstanding.length > 0 ? '#e67e22' : 'var(--viola)';
   }
 
   const pupilOptions = [...students]
@@ -13176,7 +13385,7 @@ function renderGiftsList() {
       + '</div>'
       + '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.75rem;flex-shrink:0;white-space:nowrap;color:var(--muted)">'
       + '<input type="checkbox" onchange="markGiftDone(\'' + o.s.id + '\',' + o.idx + ')" '
-      + 'style="width:18px;height:18px;cursor:pointer;accent-color:#2F5C1A">'
+      + 'style="width:18px;height:18px;cursor:pointer;accent-color:var(--viola)">'
       + 'Thank you sent</label>'
       + '</div></div>';
   }).join('') + addRow;
@@ -13231,12 +13440,12 @@ function renderLendingLog() {
   }
   el.innerHTML = lendingLog.map((entry, i) => {
     const returned = entry.returned;
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:${returned?'#f5f5f2':'#f8fdf5'};border:1.5px solid ${returned?'#e0ddd8':'#c8ddb8'};margin-bottom:6px;opacity:${returned?'0.6':'1'}">
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:${returned?'#f5f5f2':'var(--soft-green)'};border:1.5px solid ${returned?'#e0ddd8':'var(--piece-bd)'};margin-bottom:6px;opacity:${returned?'0.6':'1'}">
       <div style="flex:1;min-width:0">
         <div style="font-size:0.88rem;font-weight:600;color:var(--ink);${returned?'text-decoration:line-through':''}">${esc(entry.book)}</div>
         <div style="font-size:0.75rem;color:var(--muted)">${esc(entry.to)} · ${entry.date}${returned?' · returned '+entry.returnedDate:''}</div>
       </div>
-      ${!returned ? `<button onclick="markReturned(${i})" style="background:var(--string);color:#05270B;border:none;border-radius:6px;padding:4px 10px;font-family:'Special Elite',cursive;font-size:0.75rem;cursor:pointer;white-space:nowrap">✓ Returned</button>` : ''}
+      ${!returned ? `<button onclick="markReturned(${i})" style="background:var(--string);color:var(--ink);border:none;border-radius:6px;padding:4px 10px;font-family:'Special Elite',cursive;font-size:0.75rem;cursor:pointer;white-space:nowrap">✓ Returned</button>` : ''}
       <button onclick="removeLendingEntry(${i})" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;padding:0 4px">×</button>
     </div>`;
   }).join('');
@@ -13257,9 +13466,9 @@ let libPickToastTimer = null;
 const LIBPICK_SOURCES = [
   { id: 'pieces',  icon: '📚', label: 'Full library',  bg: 'var(--ink)',    fg: '#fff' },
   { id: 'studies', icon: '📖', label: 'Studies', bg: 'var(--string)', fg: 'var(--ink)' },
-  { id: 'methods', icon: '📘', label: 'Methods', bg: '#46C6E5',       fg: 'var(--ink)' },
+  { id: 'methods', icon: '📘', label: 'Methods', bg: 'var(--sky)',       fg: 'var(--ink)' },
   { id: 'albums',  icon: '🎵', label: 'Albums',  bg: 'var(--viola)',  fg: '#fff' },
-  { id: 'violaness', icon: '🎻', label: 'Violaness', bg: '#1a4a6b',   fg: '#fff' }
+  { id: 'violaness', icon: '🎻', label: 'Violaness', bg: 'var(--deep)',   fg: '#fff' }
 ];
 
 function libPickGetDest() {
@@ -13518,13 +13727,13 @@ function libPickItemsHTML(bk) {
       return '<div style="display:flex;flex-wrap:wrap;gap:5px;margin:4px 0">' + seg.items.map(function(o) {
         const lv = bookTickLevel(bk.ticks[ikeys[o.idx]]);
         return '<button onclick="libPickAddBookItem(\'' + k + '\',' + o.idx + ')" style="min-width:38px;height:36px;padding:0 6px;border-radius:8px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.8rem;'
-          + 'border:1.5px solid ' + (lv === 2 ? 'var(--string)' : lv === 1 ? '#e67e22' : '#d6ddd2') + ';background:' + (lv === 2 ? '#e8f5e0' : lv === 1 ? '#fff3e0' : '#fff') + ';color:var(--ink)">' + esc(o.it) + '</button>';
+          + 'border:1.5px solid ' + (lv === 2 ? 'var(--string)' : lv === 1 ? '#e67e22' : '#d6ddd2') + ';background:' + (lv === 2 ? 'var(--soft-green2)' : lv === 1 ? '#fff3e0' : '#fff') + ';color:var(--ink)">' + esc(o.it) + '</button>';
       }).join('') + '</div>';
     }
     return '<div style="margin:4px 0">' + seg.items.map(function(o) {
       const lv = bookTickLevel(bk.ticks[ikeys[o.idx]]);
       return '<button onclick="libPickAddBookItem(\'' + k + '\',' + o.idx + ')" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:8px 10px;margin-bottom:4px;border-radius:8px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.85rem;'
-        + 'border:1.5px solid ' + (lv === 2 ? 'var(--string)' : lv === 1 ? '#e67e22' : '#e0ddd8') + ';background:' + (lv === 2 ? '#e8f5e0' : lv === 1 ? '#fff3e0' : '#fff') + ';color:var(--ink)">'
+        + 'border:1.5px solid ' + (lv === 2 ? 'var(--string)' : lv === 1 ? '#e67e22' : '#e0ddd8') + ';background:' + (lv === 2 ? 'var(--soft-green2)' : lv === 1 ? '#fff3e0' : '#fff') + ';color:var(--ink)">'
         + '<span style="color:var(--viola);font-weight:700">＋</span><span style="flex:1">' + esc(o.it) + '</span>' + (lv === 2 ? '<span style="font-size:0.72rem;color:var(--viola)">✓</span>' : lv === 1 ? '<span style="font-size:0.72rem;color:#b7791f">working</span>' : '') + '</button>';
     }).join('') + '</div>';
   }).join('');
@@ -13545,7 +13754,7 @@ function renderLibPickViolaness(search) {
     const inCat = sortByTitle(items.filter(function(sh){ return sh.cat === c; }));
     if (!inCat.length) return '';
     return '<div style="margin-bottom:14px">'
-      + '<div style="font-size:0.68rem;font-weight:800;color:#1a4a6b;padding:6px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">' + esc(c) + '</div>'
+      + '<div style="font-size:0.68rem;font-weight:800;color:var(--deep);padding:6px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">' + esc(c) + '</div>'
       + inCat.map(function(sh) {
           return '<div onclick="libPickAddVio(\'' + escJs(sh.id) + '\')" style="padding:10px 12px;border-radius:9px;cursor:pointer;margin-bottom:4px" '
             + 'onmouseover="this.style.background=\'var(--warm)\'" onmouseout="this.style.background=\'transparent\'">'
@@ -13638,14 +13847,14 @@ function buildPupilHTML(s, term, includeScales) {
           var someDone = OCTS.some(function(o) { return ticks[type] && ticks[type][o]; });
           var cell = OCTS.map(function(o) {
             var done = ticks[type] && ticks[type][o];
-            return '<span style="display:inline-block;width:16px;height:16px;border:1px solid #ccc;border-radius:3px;background:' + (done?'#2F5C1A':'#fff') + ';color:#fff;font-size:9px;text-align:center;line-height:16px;margin:1px">' + (done?'✓':'') + '</span>';
+            return '<span style="display:inline-block;width:16px;height:16px;border:1px solid #ccc;border-radius:3px;background:' + (done?'var(--viola)':'#fff') + ';color:#fff;font-size:9px;text-align:center;line-height:16px;margin:1px">' + (done?'✓':'') + '</span>';
           }).join('');
           clHtml += '<td style="text-align:center;padding:4px 2px;border-bottom:1px solid #f0f0f0">' + cell + '</td>';
         });
         clHtml += '</tr>';
       });
       clHtml += '</tbody></table>';
-      clHtml += '<div style="font-size:0.7rem;color:#6b8a6b;margin-bottom:8px">Each key shows 3 boxes: 1 octave · 2 octaves · 3 octaves</div>';
+      clHtml += '<div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">Each key shows 3 boxes: 1 octave · 2 octaves · 3 octaves</div>';
     }
     var nmKeys = s.naturalMinorKeys || [];
     if (nmKeys.length > 0) {
@@ -13655,7 +13864,7 @@ function buildPupilHTML(s, term, includeScales) {
         var ticks = nmCl[k] || {};
         var cells = OCTS.map(function(o) {
           var done = ticks[o];
-          return '<span style="display:inline-block;width:16px;height:16px;border:1px solid #ccc;border-radius:3px;background:' + (done?'#2F5C1A':'#fff') + ';color:#fff;font-size:9px;text-align:center;line-height:16px;margin:1px">' + (done?'✓':'') + '</span>';
+          return '<span style="display:inline-block;width:16px;height:16px;border:1px solid #ccc;border-radius:3px;background:' + (done?'var(--viola)':'#fff') + ';color:#fff;font-size:9px;text-align:center;line-height:16px;margin:1px">' + (done?'✓':'') + '</span>';
         }).join('');
         return '<span style="display:inline-block;margin-right:16px;font-size:0.82rem"><strong>' + k + '</strong> ' + cells + '</span>';
       }).join('');
@@ -13669,7 +13878,7 @@ function buildPupilHTML(s, term, includeScales) {
         var ticks = dsCl[k] || {};
         var cells = ['3rds','6ths','Octaves'].map(function(t) {
           var done = ticks[t];
-          return '<span style="display:inline-block;margin-right:6px;font-size:0.78rem">' + t + ' <span style="display:inline-block;width:14px;height:14px;border:1px solid #ccc;border-radius:3px;background:' + (done?'#2F5C1A':'#fff') + ';color:#fff;font-size:9px;text-align:center;line-height:14px">' + (done?'✓':'') + '</span></span>';
+          return '<span style="display:inline-block;margin-right:6px;font-size:0.78rem">' + t + ' <span style="display:inline-block;width:14px;height:14px;border:1px solid #ccc;border-radius:3px;background:' + (done?'var(--viola)':'#fff') + ';color:#fff;font-size:9px;text-align:center;line-height:14px">' + (done?'✓':'') + '</span></span>';
         }).join('');
         return '<div style="margin-bottom:4px;font-size:0.82rem"><strong>' + k + '</strong> ' + cells + '</div>';
       }).join('');
@@ -13707,7 +13916,7 @@ function buildPupilHTML(s, term, includeScales) {
       <div class="section"><div class="section-title">Other sketches</div>
         ${s.canvasSaves.filter(sv => !log.some(e => (e.sketches||[]).includes(sv.img))).map(sv=>`
           <div style="margin-bottom:12px">
-            <div style="font-size:0.75rem;color:#6b8a6b;margin-bottom:4px">${sv.date}</div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-bottom:4px">${sv.date}</div>
             <img src="${sv.img}" style="max-width:100%;border-radius:6px;border:1px solid #d0e8c8">
           </div>`).join('')}
       </div>` : ''}
@@ -14225,6 +14434,7 @@ function backupData() {
     studio_income_log:    localStorage.getItem('studio_income_log')    || '{}',
     studio_invoice_thanks: localStorage.getItem('studio_invoice_thanks') || '{}',
     studio_other_income:  localStorage.getItem('studio_other_income')  || '[]',
+    studio_theme:         localStorage.getItem('studio_theme')         || '',
     studio_violaness_sheets: localStorage.getItem('studio_violaness_sheets') || '[]',
     studio_violaness_cats:   localStorage.getItem('studio_violaness_cats')   || '',
     studio_cal_url:       localStorage.getItem('studio_cal_url')       || '',
@@ -14255,7 +14465,7 @@ function restoreData(event) {
       const keys = ['studio_students','studio_custom_chips','studio_deleted_builtins','studio_custom_pieces',
         'studio_tech_categories','studio_custom_tech_cats','studio_lending_log','studio_speech_replacements','studio_video_links','studio_video_cats_removed','studio_video_teachers','studio_hidden_pieces','studio_hidden_piece_cats',
         'studio_one_off_moves','studio_waiting_list','studio_daily_notes',
-        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_technique_sets','studio_study_book_bank','studio_method_book_bank','studio_album_bank','studio_rates','studio_billing_paid','studio_invoice_settings','studio_invoice_nos','studio_invoice_extras','studio_invoice_sent','studio_income_log','studio_invoice_thanks','studio_other_income','studio_violaness_sheets','studio_violaness_cats','studio_cal_url','studio_dark_mode_REMOVED'];
+        'studio_term','studio_term_dates','studio_eod','studio_skipped_weeks','studio_schoolyear_bumped','studio_idea_boards','studio_idea_current','studio_extra_lessons','studio_technique_defaults','studio_technique_sets','studio_study_book_bank','studio_method_book_bank','studio_album_bank','studio_rates','studio_billing_paid','studio_invoice_settings','studio_invoice_nos','studio_invoice_extras','studio_invoice_sent','studio_income_log','studio_invoice_thanks','studio_other_income','studio_theme','studio_violaness_sheets','studio_violaness_cats','studio_cal_url','studio_dark_mode_REMOVED'];
       keys.forEach(k => { if (payload[k] !== undefined && payload[k] !== '') localStorage.setItem(k, payload[k]); });
 
       // Reload state
@@ -14295,6 +14505,7 @@ function restoreData(event) {
       incomeLog       = JSON.parse(localStorage.getItem('studio_income_log')        || '{}');
       invoiceThanks   = JSON.parse(localStorage.getItem('studio_invoice_thanks')    || '{}');
       otherIncome     = JSON.parse(localStorage.getItem('studio_other_income')      || '[]');
+      themeSettings   = snThemeSettings(); snApplyTheme();
       violanessSheets = JSON.parse(localStorage.getItem('studio_violaness_sheets')  || '[]');
       violanessCats   = JSON.parse(localStorage.getItem('studio_violaness_cats')    || 'null') || violanessCats;
       repairStudentIDs();
