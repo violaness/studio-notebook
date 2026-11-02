@@ -560,13 +560,13 @@
   /* Working On: Scales / Technical / Pieces */
   .wo-group { padding: 8px 0 10px; border-bottom: 1px dashed var(--warm); }
   .wo-group:last-child { border-bottom: none; }
-  .wo-label { font-size: 0.72rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+  .wo-label { font-size: 0.72rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
   .wo-group .piece-item { margin-bottom: 8px; }
   /* Same text size as the Working On list in the After tab summary */
   .wo-group .piece-item textarea, .wo-group .piece-item input { font-size: 0.8rem !important; line-height: 1.4; padding: 7px 10px; box-sizing: border-box; }
   .wo-group .piece-item input { height: 34px; }
   .wo-group .piece-item textarea { min-height: 34px; }
-  .wo-label { font-size: 0.7rem; }
+  .wo-label { font-size: 0.85rem; }
   .wo-add { background: none; border: none; color: var(--viola); font-family: 'Special Elite', cursive; font-size: 0.78rem; cursor: pointer; padding: 4px 2px; }
   .move-piece-btn { background: none; border: none; color: var(--muted); font-size: 0.95rem; cursor: pointer; padding: 2px 4px; }
   /* Before tab: what they play (left) | what to do (right); stacked on a phone */
@@ -5059,9 +5059,9 @@ function buildPiecesHTML(s) {
       + '</div>');
   });
   const group = function(g, label) {
-    return '<div class="wo-group"><div class="wo-label">' + label + '</div>'
-      + rows[g].join('')
-      + '<button class="wo-add" onclick="addPiece(\'' + s.id + '\',\'' + g + '\')">＋ Add</button></div>';
+    return '<div class="wo-group"><div class="wo-label"><span>' + label + '</span>'
+      + '<button class="wo-add" onclick="addPiece(\'' + s.id + '\',\'' + g + '\')">＋ Add</button></div>'
+      + rows[g].join('') + '</div>';
   };
   return group('tech', '🔧 Technical') + group('piece', '🎵 Pieces');
 }
