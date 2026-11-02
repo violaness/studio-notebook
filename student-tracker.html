@@ -4275,7 +4275,7 @@ function updatePiece(id, i, val)    { const s=getStudent(id); if(s){if(!s.pieces
 function updatePieceRef(id, i, val) {
   const s=getStudent(id); if(!s) return;
   if(!s.pieceRefs)s.pieceRefs=[]; s.pieceRefs[i]=val;
-  if(!s.pieceRefManual)s.pieceRefManual=[]; while(s.pieceRefManual.length<i)s.pieceRefManual.push(false);
+  if(!s.pieceRefManual)s.pieceRefManual=[]; while(s.pieceRefManual.length<i)s.pieceRefManual.push(null);
   s.pieceRefManual[i] = !!String(val).trim(); // typed by you: the movement ticks leave it alone
   save();
 }
@@ -5089,8 +5089,32 @@ function autoPieceRef(s, i) {
   while (s.pieceRefs.length < i) s.pieceRefs.push('');
   s.pieceRefs[i] = mvtWorkingLabels(s, i).join(', ');
   if (!s.pieceRefManual) s.pieceRefManual = [];
-  while (s.pieceRefManual.length < i) s.pieceRefManual.push(undefined);
+  while (s.pieceRefManual.length < i) s.pieceRefManual.push(null);
   s.pieceRefManual[i] = false;
+}
+// The short label for one movement / study: "Suite No. 2: Prélude", "Variation 1", "No. 3"
+function mvtShortLabel(head, item, numLabel) {
+  const part = /^\d+$/.test(item) ? (numLabel || 'Mvt.') + ' ' + item : mvtShortName(item);
+  return (head ? mvtShortName(String(head).split(',')[0]) + ': ' : '') + part;
+}
+// If a No. / mvt. box holds the full library wording of a movement or study
+// (with its long description), swap it for the short label.
+function tidyPieceRef(title, ref) {
+  const r = String(ref || '').trim(); if (!r) return ref;
+  const lists = [];
+  const mv = pieceMovements(title); if (mv) lists.push({ items: mv, num: 'Mvt.' });
+  [].concat(typeof studyBookBank !== 'undefined' ? studyBookBank : [], typeof methodBookBank !== 'undefined' ? methodBookBank : [], typeof albumBank !== 'undefined' ? albumBank : [])
+    .forEach(function(bk){ if (bk && bk.name === title) lists.push({ items: bk.studies || bk.items || [], num: bk.numLabel || 'No.' }); });
+  for (let L = 0; L < lists.length; L++) {
+    const items = lists[L].items;
+    for (let n = 0; n < items.length; n++) {
+      const it = items[n]; if (isHeadingItem(it)) continue;
+      const head = headingFor(items, n);
+      const part = /^\d+$/.test(it) ? (lists[L].num) + ' ' + it : it;
+      if (r === part || r === it || (head && r === head + ' - ' + part)) return mvtShortLabel(head, it, lists[L].num);
+    }
+  }
+  return ref;
 }
 function mvtWorkingLabels(s, i) {
   const title = (s.pieces || [])[i];
@@ -5211,6 +5235,7 @@ function buildPiecesHTML(s) {
   pieces.forEach(function(p, i) {
     const g = pieceGroupOf(s, i);
     autoPieceRef(s, i); // movements already ticked orange show in the box too
+    if ((s.pieceRefs || [])[i]) s.pieceRefs[i] = tidyPieceRef(p, s.pieceRefs[i]); // just the title, not the long description
     const ref = (s.pieceRefs || [])[i] || '';
     // Movement ticks under the first row of each piece that has movements
     const mk = normPieceCat(String(p || '')).toLowerCase();
@@ -13668,9 +13693,7 @@ function libPickAddMvt(key, idx) {
   const p = visibleLibraryPieces().find(function(x){ return pieceKey(x) === key; });
   if (!p || !p.movements) return;
   const m = p.movements[idx]; if (m === undefined || isHeadingItem(m)) return;
-  const head = headingFor(p.movements, idx);
-  const part = /^\d+$/.test(m) ? 'Mvt. ' + m : m;
-  libPickAdd(p.title, head ? head + ' - ' + part : part);
+  libPickAdd(p.title, mvtShortLabel(headingFor(p.movements, idx), m, 'Mvt.'));
 }
 
 // The pupil's own copies of this kind of book, plus the studio bank (minus
@@ -13709,9 +13732,7 @@ function libPickAddWholeBook(key) {
 function libPickAddBookItem(key, idx) {
   const bk = libPickFindBook(key); if (!bk) return;
   const it = bk.items[idx]; if (it === undefined || isHeadingItem(it)) return;
-  const head = headingFor(bk.items, idx);
-  const part = /^\d+$/.test(it) ? (bk.numLabel || 'No.') + ' ' + it : it;
-  libPickAdd(bk.name, head ? head + ' - ' + part : part);
+  libPickAdd(bk.name, mvtShortLabel(headingFor(bk.items, idx), it, bk.numLabel || 'No.'));
 }
 
 function renderLibPickBooks(search) {
@@ -13845,7 +13866,7 @@ function libPickAdd(title, ref) {
     while (s.pieceRefs.length < i) s.pieceRefs.push('');
     s.pieceRefs[i] = ref || '';
     if (!s.pieceRefManual) s.pieceRefManual = [];
-    while (s.pieceRefManual.length < i) s.pieceRefManual.push(false);
+    while (s.pieceRefManual.length < i) s.pieceRefManual.push(null);
     s.pieceRefManual[i] = !!ref; // a movement you picked counts as your own choice
     // Study / method books and your own sheets are technical, albums are pieces;
     // from the Full library it's worked out from the category.
