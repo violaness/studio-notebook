@@ -3418,7 +3418,7 @@ function renderDetail(s, preserveTab = false) {
     <div class="moment-tabs" style="flex-wrap:wrap">
       <button class="moment-tab active" onclick="switchMoment(this,'panel-before')">Before</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-after')">After</button>
-      <button class="moment-tab" onclick="switchMoment(this,'panel-scales')">Technique</button>
+      <button class="moment-tab" onclick="switchMoment(this,'panel-scales')">Repertoire</button>
       <button class="moment-tab" onclick="switchMoment(this,'panel-history')">History</button>
     </div>
 
@@ -5701,7 +5701,7 @@ function scalesForWeekHTML(s) {
   // too, flagged, so they can always be cleared.
   var orphans = selected.filter(function(k) { return allKeys.indexOf(k) === -1; });
 
-  if (allKeys.length === 0 && orphans.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No scales assigned yet - add keys in the Technique tab.</p>';
+  if (allKeys.length === 0 && orphans.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No scales assigned yet - add keys in the Repertoire tab.</p>';
 
   var html = '<div style="display:flex;flex-wrap:wrap;gap:8px">'
     + allKeys.map(function(k) {
@@ -9673,7 +9673,7 @@ function renderLibReturnBar() {
   const s = libReturn ? getStudent(libReturn.pupilId) : null;
   if (!s) { libReturn = null; bar.style.display = 'none'; bar.innerHTML = ''; return; }
   bar.style.display = 'block';
-  bar.innerHTML = '<button onclick="returnFromLibrary()" style="width:100%;background:var(--warm);border:1.5px solid var(--string);border-radius:12px;padding:10px 14px;font-family:\'Special Elite\',cursive;font-size:0.88rem;color:var(--viola);cursor:pointer;font-weight:600;text-align:left">← Back to ' + esc(s.name) + '’s Technique tab</button>';
+  bar.innerHTML = '<button onclick="returnFromLibrary()" style="width:100%;background:var(--warm);border:1.5px solid var(--string);border-radius:12px;padding:10px 14px;font-family:\'Special Elite\',cursive;font-size:0.88rem;color:var(--viola);cursor:pointer;font-weight:600;text-align:left">← Back to ' + esc(s.name) + '’s Repertoire tab</button>';
 }
 
 function returnFromLibrary() {
