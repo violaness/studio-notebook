@@ -773,6 +773,15 @@
     position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
     color: var(--muted); font-size: 0.85rem; font-style: italic; text-align: center; width: 260px;
   }
+
+/* Add-from-library tabs: two rows of three on phones */
+@media (max-width: 600px) { #libpick-tabs { grid-template-columns: repeat(3, minmax(0,1fr)) !important; } }
+
+/* Library: shortcuts to each type under the Full library tile */
+.lib-kind-tile { border: none; border-radius: 14px; padding: 12px 6px; min-height: 52px; font-family: 'Special Elite', cursive; font-size: 0.82rem; font-weight: 600; cursor: pointer; box-shadow: 0 3px 10px rgba(5,39,11,0.14); line-height: 1.25; }
+.lib-kind-tile span { display: block; font-size: 0.7rem; opacity: 0.8; font-weight: 400; }
+.lib-kind-tile.active { outline: 3px solid var(--ink); outline-offset: 2px; }
+@media (max-width: 600px) { #lib-kind-tiles { grid-template-columns: repeat(2, minmax(0,1fr)) !important; } }
 </style>
 <script>
 // ── COLOUR THEMES ──────────────────────────────────────────────────────────
@@ -941,54 +950,37 @@ snApplyTheme();
   <!-- "Back to pupil" bar - only shows when you jumped here from a pupil's Technique tab -->
   <div id="lib-return-bar" style="display:none;margin:4px 0 12px"></div>
 
-  <!-- TOP ROW: the main banks, dark blue like the Billing sheet -->
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:6px 0 14px">
-    <button class="admin-tile lib-tile" style="background:var(--deep);min-height:92px" onclick="showLibrarySection('pieces')">
+  <!-- FULL LIBRARY: one big tile, with shortcuts to each type underneath -->
+  <div style="margin:6px 0 14px">
+    <button class="admin-tile lib-tile" style="background:var(--deep);min-height:92px;width:100%" onclick="showLibrarySection('pieces')">
       <span class="admin-tile-icon">📚</span>
       <span class="admin-tile-label">Full library</span>
+      <span class="admin-tile-badge" id="tile-pieces-badge"></span>
     </button>
-    <button class="admin-tile lib-tile" style="background:var(--deep);min-height:92px" onclick="showLibrarySection('violaness')">
-      <span class="admin-tile-icon">🎻</span>
-      <span class="admin-tile-label">Violaness</span>
-      <span class="admin-tile-badge" id="tile-violaness-badge"></span>
-    </button>
-    <button class="admin-tile lib-tile" style="background:var(--deep);min-height:92px" onclick="showLibrarySection('techsets')">
+    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:8px" id="lib-kind-tiles">
+      <button class="lib-tile lib-kind-tile" style="background:var(--string);color:var(--ink)" onclick="showLibrarySection('studybank')">📖 Study books <span id="tile-studybank-badge"></span></button>
+      <button class="lib-tile lib-kind-tile" style="background:var(--sky);color:var(--ink)" onclick="showLibrarySection('methodbank')">📘 Method books <span id="tile-methodbank-badge"></span></button>
+      <button class="lib-tile lib-kind-tile" style="background:var(--viola);color:#fff" onclick="showLibrarySection('albumbank')">🎵 Albums <span id="tile-albumbank-badge"></span></button>
+      <button class="lib-tile lib-kind-tile" style="background:var(--advanced);color:#fff" onclick="showLibrarySection('violaness')">🎻 Violaness <span id="tile-violaness-badge"></span></button>
+    </div>
+  </div>
+
+  <!-- OTHER LIBRARY TOOLS -->
+  <div class="admin-grid" style="grid-auto-flow:row;grid-template-rows:none">
+    <button class="admin-tile lib-tile" style="background:var(--ink)" onclick="showLibrarySection('techsets')">
       <span class="admin-tile-icon">🛠</span>
       <span class="admin-tile-label">Checklist sets</span>
       <span class="admin-tile-badge" id="tile-techsets-badge"></span>
     </button>
-  </div>
-
-  <!-- LIBRARY TILE GRID -->
-  <!-- Greens flow down the left column (light→dark), blues down the right (light→dark).
-       Book banks sit on the top two rows, matching the Technique tab colours. -->
-  <div class="admin-grid">
-    <!-- LEFT COLUMN: greens, lightest at top -->
-    <button class="admin-tile lib-tile" style="background:var(--string);color:var(--ink)" onclick="showLibrarySection('studybank')">
-      <span class="admin-tile-icon">📖</span>
-      <span class="admin-tile-label">Study books</span>
-      <span class="admin-tile-badge" id="tile-studybank-badge"></span>
-    </button>
-    <button class="admin-tile lib-tile" style="background:var(--viola)" onclick="showLibrarySection('albumbank')">
-      <span class="admin-tile-icon">🎵</span>
-      <span class="admin-tile-label">Albums</span>
-      <span class="admin-tile-badge" id="tile-albumbank-badge"></span>
-    </button>
-    <button class="admin-tile lib-tile" style="background:var(--ink)" onclick="showLibrarySection('technical')">
+    <button class="admin-tile lib-tile" style="background:var(--viola)" onclick="showLibrarySection('technical')">
       <span class="admin-tile-icon">🎯</span>
       <span class="admin-tile-label">Technical focus</span>
-    </button>
-    <!-- RIGHT COLUMN: blues, lightest at top -->
-    <button class="admin-tile lib-tile" style="background:var(--sky);color:var(--ink)" onclick="showLibrarySection('methodbank')">
-      <span class="admin-tile-icon">📘</span>
-      <span class="admin-tile-label">Method books</span>
-      <span class="admin-tile-badge" id="tile-methodbank-badge"></span>
     </button>
     <button class="admin-tile lib-tile" style="background:var(--violin)" onclick="showLibrarySection('video')">
       <span class="admin-tile-icon">🎬</span>
       <span class="admin-tile-label">Video library</span>
     </button>
-    <button class="admin-tile lib-tile" style="background:var(--advanced)" onclick="showLibrarySection('voice')">
+    <button class="admin-tile lib-tile" style="background:var(--sky);color:var(--ink)" onclick="showLibrarySection('voice')">
       <span class="admin-tile-icon">🎤</span>
       <span class="admin-tile-label">Voice text</span>
     </button>
@@ -1009,109 +1001,6 @@ snApplyTheme();
           onkeydown="if(event.key==='Enter')addTechSet()" style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box">
         <button onclick="addTechSet()" style="background:var(--deep);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ New set</button>
       </div>
-    </div>
-  </section>
-
-  <!-- VIOLANESS: my own arranged exercises & technical sheets -->
-  <section class="admin-panel" id="lib-panel-violaness" style="display:none">
-    <div class="admin-panel-head"><span>🎻 Violaness: my own sheets</span><button class="admin-panel-close" onclick="closeLibrarySections()">✕ Close</button></div>
-    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">Your own arranged exercises and technical sheets, sorted into categories. Add them to a lesson with “＋ From library” on a pupil’s Before tab.</div>
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-      <select id="vio-cat-filter" onchange="renderViolaness()" style="flex:1;min-width:120px"></select>
-      <input type="text" id="vio-search" placeholder="Search…" oninput="renderViolaness()"
-        style="flex:1;padding:8px 12px;border-radius:8px;font-size:0.88rem;min-width:100px">
-    </div>
-    <div id="vio-list" style="max-height:420px;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
-    <div style="border-top:1px solid var(--warm);margin-top:14px;padding-top:14px">
-      <div class="section-label" style="margin-bottom:8px">Add a sheet</div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <input type="text" id="vio-new-title" placeholder="Title, e.g. Finger patterns on the C string" style="padding:8px 12px;border-radius:8px;font-size:0.88rem"
-          onkeydown="if(event.key==='Enter')addViolanessSheet()">
-        <select id="vio-new-cat" onchange="this.style.borderColor='';toggleVioNewCat(this.value)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem"></select>
-        <input type="text" id="vio-new-cat-custom" placeholder="New category name" style="display:none;padding:8px 12px;border-radius:8px;font-size:0.88rem">
-        <input type="text" id="vio-new-note" placeholder="Note (optional), e.g. level, where it's filed" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
-        <button onclick="addViolanessSheet()" style="background:var(--deep);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">＋ Add to Violaness</button>
-      </div>
-    </div>
-    <details style="margin-top:14px">
-      <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-        <span>🗂 Manage categories</span><span style="font-weight:400">▾</span>
-      </summary>
-      <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
-        <div id="vio-cat-manage"></div>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <input type="text" id="vio-cat-new" placeholder="Add a category…" maxlength="40"
-            onkeydown="if(event.key==='Enter')addViolanessCat()"
-            style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;box-sizing:border-box">
-          <button onclick="addViolanessCat()" style="background:var(--deep);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:'Special Elite',cursive;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ Add</button>
-        </div>
-      </div>
-    </details>
-  </section>
-
-  <!-- STUDY-BOOK BANK -->
-  <section class="admin-panel" id="lib-panel-studybank" style="display:none">
-    <div class="admin-panel-head"><span>📖 Study-book bank</span><button class="admin-panel-close" onclick="closeLibrarySections()">✕ Close</button></div>
-    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">Set up books once here, then pull them onto any pupil from their Technique tab. Editing the bank doesn’t change books already added to pupils.</div>
-    <div id="study-bank-list"></div>
-    <div style="border-top:1px solid var(--warm);margin-top:12px;padding-top:12px">
-      <div class="section-label" style="margin-bottom:8px">Add a study book</div>
-      <input type="text" id="bank-new-name" placeholder="Book name, e.g. Wohlfahrt Op. 45"
-        style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;margin-bottom:6px">
-      <textarea id="bank-new-studies" rows="3" placeholder="Number (e.g. 60) to auto-number, or one named study per line. Start a line with # for a heading"
-        style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;resize:vertical"></textarea>
-      <label style="display:flex;align-items:center;gap:8px;font-size:0.75rem;color:var(--muted);margin:6px 0">Numbers are:
-        <select id="bank-new-label" style="width:auto;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;background:var(--paper)">
-          <option value="No.">No. 1, No. 2…</option>
-          <option value="Page">Page 1, Page 2…</option>
-          <option value="Ex.">Ex. 1, Ex. 2…</option>
-        </select>
-      </label>
-      <button onclick="addBankBook()" style="background:var(--string);color:var(--ink);border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:8px auto 0;min-width:160px">＋ Add to bank</button>
-    </div>
-  </section>
-
-  <!-- METHOD-BOOK BANK -->
-  <section class="admin-panel" id="lib-panel-methodbank" style="display:none">
-    <div class="admin-panel-head"><span>📘 Method-book bank</span><button class="admin-panel-close" onclick="closeLibrarySections()">✕ Close</button></div>
-    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">Set up method books once here, then pull them onto any pupil from their Technique tab. Editing the bank doesn’t change books already added to pupils.</div>
-    <div id="method-bank-list"></div>
-    <div style="border-top:1px solid var(--warm);margin-top:12px;padding-top:12px">
-      <div class="section-label" style="margin-bottom:8px">Add a method book</div>
-      <input type="text" id="method-bank-new-name" placeholder="Book name, e.g. Essential Elements Book 1"
-        style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;margin-bottom:6px">
-      <textarea id="method-bank-new-studies" rows="3" placeholder="Number (e.g. 20) to auto-number, or one named unit per line. Start a line with # for a heading"
-        style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;resize:vertical"></textarea>
-      <label style="display:flex;align-items:center;gap:8px;font-size:0.75rem;color:var(--muted);margin:6px 0">Numbers are:
-        <select id="method-bank-new-label" style="width:auto;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;background:var(--paper)">
-          <option value="No.">No. 1, No. 2…</option>
-          <option value="Page">Page 1, Page 2…</option>
-          <option value="Ex.">Ex. 1, Ex. 2…</option>
-        </select>
-      </label>
-      <button onclick="addMethodBankBook()" style="background:var(--sky);color:var(--ink);border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:8px auto 0;min-width:160px">＋ Add to bank</button>
-    </div>
-  </section>
-
-  <!-- ALBUM BANK -->
-  <section class="admin-panel" id="lib-panel-albumbank" style="display:none">
-    <div class="admin-panel-head"><span>🎵 Album bank</span><button class="admin-panel-close" onclick="closeLibrarySections()">✕ Close</button></div>
-    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">Set up albums once here, then pull them onto any pupil from their Technique tab. Editing the bank doesn’t change albums already added to pupils.</div>
-    <div id="album-bank-list"></div>
-    <div style="border-top:1px solid var(--warm);margin-top:12px;padding-top:12px">
-      <div class="section-label" style="margin-bottom:8px">Add an album</div>
-      <input type="text" id="album-bank-new-name" placeholder="Album name, e.g. Fiddle Time Joggers"
-        style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;margin-bottom:6px">
-      <textarea id="album-bank-new-studies" rows="3" placeholder="Number (e.g. 15) to auto-number, or one named piece per line. Start a line with # for a heading"
-        style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box;resize:vertical"></textarea>
-      <label style="display:flex;align-items:center;gap:8px;font-size:0.75rem;color:var(--muted);margin:6px 0">Numbers are:
-        <select id="album-bank-new-label" style="width:auto;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:'Special Elite',cursive;font-size:0.82rem;background:var(--paper)">
-          <option value="No.">No. 1, No. 2…</option>
-          <option value="Page">Page 1, Page 2…</option>
-          <option value="Ex.">Ex. 1, Ex. 2…</option>
-        </select>
-      </label>
-      <button onclick="addAlbumBankBook()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:8px auto 0;min-width:160px">＋ Add to bank</button>
     </div>
   </section>
 
@@ -1208,6 +1097,7 @@ snApplyTheme();
         <input type="text" id="lib-new-piece-title" placeholder="Title" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <input type="text" id="lib-new-piece-composer" placeholder="Composer (optional)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <input type="text" id="lib-new-piece-grade" placeholder="Grade (optional)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
+        <input type="text" id="lib-new-piece-note" placeholder="Note (optional), e.g. where it's filed" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
         <textarea id="lib-new-piece-mvts" rows="2" placeholder="Movements or studies (optional): a number, e.g. 40, or one per line. Mix them, e.g. Theme then 40. Start a line with # for a heading" style="width:100%;padding:8px 12px;border-radius:8px;font-size:0.88rem;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;box-sizing:border-box;resize:vertical;background:var(--paper)"></textarea>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:0.75rem;color:var(--muted)">Numbers are:
           <span id="lib-new-piece-numlabel" style="display:flex;gap:6px;flex-wrap:wrap"></span>
@@ -1233,7 +1123,7 @@ snApplyTheme();
         <span>🗂 Manage categories</span><span style="font-weight:400">▾</span>
       </summary>
       <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
-        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">Delete a category you don’t use. Any pieces in it move to “My Library”, nothing is lost.</div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">Choose what type each category holds (e.g. Studies → 📖 Study books). Delete a category you don’t use: anything in it moves to “My Library”, nothing is lost.</div>
         <div id="piece-cat-manage"></div>
       </div>
     </details>
@@ -1762,7 +1652,7 @@ snApplyTheme();
   <div class="modal" style="max-width:520px;max-height:88vh;display:flex;flex-direction:column">
     <h2 style="margin-bottom:12px">Add from library</h2>
     <!-- Which library to pick from (chunky tabs) -->
-    <div id="libpick-tabs" style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:10px"></div>
+    <div id="libpick-tabs" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin-bottom:10px"></div>
     <!-- Where the line goes -->
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
       <span style="font-size:0.72rem;color:var(--muted);white-space:nowrap">Add to:</span>
@@ -1843,10 +1733,10 @@ snApplyTheme();
     <h2>Add study book</h2>
     <input type="hidden" id="study-book-student-id">
     <div class="field-group">
-      <label class="field-label">Pick from your bank</label>
+      <label class="field-label">Pick from your library</label>
       <div id="bank-picker-list" style="max-height:240px;overflow-y:auto"></div>
     </div>
-    <button onclick="toggleCustomBookFields()" style="width:100%;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:9px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;font-weight:500">＋ Custom one-off book</button>
+    <button onclick="toggleCustomBookFields()" style="width:100%;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:9px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;font-weight:500">＋ New book (saved to your library too)</button>
     <div id="custom-book-fields" style="display:none;margin-top:12px">
       <div class="field-group">
         <label class="field-label" for="custom-book-name">Book name</label>
@@ -1856,8 +1746,9 @@ snApplyTheme();
         <label class="field-label" for="custom-book-studies">Studies</label>
         <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">Type a number (e.g. 60) to auto-number 1–60, or list named studies one per line.</div>
         <textarea id="custom-book-studies" rows="4" placeholder="60&#10;or&#10;No. 1 - Détaché&#10;No. 2 - Legato" style="width:100%;padding:10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.9rem;box-sizing:border-box;resize:vertical"></textarea>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:0.75rem;color:var(--muted);margin-top:8px">Numbers are: <span id="custom-book-numlabel" style="display:flex;gap:6px;flex-wrap:wrap"></span></div>
       </div>
-      <button class="btn-primary" style="width:100%" onclick="confirmAddStudyBook()">Add this book to pupil</button>
+      <button class="btn-primary" style="width:100%" onclick="confirmAddStudyBook()">Add to library and pupil</button>
     </div>
     <div class="modal-actions">
       <button class="btn-primary" onclick="document.getElementById('add-study-book-modal').classList.remove('open')">Done</button>
@@ -1871,10 +1762,10 @@ snApplyTheme();
     <h2>Add method book</h2>
     <input type="hidden" id="method-book-student-id">
     <div class="field-group">
-      <label class="field-label">Pick from your bank</label>
+      <label class="field-label">Pick from your library</label>
       <div id="method-bank-picker-list" style="max-height:240px;overflow-y:auto"></div>
     </div>
-    <button onclick="toggleCustomMethodFields()" style="width:100%;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:9px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;font-weight:500">＋ Custom one-off book</button>
+    <button onclick="toggleCustomMethodFields()" style="width:100%;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:9px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;font-weight:500">＋ New book (saved to your library too)</button>
     <div id="custom-method-fields" style="display:none;margin-top:12px">
       <div class="field-group">
         <label class="field-label" for="custom-method-name">Book name</label>
@@ -1884,8 +1775,9 @@ snApplyTheme();
         <label class="field-label" for="custom-method-studies">Units</label>
         <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">Type a number (e.g. 20) to auto-number 1–20, or list named units one per line.</div>
         <textarea id="custom-method-studies" rows="4" placeholder="20&#10;or&#10;Unit 1 - Open strings&#10;Unit 2 - First finger" style="width:100%;padding:10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.9rem;box-sizing:border-box;resize:vertical"></textarea>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:0.75rem;color:var(--muted);margin-top:8px">Numbers are: <span id="custom-method-numlabel" style="display:flex;gap:6px;flex-wrap:wrap"></span></div>
       </div>
-      <button class="btn-primary" style="width:100%" onclick="confirmAddMethodBook()">Add this book to pupil</button>
+      <button class="btn-primary" style="width:100%" onclick="confirmAddMethodBook()">Add to library and pupil</button>
     </div>
     <div class="modal-actions">
       <button class="btn-primary" onclick="document.getElementById('add-method-book-modal').classList.remove('open')">Done</button>
@@ -1899,10 +1791,10 @@ snApplyTheme();
     <h2>Add album</h2>
     <input type="hidden" id="album-student-id">
     <div class="field-group">
-      <label class="field-label">Pick from your bank</label>
+      <label class="field-label">Pick from your library</label>
       <div id="album-bank-picker-list" style="max-height:240px;overflow-y:auto"></div>
     </div>
-    <button onclick="toggleCustomAlbumFields()" style="width:100%;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:9px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;font-weight:500">＋ Custom one-off album</button>
+    <button onclick="toggleCustomAlbumFields()" style="width:100%;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:9px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;font-weight:500">＋ New album (saved to your library too)</button>
     <div id="custom-album-fields" style="display:none;margin-top:12px">
       <div class="field-group">
         <label class="field-label" for="custom-album-name">Album name</label>
@@ -1912,8 +1804,9 @@ snApplyTheme();
         <label class="field-label" for="custom-album-studies">Pieces</label>
         <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">Type a number (e.g. 15) to auto-number 1–15, or list named pieces one per line.</div>
         <textarea id="custom-album-studies" rows="4" placeholder="15&#10;or&#10;Bow Dance&#10;Rhythm Fever" style="width:100%;padding:10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.9rem;box-sizing:border-box;resize:vertical"></textarea>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:0.75rem;color:var(--muted);margin-top:8px">Numbers are: <span id="custom-album-numlabel" style="display:flex;gap:6px;flex-wrap:wrap"></span></div>
       </div>
-      <button class="btn-primary" style="width:100%" onclick="confirmAddAlbum()">Add this album to pupil</button>
+      <button class="btn-primary" style="width:100%" onclick="confirmAddAlbum()">Add to library and pupil</button>
     </div>
     <div class="modal-actions">
       <button class="btn-primary" onclick="document.getElementById('add-album-modal').classList.remove('open')">Done</button>
@@ -2245,6 +2138,10 @@ snApplyTheme();
     <div class="field-group">
       <label class="field-label">Grade (optional)</label>
       <input type="text" id="edit-lib-piece-grade" placeholder="Grade">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Note (optional)</label>
+      <input type="text" id="edit-lib-piece-note" placeholder="e.g. level, where it's filed">
     </div>
     <div class="field-group">
       <label class="field-label">It's a</label>
@@ -4286,7 +4183,7 @@ function updateGoal(id, key, val) {
   save();
   showToast('toast-goals-' + id);
 }
-function updatePiece(id, i, val)    { const s=getStudent(id); if(s){if(!s.pieces)s.pieces=[];s.pieces[i]=val;save();} }
+function updatePiece(id, i, val)    { const s=getStudent(id); if(s){if(!s.pieces)s.pieces=[];s.pieces[i]=val;if(ensureTechBook(s,val))refreshBookLists(s);save();} }
 function updatePieceRef(id, i, val) {
   const s=getStudent(id); if(!s) return;
   if(!s.pieceRefs)s.pieceRefs=[]; s.pieceRefs[i]=val;
@@ -5081,9 +4978,22 @@ const LIB_KINDS = [
   { id: 'piece',  icon: '🎶', label: 'Pieces',       one: 'Piece',       unit: ['movement', 'movements'] },
   { id: 'study',  icon: '📖', label: 'Study books',  one: 'Study book',  unit: ['study', 'studies'] },
   { id: 'method', icon: '📘', label: 'Method books', one: 'Method book', unit: ['item', 'items'] },
-  { id: 'album',  icon: '🎵', label: 'Albums',       one: 'Album',       unit: ['piece', 'pieces'] }
+  { id: 'album',  icon: '🎵', label: 'Albums',       one: 'Album',       unit: ['piece', 'pieces'] },
+  { id: 'violaness', icon: '🎻', label: 'Violaness',  one: 'Violaness sheet', unit: ['exercise', 'exercises'] }
 ];
-function libKind(p) { const k = p && p.kind; return (k === 'study' || k === 'method' || k === 'album') ? k : 'piece'; }
+function libKind(p) {
+  const k = p && p.kind;
+  if (k === 'study' || k === 'method' || k === 'album' || k === 'piece' || k === 'violaness') return k;
+  // Not set yet: make a sensible guess from its categories (change it with Edit,
+  // or for a whole category at once in Manage categories)
+  const cats = p ? pieceCats(p).join(' | ') : '';
+  if (/method/i.test(cats)) return 'method';
+  if (/stud|[ée]tude|technique|scalab|scale/i.test(cats)) return 'study';
+  if (/album|book/i.test(cats)) return 'album';
+  return 'piece';
+}
+// Every library item has an id pupils' books can link to
+function libBid(p) { return (p && p.bid) || ('k:' + libTitleKey(p && p.title)); }
 function libKindInfo(k) { return LIB_KINDS.find(function(x){ return x.id === k; }) || LIB_KINDS[0]; }
 function libTitleKey(t) { return normPieceCat(String(t || '').trim()).toLowerCase(); }
 function newLibBid() { return 'lb' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
@@ -5092,13 +5002,18 @@ function newLibBid() { return 'lb' + Date.now().toString(36) + Math.random().toS
 function rebuildBanksFromLibrary() {
   const lib = visibleLibraryPieces();
   const mk = function(kind) {
-    return lib.filter(function(p){ return libKind(p) === kind && p.bid; }).map(function(p) {
-      return { id: p.bid, name: p.title, studies: (p.movements || []).slice(), numLabel: pieceNumLabelOf(p) };
+    // Books with something to tick (or ones you've added yourself)
+    return lib.filter(function(p){ return libKind(p) === kind && ((p.movements && p.movements.length) || p.bid); }).map(function(p) {
+      return { id: libBid(p), name: p.title, studies: (p.movements || []).slice(), numLabel: pieceNumLabelOf(p) };
     });
   };
   studyBookBank = mk('study');
   methodBookBank = mk('method');
   albumBank = mk('album');
+  // Your own sheets, kept in the old shape too (backups, older versions)
+  violanessSheets = lib.filter(function(p){ return libKind(p) === 'violaness'; }).map(function(p) {
+    return { id: libBid(p), title: p.title, cat: p.cat, note: p.note || '' };
+  });
 }
 
 // Bring any books from the old banks into the library (only the ones not
@@ -5111,7 +5026,7 @@ function mergeBanksIntoLibrary() {
     const kind = pair[1];
     pair[0].forEach(function(bk) {
       if (!bk || !bk.name) return;
-      if (customPieces.some(function(p){ return p.bid === bk.id; })) return;
+      if (visibleLibraryPieces().some(function(p){ return libBid(p) === bk.id; })) return;
       const t = libTitleKey(bk.name);
       let hit = customPieces.find(function(p){ return libTitleKey(p.title) === t && libKind(p) === kind; })
              || customPieces.find(function(p){ return libTitleKey(p.title) === t; });
@@ -5126,7 +5041,7 @@ function mergeBanksIntoLibrary() {
       }
       const studies = (bk.studies && bk.studies.length) ? bk.studies.slice() : [];
       if (hit) {
-        if (libKind(hit) === 'piece') hit.kind = kind;
+        if (!hit.kind || libKind(hit) === 'piece') hit.kind = kind;
         if (!hit.movements || !hit.movements.length) { if (studies.length) hit.movements = studies; }
         if (!hit.numLabel && bk.numLabel) hit.numLabel = bk.numLabel;
         if (!hit.bid) hit.bid = bk.id; else if (hit.bid !== bk.id) idMap[bk.id] = hit.bid;
@@ -5136,8 +5051,13 @@ function mergeBanksIntoLibrary() {
       }
     });
   });
-  // Every book in the library needs an id so pupils' copies can link to it
-  customPieces.forEach(function(p){ if (libKind(p) !== 'piece' && !p.bid) p.bid = newLibBid(); });
+  // Your own Violaness sheets come into the library too
+  (typeof violanessSheets !== 'undefined' ? violanessSheets : []).forEach(function(sh) {
+    if (!sh || !sh.title) return;
+    const t = libTitleKey(sh.title);
+    if (visibleLibraryPieces().some(function(p){ return p.vid === sh.id || libBid(p) === sh.id || (libKind(p) === 'violaness' && libTitleKey(p.title) === t); })) return;
+    customPieces.push({ title: sh.title, composer: '', grade: '', cat: sh.cat || 'Violaness', kind: 'violaness', vid: sh.id, bid: sh.id, note: sh.note || '' });
+  });
   (students || []).forEach(function(s) {
     ['studyBooks', 'methodBooks', 'albums'].forEach(function(f) {
       (s[f] || []).forEach(function(b) {
@@ -5152,6 +5072,10 @@ function mergeBanksIntoLibrary() {
         delete b.ticks;
       });
     });
+    if (!s.techBooksSynced) {
+      (s.pieces || []).forEach(function(t){ ensureTechBook(s, t); });
+      s.techBooksSynced = true;
+    }
   });
   rebuildBanksFromLibrary();
 }
@@ -5169,7 +5093,7 @@ function sharedTicks(s, title, create) {
 function libItemForBook(book) {
   if (!book) return null;
   const lib = visibleLibraryPieces();
-  if (book.bankId) { const byId = lib.find(function(p){ return p.bid === book.bankId; }); if (byId) return byId; }
+  if (book.bankId) { const byId = lib.find(function(p){ return libBid(p) === book.bankId; }); if (byId) return byId; }
   const t = libTitleKey(book.name);
   return lib.find(function(p){ return libTitleKey(p.title) === t && p.movements && p.movements.length; }) || null;
 }
@@ -5192,18 +5116,46 @@ function refreshBookLists(s) {
   if (document.getElementById('method-books-' + s.id)) rerenderKeepOpen('method-books-' + s.id, methodBooksHTML(s));
   if (document.getElementById('albums-' + s.id)) rerenderKeepOpen('albums-' + s.id, albumsHTML(s));
 }
+// ── 1. Working On → Technique tab ──
+// A study book, method book or album put on Working On is also put on the
+// pupil's Technique tab (if it isn't there already), so the record builds itself.
+function ensureTechBook(s, title) {
+  const t = libTitleKey(title); if (!s || !t) return false;
+  const lib = visibleLibraryPieces().find(function(p){ return libTitleKey(p.title) === t; });
+  if (!lib || !lib.movements || !lib.movements.length) return false;
+  const field = { study: 'studyBooks', method: 'methodBooks', album: 'albums' }[libKind(lib)];
+  if (!field) return false;
+  const bid = libBid(lib);
+  if (!s[field]) s[field] = [];
+  if (s[field].some(function(b){ return b.bankId === bid || libTitleKey(b.name) === t; })) return false;
+  s[field].push({ id: Date.now().toString() + Math.random().toString(36).slice(2, 5), bankId: bid, name: lib.title, studies: lib.movements.slice() });
+  return true;
+}
+
+// "Numbers are" chips in the Add study book / method book / album windows
+let newBookNumLabel = 'No.';
+function renderNewBookNumLabel() {
+  ['custom-book', 'custom-method', 'custom-album'].forEach(function(f) {
+    const el = document.getElementById(f + '-numlabel'); if (!el) return;
+    el.innerHTML = PIECE_NUM_LABELS.map(function(l){ return kindChipHTML(newBookNumLabel === l, l + ' 1', 'newBookNumLabel=\'' + l + '\';renderNewBookNumLabel()'); }).join('');
+  });
+}
 // A book typed straight onto a pupil also goes into the library, so it's
 // only ever entered once
-function libAddBookFromPupil(name, studies, kind) {
+function libAddBookFromPupil(name, studies, kind, numLabel) {
   const t = libTitleKey(name);
   const hit = visibleLibraryPieces().find(function(p){ return libTitleKey(p.title) === t; });
   if (hit) {
-    if (hit.bid) return hit.bid;
-    const own = customPieces.indexOf(hit) >= 0 ? hit : null;
-    if (own) { own.bid = newLibBid(); if (libKind(own) === 'piece') own.kind = kind; if (!own.movements || !own.movements.length) own.movements = studies.slice(); return own.bid; }
+    if (customPieces.indexOf(hit) >= 0) {
+      if (libKind(hit) === 'piece') hit.kind = kind;
+      if (!hit.movements || !hit.movements.length) hit.movements = studies.slice();
+    }
+    return libBid(hit);
   }
   const bid = newLibBid();
-  customPieces.push({ title: name, composer: '', grade: '', cat: 'My Library', kind: kind, bid: bid, movements: studies.slice(), numLabel: 'No.' });
+  const item = { title: name, composer: '', grade: '', cat: 'My Library', kind: kind, bid: bid, movements: studies.slice() };
+  if (numLabel && numLabel !== 'No.') item.numLabel = numLabel;
+  customPieces.push(item);
   return bid;
 }
 
@@ -5403,7 +5355,7 @@ function pieceAutoGroup(title) {
   const lt = t.toLowerCase();
   const lib = visibleLibraryPieces().find(function(p){ return (p.title || '').toLowerCase() === lt; });
   if (lib) {
-    if (libKind(lib) === 'study' || libKind(lib) === 'method') return 'tech';
+    if (libKind(lib) === 'study' || libKind(lib) === 'method' || libKind(lib) === 'violaness') return 'tech';
     if (libKind(lib) === 'album') return 'piece';
     const cats = pieceCats(lib).join(' ');
     if (/technique|scalab|stud/i.test(cats)) return 'tech';
@@ -6865,21 +6817,6 @@ function bookStudies(book) {
 // A line starting with # is a heading (e.g. "# Suite No. 1 in G major"):
 // shown as a label, never a tick box, not counted. Items under it carry its
 // name into lessons, e.g. "Suite No. 1 in G major - 1. Prélude".
-// What a plain number in a book means: "No. 12", "Page 12" or "Ex. 12".
-// Set per book in the Library bank; pupils' copies follow their bank book.
-const NUM_LABELS = ['No.', 'Page', 'Ex.'];
-function numLabelSelectHTML(id, current) {
-  const cur = NUM_LABELS.indexOf(current) >= 0 ? current : 'No.';
-  return '<label style="display:flex;align-items:center;gap:8px;font-size:0.75rem;color:var(--muted);margin:6px 0">Numbers are:'
-    + '<select id="' + id + '" style="flex:0 0 auto;width:auto;padding:6px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;background:var(--paper)">'
-    + NUM_LABELS.map(function(l){ return '<option value="' + l + '"' + (l === cur ? ' selected' : '') + '>' + (l === 'No.' ? 'No. 1, No. 2…' : l === 'Page' ? 'Page 1, Page 2…' : 'Ex. 1, Ex. 2…') + '</option>'; }).join('')
-    + '</select></label>';
-}
-function readNumLabel(id) {
-  const el = document.getElementById(id);
-  return el && NUM_LABELS.indexOf(el.value) >= 0 ? el.value : 'No.';
-}
-
 function isHeadingItem(it) { return /^\s*#/.test(String(it || '')); }
 function headingText(it) { return String(it || '').replace(/^\s*#+\s*/, ''); }
 function tickableCount(list) { return (list || []).filter(function(it){ return !isHeadingItem(it); }).length; }
@@ -6973,7 +6910,7 @@ function bookTicksHTML(studies, ticks, tickFn, sid, bIdx) {
 
 function studyBooksHTML(s) {
   const books = s.studyBooks || [];
-  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No study books yet - tap “＋ Add study book” to pull one from your bank.</p>';
+  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No study books yet - tap “＋ Add study book” to pull one from your library.</p>';
   return books.map(function(book, bIdx) {
     const ticks = sharedTicks(s, bookTitle(book));
     const studies = bookStudies(book);
@@ -7013,7 +6950,7 @@ function renderBankPicker() {
   const el = document.getElementById('bank-picker-list');
   if (!el) return;
   if (!studyBookBank.length) {
-    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">Your bank is empty. Set books up in Library → 📖 Study books, or add a custom one below.</p>';
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">No study books with numbers or names to tick yet. Add one below and it goes into your library too.</p>';
     return;
   }
   el.innerHTML = sortByName(studyBookBank).map(function(bk) {
@@ -7044,6 +6981,7 @@ function addBankBookToPupil(bankId) {
 function toggleCustomBookFields() {
   const f = document.getElementById('custom-book-fields');
   f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  newBookNumLabel = 'No.'; renderNewBookNumLabel();
 }
 
 // Parse the studies textarea into a list of studies. Each non-empty line is a
@@ -7078,7 +7016,7 @@ function confirmAddStudyBook() {
   if (!name || studies.length === 0) { alert('Give the book a name and either a number of studies or a list of named studies.'); return; }
   const s = getStudent(id); if (!s) return;
   if (!s.studyBooks) s.studyBooks = [];
-  s.studyBooks.push({ id: Date.now().toString(), bankId: libAddBookFromPupil(name, studies, 'study'), name: name, studies: studies });
+  s.studyBooks.push({ id: Date.now().toString(), bankId: libAddBookFromPupil(name, studies, 'study', newBookNumLabel), name: name, studies: studies });
   save();
   document.getElementById('add-study-book-modal').classList.remove('open');
   const el = document.getElementById('study-books-' + id);
@@ -7115,7 +7053,6 @@ function removeStudyBook(studentId, bookIdx) {
 }
 
 // ── STUDY-BOOK BANK EDITOR (studio-wide) ──────────────────────────────────
-let editingBankId = null;
 
 // Turn a book's studies back into editable text, collapsing a trailing 1..n run
 // of plain numbers back to a single number. So ["Theme","1".."40"] shows as
@@ -7144,87 +7081,10 @@ function studiesToText(studies) {
   return list.join('\n');
 }
 
-function studyBankEditorHTML() {
-  if (!studyBookBank.length) {
-    return '<p style="color:var(--muted);font-size:0.8rem;font-style:italic">No books in your bank yet. Add one below (e.g. “Wohlfahrt Op. 45”, then 60, or paste named studies one per line).</p>';
-  }
-  return sortByName(studyBookBank).map(function(bk) {
-    const n = tickableCount(bk.studies);
-    if (editingBankId === bk.id) {
-      return '<div style="padding:8px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px;border:1.5px solid var(--violin)">'
-        + '<input type="text" id="bank-edit-name" value="' + esc(bk.name) + '" '
-        + 'style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box;margin-bottom:6px">'
-        + '<div style="font-size:0.66rem;color:var(--muted);margin-bottom:4px">Number (e.g. 60) to auto-number, or one named study per line.</div>'
-        + '<textarea id="bank-edit-studies" rows="4" '
-        + 'style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical">' + esc(studiesToText(bk.studies)) + '</textarea>'
-        + numLabelSelectHTML('bank-edit-label', bk.numLabel)
-        + '<div style="display:flex;gap:8px;margin-top:6px">'
-        + '<button onclick="saveBankEdit(\'' + bk.id + '\')" style="flex:1;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">Save</button>'
-        + '<button onclick="cancelBankEdit()" style="flex:1;background:var(--warm);color:var(--muted);border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;cursor:pointer">Cancel</button>'
-        + '</div></div>';
-    }
-    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">'
-      + '<span style="flex:1;font-size:0.85rem">' + esc(bk.name) + '</span>'
-      + '<span style="font-size:0.7rem;color:var(--muted)">' + (bk.numLabel && bk.numLabel !== 'No.' ? (bk.numLabel === 'Page' ? 'pages · ' : 'ex. · ') : '') + n + '</span>'
-      + '<button onclick="startBankEdit(\'' + bk.id + '\')" title="Edit studies" style="background:none;border:none;color:var(--violin);font-size:0.9rem;cursor:pointer">✏️</button>'
-      + '<button onclick="removeBankBook(\'' + bk.id + '\')" title="Remove from bank" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>'
-      + '</div>';
-  }).join('');
-}
-
-function startBankEdit(bankId) {
-  editingBankId = bankId;
-  const el = document.getElementById('study-bank-list'); if (el) el.innerHTML = studyBankEditorHTML();
-}
-
-function cancelBankEdit() {
-  editingBankId = null;
-  const el = document.getElementById('study-bank-list'); if (el) el.innerHTML = studyBankEditorHTML();
-}
-
-function saveBankEdit(bankId) {
-  const bk = studyBookBank.find(function(b){ return b.id === bankId; });
-  if (!bk) return;
-  const nameEl = document.getElementById('bank-edit-name');
-  const studiesEl = document.getElementById('bank-edit-studies');
-  const name = nameEl ? nameEl.value.trim() : '';
-  const studies = parseStudiesInput(studiesEl ? studiesEl.value : '');
-  if (!name || studies.length === 0) { alert('Give the book a name and either a number of studies or a list of named studies, one per line.'); return; }
-  bk.name = name;
-  bk.studies = studies;
-  bk.numLabel = readNumLabel('bank-edit-label');
-  editingBankId = null;
-  save();
-  const el = document.getElementById('study-bank-list'); if (el) el.innerHTML = studyBankEditorHTML();
-  const picker = document.getElementById('bank-picker-list'); if (picker) renderBankPicker();
-}
-
-function addBankBook() {
-  const nameEl = document.getElementById('bank-new-name');
-  const studiesEl = document.getElementById('bank-new-studies');
-  const name = nameEl ? nameEl.value.trim() : '';
-  const studies = parseStudiesInput(studiesEl ? studiesEl.value : '');
-  if (!name || studies.length === 0) { alert('Give the book a name and either a number of studies or a list of named studies, one per line.'); return; }
-  studyBookBank.push({ id: 'bk' + Date.now(), name: name, studies: studies, numLabel: readNumLabel('bank-new-label') });
-  save();
-  if (nameEl) nameEl.value = '';
-  if (studiesEl) studiesEl.value = '';
-  const el = document.getElementById('study-bank-list'); if (el) el.innerHTML = studyBankEditorHTML();
-  const picker = document.getElementById('bank-picker-list'); if (picker) renderBankPicker();
-}
-
-function removeBankBook(bankId) {
-  const bk = studyBookBank.find(function(b){ return b.id === bankId; });
-  if (bk && !confirm('Remove "' + bk.name + '" from your bank? Pupils who already have it keep their copy.')) return;
-  studyBookBank = studyBookBank.filter(function(b){ return b.id !== bankId; });
-  save();
-  const el = document.getElementById('study-bank-list'); if (el) el.innerHTML = studyBankEditorHTML();
-}
-
 // ── METHOD BOOKS (same principle as study books, separate bank) ───────────
 function methodBooksHTML(s) {
   const books = s.methodBooks || [];
-  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No method books yet - tap “＋ Add method book” to pull one from your bank.</p>';
+  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No method books yet - tap “＋ Add method book” to pull one from your library.</p>';
   return books.map(function(book, bIdx) {
     const ticks = sharedTicks(s, bookTitle(book));
     const studies = bookStudies(book);
@@ -7262,7 +7122,7 @@ function renderMethodBankPicker() {
   const el = document.getElementById('method-bank-picker-list');
   if (!el) return;
   if (!methodBookBank.length) {
-    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">Your method-book bank is empty. Set books up in Library → 📘 Method books, or add a custom one below.</p>';
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">No method books with numbers or names to tick yet. Add one below and it goes into your library too.</p>';
     return;
   }
   el.innerHTML = sortByName(methodBookBank).map(function(bk) {
@@ -7293,6 +7153,7 @@ function addMethodBankBookToPupil(bankId) {
 function toggleCustomMethodFields() {
   const f = document.getElementById('custom-method-fields');
   f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  newBookNumLabel = 'No.'; renderNewBookNumLabel();
 }
 
 function confirmAddMethodBook() {
@@ -7302,7 +7163,7 @@ function confirmAddMethodBook() {
   if (!name || studies.length === 0) { alert('Give the book a name and either a number of units or a list of named units.'); return; }
   const s = getStudent(id); if (!s) return;
   if (!s.methodBooks) s.methodBooks = [];
-  s.methodBooks.push({ id: Date.now().toString(), bankId: libAddBookFromPupil(name, studies, 'method'), name: name, studies: studies });
+  s.methodBooks.push({ id: Date.now().toString(), bankId: libAddBookFromPupil(name, studies, 'method', newBookNumLabel), name: name, studies: studies });
   save();
   document.getElementById('add-method-book-modal').classList.remove('open');
   const el = document.getElementById('method-books-' + id);
@@ -7328,89 +7189,10 @@ function removeMethodBook(studentId, bookIdx) {
 }
 
 // Method-book bank editor
-let editingMethodBankId = null;
-
-function methodBankEditorHTML() {
-  if (!methodBookBank.length) {
-    return '<p style="color:var(--muted);font-size:0.8rem;font-style:italic">No method books in your bank yet. Add one below (e.g. “Essential Elements Book 1”, then a number of units, or paste named units one per line).</p>';
-  }
-  return sortByName(methodBookBank).map(function(bk) {
-    const n = tickableCount(bk.studies);
-    if (editingMethodBankId === bk.id) {
-      return '<div style="padding:8px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px;border:1.5px solid var(--violin)">'
-        + '<input type="text" id="method-bank-edit-name" value="' + esc(bk.name) + '" '
-        + 'style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box;margin-bottom:6px">'
-        + '<div style="font-size:0.66rem;color:var(--muted);margin-bottom:4px">Number (e.g. 20) to auto-number, or one named unit per line.</div>'
-        + '<textarea id="method-bank-edit-studies" rows="4" '
-        + 'style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical">' + esc(studiesToText(bk.studies)) + '</textarea>'
-        + numLabelSelectHTML('method-bank-edit-label', bk.numLabel)
-        + '<div style="display:flex;gap:8px;margin-top:6px">'
-        + '<button onclick="saveMethodBankEdit(\'' + bk.id + '\')" style="flex:1;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">Save</button>'
-        + '<button onclick="cancelMethodBankEdit()" style="flex:1;background:var(--warm);color:var(--muted);border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;cursor:pointer">Cancel</button>'
-        + '</div></div>';
-    }
-    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">'
-      + '<span style="flex:1;font-size:0.85rem">' + esc(bk.name) + '</span>'
-      + '<span style="font-size:0.7rem;color:var(--muted)">' + (bk.numLabel && bk.numLabel !== 'No.' ? (bk.numLabel === 'Page' ? 'pages · ' : 'ex. · ') : '') + n + '</span>'
-      + '<button onclick="startMethodBankEdit(\'' + bk.id + '\')" title="Edit units" style="background:none;border:none;color:var(--violin);font-size:0.9rem;cursor:pointer">✏️</button>'
-      + '<button onclick="removeMethodBankBook(\'' + bk.id + '\')" title="Remove from bank" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>'
-      + '</div>';
-  }).join('');
-}
-
-function addMethodBankBook() {
-  const nameEl = document.getElementById('method-bank-new-name');
-  const studiesEl = document.getElementById('method-bank-new-studies');
-  const name = nameEl ? nameEl.value.trim() : '';
-  const studies = parseStudiesInput(studiesEl ? studiesEl.value : '');
-  if (!name || studies.length === 0) { alert('Give the book a name and either a number of units or a list of named units, one per line.'); return; }
-  methodBookBank.push({ id: 'mb' + Date.now(), name: name, studies: studies, numLabel: readNumLabel('method-bank-new-label') });
-  save();
-  if (nameEl) nameEl.value = '';
-  if (studiesEl) studiesEl.value = '';
-  const el = document.getElementById('method-bank-list'); if (el) el.innerHTML = methodBankEditorHTML();
-  const picker = document.getElementById('method-bank-picker-list'); if (picker) renderMethodBankPicker();
-}
-
-function startMethodBankEdit(bankId) {
-  editingMethodBankId = bankId;
-  const el = document.getElementById('method-bank-list'); if (el) el.innerHTML = methodBankEditorHTML();
-}
-
-function cancelMethodBankEdit() {
-  editingMethodBankId = null;
-  const el = document.getElementById('method-bank-list'); if (el) el.innerHTML = methodBankEditorHTML();
-}
-
-function saveMethodBankEdit(bankId) {
-  const bk = methodBookBank.find(function(b){ return b.id === bankId; });
-  if (!bk) return;
-  const nameEl = document.getElementById('method-bank-edit-name');
-  const studiesEl = document.getElementById('method-bank-edit-studies');
-  const name = nameEl ? nameEl.value.trim() : '';
-  const studies = parseStudiesInput(studiesEl ? studiesEl.value : '');
-  if (!name || studies.length === 0) { alert('Give the book a name and either a number of units or a list of named units, one per line.'); return; }
-  bk.name = name;
-  bk.studies = studies;
-  bk.numLabel = readNumLabel('method-bank-edit-label');
-  editingMethodBankId = null;
-  save();
-  const el = document.getElementById('method-bank-list'); if (el) el.innerHTML = methodBankEditorHTML();
-  const picker = document.getElementById('method-bank-picker-list'); if (picker) renderMethodBankPicker();
-}
-
-function removeMethodBankBook(bankId) {
-  const bk = methodBookBank.find(function(b){ return b.id === bankId; });
-  if (bk && !confirm('Remove "' + bk.name + '" from your bank? Pupils who already have it keep their copy.')) return;
-  methodBookBank = methodBookBank.filter(function(b){ return b.id !== bankId; });
-  save();
-  const el = document.getElementById('method-bank-list'); if (el) el.innerHTML = methodBankEditorHTML();
-}
-
 // ── ALBUMS (same principle as study / method books, separate bank) ─────────
 function albumsHTML(s) {
   const books = s.albums || [];
-  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No albums yet - tap “＋ Add album” to pull one from your bank.</p>';
+  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No albums yet - tap “＋ Add album” to pull one from your library.</p>';
   return books.map(function(book, bIdx) {
     const ticks = sharedTicks(s, bookTitle(book));
     const studies = bookStudies(book);
@@ -7448,7 +7230,7 @@ function renderAlbumBankPicker() {
   const el = document.getElementById('album-bank-picker-list');
   if (!el) return;
   if (!albumBank.length) {
-    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">Your album bank is empty. Set albums up in Library → 🎵 Albums, or add a custom one below.</p>';
+    el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">No albums with numbers or names to tick yet. Add one below and it goes into your library too.</p>';
     return;
   }
   el.innerHTML = sortByName(albumBank).map(function(bk) {
@@ -7479,6 +7261,7 @@ function addAlbumBankToPupil(bankId) {
 function toggleCustomAlbumFields() {
   const f = document.getElementById('custom-album-fields');
   f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  newBookNumLabel = 'No.'; renderNewBookNumLabel();
 }
 
 function confirmAddAlbum() {
@@ -7488,7 +7271,7 @@ function confirmAddAlbum() {
   if (!name || studies.length === 0) { alert('Give the album a name and either a number of pieces or a list of named pieces.'); return; }
   const s = getStudent(id); if (!s) return;
   if (!s.albums) s.albums = [];
-  s.albums.push({ id: Date.now().toString(), bankId: libAddBookFromPupil(name, studies, 'album'), name: name, studies: studies });
+  s.albums.push({ id: Date.now().toString(), bankId: libAddBookFromPupil(name, studies, 'album', newBookNumLabel), name: name, studies: studies });
   save();
   document.getElementById('add-album-modal').classList.remove('open');
   const el = document.getElementById('albums-' + id);
@@ -7514,85 +7297,6 @@ function removeAlbum(studentId, bookIdx) {
 }
 
 // Album bank editor
-let editingAlbumBankId = null;
-
-function albumBankEditorHTML() {
-  if (!albumBank.length) {
-    return '<p style="color:var(--muted);font-size:0.8rem;font-style:italic">No albums in your bank yet. Add one below (e.g. “Fiddle Time Joggers”, then a number of pieces, or paste named pieces one per line).</p>';
-  }
-  return sortByName(albumBank).map(function(bk) {
-    const n = tickableCount(bk.studies);
-    if (editingAlbumBankId === bk.id) {
-      return '<div style="padding:8px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px;border:1.5px solid var(--violin)">'
-        + '<input type="text" id="album-bank-edit-name" value="' + esc(bk.name) + '" '
-        + 'style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box;margin-bottom:6px">'
-        + '<div style="font-size:0.66rem;color:var(--muted);margin-bottom:4px">Number (e.g. 15) to auto-number, or one named piece per line.</div>'
-        + '<textarea id="album-bank-edit-studies" rows="4" '
-        + 'style="width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical">' + esc(studiesToText(bk.studies)) + '</textarea>'
-        + numLabelSelectHTML('album-bank-edit-label', bk.numLabel)
-        + '<div style="display:flex;gap:8px;margin-top:6px">'
-        + '<button onclick="saveAlbumBankEdit(\'' + bk.id + '\')" style="flex:1;background:var(--violin);color:#fff;border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">Save</button>'
-        + '<button onclick="cancelAlbumBankEdit()" style="flex:1;background:var(--warm);color:var(--muted);border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;cursor:pointer">Cancel</button>'
-        + '</div></div>';
-    }
-    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">'
-      + '<span style="flex:1;font-size:0.85rem">' + esc(bk.name) + '</span>'
-      + '<span style="font-size:0.7rem;color:var(--muted)">' + (bk.numLabel && bk.numLabel !== 'No.' ? (bk.numLabel === 'Page' ? 'pages · ' : 'ex. · ') : '') + n + '</span>'
-      + '<button onclick="startAlbumBankEdit(\'' + bk.id + '\')" title="Edit pieces" style="background:none;border:none;color:var(--violin);font-size:0.9rem;cursor:pointer">✏️</button>'
-      + '<button onclick="removeAlbumBankBook(\'' + bk.id + '\')" title="Remove from bank" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>'
-      + '</div>';
-  }).join('');
-}
-
-function addAlbumBankBook() {
-  const nameEl = document.getElementById('album-bank-new-name');
-  const studiesEl = document.getElementById('album-bank-new-studies');
-  const name = nameEl ? nameEl.value.trim() : '';
-  const studies = parseStudiesInput(studiesEl ? studiesEl.value : '');
-  if (!name || studies.length === 0) { alert('Give the album a name and either a number of pieces or a list of named pieces, one per line.'); return; }
-  albumBank.push({ id: 'al' + Date.now(), name: name, studies: studies, numLabel: readNumLabel('album-bank-new-label') });
-  save();
-  if (nameEl) nameEl.value = '';
-  if (studiesEl) studiesEl.value = '';
-  const el = document.getElementById('album-bank-list'); if (el) el.innerHTML = albumBankEditorHTML();
-  const picker = document.getElementById('album-bank-picker-list'); if (picker) renderAlbumBankPicker();
-}
-
-function startAlbumBankEdit(bankId) {
-  editingAlbumBankId = bankId;
-  const el = document.getElementById('album-bank-list'); if (el) el.innerHTML = albumBankEditorHTML();
-}
-
-function cancelAlbumBankEdit() {
-  editingAlbumBankId = null;
-  const el = document.getElementById('album-bank-list'); if (el) el.innerHTML = albumBankEditorHTML();
-}
-
-function saveAlbumBankEdit(bankId) {
-  const bk = albumBank.find(function(b){ return b.id === bankId; });
-  if (!bk) return;
-  const nameEl = document.getElementById('album-bank-edit-name');
-  const studiesEl = document.getElementById('album-bank-edit-studies');
-  const name = nameEl ? nameEl.value.trim() : '';
-  const studies = parseStudiesInput(studiesEl ? studiesEl.value : '');
-  if (!name || studies.length === 0) { alert('Give the album a name and either a number of pieces or a list of named pieces, one per line.'); return; }
-  bk.name = name;
-  bk.studies = studies;
-  bk.numLabel = readNumLabel('album-bank-edit-label');
-  editingAlbumBankId = null;
-  save();
-  const el = document.getElementById('album-bank-list'); if (el) el.innerHTML = albumBankEditorHTML();
-  const picker = document.getElementById('album-bank-picker-list'); if (picker) renderAlbumBankPicker();
-}
-
-function removeAlbumBankBook(bankId) {
-  const bk = albumBank.find(function(b){ return b.id === bankId; });
-  if (bk && !confirm('Remove "' + bk.name + '" from your bank? Pupils who already have it keep their copy.')) return;
-  albumBank = albumBank.filter(function(b){ return b.id !== bankId; });
-  save();
-  const el = document.getElementById('album-bank-list'); if (el) el.innerHTML = albumBankEditorHTML();
-}
-
 function sevcikCheck(studentId, item) {
   const s = getStudent(studentId); if (!s) return;
   if (!s.sevcikOp3) s.sevcikOp3 = {};
@@ -9751,74 +9455,9 @@ function renderLibrary() {
   renderLibPieces();
   renderVideoLibrary();
   renderSpeechReplacements();
-  renderBankEditors();
-  renderViolaness();
+  updateLibraryBadges();
   renderTechSets();
   renderLibReturnBar();
-}
-
-// The three book banks (study / method / album) now live in the Library tab.
-// Their editor functions still target these same element IDs, so we just
-// fill them here and refresh the little count badges on the tiles.
-function renderBankEditors() {
-  const sb = document.getElementById('study-bank-list');  if (sb) sb.innerHTML = studyBankEditorHTML();
-  const mb = document.getElementById('method-bank-list'); if (mb) mb.innerHTML = methodBankEditorHTML();
-  const ab = document.getElementById('album-bank-list');  if (ab) ab.innerHTML = albumBankEditorHTML();
-  updateLibraryBadges();
-}
-
-// ── VIOLANESS 🎻 - your own arranged exercises & technical sheets ─────────
-var editingVioId = null;
-
-// Your category list, plus any category a sheet still uses that isn't on it
-function vioAllCats() {
-  const cats = violanessCats.slice();
-  violanessSheets.forEach(function(sh) { if (sh.cat && cats.indexOf(sh.cat) === -1) cats.push(sh.cat); });
-  return cats;
-}
-
-function vioCatOptions(selected, withNew) {
-  return vioAllCats().map(function(c) {
-    return '<option value="' + esc(c) + '"' + (c === selected ? ' selected' : '') + '>' + esc(c) + '</option>';
-  }).join('') + (withNew ? '<option value="__new__">+ New category…</option>' : '');
-}
-
-function renderViolaness() {
-  const filterEl = document.getElementById('vio-cat-filter');
-  const newCatEl = document.getElementById('vio-new-cat');
-  if (filterEl) {
-    const cur = filterEl.value;
-    filterEl.innerHTML = '<option value="">All categories</option>' + vioCatOptions(cur, false);
-    filterEl.value = vioAllCats().indexOf(cur) >= 0 ? cur : '';
-  }
-  if (newCatEl) {
-    const cur = newCatEl.value;
-    newCatEl.innerHTML = '<option value="">Choose category…</option>' + vioCatOptions(cur, true);
-    newCatEl.value = (cur && cur !== '__new__' && vioAllCats().indexOf(cur) >= 0) ? cur : '';
-    newCatEl.style.borderColor = '';
-  }
-  renderVioCatManage();
-  updateLibraryBadges();
-
-  const list = document.getElementById('vio-list'); if (!list) return;
-  const search = ((document.getElementById('vio-search') || {}).value || '').toLowerCase();
-  const cat = filterEl ? filterEl.value : '';
-  const items = violanessSheets.filter(function(sh) {
-    const hit = !search || (sh.title || '').toLowerCase().includes(search) || (sh.note || '').toLowerCase().includes(search) || (sh.cat || '').toLowerCase().includes(search);
-    return hit && (!cat || sh.cat === cat);
-  });
-  if (!violanessSheets.length) {
-    list.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No sheets yet. Add your first one below.</p>';
-    return;
-  }
-  if (!items.length) { list.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">No results.</p>'; return; }
-  list.innerHTML = vioAllCats().map(function(c) {
-    const inCat = sortByTitle(items.filter(function(sh){ return sh.cat === c; }));
-    if (!inCat.length) return '';
-    return '<div style="margin-bottom:14px">'
-      + '<div style="font-size:0.78rem;font-weight:700;color:var(--deep);padding:4px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">' + esc(c) + ' <span style="font-weight:400;color:var(--muted)">(' + inCat.length + ')</span></div>'
-      + inCat.map(vioRowHTML).join('') + '</div>';
-  }).join('');
 }
 
 function sortByTitle(list) {
@@ -9827,149 +9466,21 @@ function sortByTitle(list) {
   });
 }
 
-function vioRowHTML(sh) {
-  const id = escJs(sh.id);
-  if (editingVioId === sh.id) {
-    return '<div style="padding:8px 10px;border-radius:8px;background:var(--paper);margin-bottom:6px;border:1.5px solid var(--deep)">'
-      + '<input type="text" id="vio-edit-title" value="' + esc(sh.title) + '" style="width:100%;padding:7px 10px;border-radius:8px;font-size:0.85rem;box-sizing:border-box;margin-bottom:6px">'
-      + '<select id="vio-edit-cat" style="width:100%;padding:7px 10px;border-radius:8px;font-size:0.85rem;margin-bottom:6px">' + vioCatOptions(sh.cat, false) + '</select>'
-      + '<input type="text" id="vio-edit-note" value="' + esc(sh.note || '') + '" placeholder="Note (optional)" style="width:100%;padding:7px 10px;border-radius:8px;font-size:0.85rem;box-sizing:border-box">'
-      + '<div style="display:flex;gap:8px;margin-top:6px">'
-      + '<button onclick="saveVioEdit(\'' + id + '\')" style="flex:1;background:var(--deep);color:#fff;border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;font-weight:600;cursor:pointer">Save</button>'
-      + '<button onclick="cancelVioEdit()" style="flex:1;background:var(--warm);color:var(--muted);border:none;border-radius:8px;padding:7px;font-family:\'Special Elite\',cursive;font-size:0.8rem;cursor:pointer">Cancel</button>'
-      + '</div></div>';
-  }
-  return '<div style="padding:8px 0;border-bottom:1px solid var(--warm);display:flex;align-items:center;gap:8px">'
-    + '<div style="flex:1"><div style="font-size:0.88rem;font-weight:600">' + esc(sh.title) + '</div>'
-    + (sh.note ? '<div style="font-size:0.75rem;color:var(--muted)">' + esc(sh.note) + '</div>' : '') + '</div>'
-    + '<button onclick="startVioEdit(\'' + id + '\')" style="background:none;border:1.5px solid var(--deep);border-radius:6px;padding:3px 8px;color:var(--deep);cursor:pointer;font-size:0.75rem;flex-shrink:0">Edit</button>'
-    + '<button onclick="removeViolanessSheet(\'' + id + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px;flex-shrink:0">×</button>'
-    + '</div>';
-}
-
-function toggleVioNewCat(val) {
-  const el = document.getElementById('vio-new-cat-custom'); if (!el) return;
-  el.style.display = val === '__new__' ? 'block' : 'none';
-  if (val === '__new__') el.focus();
-}
-
-function addViolanessSheet() {
-  const titleEl = document.getElementById('vio-new-title');
-  const title = titleEl ? titleEl.value.trim() : '';
-  if (!title) { if (titleEl) titleEl.focus(); return; }
-  const catSel = document.getElementById('vio-new-cat');
-  let cat = catSel.value;
-  if (!cat) {
-    // No category picked yet: highlight the box rather than guessing one
-    catSel.style.borderColor = '#e67e22';
-    catSel.focus();
-    return;
-  }
-  if (cat === '__new__') {
-    const custom = document.getElementById('vio-new-cat-custom');
-    cat = custom.value.trim();
-    if (!cat) { custom.focus(); return; }
-    if (violanessCats.indexOf(cat) === -1) violanessCats.push(cat);
-  }
-  const noteEl = document.getElementById('vio-new-note');
-  violanessSheets.push({ id: 'vs' + Date.now(), title: title, cat: cat, note: noteEl ? noteEl.value.trim() : '' });
-  save();
-  titleEl.value = '';
-  if (noteEl) noteEl.value = '';
-  const custom = document.getElementById('vio-new-cat-custom');
-  if (custom) { custom.value = ''; custom.style.display = 'none'; }
-  const sel = document.getElementById('vio-new-cat'); if (sel) sel.value = ''; // back to "Choose category…"
-  renderViolaness();
-  titleEl.focus();
-}
-
-function startVioEdit(id) { editingVioId = id; renderViolaness(); }
-function cancelVioEdit() { editingVioId = null; renderViolaness(); }
-
-function saveVioEdit(id) {
-  const sh = violanessSheets.find(function(x){ return x.id === id; }); if (!sh) return;
-  const title = (document.getElementById('vio-edit-title').value || '').trim();
-  if (!title) { alert('Give the sheet a title.'); return; }
-  sh.title = title;
-  sh.cat = document.getElementById('vio-edit-cat').value || sh.cat;
-  sh.note = (document.getElementById('vio-edit-note').value || '').trim();
-  editingVioId = null;
-  save();
-  renderViolaness();
-}
-
-function removeViolanessSheet(id) {
-  const sh = violanessSheets.find(function(x){ return x.id === id; }); if (!sh) return;
-  if (!confirm('Remove "' + sh.title + '" from Violaness? Pupils who already have it in their notes keep it.')) return;
-  violanessSheets = violanessSheets.filter(function(x){ return x.id !== id; });
-  save();
-  renderViolaness();
-}
-
-// Categories: add, rename (moves its sheets too), remove (sheets go to "Uncategorised")
-function renderVioCatManage() {
-  const el = document.getElementById('vio-cat-manage'); if (!el) return;
-  const cats = vioAllCats();
-  if (!cats.length) { el.innerHTML = '<p style="color:var(--muted);font-size:0.8rem;font-style:italic">No categories yet.</p>'; return; }
-  el.innerHTML = cats.map(function(c, i) {
-    const n = violanessSheets.filter(function(sh){ return sh.cat === c; }).length;
-    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">'
-      + '<span style="flex:1;font-size:0.85rem">' + esc(c) + '</span>'
-      + '<span style="font-size:0.7rem;color:var(--muted)">' + n + '</span>'
-      + '<button onclick="renameViolanessCat(' + i + ')" title="Rename" style="background:none;border:none;color:var(--deep);font-size:0.9rem;cursor:pointer">✏️</button>'
-      + '<button onclick="removeViolanessCat(' + i + ')" title="Remove category" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>'
-      + '</div>';
-  }).join('');
-}
-
-function addViolanessCat() {
-  const el = document.getElementById('vio-cat-new');
-  const name = el ? el.value.trim() : '';
-  if (!name) return;
-  if (vioAllCats().some(function(c){ return c.toLowerCase() === name.toLowerCase(); })) { el.value = ''; return; }
-  violanessCats.push(name);
-  save();
-  el.value = '';
-  renderViolaness();
-}
-
-function renameViolanessCat(i) {
-  const old = vioAllCats()[i]; if (old === undefined) return;
-  const name = (prompt('Rename category', old) || '').trim();
-  if (!name || name === old) return;
-  const idx = violanessCats.indexOf(old);
-  if (idx >= 0) violanessCats[idx] = name; else violanessCats.push(name);
-  // If the new name already existed, merge rather than duplicate
-  violanessCats = violanessCats.filter(function(c, j){ return violanessCats.indexOf(c) === j; });
-  violanessSheets.forEach(function(sh){ if (sh.cat === old) sh.cat = name; });
-  save();
-  renderViolaness();
-}
-
-function removeViolanessCat(i) {
-  const cat = vioAllCats()[i]; if (cat === undefined) return;
-  const n = violanessSheets.filter(function(sh){ return sh.cat === cat; }).length;
-  if (!confirm('Remove the category "' + cat + '"?' + (n ? '\n\nIts ' + n + ' sheet' + (n === 1 ? '' : 's') + ' will move to "Uncategorised".' : ''))) return;
-  violanessCats = violanessCats.filter(function(c){ return c !== cat; });
-  if (n) {
-    violanessSheets.forEach(function(sh){ if (sh.cat === cat) sh.cat = 'Uncategorised'; });
-    if (violanessCats.indexOf('Uncategorised') === -1) violanessCats.push('Uncategorised');
-  }
-  save();
-  renderViolaness();
-}
-
 function updateLibraryBadges() {
+  const lib = visibleLibraryPieces();
+  const count = function(k){ return lib.filter(function(p){ return libKind(p) === k; }).length; };
+  const setText = function(id, n) { const el = document.getElementById(id); if (el) el.textContent = n; };
+  setText('tile-studybank-badge',  count('study'));
+  setText('tile-methodbank-badge', count('method'));
+  setText('tile-albumbank-badge',  count('album'));
+  setText('tile-violaness-badge',  count('violaness'));
   const setBadge = (id, n) => {
     const el = document.getElementById(id); if (!el) return;
     if (n > 0) { el.textContent = n; el.classList.add('show'); }
     else { el.textContent = ''; el.classList.remove('show'); }
   };
-  setBadge('tile-studybank-badge',  studyBookBank.length);
-  setBadge('tile-methodbank-badge', methodBookBank.length);
-  setBadge('tile-albumbank-badge',  albumBank.length);
-  setBadge('tile-violaness-badge',  violanessSheets.length);
-  setBadge('tile-techsets-badge',   (techniqueSets || []).length);
+  setBadge('tile-pieces-badge', lib.length);
+  setBadge('tile-techsets-badge', (techniqueSets || []).length);
 }
 
 // Jump from a pupil's Technique tab to a bank in the Library, remembering
@@ -10056,7 +9567,7 @@ function closeAdminSections() {
 
 // Open one Library section panel, hide the rest, highlight its tile, scroll to it
 function showLibrarySection(name) {
-  const kindFor = { studybank: 'study', methodbank: 'method', albumbank: 'album' }[name];
+  const kindFor = { studybank: 'study', methodbank: 'method', albumbank: 'album', violaness: 'violaness' }[name];
   const tileName = name;
   if (name === 'pieces') libKindFilter = '';
   if (kindFor) { libKindFilter = kindFor; name = 'pieces'; }
@@ -10069,12 +9580,7 @@ function showLibrarySection(name) {
   const activeTile = document.querySelector('#view-library .lib-tile[onclick*="\'' + tileName + '\'"]');
   if (activeTile) activeTile.classList.add('active');
   // Book banks: fill the editor fresh each time it's opened
-  if (name === 'violaness') { editingVioId = null; renderViolaness(); }
   if (name === 'techsets') renderTechSets();
-  if (name === 'studybank' || name === 'methodbank' || name === 'albumbank') {
-    editingBankId = null; editingMethodBankId = null; editingAlbumBankId = null;
-    renderBankEditors();
-  }
   const panel = document.getElementById('lib-panel-' + name);
   if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -10138,7 +9644,8 @@ function renderPieceCatManage() {
     const locked = c.name === 'My Library';
     return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--paper);margin-bottom:5px">'
       + '<span style="flex:1;font-size:0.85rem">' + esc(c.name.replace(' - ', ' - ')) + '</span>'
-      + '<span style="font-size:0.7rem;color:var(--muted)">' + c.count + ' piece' + (c.count === 1 ? '' : 's') + '</span>'
+      + '<span style="font-size:0.7rem;color:var(--muted)">' + c.count + '</span>'
+      + catKindSelectHTML(c.name)
       + (locked
           ? '<span style="font-size:0.66rem;color:var(--muted);width:22px;text-align:center" title="Pieces move here, so it stays">🔒</span>'
           : '<button onclick="deletePieceCat(\'' + escJs(c.name) + '\')" title="Delete category" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;width:22px">×</button>')
@@ -10147,6 +9654,33 @@ function renderPieceCatManage() {
   + (hiddenPieceCats.length
       ? '<button onclick="restorePieceCats()" style="background:none;border:none;font-size:0.7rem;color:var(--muted);cursor:pointer;text-decoration:underline;padding:4px 0;font-family:\'Special Elite\',cursive">Bring back deleted categories (' + hiddenPieceCats.length + ')</button>'
       : '');
+}
+
+// Set the type (piece / study book…) of everything in a category in one go
+function catKindSelectHTML(cat) {
+  const items = visibleLibraryPieces().filter(function(p){ return p.cat === cat; });
+  const kinds = new Set(items.map(libKind));
+  const cur = kinds.size === 1 ? [...kinds][0] : '';
+  return '<select onchange="setCatKind(\'' + escJs(cat) + '\', this.value)" title="Type for everything in this category" style="flex:0 0 auto;width:auto;padding:4px 6px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.72rem;background:#fff">'
+    + (cur ? '' : '<option value="" selected>Mixed</option>')
+    + LIB_KINDS.map(function(k){ return '<option value="' + k.id + '"' + (k.id === cur ? ' selected' : '') + '>' + k.icon + ' ' + k.label + '</option>'; }).join('')
+    + '</select>';
+}
+function setCatKind(cat, kind) {
+  if (!kind) return;
+  visibleLibraryPieces().filter(function(p){ return p.cat === cat; }).forEach(function(p) {
+    let own = customPieces.indexOf(p) >= 0 ? p : null;
+    if (!own) {
+      // A built-in piece: keep your own copy instead, like editing does
+      own = Object.assign({}, p);
+      customPieces.push(own);
+      if (hiddenPieces.indexOf(pieceKey(p)) === -1) hiddenPieces.push(pieceKey(p));
+    }
+    if (kind !== 'piece' && !own.bid) own.bid = libBid(p);
+    own.kind = kind;
+  });
+  save();
+  renderLibPieces();
 }
 
 // Delete a category: its pieces move to "My Library" (built-in pieces get your
@@ -10406,7 +9940,7 @@ function renderLibPieces() {
           <div style="flex:1">
             <div style="font-size:0.88rem;font-weight:600">${esc(p.title)}</div>
             ${pieceCats(p).length > 1 ? `<div style="font-size:0.68rem;color:var(--violin)">📂 Also in: ${pieceCats(p).filter(c => c !== cat).map(esc).join(', ')}</div>` : ''}
-            <div style="font-size:0.75rem;color:var(--muted)">${(libKindFilter ? [] : [libKindInfo(libKind(p)).icon + ' ' + libKindInfo(libKind(p)).one]).concat([p.composer,p.grade].filter(Boolean).map(esc)).concat(p.movements&&p.movements.length ? ['<span style="color:var(--violin)">🎼 ' + tickableCount(p.movements) + ' ' + libKindInfo(libKind(p)).unit[tickableCount(p.movements)===1?0:1] + '</span>'] : []).join(' · ')}</div>
+            <div style="font-size:0.75rem;color:var(--muted)">${(libKindFilter ? [] : [libKindInfo(libKind(p)).icon + ' ' + libKindInfo(libKind(p)).one]).concat([p.composer,p.grade,p.note].filter(Boolean).map(esc)).concat(p.movements&&p.movements.length ? ['<span style="color:var(--violin)">🎼 ' + tickableCount(p.movements) + ' ' + libKindInfo(libKind(p)).unit[tickableCount(p.movements)===1?0:1] + '</span>'] : []).join(' · ')}</div>
           </div>
           <button onclick="editLibPieceByKey('${key}')" style="background:none;border:1.5px solid var(--viola);border-radius:6px;padding:3px 8px;color:var(--viola);cursor:pointer;font-size:0.75rem;flex-shrink:0">Edit</button>
           <button onclick="removeLibPieceByKey('${key}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px;flex-shrink:0">×</button>
@@ -10439,7 +9973,10 @@ function addLibPiece() {
   const mvEl = document.getElementById('lib-new-piece-mvts');
   const movements = parseStudiesInput(mvEl ? mvEl.value : '');
   const piece = { title, composer, grade, cat };
-  if (libNewKind !== 'piece') { piece.kind = libNewKind; piece.bid = newLibBid(); }
+  const noteEl = document.getElementById('lib-new-piece-note');
+  if (noteEl && noteEl.value.trim()) { piece.note = noteEl.value.trim(); noteEl.value = ''; }
+  piece.kind = libNewKind;
+  if (libNewKind !== 'piece') piece.bid = newLibBid();
   if (movements.length) piece.movements = movements;
   const nl = libNewNumLabel || (libNewKind === 'piece' ? 'Mvt.' : 'No.');
   if (movements.length && nl !== (libNewKind === 'piece' ? 'Mvt.' : 'No.')) piece.numLabel = nl;
@@ -10471,6 +10008,7 @@ function editLibPieceByKey(key) {
   document.getElementById('edit-lib-piece-title').value    = p.title    || '';
   document.getElementById('edit-lib-piece-composer').value = p.composer || '';
   document.getElementById('edit-lib-piece-grade').value    = p.grade    || '';
+  document.getElementById('edit-lib-piece-note').value     = p.note     || '';
   document.getElementById('edit-lib-piece-cat').value      = p.cat      || 'My Library';
   document.getElementById('edit-lib-piece-mvts').value     = studiesToText(p.movements || []);
   editAlsoCats = (p.also || []).slice();
@@ -10546,11 +10084,14 @@ function saveEditLibPiece() {
     grade:    document.getElementById('edit-lib-piece-grade').value.trim(),
     cat:      document.getElementById('edit-lib-piece-cat').value,
   };
+  const noteVal = document.getElementById('edit-lib-piece-note').value.trim();
+  if (noteVal) updated.note = noteVal;
   const mvts = parseStudiesInput(document.getElementById('edit-lib-piece-mvts').value);
   if (mvts.length) updated.movements = mvts;
-  if (editKind !== 'piece') updated.kind = editKind;
+  updated.kind = editKind;
   const before = findLibPieceByKey(origKey);
-  if (editKind !== 'piece') updated.bid = (before && before.bid) || newLibBid();
+  if (before && before.vid) updated.vid = before.vid;
+  if (editKind !== 'piece') updated.bid = before ? libBid(before) : newLibBid();
   else if (before && before.bid) updated.bid = before.bid; // pupils' copies stay linked
   if (mvts.length && editNumLabel !== (editKind === 'piece' ? 'Mvt.' : 'No.')) updated.numLabel = editNumLabel;
   // Renamed? Move pupils' lists and ticks over to the new name
@@ -13842,7 +13383,8 @@ let libPickDestMem = null;        // fallback if browser storage is unavailable
 let libPickToastTimer = null;
 
 const LIBPICK_SOURCES = [
-  { id: 'pieces',  icon: '📚', label: 'Full library',  bg: 'var(--ink)',    fg: '#fff' },
+  { id: 'pieces',  icon: '📚', label: 'Everything',  bg: 'var(--ink)',    fg: '#fff' },
+  { id: 'onlypieces', icon: '🎶', label: 'Pieces', bg: 'var(--violin)', fg: '#fff' },
   { id: 'studies', icon: '📖', label: 'Studies', bg: 'var(--string)', fg: 'var(--ink)' },
   { id: 'methods', icon: '📘', label: 'Methods', bg: 'var(--sky)',       fg: 'var(--ink)' },
   { id: 'albums',  icon: '🎵', label: 'Albums',  bg: 'var(--viola)',  fg: '#fff' },
@@ -13917,17 +13459,16 @@ function renderLibPickChrome() {
     dest.innerHTML = chip('pieces', '🎵 Working On') + chip('plan', '📌 Today’s plan');
   }
   const cat = document.getElementById('piece-cat-filter');
-  if (cat) cat.style.display = libPickSource === 'pieces' ? '' : 'none';
+  if (cat) cat.style.display = (libPickSource === 'pieces' || libPickSource === 'onlypieces' || libPickSource === 'violaness') ? '' : 'none';
   const search = document.getElementById('piece-search');
-  if (search) search.placeholder = libPickSource === 'pieces' ? 'Search pieces…' : libPickSource === 'violaness' ? 'Search your sheets…' : 'Search books…';
+  if (search) search.placeholder = (libPickSource === 'pieces' || libPickSource === 'onlypieces') ? 'Search pieces…' : libPickSource === 'violaness' ? 'Search your sheets…' : 'Search books…';
 }
 
 function filterPieceDB() {
   const search = document.getElementById('piece-search').value.toLowerCase();
-  if (libPickSource === 'violaness') { renderLibPickViolaness(search); return; }
-  if (libPickSource !== 'pieces') { renderLibPickBooks(search); return; }
+  if (libPickSource !== 'pieces' && libPickSource !== 'onlypieces' && libPickSource !== 'violaness') { renderLibPickBooks(search); return; }
   const cat = document.getElementById('piece-cat-filter').value;
-  const allPieces = visibleLibraryPieces();
+  const allPieces = visibleLibraryPieces().filter(p => libPickSource === 'onlypieces' ? libKind(p) === 'piece' : libPickSource === 'violaness' ? libKind(p) === 'violaness' : true);
   const filtered = allPieces.filter(p => {
     const matchSearch = !search || p.title.toLowerCase().includes(search) || (p.composer||'').toLowerCase().includes(search) || (p.grade||'').toLowerCase().includes(search);
     const matchCat = !cat || pieceInCat(p, cat);
@@ -14059,7 +13600,7 @@ function renderLibPickBooks(search) {
       + '<div style="font-size:0.68rem;font-weight:800;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">' + title + '</div>'
       + books.map(libPickBookHTML).join('') + '</div>';
   };
-  list.innerHTML = group('On ' + firstName + '’s list', mine) + group('Your bank', bank);
+  list.innerHTML = group('On ' + firstName + '’s list', mine) + group('Your library', bank);
 }
 
 function libPickBookHTML(bk) {
@@ -14114,36 +13655,6 @@ function libPickItemsHTML(bk) {
 }
 
 // Violaness sheets in the picker, grouped by your categories
-function renderLibPickViolaness(search) {
-  const list = document.getElementById('piece-db-list'); if (!list) return;
-  if (!violanessSheets.length) {
-    list.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;text-align:center;padding:20px;line-height:1.5">No sheets yet. Add them in Library → 🎻 Violaness.</p>';
-    return;
-  }
-  const items = violanessSheets.filter(function(sh) {
-    return !search || (sh.title || '').toLowerCase().includes(search) || (sh.note || '').toLowerCase().includes(search) || (sh.cat || '').toLowerCase().includes(search);
-  });
-  if (!items.length) { list.innerHTML = '<p style="color:var(--muted);font-size:0.88rem;text-align:center;padding:20px">No results</p>'; return; }
-  list.innerHTML = vioAllCats().map(function(c) {
-    const inCat = sortByTitle(items.filter(function(sh){ return sh.cat === c; }));
-    if (!inCat.length) return '';
-    return '<div style="margin-bottom:14px">'
-      + '<div style="font-size:0.68rem;font-weight:800;color:var(--deep);padding:6px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">' + esc(c) + '</div>'
-      + inCat.map(function(sh) {
-          return '<div onclick="libPickAddVio(\'' + escJs(sh.id) + '\')" style="padding:10px 12px;border-radius:9px;cursor:pointer;margin-bottom:4px" '
-            + 'onmouseover="this.style.background=\'var(--warm)\'" onmouseout="this.style.background=\'transparent\'">'
-            + '<div style="font-size:0.9rem;font-weight:600">' + esc(sh.title) + '</div>'
-            + (sh.note ? '<div style="font-size:0.75rem;color:var(--muted)">' + esc(sh.note) + '</div>' : '')
-            + '</div>';
-        }).join('') + '</div>';
-  }).join('');
-}
-
-function libPickAddVio(id) {
-  const sh = violanessSheets.find(function(x){ return x.id === id; }); if (!sh) return;
-  libPickAdd(sh.title, '');
-}
-
 // Put one line where the "Add to" chip says. title = piece/book, ref = No. / item.
 function libPickAdd(title, ref) {
   if (!pieceDBStudentId) return;
@@ -14167,6 +13678,7 @@ function libPickAdd(title, ref) {
     if (!s.pieceRefManual) s.pieceRefManual = [];
     while (s.pieceRefManual.length < i) s.pieceRefManual.push(null);
     s.pieceRefManual[i] = !!ref; // a movement you picked counts as your own choice
+    if (ensureTechBook(s, title)) refreshBookLists(s);
     // Study / method books and your own sheets are technical, albums are pieces;
     // from the Full library it's worked out from the category.
     const g = (libPickSource === 'studies' || libPickSource === 'methods' || libPickSource === 'violaness') ? 'tech'
@@ -14873,7 +14385,6 @@ function restoreData(event) {
       studyBookBank   = JSON.parse(localStorage.getItem('studio_study_book_bank')   || '[]');
       methodBookBank  = JSON.parse(localStorage.getItem('studio_method_book_bank')  || '[]');
       albumBank       = JSON.parse(localStorage.getItem('studio_album_bank')        || '[]');
-      try { mergeBanksIntoLibrary(); } catch (e) { console.error('Library merge', e); }
       studioRates     = JSON.parse(localStorage.getItem('studio_rates')             || '{}');
       billingPaid     = JSON.parse(localStorage.getItem('studio_billing_paid')      || '{}');
       invoiceSettings = JSON.parse(localStorage.getItem('studio_invoice_settings')  || 'null') || invoiceSettings;
@@ -14886,6 +14397,7 @@ function restoreData(event) {
       themeSettings   = snThemeSettings(); snApplyTheme();
       violanessSheets = JSON.parse(localStorage.getItem('studio_violaness_sheets')  || '[]');
       violanessCats   = JSON.parse(localStorage.getItem('studio_violaness_cats')    || 'null') || violanessCats;
+      try { mergeBanksIntoLibrary(); } catch (e) { console.error('Library merge', e); }
       repairStudentIDs();
       migrateGiftsToList();
             closeBackupModal();
