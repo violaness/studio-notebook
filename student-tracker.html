@@ -3679,10 +3679,13 @@ function renderDetail(s, preserveTab = false) {
         <button class="admin-tile" style="background:var(--violin)" onclick="showTechniqueSection('${s.id}','methodbooks')">
           <span class="admin-tile-icon">📘</span><span class="admin-tile-label">Method books</span>
         </button>
-        <button class="admin-tile" style="background:var(--deep);grid-column:1 / -1" onclick="showTechniqueSection('${s.id}','technique')">
+        <button class="admin-tile" style="background:var(--ink)" onclick="showTechniqueSection('${s.id}','piecetracks')">
+          <span class="admin-tile-icon">🎶</span><span class="admin-tile-label">Pieces</span>
+        </button>
+        <button class="admin-tile" style="background:var(--deep)" onclick="showTechniqueSection('${s.id}','technique')">
           <span class="admin-tile-icon">🛠</span><span class="admin-tile-label">Technique checklist</span>
         </button>
-        <!-- light green|light blue · mid green|mid blue · then the checklist full width at the bottom -->
+        <!-- greens down the left (light → dark), blues down the right (light → dark) -->
       </div>
 
       <div id="technique-panels-${s.id}">
@@ -3768,6 +3771,18 @@ function renderDetail(s, preserveTab = false) {
           style="width:100%;margin-top:10px;background:var(--warm);border:none;color:var(--muted);border-radius:10px;padding:9px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer">
           🎵 Set up albums in the Library →
         </button>
+      </section>
+
+      <!-- PIECES: movements covered, kept even after the piece leaves Working On -->
+      <section class="admin-panel technique-panel" id="tech-panel-piecetracks" style="display:none">
+        <div class="admin-panel-head"><span>🎶 Pieces</span><button class="admin-panel-close" onclick="closeTechniqueSections('${s.id}')">✕ Close</button></div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:6px">Pieces with movements. Ticks stay here after a piece comes off Working On.</div>
+        <div id="piece-tracks-${s.id}">${pieceTracksHTML(s)}</div>
+        <button onclick="togglePieceTrackAdd('${s.id}')"
+          style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
+          ＋ Add piece
+        </button>
+        <div id="piece-track-add-${s.id}" style="display:none;margin-top:8px"></div>
       </section>
 
       </div><!-- /technique-panels -->
@@ -5113,6 +5128,14 @@ function mergeBanksIntoLibrary() {
         delete b.ticks;
       });
     });
+    if (!s.pieceTracksSynced) {
+      (s.pieces || []).forEach(function(t){ ensureTechBook(s, t); });
+      Object.keys(s.pieceMvtTicks || {}).forEach(function(k) {
+        const tk = s.pieceMvtTicks[k] || {};
+        if (Object.keys(tk).some(function(x){ return bookTickLevel(tk[x]) > 0; })) ensureTechBook(s, k);
+      });
+      s.pieceTracksSynced = true;
+    }
     if (!s.techBooksSynced) {
       (s.pieces || []).forEach(function(t){ ensureTechBook(s, t); });
       s.techBooksSynced = true;
@@ -5156,6 +5179,7 @@ function refreshBookLists(s) {
   if (document.getElementById('study-books-' + s.id)) rerenderKeepOpen('study-books-' + s.id, studyBooksHTML(s));
   if (document.getElementById('method-books-' + s.id)) rerenderKeepOpen('method-books-' + s.id, methodBooksHTML(s));
   if (document.getElementById('albums-' + s.id)) rerenderKeepOpen('albums-' + s.id, albumsHTML(s));
+  if (document.getElementById('piece-tracks-' + s.id)) rerenderKeepOpen('piece-tracks-' + s.id, pieceTracksHTML(s));
 }
 // ── 1. Working On → Technique tab ──
 // A study book, method book or album put on Working On is also put on the
@@ -5164,7 +5188,7 @@ function ensureTechBook(s, title) {
   const t = libTitleKey(title); if (!s || !t) return false;
   const lib = visibleLibraryPieces().find(function(p){ return libTitleKey(p.title) === t; });
   if (!lib || !lib.movements || !lib.movements.length) return false;
-  const field = { study: 'studyBooks', method: 'methodBooks', album: 'albums' }[libKind(lib)];
+  const field = { study: 'studyBooks', method: 'methodBooks', album: 'albums', piece: 'pieceTracks' }[libKind(lib)];
   if (!field) return false;
   const bid = libBid(lib);
   if (!s[field]) s[field] = [];
@@ -7357,6 +7381,80 @@ function removeAlbum(studentId, bookIdx) {
 }
 
 // Album bank editor
+// ── PIECES on the Technique tab ──
+// s.pieceTracks: [{ id, bankId, name }] - pieces with movements, sharing the
+// same ticks as Working On (s.pieceMvtTicks), so the record stays after a
+// piece is taken off Working On.
+function pieceTracksHTML(s) {
+  const books = s.pieceTracks || [];
+  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No pieces yet. They appear here when a piece with movements goes on Working On, or tap “＋ Add piece”.</p>';
+  return books.map(function(book, bIdx) {
+    const ticks = sharedTicks(s, bookTitle(book));
+    const studies = bookStudies(book);
+    const total = tickableCount(studies);
+    const tkeys = uniqueItemKeys(studies).filter(function(k, n){ return !isHeadingItem(studies[n]); });
+    const done = tkeys.filter(function(k){ return bookTickLevel(ticks[k]) === 2; }).length;
+    const working = tkeys.filter(function(k){ return bookTickLevel(ticks[k]) === 1; }).length;
+    const ticksHTML = bookTicksHTML(studies, ticks, 'pieceTrackTick', s.id, bIdx);
+    return '<details style="margin-top:10px">'
+      + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
+      + '<span>' + esc(bookTitle(book)) + '</span>'
+      + '<span style="display:flex;align-items:center;gap:10px">'
+      + '<span style="font-size:0.7rem;font-weight:400">' + done + ' / ' + total + '</span>'
+      + '<button onclick="event.stopPropagation();removePieceTrack(\'' + s.id + '\',' + bIdx + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:0 4px">×</button>'
+      + '</span></summary>'
+      + '<div class="section-card" style="margin-top:6px">'
+      + '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center">'
+      + '<span>' + done + ' of ' + total + ' finished' + (working ? ' · <span style="color:#b7791f">' + working + ' working on</span>' : '') + '</span>'
+      + '<span style="font-size:0.68rem">Tap: <span style="color:#e67e22">■</span> working on it → <span style="color:var(--viola)">■</span> finished → clear</span></div>'
+      + ticksHTML
+      + '</div></details>';
+  }).join('');
+}
+function pieceTrackTick(studentId, bookIdx, item) {
+  const s = getStudent(studentId); if (!s || !s.pieceTracks) return;
+  const book = s.pieceTracks[bookIdx]; if (!book) return;
+  const store = sharedTicks(s, bookTitle(book), true);
+  store[item] = bookTickNext(store[item]);
+  save();
+  rerenderKeepOpen('piece-tracks-' + studentId, pieceTracksHTML(s));
+  refreshWorkingOnTicks(s);
+}
+function removePieceTrack(studentId, bookIdx) {
+  const s = getStudent(studentId); if (!s || !s.pieceTracks) return;
+  if (!confirm('Take "' + bookTitle(s.pieceTracks[bookIdx]) + '" off ' + s.name + '’s list? Their ticks are kept, so they come back if you add it again.')) return;
+  s.pieceTracks.splice(bookIdx, 1);
+  save();
+  document.getElementById('piece-tracks-' + studentId).innerHTML = pieceTracksHTML(s);
+}
+// Pick a piece with movements from the library (pupil's instrument first)
+function togglePieceTrackAdd(studentId) {
+  const el = document.getElementById('piece-track-add-' + studentId); if (!el) return;
+  if (el.style.display !== 'none') { el.style.display = 'none'; return; }
+  const s = getStudent(studentId); if (!s) return;
+  const have = new Set((s.pieceTracks || []).map(function(b){ return libTitleKey(bookTitle(b)); }));
+  const list = sortByTitle(visibleLibraryPieces().filter(function(p) {
+    return libKind(p) === 'piece' && p.movements && tickableCount(p.movements) > 0
+      && !have.has(libTitleKey(p.title)) && instrMatch(p, s.instrument === 'viola' || s.instrument === 'violin' ? s.instrument : '');
+  }));
+  el.innerHTML = list.length
+    ? '<div style="max-height:260px;overflow-y:auto;border:1.5px solid var(--warm);border-radius:10px;padding:6px">'
+      + list.map(function(p) {
+          return '<button onclick="addPieceTrack(\'' + studentId + '\',\'' + escJs(p.title) + '\')" style="display:flex;width:100%;text-align:left;align-items:center;gap:8px;padding:8px 10px;margin-bottom:4px;border-radius:8px;border:1.5px solid #e0ddd8;background:#fff;font-family:\'Special Elite\',cursive;font-size:0.85rem;cursor:pointer;color:var(--ink)">'
+            + '<span style="color:var(--viola);font-weight:700">＋</span><span style="flex:1">' + instrPillHTML(p) + esc(p.title) + '</span>'
+            + '<span style="font-size:0.7rem;color:var(--muted)">🎼 ' + tickableCount(p.movements) + '</span></button>';
+        }).join('') + '</div>'
+    : '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No other pieces with movements in your library. Add movements to a piece with Edit in the Full library.</p>';
+  el.style.display = 'block';
+}
+function addPieceTrack(studentId, title) {
+  const s = getStudent(studentId); if (!s) return;
+  ensureTechBook(s, title);
+  save();
+  document.getElementById('piece-tracks-' + studentId).innerHTML = pieceTracksHTML(s);
+  const el = document.getElementById('piece-track-add-' + studentId); if (el) el.style.display = 'none';
+}
+
 function sevcikCheck(studentId, item) {
   const s = getStudent(studentId); if (!s) return;
   if (!s.sevcikOp3) s.sevcikOp3 = {};
@@ -10145,7 +10243,7 @@ function renameLibTitleForPupils(oldT, newT) {
       Object.keys(s.pieceMvtTicks[ok]).forEach(function(k){ if (bookTickLevel(s.pieceMvtTicks[ok][k]) > bookTickLevel(to[k])) to[k] = s.pieceMvtTicks[ok][k]; });
       delete s.pieceMvtTicks[ok];
     }
-    ['studyBooks', 'methodBooks', 'albums'].forEach(function(f) {
+    ['studyBooks', 'methodBooks', 'albums', 'pieceTracks'].forEach(function(f) {
       (s[f] || []).forEach(function(b){ if (libTitleKey(b.name) === ok) b.name = newT; });
     });
   });
@@ -13598,10 +13696,10 @@ function libPickPieceWithMvtsHTML(p) {
     + '<span style="font-size:0.75rem;color:var(--muted);display:inline-block;transform:rotate(' + (open ? '90' : '0') + 'deg);transition:transform 0.15s">▶</span>'
     + '<span style="flex:1"><span style="display:block;font-size:0.9rem;font-weight:600">' + instrPillHTML(p) + esc(p.title) + '</span>'
     + '<span style="display:block;font-size:0.75rem;color:var(--muted)">' + [p.composer, p.grade].filter(Boolean).map(esc).concat(['🎼 ' + tickableCount(p.movements) + ' movement' + (tickableCount(p.movements) === 1 ? '' : 's')]).join(' · ') + '</span></span></button>'
-    + '<button onclick="selectPiece(\'' + escJs(p.title) + '\')" title="Add the piece on its own" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:6px 10px;font-family:\'Special Elite\',cursive;font-size:0.72rem;cursor:pointer;white-space:nowrap">＋ Piece</button>'
+    + '<button onclick="selectPiece(\'' + escJs(p.title) + '\')" title="Add the whole piece, not one movement" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:6px 10px;font-family:\'Special Elite\',cursive;font-size:0.72rem;cursor:pointer;white-space:nowrap">＋ All</button>'
     + '</div>';
   if (open) {
-    html += '<div style="padding:8px 10px 10px"><div style="font-size:0.68rem;color:var(--muted);margin-bottom:6px">Tap a movement to add it</div>'
+    html += '<div style="padding:8px 10px 10px"><div style="font-size:0.68rem;color:var(--muted);margin-bottom:6px">Tap a movement to add just that one, or ＋ All for the whole piece</div>'
       + p.movements.map(function(m, idx) {
           if (isHeadingItem(m)) return headingLabelHTML(m);
           const isNum = /^\d+$/.test(m);
@@ -13698,11 +13796,11 @@ function libPickBookHTML(bk) {
     + '<span style="font-size:0.75rem;color:var(--muted);display:inline-block;transform:rotate(' + (open ? '90' : '0') + 'deg);transition:transform 0.15s">▶</span>'
     + '<span style="flex:1;font-size:0.88rem;font-weight:600">' + esc(bk.name) + '</span>'
     + '<span style="font-size:0.7rem;color:var(--muted)">' + count + '</span></button>'
-    + '<button onclick="libPickAddWholeBook(\'' + k + '\')" title="Add the book name on its own" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:6px 10px;font-family:\'Special Elite\',cursive;font-size:0.72rem;cursor:pointer;white-space:nowrap">＋ Book</button>'
+    + '<button onclick="libPickAddWholeBook(\'' + k + '\')" title="Add the whole book, not one item" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:6px 10px;font-family:\'Special Elite\',cursive;font-size:0.72rem;cursor:pointer;white-space:nowrap">＋ All</button>'
     + '</div>';
   if (open) {
     html += '<div style="padding:8px 10px 10px">'
-      + '<div style="font-size:0.68rem;color:var(--muted);margin-bottom:6px">Tap a number or item to add it' + (bk.key.charAt(0) === 'p' ? ' · orange = working on it, green = finished' : '') + '</div>'
+      + '<div style="font-size:0.68rem;color:var(--muted);margin-bottom:6px">Tap a number or item to add just that one, or ＋ All for the whole book' + (bk.key.charAt(0) === 'p' ? ' · orange = working on it, green = finished' : '') + '</div>'
       + libPickItemsHTML(bk) + '</div>';
   }
   return html + '</div>';
