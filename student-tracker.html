@@ -3584,11 +3584,7 @@ function renderDetail(s, preserveTab = false) {
         </div>
         <div id="next-ticks-${s.id}">${nextTicksHTML(s, 'a')}</div>
         <button type="button" onclick="addNextTickRow('${s.id}','a')" style="background:none;border:1.5px dashed var(--string);color:var(--viola);border-radius:8px;padding:6px 12px;margin-top:8px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;width:100%">＋ Add line</button>
-        <button onclick="saveNextLesson('${s.id}')"
-          style="margin-top:10px;background:var(--string);color:var(--ink);border:none;border-radius:10px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer;display:block;margin:10px auto 0;min-width:160px">
-          ✓ Save to Before tab
-        </button>
-        <div class="save-toast" id="toast-next-${s.id}">✓ Saved to Before tab</div>
+        <div style="font-size:0.7rem;color:var(--muted);text-align:center;margin-top:8px">Saves as you type and shows on the Before tab</div>
       </div>
       </div>
       <div class="section-card">
@@ -4980,14 +4976,6 @@ function autoSaveNextLesson(id, value) {
   save();
 }
 
-function saveNextLesson(id) {
-  const s = getStudent(id); if (!s) return;
-  collectNextTicks(id, 'a');
-  // Update the Before tab "Note for next week" textarea immediately
-  const beforeEl = document.getElementById('nextWeeknote-' + id);
-  if (beforeEl) beforeEl.value = s.nextWeekNote;
-  showToast('toast-next-' + id);
-}
 // ── ONE LIBRARY ──────────────────────────────────────────────────────────
 // Everything lives once in the Full library. Each item has a kind:
 // a piece, a study book, a method book or an album. The Study books, Method
