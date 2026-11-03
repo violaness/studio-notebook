@@ -1077,6 +1077,8 @@ snApplyTheme();
     <div id="lib-kind-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
     <div id="lib-instr-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <input type="text" id="lib-piece-search" placeholder="Search…" oninput="renderLibPieces()"
+        style="flex:1;padding:8px 12px;border-radius:8px;font-size:0.88rem;min-width:100px">
       <select id="lib-cat-filter" onchange="renderLibPieces()" style="flex:1">
         <option value="">All categories</option>
         <option value="My Library">My Library</option>
@@ -1089,8 +1091,6 @@ snApplyTheme();
         <option value="Beginner Repertoire - Viola">Beginner Repertoire - Viola</option>
         <option value="Beginner Repertoire - Violin">Beginner Repertoire - Violin</option>
       </select>
-      <input type="text" id="lib-piece-search" placeholder="Search…" oninput="renderLibPieces()"
-        style="flex:1;padding:8px 12px;border-radius:8px;font-size:0.88rem;min-width:100px">
     </div>
     <div id="lib-pieces-list" style="max-height:400px;overflow-y:auto"></div>
     <div style="border-top:1px solid var(--warm);margin-top:14px;padding-top:14px">
@@ -3764,7 +3764,7 @@ function renderDetail(s, preserveTab = false) {
       <!-- PIECES: movements covered, kept even after the piece leaves Working On -->
       <section class="admin-panel technique-panel" id="tech-panel-piecetracks" style="display:none">
         <div class="admin-panel-head"><span>🎶 Pieces</span><button class="admin-panel-close" onclick="closeTechniqueSections('${s.id}')">✕ Close</button></div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:6px">Pieces with movements. Ticks stay here after a piece comes off Working On.</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:6px">Everything from Working On’s 🎵 Pieces, plus any you add. Ticks stay here after a piece comes off Working On.</div>
         <div id="piece-tracks-${s.id}">${pieceTracksHTML(s)}</div>
         <button onclick="togglePieceTrackAdd('${s.id}')"
           style="width:100%;margin-top:10px;background:none;border:1.5px dashed var(--violin);color:var(--violin);border-radius:10px;padding:10px;font-family:'Special Elite',cursive;font-size:0.88rem;cursor:pointer;font-weight:500">
@@ -7373,12 +7373,36 @@ function removeAlbum(studentId, bookIdx) {
 // s.pieceTracks: [{ id, bankId, name }] - pieces with movements, sharing the
 // same ticks as Working On (s.pieceMvtTicks), so the record stays after a
 // piece is taken off Working On.
+// Every line in Working On's 🎵 Pieces group belongs on this list too, with or
+// without movements, and whether or not it's in the library.
+function syncPieceTracks(s) {
+  let changed = false;
+  (s.pieces || []).forEach(function(t, i) {
+    if (!t || !String(t).trim() || pieceGroupOf(s, i) !== 'piece') return;
+    const k = libTitleKey(t);
+    const lib = visibleLibraryPieces().find(function(p){ return libTitleKey(p.title) === k; });
+    if (lib && libKind(lib) !== 'piece') return; // albums etc. have their own list
+    if (!s.pieceTracks) s.pieceTracks = [];
+    if (s.pieceTracks.some(function(b){ return libTitleKey(bookTitle(b)) === k || libTitleKey(b.name) === k; })) return;
+    s.pieceTracks.push({ id: Date.now().toString() + Math.random().toString(36).slice(2, 5), bankId: lib ? libBid(lib) : null,
+                         name: lib ? lib.title : String(t).trim(), studies: lib && lib.movements ? lib.movements.slice() : [] });
+    changed = true;
+  });
+  if (changed) { try { save(); } catch (e) {} }
+}
+// A piece with no movements gets one tick box for the whole piece
+const WHOLE_PIECE = 'Whole piece';
+function pieceTrackItems(book) {
+  const st = bookStudies(book);
+  return st && st.length ? st : [WHOLE_PIECE];
+}
 function pieceTracksHTML(s) {
+  syncPieceTracks(s);
   const books = s.pieceTracks || [];
-  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No pieces yet. They appear here when a piece with movements goes on Working On, or tap “＋ Add piece”.</p>';
+  if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No pieces yet. Anything in Working On’s 🎵 Pieces appears here, or tap “＋ Add piece”.</p>';
   return books.map(function(book, bIdx) {
     const ticks = sharedTicks(s, bookTitle(book));
-    const studies = bookStudies(book);
+    const studies = pieceTrackItems(book);
     const total = tickableCount(studies);
     const tkeys = uniqueItemKeys(studies).filter(function(k, n){ return !isHeadingItem(studies[n]); });
     const done = tkeys.filter(function(k){ return bookTickLevel(ticks[k]) === 2; }).length;
@@ -7422,7 +7446,7 @@ function togglePieceTrackAdd(studentId) {
   const s = getStudent(studentId); if (!s) return;
   const have = new Set((s.pieceTracks || []).map(function(b){ return libTitleKey(bookTitle(b)); }));
   const list = sortByTitle(visibleLibraryPieces().filter(function(p) {
-    return libKind(p) === 'piece' && p.movements && tickableCount(p.movements) > 0
+    return libKind(p) === 'piece'
       && !have.has(libTitleKey(p.title)) && instrMatch(p, s.instrument === 'viola' || s.instrument === 'violin' ? s.instrument : '');
   }));
   el.innerHTML = list.length
@@ -7430,14 +7454,19 @@ function togglePieceTrackAdd(studentId) {
       + list.map(function(p) {
           return '<button onclick="addPieceTrack(\'' + studentId + '\',\'' + escJs(p.title) + '\')" style="display:flex;width:100%;text-align:left;align-items:center;gap:8px;padding:8px 10px;margin-bottom:4px;border-radius:8px;border:1.5px solid #e0ddd8;background:#fff;font-family:\'Special Elite\',cursive;font-size:0.85rem;cursor:pointer;color:var(--ink)">'
             + '<span style="color:var(--viola);font-weight:700">＋</span><span style="flex:1">' + instrPillHTML(p) + esc(p.title) + '</span>'
-            + '<span style="font-size:0.7rem;color:var(--muted)">🎼 ' + tickableCount(p.movements) + '</span></button>';
+            + (p.movements && tickableCount(p.movements) ? '<span style="font-size:0.7rem;color:var(--muted)">🎼 ' + tickableCount(p.movements) + '</span>' : '') + '</button>';
         }).join('') + '</div>'
-    : '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No other pieces with movements in your library. Add movements to a piece with Edit in the Full library.</p>';
+    : '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No other pieces in your library for this instrument.</p>';
   el.style.display = 'block';
 }
 function addPieceTrack(studentId, title) {
   const s = getStudent(studentId); if (!s) return;
-  ensureTechBook(s, title);
+  if (!ensureTechBook(s, title)) {
+    const lib = visibleLibraryPieces().find(function(p){ return libTitleKey(p.title) === libTitleKey(title); });
+    if (!s.pieceTracks) s.pieceTracks = [];
+    if (!s.pieceTracks.some(function(b){ return libTitleKey(bookTitle(b)) === libTitleKey(title); }))
+      s.pieceTracks.push({ id: Date.now().toString(), bankId: lib ? libBid(lib) : null, name: lib ? lib.title : title, studies: [] });
+  }
   save();
   document.getElementById('piece-tracks-' + studentId).innerHTML = pieceTracksHTML(s);
   const el = document.getElementById('piece-track-add-' + studentId); if (el) el.style.display = 'none';
