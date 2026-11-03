@@ -7374,14 +7374,14 @@ function removeAlbum(studentId, bookIdx) {
 // same ticks as Working On (s.pieceMvtTicks), so the record stays after a
 // piece is taken off Working On.
 // Every line in Working On's 🎵 Pieces group belongs on this list too, with or
-// without movements, and whether or not it's in the library.
+// without movements, whatever type it is, and whether or not it's in the library.
 function syncPieceTracks(s) {
   let changed = false;
   (s.pieces || []).forEach(function(t, i) {
     if (!t || !String(t).trim() || pieceGroupOf(s, i) !== 'piece') return;
     const k = libTitleKey(t);
     const lib = visibleLibraryPieces().find(function(p){ return libTitleKey(p.title) === k; });
-    if (lib && libKind(lib) !== 'piece') return; // albums etc. have their own list
+    // Albums and books in the Pieces group show here too (as well as on their own tile)
     if (!s.pieceTracks) s.pieceTracks = [];
     if (s.pieceTracks.some(function(b){ return libTitleKey(bookTitle(b)) === k || libTitleKey(b.name) === k; })) return;
     s.pieceTracks.push({ id: Date.now().toString() + Math.random().toString(36).slice(2, 5), bankId: lib ? libBid(lib) : null,
