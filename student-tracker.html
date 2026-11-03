@@ -950,40 +950,44 @@ snApplyTheme();
   <!-- "Back to pupil" bar - only shows when you jumped here from a pupil's Technique tab -->
   <div id="lib-return-bar" style="display:none;margin:4px 0 12px"></div>
 
-  <!-- FULL LIBRARY: one big tile, with shortcuts to each type underneath -->
+  <!-- FULL LIBRARY: one big tile across the top -->
   <div style="margin:6px 0 14px">
     <button class="admin-tile lib-tile" style="background:var(--deep);min-height:92px;width:100%" onclick="showLibrarySection('pieces')">
       <span class="admin-tile-icon">📚</span>
       <span class="admin-tile-label">Full library</span>
       <span class="admin-tile-badge" id="tile-pieces-badge"></span>
     </button>
-    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:8px" id="lib-kind-tiles">
-      <button class="lib-tile lib-kind-tile" style="background:var(--string);color:var(--ink)" onclick="showLibrarySection('studybank')">📖 Study books <span id="tile-studybank-badge"></span></button>
-      <button class="lib-tile lib-kind-tile" style="background:var(--sky);color:var(--ink)" onclick="showLibrarySection('methodbank')">📘 Method books <span id="tile-methodbank-badge"></span></button>
-      <button class="lib-tile lib-kind-tile" style="background:var(--viola);color:#fff" onclick="showLibrarySection('albumbank')">🎵 Albums <span id="tile-albumbank-badge"></span></button>
-      <button class="lib-tile lib-kind-tile" style="background:var(--advanced);color:#fff" onclick="showLibrarySection('violaness')">🎻 Violaness <span id="tile-violaness-badge"></span></button>
-    </div>
   </div>
 
-  <!-- OTHER LIBRARY TOOLS -->
-  <div class="admin-grid" style="grid-auto-flow:row;grid-template-rows:none">
-    <button class="admin-tile lib-tile" style="background:var(--ink)" onclick="showLibrarySection('techsets')">
-      <span class="admin-tile-icon">🛠</span>
-      <span class="admin-tile-label">Checklist sets</span>
-      <span class="admin-tile-badge" id="tile-techsets-badge"></span>
+  <!-- Greens down the left, blues down the right, each getting darker as they go down.
+       Big tiles: the music. Small tiles underneath: the other tools. -->
+  <div class="admin-grid" style="grid-auto-flow:row;grid-template-rows:none;margin-bottom:12px">
+    <button class="admin-tile lib-tile" style="background:var(--string);color:var(--ink)" onclick="showLibrarySection('studybank')">
+      <span class="admin-tile-icon">📖</span>
+      <span class="admin-tile-label">Study books</span>
+      <span class="admin-tile-badge" id="tile-studybank-badge"></span>
     </button>
-    <button class="admin-tile lib-tile" style="background:var(--viola)" onclick="showLibrarySection('technical')">
-      <span class="admin-tile-icon">🎯</span>
-      <span class="admin-tile-label">Technical focus</span>
+    <button class="admin-tile lib-tile" style="background:var(--sky);color:var(--ink)" onclick="showLibrarySection('methodbank')">
+      <span class="admin-tile-icon">📘</span>
+      <span class="admin-tile-label">Method books</span>
+      <span class="admin-tile-badge" id="tile-methodbank-badge"></span>
     </button>
-    <button class="admin-tile lib-tile" style="background:var(--violin)" onclick="showLibrarySection('video')">
-      <span class="admin-tile-icon">🎬</span>
-      <span class="admin-tile-label">Video library</span>
+    <button class="admin-tile lib-tile" style="background:var(--viola)" onclick="showLibrarySection('albumbank')">
+      <span class="admin-tile-icon">🎵</span>
+      <span class="admin-tile-label">Albums</span>
+      <span class="admin-tile-badge" id="tile-albumbank-badge"></span>
     </button>
-    <button class="admin-tile lib-tile" style="background:var(--sky);color:var(--ink)" onclick="showLibrarySection('voice')">
-      <span class="admin-tile-icon">🎤</span>
-      <span class="admin-tile-label">Voice text</span>
+    <button class="admin-tile lib-tile" style="background:var(--violin)" onclick="showLibrarySection('violaness')">
+      <span class="admin-tile-icon">🎻</span>
+      <span class="admin-tile-label">Violaness</span>
+      <span class="admin-tile-badge" id="tile-violaness-badge"></span>
     </button>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+    <button class="lib-tile lib-kind-tile" style="background:color-mix(in srgb, var(--viola) 55%, var(--ink));color:#fff" onclick="showLibrarySection('techsets')">🛠 Checklist sets<span id="tile-techsets-badge" style="display:inline;font-size:0.82rem"></span></button>
+    <button class="lib-tile lib-kind-tile" style="background:var(--deep);color:#fff" onclick="showLibrarySection('video')">🎬 Video library</button>
+    <button class="lib-tile lib-kind-tile" style="background:var(--ink);color:#fff" onclick="showLibrarySection('technical')">🎯 Technical focus</button>
+    <button class="lib-tile lib-kind-tile" style="background:var(--advanced);color:#fff" onclick="showLibrarySection('voice')">🎤 Voice text</button>
   </div>
 
   <!-- LIBRARY PANELS -->
@@ -3316,7 +3320,6 @@ function renderDetail(s, preserveTab = false) {
 
   const piecesHTML = buildPiecesHTML(s);
   const allTech = [...TECH_OPTIONS,...customChips].sort((a,b) => a.localeCompare(b));
-  const techHTML = buildTechHTML(s, allTech);
   const logHTML = buildLogHTML(s);
 
   el.innerHTML = `
@@ -3439,21 +3442,6 @@ function renderDetail(s, preserveTab = false) {
         <div id="next-ticks-b-${s.id}" class="nt-blue">${nextTicksHTML(s, 'b')}</div>
         <button type="button" onclick="addNextTickRow('${s.id}','b')" style="background:none;border:1.5px dashed var(--tech-bd);color:var(--deep);border-radius:8px;padding:6px 12px;margin-top:8px;font-family:'Special Elite',cursive;font-size:0.8rem;cursor:pointer;width:100%">＋ Add line</button>
       </div>
-      <details class="section-card" style="padding:0">
-        <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.72rem;font-weight:700;color:var(--muted)">
-          <span>🔧 Technical focus</span>
-          <span style="font-size:0.7rem;font-weight:400;color:var(--muted)">▾</span>
-        </summary>
-        <div style="padding:0 14px 14px">
-          <div class="tech-chips">${techHTML}</div>
-          <div style="display:flex;gap:8px;margin-top:10px">
-            <input type="text" id="new-tech-chip-${s.id}" placeholder="Add a new focus word…" maxlength="40"
-              onkeydown="if(event.key==='Enter')addTechChipForPupil('${s.id}')"
-              style="flex:1;min-width:0;padding:8px 12px;border-radius:999px;font-size:0.88rem">
-            <button onclick="addTechChipForPupil('${s.id}')" style="background:var(--viola);color:#fff;border:none;border-radius:999px;padding:8px 16px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer">Add</button>
-          </div>
-        </div>
-      </details>
       </div>
       <div class="before-col">
       <div class="section-card">
@@ -6664,7 +6652,7 @@ function refSummary(s) {
   var pieces        = piecesDisplay(s);
   var scales        = (s.scales||[]);
   var scalesWeek    = (s.scalesThisWeek||[]);
-  var tech          = (s.techFocus||[]).filter(Boolean);
+  var tech          = []; // Technical focus pills were taken off the Before tab
   var plan          = (s.nextLesson||'').trim();
   var pupilNote     = (s.pupilNotes||'').trim();
 
@@ -9627,18 +9615,19 @@ function sortByTitle(list) {
 function updateLibraryBadges() {
   const lib = visibleLibraryPieces();
   const count = function(k){ return lib.filter(function(p){ return libKind(p) === k; }).length; };
-  const setText = function(id, n) { const el = document.getElementById(id); if (el) el.textContent = n; };
-  setText('tile-studybank-badge',  count('study'));
-  setText('tile-methodbank-badge', count('method'));
-  setText('tile-albumbank-badge',  count('album'));
-  setText('tile-violaness-badge',  count('violaness'));
   const setBadge = (id, n) => {
     const el = document.getElementById(id); if (!el) return;
     if (n > 0) { el.textContent = n; el.classList.add('show'); }
     else { el.textContent = ''; el.classList.remove('show'); }
   };
   setBadge('tile-pieces-badge', lib.length);
-  setBadge('tile-techsets-badge', (techniqueSets || []).length);
+  setBadge('tile-studybank-badge',  count('study'));
+  setBadge('tile-methodbank-badge', count('method'));
+  setBadge('tile-albumbank-badge',  count('album'));
+  setBadge('tile-violaness-badge',  count('violaness'));
+  // Small tile: plain count under the name
+  const ts = document.getElementById('tile-techsets-badge');
+  if (ts) ts.textContent = (techniqueSets || []).length ? ' · ' + techniqueSets.length : '';
 }
 
 // Jump from a pupil's Technique tab to a bank in the Library, remembering
@@ -13967,7 +13956,6 @@ function buildPupilHTML(s, term, includeScales) {
         ${s.frequency==='fortnightly'?' · Fortnightly':''}
       </div>
       ${pieces.length ? `<div class="section"><div class="section-title">Current pieces</div><p>${pieces.map(p=>`<span class="piece">${p}</span>`).join(' ')}</p></div>` : ''}
-      ${(s.techFocus||[]).length ? `<div class="section"><div class="section-title">Technical focus</div><p>${s.techFocus.join(' · ')}</p></div>` : ''}
       ${goals.longTerm||goals.medium||goals.shortTerm ? `
       <div class="section"><div class="section-title">Goals</div>
         ${goals.longTerm  ? `<div class="goal-item"><span class="goal-label">Long-term:</span> ${goals.longTerm}</div>`  : ''}
@@ -14003,7 +13991,6 @@ function buildPupilPlainText(s, term) {
   txt += [s.instrument, s.level, (s.pupilType||'child')==='adult'?'Adult':'School age',
     s.schoolYear, slot.day?(slot.day+(slot.time?' '+slot.time:'')):''].filter(Boolean).join(' · ') + '\n\n';
   if (pieces.length) txt += 'CURRENT PIECES\n' + pieces.join(', ') + '\n\n';
-  if ((s.techFocus||[]).length) txt += 'TECHNICAL FOCUS\n' + s.techFocus.join(', ') + '\n\n';
   if (goals.longTerm||goals.medium||goals.shortTerm) {
     txt += 'GOALS\n';
     if (goals.longTerm)  txt += 'Long-term: '  + goals.longTerm  + '\n';
