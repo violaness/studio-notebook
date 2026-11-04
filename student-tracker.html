@@ -1177,7 +1177,7 @@ snApplyTheme();
   <section class="admin-panel" id="lib-panel-voice" style="display:none">
     <div class="admin-panel-head"><span>🎤 Voice text - auto-corrections</span><button class="admin-panel-close" onclick="closeLibrarySections()">✕ Close</button></div>
     <div style="margin-top:10px">
-      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Words or phrases that get replaced automatically after dictation.</div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Words or phrases that get fixed automatically. Works with the app’s 🎤 and with the iPad keyboard’s own 🎙 dictation (fixed when you leave the box). If a word keeps coming out wrong, add it here exactly as it appears.</div>
       <div id="speech-replacements-list"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
         <input type="text" id="new-replace-from" placeholder="Replace this…" style="font-size:0.82rem;padding:7px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive">
@@ -2469,6 +2469,29 @@ let termDates        = JSON.parse(localStorage.getItem('studio_term_dates')     
 let ideaBoards       = JSON.parse(localStorage.getItem('studio_idea_boards')       || '[]');
 let currentIdeaBoardId = localStorage.getItem('studio_idea_current') || '';
 let speechReplacements = JSON.parse(localStorage.getItem('studio_speech_replacements') || '[{"from":"gonna","to":"going to"},{"from":"wanna","to":"want to"},{"from":"kinda","to":"kind of"}]');
+// Music words dictation often gets wrong. Added once; anything you delete stays deleted.
+const SPEECH_MUSIC_WORDS = [
+  ['boeing', 'bowing'], ['boeings', 'bowings'], ['barack', 'Baroque'], ['baroque', 'Baroque'],
+  ['crochet', 'crotchet'], ['crochets', 'crotchets'], ['semi quaver', 'semiquaver'], ['semi quavers', 'semiquavers'],
+  ['demi semi quaver', 'demisemiquaver'], ['demi semi quavers', 'demisemiquavers'],
+  ['pizza cato', 'pizzicato'], ['pizza carto', 'pizzicato'], ['pizza kato', 'pizzicato'],
+  ['leg auto', 'legato'], ['stack auto', 'staccato'], ['speak auto', 'spiccato'], ['spica to', 'spiccato'],
+  ['day tash', 'détaché'], ['detache', 'détaché'], ['marty lay', 'martelé'], ['martele', 'martelé'],
+  ['coal leg no', 'col legno'], ['resin', 'rosin'], ['see string', 'C string'],
+  ['viola ness', 'Violaness'], ['viola nest', 'Violaness'], ['scale ability', 'Scalability'],
+  ['wool fart', 'Wohlfahrt'], ['wolf art', 'Wohlfahrt'], ['kaiser', 'Kayser'], ['tele man', 'Telemann'],
+  ['shev chick', 'Ševčík'], ['chef chick', 'Ševčík'], ['dank la', 'Dancla'], ['a b r s m', 'ABRSM']
+];
+(function addMusicWords() {
+  try {
+    if (localStorage.getItem('studio_speech_music_v1')) return;
+    SPEECH_MUSIC_WORDS.forEach(function(w) {
+      if (!speechReplacements.some(function(r){ return String(r.from).toLowerCase() === w[0]; })) speechReplacements.push({ from: w[0], to: w[1] });
+    });
+    localStorage.setItem('studio_speech_replacements', JSON.stringify(speechReplacements));
+    localStorage.setItem('studio_speech_music_v1', '1');
+  } catch (e) {}
+})();
 let extraLessons = JSON.parse(localStorage.getItem('studio_extra_lessons') || '{}');
 // Studio-wide default technique checklist - the starting template copied to each
 // pupil the first time their Technique checklist is opened. Editing this never
@@ -4850,10 +4873,12 @@ function testMic(btnId, msgId, textareaId) {
 //   • \b only works next to word characters, so a correction starting or
 //     ending with a symbol (e.g. "#1") needs the boundary omitting at that
 //     end, or it can never fire.
-function applyReplacements(text) {
+function applyReplacements(text, keepAsTyped) {
   // Treat curly and straight apostrophes as the same character throughout
   const normalise = function(str) { return String(str||'').replace(/[\u2018\u2019\u02BC]/g, "'"); };
-  text = normalise(text);
+  // From the app's 🎤 the whole transcript is tidied; for text already in a box
+  // (keyboard dictation) only the corrections themselves change anything.
+  if (!keepAsTyped) text = normalise(text);
 
   let matchedAny = false;
 
@@ -4866,7 +4891,8 @@ function applyReplacements(text) {
     // correction match punctuation and/or whitespace in the transcript.
     const escaped = from
       .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      .replace(/\s+/g, '[\\s,.;:!?\u2014\u2013-]+');
+      .replace(/\s+/g, '[\\s,.;:!?\u2014\u2013-]+')
+      .replace(/'/g, "['\u2018\u2019\u02BC]");
 
     // \b only means anything next to a word character - adding it beside a
     // symbol makes the pattern unmatchable, so only apply it where it fits.
@@ -4891,10 +4917,27 @@ function applyReplacements(text) {
   // leaves a double space behind. Otherwise leave the transcript untouched,
   // so ordinary dictation isn't silently reformatted.
   if (matchedAny) {
-    text = text.replace(/[ \t]{2,}/g, ' ').replace(/[ \t]+([,.;:!?])/g, '$1').trim();
+    text = text.replace(/[ \t]{2,}/g, ' ').replace(/[ \t]+([,.;:!?])/g, '$1');
+    if (!keepAsTyped) text = text.trim();
   }
   return text;
 }
+
+// The iPad keyboard's own 🎙 dictation types straight into the box, so the
+// app's 🎤 never sees it. Run the corrections whenever you leave a text box too.
+// (Capture phase, so it happens before the box's own save-on-blur.)
+document.addEventListener('blur', function(e) {
+  const el = e.target;
+  if (!el || !(el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'search')))) return;
+  if (/^new-replace-/.test(el.id || '')) return; // the corrections editor itself
+  if (!el.value || !speechReplacements.length) return;
+  let fixed;
+  try { fixed = applyReplacements(el.value, true); } catch (err) { return; }
+  if (fixed === el.value) return;
+  el.value = fixed;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  el.dispatchEvent(new Event('change', { bubbles: true }));
+}, true);
 
 // ── NEXT LESSON TICK LIST (After tab) ──
 // Stored as plain lines ("☐ D major scale" / "☑ Minuet bars 1-8") so the Before
