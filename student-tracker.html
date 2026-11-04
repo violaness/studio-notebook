@@ -3678,10 +3678,10 @@ function renderDetail(s, preserveTab = false) {
             <button class="admin-panel-close" onclick="closeTechniqueSections('${s.id}')">✕ Close</button>
           </span>
         </div>
-        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:10px">Tap the circle to cycle: not started → working on it → secure. Use ▲ ▼ to change the order.</div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:10px">Tap the circle: <b style="color:var(--violin)">Introduced</b> (shown the skill) → <b style="color:#b7791f">Developing</b> (can do it with reminders or support) → <b style="color:var(--viola)">Secure</b> (consistently and independently) → clear. Tap the words to change them. Use ▲ ▼ to change the order.</div>
         <div id="technique-list-${s.id}">${techniqueChecklistHTML(s)}</div>
         <div style="display:flex;gap:8px;margin-top:10px">
-          <input type="text" id="new-technique-${s.id}" placeholder="Add a technique for this pupil…" maxlength="40"
+          <input type="text" id="new-technique-${s.id}" placeholder="Add a technique for this pupil…" maxlength="160"
             onkeydown="if(event.key==='Enter')addTechnique('${s.id}')"
             style="flex:1;padding:8px 12px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.85rem;box-sizing:border-box">
           <button onclick="addTechnique('${s.id}')" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ Add</button>
@@ -7567,13 +7567,24 @@ function removeDoubleStopKey(studentId, key) {
 // ── TECHNIQUE CHECKLIST ───────────────────────────────────────────────────
 // Per-pupil list of {name, level}. level: 0 not started, 1 working on it, 2 secure.
 // Seeded once from techniqueDefaults; thereafter fully independent per pupil.
+// Introduced: shown the skill · Developing: can do it with reminders or support ·
+// Secure: does it consistently and independently
 const TECH_LEVELS = [
   { label: 'Not started', bg: '#f0ede8', fg: 'var(--muted)', dot: '#ccc' },
-  { label: 'Working on it', bg: '#fff3e0', fg: '#b7791f', dot: '#e67e22' },
+  { label: 'Introduced', bg: 'var(--tech-bg)', fg: 'var(--violin)', dot: 'var(--sky)' },
+  { label: 'Developing', bg: '#fff3e0', fg: '#b7791f', dot: '#e67e22' },
   { label: 'Secure', bg: 'var(--soft-green2)', fg: 'var(--viola)', dot: 'var(--viola)' }
 ];
+// Older checklists had three steps (0 / 1 working on it / 2 secure): move them up once
+// so "working on it" becomes Developing and secure stays Secure.
+function migrateTechLevels(s) {
+  if (s.techLevelsV2 || !Array.isArray(s.techniqueChecklist)) { s.techLevelsV2 = true; return; }
+  s.techniqueChecklist.forEach(function(it){ if (it && it.level) it.level = it.level === 1 ? 2 : 3; });
+  s.techLevelsV2 = true;
+}
 
 function seedTechniqueIfNeeded(s) {
+  migrateTechLevels(s);
   if (!s.techniqueChecklist) {
     s.techniqueChecklist = starterTechSet().items.map(function(name) {
       return { name: name, level: 0 };
@@ -7599,12 +7610,19 @@ function techniqueChecklistHTML(s) {
     return '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">No techniques on this pupil’s list yet. Add one below, or load a checklist set.</p>';
   }
   return list.map(function(item, i) {
+    if (isHeadingItem(item.name)) {
+      return '<div style="display:flex;align-items:center;gap:8px;margin:' + (i ? '14px' : '2px') + ' 0 6px;padding-bottom:4px;border-bottom:2px solid var(--warm)">'
+        + '<span onclick="editTechnique(\'' + s.id + '\',' + i + ')" title="Tap to change the heading" style="flex:1;cursor:text;font-size:0.82rem;font-weight:700;color:var(--deep)">' + esc(techFill(headingText(item.name), s.instrument)) + '</span>'
+        + moveArrowsHTML('moveTechnique(\'' + s.id + '\',' + i + ',-1)', 'moveTechnique(\'' + s.id + '\',' + i + ',1)', i === 0, i === list.length - 1)
+        + '<button onclick="removeTechnique(\'' + s.id + '\',' + i + ')" title="Remove heading" style="flex:0 0 auto;background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:0 2px">×</button>'
+        + '</div>';
+    }
     const lv = TECH_LEVELS[item.level || 0];
     const dotFill = item.level ? lv.dot : 'transparent';
     return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:' + lv.bg + ';margin-bottom:6px">' +
       '<button onclick="cycleTechnique(\'' + s.id + '\',' + i + ')" title="' + lv.label + '" ' +
         'style="flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:2px solid ' + lv.dot + ';background:' + dotFill + ';cursor:pointer;padding:0"></button>' +
-      '<span style="flex:1;font-size:0.92rem;color:' + lv.fg + ';font-weight:' + (item.level?600:400) + '">' + esc(item.name) + '</span>' +
+      '<span onclick="editTechnique(\'' + s.id + '\',' + i + ')" title="Tap to change the wording" style="flex:1;cursor:text;font-size:0.92rem;color:' + lv.fg + ';font-weight:' + (item.level?600:400) + '">' + esc(techFill(item.name, s.instrument)) + '</span>' +
       '<button onclick="cycleTechnique(\'' + s.id + '\',' + i + ')" style="flex:0 0 auto;background:none;border:none;font-size:0.72rem;color:' + lv.fg + ';cursor:pointer;font-family:\'Special Elite\',cursive;white-space:nowrap">' + lv.label + '</button>' +
       moveArrowsHTML('moveTechnique(\'' + s.id + '\',' + i + ',-1)', 'moveTechnique(\'' + s.id + '\',' + i + ',1)', i === 0, i === list.length - 1) +
       '<button onclick="removeTechnique(\'' + s.id + '\',' + i + ')" title="Remove" style="flex:0 0 auto;background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:0 2px">×</button>' +
@@ -7627,8 +7645,8 @@ function moveTechnique(id, idx, dir) {
 function cycleTechnique(id, idx) {
   const s = getStudent(id); if (!s) return;
   const list = seedTechniqueIfNeeded(s);
-  if (!list[idx]) return;
-  list[idx].level = ((list[idx].level || 0) + 1) % 3;
+  if (!list[idx] || isHeadingItem(list[idx].name)) return;
+  list[idx].level = ((list[idx].level || 0) + 1) % TECH_LEVELS.length;
   save();
   const el = document.getElementById('technique-list-' + id);
   if (el) el.innerHTML = techniqueChecklistHTML(s);
@@ -7641,6 +7659,19 @@ function addTechnique(id) {
   if (!name) return;
   seedTechniqueIfNeeded(s).push({ name: name, level: 0 });
   if (input) input.value = '';
+  save();
+  const el = document.getElementById('technique-list-' + id);
+  if (el) el.innerHTML = techniqueChecklistHTML(s);
+}
+
+// Change the wording of one line on this pupil's list (their tick stays)
+function editTechnique(id, idx) {
+  const s = getStudent(id); if (!s) return;
+  const list = seedTechniqueIfNeeded(s); const it = list[idx]; if (!it) return;
+  const head = isHeadingItem(it.name);
+  const v = prompt(head ? 'Section heading:' : 'Change the wording for ' + s.name + ':', techFill(head ? headingText(it.name) : it.name, s.instrument));
+  if (v === null || !v.trim()) return;
+  it.name = head ? '# ' + v.trim() : v.trim();
   save();
   const el = document.getElementById('technique-list-' + id);
   if (el) el.innerHTML = techniqueChecklistHTML(s);
@@ -7669,6 +7700,92 @@ function migrateTechSets() {
 }
 migrateTechSets();
 
+// Checklist wording that fits both instruments:
+//   {instrument} → violin / viola   {Instrument} → Violin / Viola   {strings} → G, D, A, E / C, G, D, A
+// Filled in for each pupil; shown as "violin/viola" in the Library.
+function techFill(name, instr) {
+  const va = instr === 'viola', vn = instr === 'violin';
+  return String(name || '')
+    .replace(/\{instrument\}/g, va ? 'viola' : vn ? 'violin' : 'violin/viola')
+    .replace(/\{Instrument\}/g, va ? 'Viola' : vn ? 'Violin' : 'Violin/viola')
+    .replace(/\{strings\}/g, va ? 'C, G, D, A' : vn ? 'G, D, A, E' : 'violin G, D, A, E · viola C, G, D, A');
+}
+// Turn a pasted list into checklist lines. Ticked/unticked boxes and bullets are
+// stripped; if the list uses ☐ boxes, lines without one become section headings
+// (# …), and so do numbered lines like "1. Bow hold".
+function parseChecklistPaste(raw) {
+  const lines = String(raw || '').split(/\r?\n/).map(function(l){ return l.trim(); }).filter(Boolean);
+  const hasBoxes = lines.some(function(l){ return /^[☐☑✓✔□■•\-*]/.test(l); });
+  return lines.map(function(l) {
+    if (/^#/.test(l)) return '# ' + l.replace(/^#+\s*/, '');
+    const boxed = /^[☐☑✓✔□■•\-*]\s*/.test(l);
+    const text = l.replace(/^[☐☑✓✔□■•\-*]\s*/, '').trim();
+    if (!text) return null;
+    if (!boxed && (hasBoxes || /^\d+[.)]\s+\S/.test(l))) return '# ' + text;
+    return text;
+  }).filter(Boolean);
+}
+const BEGINNER_STRINGS_SET = [
+  '# 1. Instrument awareness and posture',
+  'Knows the names of the four strings ({strings}).', 'Knows the parts of the {instrument}.', 'Handles the {instrument} safely.',
+  'Handles and cares for the bow correctly.', 'Can stand with balanced posture.', 'Can sit with balanced posture.',
+  'Understands rest position and playing position.', 'Can bring the {instrument} into playing position comfortably.',
+  '{Instrument} is balanced between shoulder, collarbone and jaw.', 'Head and neck remain relaxed.',
+  'Shoulders are free from unnecessary tension.', 'Can maintain a comfortable playing position without gripping.',
+  '# 2. Bow hold and right-hand preparation',
+  'Understands the parts of the bow (frog, stick, hair, tip).', 'Can make a relaxed bow hold.', 'Thumb is bent and flexible.',
+  'Fingers are naturally curved.', 'Little finger is curved and balanced on the stick.', 'Index finger makes appropriate contact with the stick.',
+  'Can hold and balance the bow independently.', 'Can place and remove the bow from the string.',
+  'Can make controlled bow movements away from the {instrument}.', 'Can maintain a flexible wrist and fingers.',
+  '# 3. First bowing skills',
+  'Can bow open strings.', 'Can produce a clear, consistent sound.', 'Can draw the bow without excessive pressure.',
+  'Can keep the bow approximately parallel to the bridge.', 'Can maintain a consistent sounding point.', 'Can use the upper half of the bow.',
+  'Can use the lower half of the bow.', 'Can use the middle of the bow.', 'Can play a controlled full bow.',
+  'Can play separate down-bows and up-bows.', 'Can maintain an even bow speed.', 'Can stop the bow cleanly.',
+  'Can play simple rhythmic patterns on open strings.',
+  '# 4. String crossings and bow control',
+  'Can identify the different levels of the four strings.', 'Can move between adjacent strings.',
+  'Can cross strings without unnecessary arm or shoulder tension.', 'Can play separate bows across two strings.',
+  'Can play simple string-crossing patterns.', 'Can maintain a straight bow during string crossings.',
+  'Can coordinate bow changes with simple rhythms.', 'Can control bow distribution.', 'Can use different parts of the bow intentionally.',
+  'Can play simple two-string patterns.',
+  '# 5. Left-hand preparation and finger placement',
+  'Can bring the left hand into position without twisting the wrist.', 'Thumb is relaxed and appropriately placed.',
+  'Wrist remains approximately straight.', 'Fingers are curved and ready above the fingerboard.', 'Fingers approach the string from above.',
+  'Can place the first finger independently.', 'Can place the second finger independently.', 'Can place the third finger independently.',
+  'Can place the fourth finger when introduced.', 'Fingers remain close to the fingerboard.',
+  'Can lift and replace fingers without collapsing the hand.', 'Can maintain a relaxed thumb whilst fingering.',
+  'Can coordinate left-hand fingers with open-string bowing.',
+  '# 6. Intonation and finger patterns',
+  'Can recognise whether a note is higher or lower.', 'Can listen to and compare open strings.',
+  'Can recognise when a fingered note is out of tune.', 'Can place fingers accurately in first position.',
+  'Can distinguish between whole-tone and semitone spacing.', 'Can play simple finger patterns on individual strings.',
+  'Can maintain consistent finger spacing.', 'Can transfer familiar finger patterns between strings.',
+  'Can play simple scales in first position.', 'Can listen for accurate intonation whilst playing.',
+  'Can make simple corrections independently.', 'Can tune with appropriate assistance.',
+  '# 7. Developing bow strokes and coordination',
+  'Can play détaché.', 'Can play simple legato.', 'Can play two notes in one bow.', 'Can play four notes in one bow.',
+  'Can maintain an even sound across a bow change.', 'Can play simple staccato when ready.',
+  'Can coordinate different bow lengths with rhythms.', 'Can coordinate left and right hands independently.',
+  'Can maintain a steady pulse.', 'Can play simple rhythmic combinations.', 'Can recognise and correct basic coordination problems.',
+  '# 8. Musical independence',
+  'Can maintain a steady tempo.', 'Can follow basic musical notation.', 'Can recognise basic note values and rests.',
+  'Can recognise basic dynamics.', 'Can observe bow directions and bowing instructions.', 'Can play simple musical phrases.',
+  'Can recognise musical phrasing.', 'Can make basic dynamic contrasts.', 'Can listen to their own sound and make adjustments.',
+  'Can play a complete beginner piece with continuity.', 'Can identify a section that needs further practice.',
+  'Can practise a short passage independently.', 'Can play a piece from beginning to end with confidence.'
+];
+// Added once as its own set; delete or rename it freely afterwards
+(function addBeginnerStringsSet() {
+  try {
+    if (localStorage.getItem('studio_techset_beginner_v1')) return;
+    if (!techniqueSets.some(function(x){ return x.name === 'Beginner technical checklist (violin & viola)'; }))
+      techniqueSets.push({ id: 'tsbeg' + Date.now(), name: 'Beginner technical checklist (violin & viola)', items: BEGINNER_STRINGS_SET.slice(), starter: false });
+    localStorage.setItem('studio_technique_sets', JSON.stringify(techniqueSets));
+    localStorage.setItem('studio_techset_beginner_v1', '1');
+  } catch (e) {}
+})();
+
 function starterTechSet() {
   return techniqueSets.find(function(x){ return x.starter; }) || techniqueSets[0] || { items: [] };
 }
@@ -7687,7 +7804,7 @@ function renderTechSets() {
       + '<button onclick="toggleTechSet(\'' + id + '\')" style="flex:1;text-align:left;background:none;border:none;font-family:\'Special Elite\',cursive;cursor:pointer;padding:4px 0;display:flex;align-items:center;gap:8px;color:var(--ink)">'
       + '<span style="font-size:0.75rem;color:var(--muted);display:inline-block;transform:rotate(' + (open ? '90' : '0') + 'deg);transition:transform 0.15s">▶</span>'
       + '<span style="flex:1;font-size:0.9rem;font-weight:600">' + esc(set.name) + '</span>'
-      + '<span style="font-size:0.7rem;color:var(--muted)">' + set.items.length + ' item' + (set.items.length === 1 ? '' : 's') + '</span></button>'
+      + '<span style="font-size:0.7rem;color:var(--muted)">' + tickableCount(set.items) + ' item' + (tickableCount(set.items) === 1 ? '' : 's') + '</span></button>'
       + '<button onclick="setStarterTechSet(\'' + id + '\')" title="' + (set.starter ? 'New pupils start with this set' : 'Make this the set new pupils start with') + '" style="background:none;border:none;font-size:1.05rem;cursor:pointer;color:' + (set.starter ? '#e6a817' : '#ccc') + '">' + (set.starter ? '★' : '☆') + '</button>'
       + '<button onclick="renameTechSet(\'' + id + '\')" title="Rename" style="background:none;border:none;font-size:0.9rem;cursor:pointer">✏️</button>'
       + '<button onclick="duplicateTechSet(\'' + id + '\')" title="Copy this set" style="background:none;border:none;font-size:0.85rem;cursor:pointer;color:var(--violin)">⧉</button>'
@@ -7696,17 +7813,23 @@ function renderTechSets() {
     if (open) {
       html += '<div style="padding:8px 10px 10px">'
         + (set.items.length ? set.items.map(function(name, i) {
-            return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:#fff;margin-bottom:5px;border:1px solid var(--warm)">'
-              + '<span style="flex:1;font-size:0.88rem">' + esc(name) + '</span>'
+            const head = isHeadingItem(name);
+            return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:' + (head ? 'var(--tech-bg)' : '#fff') + ';margin:' + (head && i ? '12px' : '0') + ' 0 5px;border:1px solid ' + (head ? 'var(--tech-bd)' : 'var(--warm)') + '">'
+              + '<span onclick="editTechSetItem(\'' + id + '\',' + i + ')" title="Tap to change the wording" style="flex:1;cursor:text;font-size:' + (head ? '0.85rem;font-weight:700;color:var(--deep)' : '0.88rem') + '">' + esc(techFill(head ? headingText(name) : name, '')) + ' <span style="font-size:0.7rem;opacity:0.45">✏️</span></span>'
               + moveArrowsHTML('moveTechSetItem(\'' + id + '\',' + i + ',-1)', 'moveTechSetItem(\'' + id + '\',' + i + ',1)', i === 0, i === set.items.length - 1)
               + '<button onclick="removeTechSetItem(\'' + id + '\',' + i + ')" title="Remove" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button>'
               + '</div>';
           }).join('') : '<p style="color:var(--muted);font-size:0.8rem;font-style:italic;margin:2px 0 6px">Empty - add the techniques for this set below.</p>')
         + '<div style="display:flex;gap:8px;margin-top:6px">'
-        + '<input type="text" id="techset-item-' + esc(set.id) + '" placeholder="Add a technique…" maxlength="40" onkeydown="if(event.key===\'Enter\')addTechSetItem(\'' + id + '\')" '
+        + '<input type="text" id="techset-item-' + esc(set.id) + '" placeholder="Add a technique (start with # for a heading)…" maxlength="160" onkeydown="if(event.key===\'Enter\')addTechSetItem(\'' + id + '\')" '
         + 'style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box">'
         + '<button onclick="addTechSetItem(\'' + id + '\')" style="background:var(--deep);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:\'Special Elite\',cursive;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ Add</button>'
-        + '</div></div>';
+        + '</div>'
+        + '<details style="margin-top:8px"><summary style="cursor:pointer;list-style:none;font-size:0.8rem;color:var(--deep);font-weight:600;padding:6px 0">📋 Paste a list ▾</summary>'
+        + '<div style="font-size:0.7rem;color:var(--muted);margin:2px 0 6px">One per line. ☐ boxes and bullets are removed; numbered lines like “1. Bow hold” (or lines starting with #) become section headings. Write {instrument} or {strings} to fit violin and viola.</div>'
+        + '<textarea id="techset-paste-' + esc(set.id) + '" rows="6" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical"></textarea>'
+        + '<button onclick="pasteTechSetItems(\'' + id + '\')" style="margin-top:6px;background:var(--deep);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:\'Special Elite\',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">Add these lines</button>'
+        + '</details></div>';
     }
     return html + '</div>';
   }).join('');
@@ -7764,6 +7887,27 @@ function addTechSetItem(id) {
   set.items.push(name);
   save(); renderTechSets();
   const inp = document.getElementById('techset-item-' + id); if (inp) inp.focus();
+}
+
+function editTechSetItem(id, i) {
+  const set = getTechSet(id); if (!set || set.items[i] === undefined) return;
+  const head = isHeadingItem(set.items[i]);
+  const cur = head ? headingText(set.items[i]) : set.items[i];
+  const v = prompt(head ? 'Section heading:' : 'Change the wording ({instrument} and {strings} fit violin and viola):', cur);
+  if (v === null || !v.trim()) return;
+  set.items[i] = head ? '# ' + v.trim() : v.trim();
+  save(); renderTechSets();
+}
+
+function pasteTechSetItems(id) {
+  const set = getTechSet(id); if (!set) return;
+  const el = document.getElementById('techset-paste-' + id);
+  const lines = parseChecklistPaste(el ? el.value : '');
+  if (!lines.length) return;
+  set.items = set.items.concat(lines);
+  save(); renderTechSets();
+  const n = lines.filter(function(l){ return !isHeadingItem(l); }).length, h = lines.length - n;
+  alert('Added ' + n + ' item' + (n === 1 ? '' : 's') + (h ? ' in ' + h + ' section' + (h === 1 ? '' : 's') : '') + ' to "' + set.name + '".');
 }
 
 function removeTechSetItem(id, i) {
