@@ -782,6 +782,10 @@
 .lib-kind-tile span { display: block; font-size: 0.7rem; opacity: 0.8; font-weight: 400; }
 .lib-kind-tile.active { outline: 3px solid var(--ink); outline-offset: 2px; }
 @media (max-width: 600px) { #lib-kind-tiles { grid-template-columns: repeat(2, minmax(0,1fr)) !important; } }
+
+/* Progress counts on the Repertoire tab tiles */
+.rep-count:empty { display: none; }
+.rep-count { display: inline-flex; gap: 8px; align-items: center; background: rgba(255,255,255,0.88); color: var(--ink); border-radius: 999px; padding: 3px 10px; font-size: 0.78rem; font-weight: 600; margin-top: 2px; }
 </style>
 <script>
 // ── COLOUR THEMES ──────────────────────────────────────────────────────────
@@ -2549,6 +2553,7 @@ function save() {
   localStorage.setItem('studio_violaness_cats', JSON.stringify(violanessCats));
   // Keep the Library tile counts in step with the banks
   try { updateLibraryBadges(); } catch (e) {}
+  try { refreshRepTileCounts(); } catch (e) {}
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
@@ -3650,21 +3655,26 @@ function renderDetail(s, preserveTab = false) {
       <div class="admin-grid" style="grid-template-rows:none;grid-auto-flow:row">
         <button class="admin-tile" style="background:var(--string);color:var(--ink)" onclick="showTechniqueSection('${s.id}','studybooks')">
           <span class="admin-tile-icon">📖</span><span class="admin-tile-label">Study books</span>
+          <span class="rep-count" data-sid="${s.id}" data-kind="studybooks">${repTileCountHTML(s, 'studybooks')}</span>
         </button>
         <button class="admin-tile" style="background:var(--sky);color:var(--ink)" onclick="showTechniqueSection('${s.id}','scales')">
           <span class="admin-tile-icon">🎼</span><span class="admin-tile-label">Scale checklist</span>
         </button>
         <button class="admin-tile" style="background:var(--viola)" onclick="showTechniqueSection('${s.id}','albums')">
           <span class="admin-tile-icon">🎵</span><span class="admin-tile-label">Albums</span>
+          <span class="rep-count" data-sid="${s.id}" data-kind="albums">${repTileCountHTML(s, 'albums')}</span>
         </button>
         <button class="admin-tile" style="background:var(--violin)" onclick="showTechniqueSection('${s.id}','methodbooks')">
           <span class="admin-tile-icon">📘</span><span class="admin-tile-label">Method books</span>
+          <span class="rep-count" data-sid="${s.id}" data-kind="methodbooks">${repTileCountHTML(s, 'methodbooks')}</span>
         </button>
         <button class="admin-tile" style="background:var(--ink)" onclick="showTechniqueSection('${s.id}','piecetracks')">
           <span class="admin-tile-icon">🎶</span><span class="admin-tile-label">Pieces</span>
+          <span class="rep-count" data-sid="${s.id}" data-kind="piecetracks">${repTileCountHTML(s, 'piecetracks')}</span>
         </button>
         <button class="admin-tile" style="background:var(--deep)" onclick="showTechniqueSection('${s.id}','technique')">
           <span class="admin-tile-icon">🛠</span><span class="admin-tile-label">Technique checklist</span>
+          <span class="rep-count" data-sid="${s.id}" data-kind="technique">${repTileCountHTML(s, 'technique')}</span>
         </button>
         <!-- greens down the left (light → dark), blues down the right (light → dark) -->
       </div>
@@ -7583,6 +7593,46 @@ function migrateTechLevels(s) {
   s.techLevelsV2 = true;
 }
 
+// ── Counts on the Repertoire tab tiles (worked out from the ticks, nothing to fill in) ──
+function countLevels(list, ticks, max) {
+  const c = [0, 0, 0, 0];
+  const keys = uniqueItemKeys(list);
+  list.forEach(function(it, n) {
+    if (isHeadingItem(it)) return;
+    c[Math.min(bookTickLevel(ticks[keys[n]]), max)]++;
+  });
+  return c;
+}
+function repTileCountHTML(s, kind) {
+  try {
+    if (kind === 'technique') {
+      const list = Array.isArray(s.techniqueChecklist) ? s.techniqueChecklist : [];
+      const c = [0, 0, 0, 0];
+      list.forEach(function(it){ if (it && !isHeadingItem(it.name)) c[Math.min(it.level || 0, 3)]++; });
+      if (!c[1] && !c[2] && !c[3]) return '';
+      return (c[1] ? '<span title="Introduced">🔵 ' + c[1] + '</span>' : '') + (c[2] ? '<span title="Developing">🟠 ' + c[2] + '</span>' : '') + (c[3] ? '<span title="Secure">🟢 ' + c[3] + '</span>' : '');
+    }
+    let books;
+    if (kind === 'piecetracks') books = pieceTrackList(s).map(function(b){ return { title: bookTitle(b), items: pieceTrackItems(b) }; });
+    else books = (s[{ studybooks: 'studyBooks', methodbooks: 'methodBooks', albums: 'albums' }[kind]] || []).map(function(b){ return { title: bookTitle(b), items: bookStudies(b) }; });
+    let w = 0, f = 0;
+    books.forEach(function(b) {
+      const c = countLevels(b.items, sharedTicks(s, b.title), 2);
+      w += c[1]; f += c[2];
+    });
+    if (!w && !f) return '';
+    return (w ? '<span title="Working on">🟠 ' + w + '</span>' : '') + (f ? '<span title="Finished">🟢 ' + f + '</span>' : '');
+  } catch (e) { return ''; }
+}
+// Keep any tile counts on screen up to date (called after every save)
+function refreshRepTileCounts() {
+  document.querySelectorAll('.rep-count[data-sid]').forEach(function(el) {
+    const s = getStudent(el.dataset.sid); if (!s) return;
+    const h = repTileCountHTML(s, el.dataset.kind);
+    if (el.innerHTML !== h) el.innerHTML = h;
+  });
+}
+
 function seedTechniqueIfNeeded(s) {
   migrateTechLevels(s);
   if (!s.techniqueChecklist) {
@@ -7611,8 +7661,12 @@ function techniqueChecklistHTML(s) {
   }
   return list.map(function(item, i) {
     if (isHeadingItem(item.name)) {
+      // How this section is going, at a glance
+      const c = [0, 0, 0, 0];
+      for (let j = i + 1; j < list.length && !isHeadingItem(list[j].name); j++) c[Math.min(list[j].level || 0, 3)]++;
+      const sum = (c[1] || c[2] || c[3]) ? '<span style="flex:0 0 auto;font-size:0.72rem;color:var(--muted);display:inline-flex;gap:6px">' + (c[1] ? '<span>🔵 ' + c[1] + '</span>' : '') + (c[2] ? '<span>🟠 ' + c[2] + '</span>' : '') + (c[3] ? '<span>🟢 ' + c[3] + '</span>' : '') + '</span>' : '';
       return '<div style="display:flex;align-items:center;gap:8px;margin:' + (i ? '14px' : '2px') + ' 0 6px;padding-bottom:4px;border-bottom:2px solid var(--warm)">'
-        + '<span onclick="editTechnique(\'' + s.id + '\',' + i + ')" title="Tap to change the heading" style="flex:1;cursor:text;font-size:0.82rem;font-weight:700;color:var(--deep)">' + esc(techFill(headingText(item.name), s.instrument)) + '</span>'
+        + '<span onclick="editTechnique(\'' + s.id + '\',' + i + ')" title="Tap to change the heading" style="flex:1;cursor:text;font-size:0.82rem;font-weight:700;color:var(--deep)">' + esc(techFill(headingText(item.name), s.instrument)) + '</span>' + sum
         + moveArrowsHTML('moveTechnique(\'' + s.id + '\',' + i + ',-1)', 'moveTechnique(\'' + s.id + '\',' + i + ',1)', i === 0, i === list.length - 1)
         + '<button onclick="removeTechnique(\'' + s.id + '\',' + i + ')" title="Remove heading" style="flex:0 0 auto;background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:0 2px">×</button>'
         + '</div>';
@@ -7775,6 +7829,8 @@ const BEGINNER_STRINGS_SET = [
   'Can play a complete beginner piece with continuity.', 'Can identify a section that needs further practice.',
   'Can practise a short passage independently.', 'Can play a piece from beginning to end with confidence.'
 ];
+const INTERMEDIATE_STRINGS_SET = ["# 1. Posture, balance and physical coordination", "Maintains a balanced, comfortable standing or sitting position while playing.", "Holds the {instrument} securely without unnecessary tension in the neck, shoulder or left hand.", "Keeps the left shoulder and arm free enough to move naturally.", "Coordinates the movement of the arms and hands without unnecessary stiffness.", "Can identify and release obvious areas of tension while playing.", "Maintains a relaxed, balanced set-up during longer passages.", "# 2. Bow hold and tone production", "Maintains a flexible, balanced bow hold.", "Uses a supple thumb and flexible fingers.", "Controls bow speed, weight and contact point to produce a consistent tone.", "Uses the full bow when appropriate and manages bow distribution.", "Produces an even sound across the length of the bow.", "Adjusts contact point and bow speed for different dynamics.", "Plays with a clear, resonant tone without pressing.", "Makes smooth, controlled bow changes.", "Maintains a consistent sound when crossing strings.", "# 3. Bow strokes and articulation", "Plays détaché with an even, controlled stroke.", "Plays legato across several notes in one bow.", "Plays separate bows with clear, consistent articulation.", "Develops controlled martelé.", "Develops a light, controlled spiccato where appropriate.", "Distinguishes between smooth, sustained and articulated bow strokes.", "Controls accents and releases without disturbing the pulse.", "Changes bow stroke to suit the musical character and style.", "# 4. Left-hand technique and finger dexterity", "Maintains a relaxed left-hand frame while allowing fingers to move independently.", "Places fingers accurately and economically.", "Maintains reliable finger spacing in common patterns.", "Uses clear, even finger action without excessive lifting.", "Develops finger independence and coordination.", "Plays scales and passages with different finger patterns securely.", "Uses extensions and contractions comfortably where required.", "Coordinates left-hand movement with bow changes and string crossings.", "Maintains clarity and accuracy in quicker passagework.", "# 5. Scales, arpeggios and tonal understanding", "Plays major scales in a range of keys with secure fingering and intonation.", "Plays minor scales, including relevant harmonic and melodic forms.", "Plays tonic arpeggios with secure intonation and an even sound.", "Understands and applies the tone and semitone pattern of major and minor scales.", "Recognises key signatures and applies accidentals accurately.", "Plays scales using a range of rhythms and bowing patterns.", "Maintains an even tone and steady pulse throughout a scale.", "Identifies the tonic and dominant in familiar keys.", "Uses scales and arpeggios to support the learning of repertoire.", "# 6. Shifting and positions", "Understands the purpose of shifting and moves the hand as a coordinated unit.", "Shifts between first and third positions with increasing accuracy.", "Plays in third position with a secure hand frame.", "Begins to use second and/or fifth position where appropriate.", "Uses a relaxed thumb and hand during shifts.", "Prepares shifts in advance rather than moving at the last moment.", "Listens for accurate arrival notes.", "Uses suitable guide fingers where helpful.", "Maintains a connected sound through shifts.", "Recognises when a passage requires a change of position.", "# 7. Vibrato", "Understands the basic movement and purpose of vibrato.", "Can produce a relaxed vibrato movement without gripping the instrument.", "Develops a consistent movement in the left hand or arm, according to the pupil’s natural approach.", "Begins vibrato slowly and with control.", "Can start and stop vibrato intentionally.", "Uses vibrato selectively rather than continuously.", "Adjusts vibrato width and speed to suit the musical context.", "Maintains secure intonation and a relaxed hand while using vibrato.", "# 8. Double stops and chordal playing", "Coordinates the bow across two strings to produce a clear double stop.", "Adjusts the bow level accurately between adjacent strings.", "Places both left-hand fingers accurately together.", "Listens for the balance and intonation of both notes.", "Plays simple thirds, sixths or octaves where appropriate to the pupil’s level.", "Plays simple three- and four-note chords with a controlled bow.", "Releases chordal notes cleanly and maintains the musical pulse.", "# 9. Intonation and listening skills", "Listens actively to the quality and accuracy of each note.", "Uses open strings and familiar reference notes to check tuning.", "Recognises when a note is sharp or flat and makes a considered adjustment.", "Maintains accurate intonation in familiar keys and finger patterns.", "Listens for resonance and ringing notes.", "Checks intonation during shifts and in higher positions.", "Can identify and correct some intonation problems independently.", "Listens to the relationship between notes in scales, arpeggios and double stops.", "Maintains intonation while concentrating on rhythm, bowing and expression.", "# 10. Musical expression and interpretation", "Observes and follows dynamic markings.", "Shapes phrases with a clear sense of direction.", "Uses appropriate bow distribution to support phrasing.", "Distinguishes between different articulations and musical characters.", "Observes tempo indications and changes of tempo.", "Uses vibrato and tone colour thoughtfully where appropriate.", "Understands and communicates basic stylistic differences between pieces.", "Listens to accompaniment and responds musically.", "Makes informed musical choices rather than relying only on written instructions.", "# 11. Rhythm, sight-reading and musical literacy", "Maintains a steady pulse when playing alone.", "Reads and performs common note values and rests accurately.", "Reads and performs dotted rhythms and simple syncopations.", "Understands and observes common time signatures.", "Counts accurately through rests and longer note values.", "Reads notes confidently across the {instrument}’s range and in familiar positions.", "Recognises key signatures and applies accidentals.", "Observes repeat signs, first and second time bars and other common navigation markings.", "Sight-reads short passages while maintaining continuity.", "Recovers from small mistakes without stopping.", "# 12. Practice skills and musical independence", "Can identify a specific difficulty in a piece or exercise.", "Breaks a challenging passage into manageable sections.", "Practises slowly and increases tempo gradually while maintaining accuracy.", "Repeats passages with a clear purpose rather than simply playing them through.", "Uses a metronome where helpful.", "Uses listening and self-assessment to identify improvements.", "Can explain what they are working on and what they need to improve.", "Plans practice around specific goals.", "Revisits previously learned material to maintain security.", "Begins to make independent decisions about how to practise effectively."];
+const ADVANCED_STRINGS_SET = ["# 1. Posture, balance and physical efficiency", "Maintains a balanced, adaptable playing position in standing and seated performance.", "Supports the instrument securely without relying on excessive pressure from the jaw, shoulder or left hand.", "Maintains freedom of movement through the shoulders, arms, wrists and hands.", "Coordinates large and small movements efficiently at speed.", "Adjusts physical approach to meet different technical and musical demands.", "Recognises and releases unnecessary tension during demanding passages.", "Sustains physical efficiency and sound quality through extended rehearsals and performances.", "Makes practical adjustments to set-up when they improve comfort, freedom or reliability.", "# 2. Advanced bow control and tone production", "Controls bow speed, weight and contact point independently and in combination.", "Produces a wide range of tone colours without compromising sound quality.", "Maintains a focused, resonant sound at very soft and very loud dynamics.", "Controls bow distribution precisely across long phrases and complex passages.", "Makes seamless bow changes at different dynamics and speeds.", "Maintains an even tone across all strings and registers.", "Controls the point of contact to suit register, string, dynamic and musical character.", "Produces clear articulation without excessive pressure.", "Uses the bow efficiently in technically demanding passagework.", "Sustains a consistent sound during extended playing.", "# 3. Advanced bow strokes and articulation", "Controls a range of détaché speeds, lengths and characters.", "Plays sustained legato across long phrases and complex string crossings.", "Controls martelé with a clear, immediate articulation and clean release.", "Plays spiccato with adjustable height, speed and character.", "Develops controlled sautillé at appropriate tempi.", "Plays ricochet with consistent grouping and rebound.", "Controls collé and other short, articulated strokes where repertoire requires them.", "Differentiates between on-the-string and off-the-string strokes.", "Changes bow stroke and articulation rapidly without disrupting pulse or sound quality.", "Applies advanced bow techniques accurately within orchestral and solo repertoire.", "# 4. Left-hand fluency and finger dexterity", "Maintains a flexible left-hand frame across all commonly used positions.", "Coordinates rapid finger action with minimal unnecessary movement.", "Maintains clarity and evenness in fast scales, arpeggios and passagework.", "Uses extensions and contractions efficiently in all relevant positions.", "Coordinates complex finger patterns with string crossings and bow changes.", "Maintains reliable intonation in chromatic and diatonic passagework.", "Executes trills with evenness, speed and control.", "Controls finger articulation in repeated notes and rapid patterns.", "Maintains left-hand freedom during demanding bow strokes.", "Adjusts fingering choices to support musical phrasing, tone and technical security.", "# 5. Scales, arpeggios and advanced tonal fluency", "Plays major and minor scales fluently in all keys across an appropriate range.", "Plays scales in three octaves and, where appropriate, four octaves.", "Plays a wide range of arpeggios, including dominant and diminished forms.", "Plays scales and arpeggios in varied rhythms, articulations and bowing patterns.", "Maintains evenness, intonation and tone across the full range.", "Uses varied fingerings and positions confidently.", "Plays chromatic scales with secure intonation and fluent fingering.", "Plays scales in thirds, sixths and octaves where appropriate.", "Develops fluency in tenths where suitable to the player’s hand and repertoire.", "Uses scale and arpeggio patterns to recognise and prepare technical material in repertoire.", "# 6. Shifting and positional fluency", "Shifts accurately and efficiently throughout the instrument’s range.", "Moves confidently between positions, including less familiar positions.", "Uses a range of shifting approaches according to musical context.", "Maintains accurate intonation in high positions.", "Uses guide fingers, anticipatory movement and preparation appropriately.", "Controls the speed and timing of shifts to suit the musical phrase.", "Maintains a connected tone through shifts.", "Executes rapid position changes without unnecessary movement.", "Chooses fingerings and positions that support phrasing, articulation and tone colour.", "Maintains security when shifting during fast passagework and complex bowing.", "# 7. Vibrato and tone colour", "Uses a relaxed, controlled vibrato with consistent quality.", "Varies vibrato speed, width and intensity according to musical context.", "Controls the beginning, continuation and release of vibrato.", "Uses vibrato selectively for expressive purpose.", "Maintains secure intonation and left-hand freedom while using vibrato.", "Varies tone colour through a combination of vibrato, bow speed, weight and contact point.", "Creates distinct tonal characters appropriate to different composers and styles.", "Maintains expressive control in sustained and exposed passages.", "# 8. Double stops, chords and polyphonic playing", "Plays thirds, sixths and octaves with secure intonation across relevant positions.", "Plays tenths where appropriate, with attention to comfort and individual hand suitability.", "Maintains accurate intonation when shifting in double stops.", "Balances the two notes of a double stop through bow control.", "Plays rapid double-stop passagework with clarity and rhythmic control.", "Executes three- and four-note chords with a controlled, resonant sound.", "Manages chord preparation, distribution and release effectively.", "Brings out individual voices in contrapuntal or polyphonic writing.", "Maintains clarity and independence between voices in Bach and other polyphonic repertoire.", "# 9. Intonation and advanced listening", "Maintains reliable intonation across all registers and positions.", "Uses harmonic context and tonal relationships to guide intonation.", "Listens for resonance and sympathetic vibration where appropriate.", "Adjusts intonation according to harmonic function and ensemble context.", "Maintains accurate intonation in chromatic, atonal and technically complex writing.", "Tunes double stops and chords with awareness of their harmonic context.", "Identifies and corrects intonation problems independently.", "Maintains intonation while managing complex rhythms, bowings and musical expression.", "Listens critically to tone quality, articulation and balance as well as pitch.", "Makes informed adjustments when playing with piano, chamber groups or orchestra.", "# 10. Rhythmic control and complex metre", "Maintains a secure pulse through complex rhythmic patterns.", "Performs tuplets and irregular groupings accurately.", "Manages syncopation, cross-rhythms and changing subdivisions.", "Maintains rhythmic precision during complex string crossings and bowing patterns.", "Observes changes of metre and tempo securely.", "Counts and sustains long rests accurately in ensemble repertoire.", "Maintains rhythmic independence when musical lines are rhythmically complex.", "Uses subdivision and internal pulse to manage technically demanding passages.", "# 11. Musical interpretation and style", "Develops a convincing overall interpretation of a work.", "Shapes long phrases with clear direction and structural awareness.", "Understands harmonic movement and uses it to inform phrasing.", "Makes informed choices about tempo, rubato and flexibility.", "Uses articulation, dynamics and tone colour to communicate musical character.", "Demonstrates stylistic awareness across Baroque, Classical, Romantic and modern repertoire.", "Understands the relationship between written notation and historically informed or stylistically appropriate performance.", "Balances expressive freedom with rhythmic and structural integrity.", "Develops an individual musical voice while respecting the score and style.", "Sustains musical concentration and direction throughout a complete work.", "# 12. Sight-reading and score literacy", "Sight-reads unfamiliar music while maintaining pulse and continuity.", "Reads fluently across the full range of the instrument.", "Recognises complex rhythms, key signatures and changing metres.", "Understands and observes advanced notation, articulation and expression markings.", "Identifies musical structures, sequences and recurring patterns.", "Reads orchestral and chamber music scores sufficiently to understand their own part in context.", "Follows repeats, codas, rehearsal marks and complex navigation accurately.", "Recovers efficiently from mistakes without losing place.", "Makes sensible first-reading decisions about fingering, bowing and musical priorities.", "# 13. Technical problem-solving and practice independence", "Analyses technically demanding passages and identifies the source of difficulty.", "Selects appropriate practice methods for specific technical problems.", "Uses slow practice, rhythmic variation and subdivision purposefully.", "Uses metronome work selectively to develop accuracy and control.", "Plans bowings and fingerings with musical and practical awareness.", "Evaluates the effectiveness of practice and adapts strategies when necessary.", "Maintains technical security while increasing tempo.", "Integrates isolated technical work back into the musical context.", "Organises practice effectively over longer periods.", "Takes responsibility for preparation, interpretation and ongoing technical development.", "# 14. Performance and ensemble application", "Maintains technical and musical security under performance pressure.", "Recovers calmly and musically from unexpected mistakes.", "Communicates clearly with accompanists and ensemble colleagues.", "Adapts intonation, balance, articulation and timing to the ensemble.", "Follows a conductor while maintaining awareness of the musical score.", "Leads or supports ensemble entries and transitions appropriately.", "Maintains concentration through long rehearsals and performances.", "Makes effective use of rehearsal time and responds constructively to feedback.", "Prepares technically and musically for auditions, recitals and orchestral work."];
 // Added once as its own set; delete or rename it freely afterwards
 (function addBeginnerStringsSet() {
   try {
@@ -7783,6 +7839,20 @@ const BEGINNER_STRINGS_SET = [
       techniqueSets.push({ id: 'tsbeg' + Date.now(), name: 'Beginner technical checklist (violin & viola)', items: BEGINNER_STRINGS_SET.slice(), starter: false });
     localStorage.setItem('studio_technique_sets', JSON.stringify(techniqueSets));
     localStorage.setItem('studio_techset_beginner_v1', '1');
+  } catch (e) {}
+})();
+
+// Intermediate and Advanced added once too (same rules as the Beginner one)
+(function addLevelSets() {
+  try {
+    if (localStorage.getItem('studio_techset_levels_v1')) return;
+    [['Intermediate technical checklist (violin & viola)', INTERMEDIATE_STRINGS_SET],
+     ['Advanced technical checklist (violin & viola)', ADVANCED_STRINGS_SET]].forEach(function(pair, n) {
+      if (!techniqueSets.some(function(x){ return x.name === pair[0]; }))
+        techniqueSets.push({ id: 'tslvl' + n + Date.now(), name: pair[0], items: pair[1].slice(), starter: false });
+    });
+    localStorage.setItem('studio_technique_sets', JSON.stringify(techniqueSets));
+    localStorage.setItem('studio_techset_levels_v1', '1');
   } catch (e) {}
 })();
 
