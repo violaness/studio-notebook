@@ -1092,40 +1092,8 @@ snApplyTheme();
         <option value="Beginner Repertoire - Violin">Beginner Repertoire - Violin</option>
       </select>
     </div>
-    <div id="lib-pieces-list" style="max-height:400px;overflow-y:auto"></div>
-    <div style="border-top:1px solid var(--warm);margin-top:14px;padding-top:14px">
-      <div class="section-label" style="margin-bottom:8px">Add to the library</div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:0.75rem;color:var(--muted)">It's a:
-          <span id="lib-new-piece-kind" style="display:flex;gap:6px;flex-wrap:wrap"></span>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:0.75rem;color:var(--muted)">For:
-          <span id="lib-new-piece-instr" style="display:flex;gap:6px;flex-wrap:wrap"></span>
-        </div>
-        <input type="text" id="lib-new-piece-title" placeholder="Title" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
-        <input type="text" id="lib-new-piece-composer" placeholder="Composer (optional)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
-        <input type="text" id="lib-new-piece-grade" placeholder="Grade (optional)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
-        <input type="text" id="lib-new-piece-note" placeholder="Note (optional), e.g. where it's filed" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
-        <textarea id="lib-new-piece-mvts" rows="2" placeholder="Movements or studies (optional): a number, e.g. 40, or one per line. Mix them, e.g. Theme then 40. Start a line with # for a heading" style="width:100%;padding:8px 12px;border-radius:8px;font-size:0.88rem;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;box-sizing:border-box;resize:vertical;background:var(--paper)"></textarea>
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:0.75rem;color:var(--muted)">Numbers are:
-          <span id="lib-new-piece-numlabel" style="display:flex;gap:6px;flex-wrap:wrap"></span>
-        </div>
-        <select id="lib-new-piece-cat" onchange="toggleNewCatInput(this.value)" style="padding:8px 12px;border-radius:8px;font-size:0.88rem">
-          <option value="My Library">My Library</option>
-          <option value="Scalability">Scalability</option>
-          <option value="Technique">Technique</option>
-          <option value="Studies - Viola">Studies - Viola</option>
-          <option value="Studies - Violin">Studies - Violin</option>
-          <option value="Repertoire - Viola">Repertoire - Viola</option>
-          <option value="Repertoire - Violin">Repertoire - Violin</option>
-          <option value="Beginner Repertoire - Viola">Beginner Repertoire - Viola</option>
-          <option value="Beginner Repertoire - Violin">Beginner Repertoire - Violin</option>
-          <option value="__new__">+ New category…</option>
-        </select>
-        <input type="text" id="lib-new-piece-cat-custom" placeholder="New category name" style="display:none;padding:8px 12px;border-radius:8px;font-size:0.88rem">
-        <button onclick="addLibPiece()" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">Add to library</button>
-      </div>
-    </div>
+    <div id="lib-pieces-list" style="max-height:70vh;overflow-y:auto"></div>
+    <button onclick="openNewLibPiece()" style="width:100%;margin-top:14px;background:none;border:1.5px dashed var(--viola);border-radius:10px;padding:10px;color:var(--viola);font-family:'Special Elite',cursive;font-size:0.88rem;font-weight:600;cursor:pointer">＋ Add to the library</button>
     <details style="margin-top:14px">
       <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
         <span>🗂 Manage categories</span><span style="font-weight:400">▾</span>
@@ -1683,7 +1651,7 @@ snApplyTheme();
         <option value="Beginner Repertoire - Violin">Beginner Repertoire - Violin</option>
       </select>
     </div>
-    <div id="libpick-toast" style="display:none;background:var(--soft-green2);color:var(--viola);border-radius:8px;padding:7px 12px;font-size:0.82rem;font-weight:600;margin-bottom:8px"></div>
+    <div id="libpick-toast" style="display:none;align-items:center;gap:8px;background:var(--soft-green2);color:var(--viola);border-radius:8px;padding:7px 12px;font-size:0.82rem;font-weight:600;margin-bottom:8px"></div>
     <div id="piece-db-list" style="overflow-y:auto;flex:1;margin-bottom:12px;-webkit-overflow-scrolling:touch"></div>
     <button class="btn-primary" onclick="closePieceDB()">Done</button>
   </div>
@@ -2134,7 +2102,7 @@ snApplyTheme();
 <!-- EDIT LIBRARY PIECE MODAL -->
 <div class="modal-overlay" id="edit-lib-piece-modal">
   <div class="modal">
-    <h2>Edit piece</h2>
+    <h2 id="edit-lib-piece-heading">Edit piece</h2>
     <input type="hidden" id="edit-lib-piece-idx">
     <div class="field-group">
       <label class="field-label">Title</label>
@@ -2170,7 +2138,7 @@ snApplyTheme();
     </div>
     <div class="field-group">
       <label class="field-label">Main category</label>
-      <select id="edit-lib-piece-cat" onchange="renderEditAlsoCats()">
+      <select id="edit-lib-piece-cat" onchange="editCatChanged(this.value)">
         <option value="My Library">My Library</option>
         <option value="Scalability">Scalability</option>
         <option value="Technique">Technique</option>
@@ -2180,7 +2148,9 @@ snApplyTheme();
         <option value="Repertoire - Violin">Repertoire - Violin</option>
         <option value="Beginner Repertoire - Viola">Beginner Repertoire - Viola</option>
         <option value="Beginner Repertoire - Violin">Beginner Repertoire - Violin</option>
+        <option value="__new__">+ New category…</option>
       </select>
+      <input type="text" id="edit-lib-piece-cat-custom" placeholder="New category name" style="display:none;margin-top:8px">
     </div>
     <div class="field-group">
       <label class="field-label">📂 Also show in (optional)</label>
@@ -5151,13 +5121,18 @@ function mergeBanksIntoLibrary() {
         delete b.ticks;
       });
     });
-    if (!s.pieceTracksSynced) {
-      (s.pieces || []).forEach(function(t){ ensureTechBook(s, t); });
+    if (!s.pieceTracksSynced2) {
+      // Pieces with ticks are kept on the Repertoire tab's Pieces list
       Object.keys(s.pieceMvtTicks || {}).forEach(function(k) {
         const tk = s.pieceMvtTicks[k] || {};
-        if (Object.keys(tk).some(function(x){ return bookTickLevel(tk[x]) > 0; })) ensureTechBook(s, k);
+        if (!Object.keys(tk).some(function(x){ return bookTickLevel(tk[x]) > 0; })) return;
+        const lib = visibleLibraryPieces().find(function(p){ return libTitleKey(p.title) === k; });
+        if (!lib || libKind(lib) !== 'piece') return;
+        if (!s.pieceTracks) s.pieceTracks = [];
+        if (s.pieceTracks.some(function(b){ return libTitleKey(bookTitle(b)) === k; })) return;
+        s.pieceTracks.push({ id: Date.now().toString() + Math.random().toString(36).slice(2, 5), bankId: libBid(lib), name: lib.title, studies: (lib.movements || []).slice() });
       });
-      s.pieceTracksSynced = true;
+      s.pieceTracksSynced2 = true;
     }
     if (!s.techBooksSynced) {
       (s.pieces || []).forEach(function(t){ ensureTechBook(s, t); });
@@ -5211,7 +5186,7 @@ function ensureTechBook(s, title) {
   const t = libTitleKey(title); if (!s || !t) return false;
   const lib = visibleLibraryPieces().find(function(p){ return libTitleKey(p.title) === t; });
   if (!lib || !lib.movements || !lib.movements.length) return false;
-  const field = { study: 'studyBooks', method: 'methodBooks', album: 'albums', piece: 'pieceTracks' }[libKind(lib)];
+  const field = { study: 'studyBooks', method: 'methodBooks', album: 'albums' }[libKind(lib)];
   if (!field) return false;
   const bid = libBid(lib);
   if (!s[field]) s[field] = [];
@@ -7410,20 +7385,33 @@ function removeAlbum(studentId, bookIdx) {
 // piece is taken off Working On.
 // Every line in Working On's 🎵 Pieces group belongs on this list too, with or
 // without movements, whatever type it is, and whether or not it's in the library.
-function syncPieceTracks(s) {
-  let changed = false;
+// The list is: everything in Working On's 🎵 Pieces right now (shown live, not
+// saved, so half-typed or changed titles never stick), plus pieces kept from
+// before - ones you added with ＋ Add piece, or that have any ticks.
+function hasAnyTicks(s, title) {
+  const tk = sharedTicks(s, title);
+  return Object.keys(tk).some(function(k){ return bookTickLevel(tk[k]) > 0; });
+}
+function pieceTrackList(s) {
+  const onWO = {};
   (s.pieces || []).forEach(function(t, i) {
-    if (!t || !String(t).trim() || pieceGroupOf(s, i) !== 'piece') return;
-    const k = libTitleKey(t);
-    const lib = visibleLibraryPieces().find(function(p){ return libTitleKey(p.title) === k; });
-    // Albums and books in the Pieces group show here too (as well as on their own tile)
-    if (!s.pieceTracks) s.pieceTracks = [];
-    if (s.pieceTracks.some(function(b){ return libTitleKey(bookTitle(b)) === k || libTitleKey(b.name) === k; })) return;
-    s.pieceTracks.push({ id: Date.now().toString() + Math.random().toString(36).slice(2, 5), bankId: lib ? libBid(lib) : null,
-                         name: lib ? lib.title : String(t).trim(), studies: lib && lib.movements ? lib.movements.slice() : [] });
-    changed = true;
+    if (t && String(t).trim() && pieceGroupOf(s, i) === 'piece') onWO[libTitleKey(t)] = String(t).trim();
   });
-  if (changed) { try { save(); } catch (e) {} }
+  // Tidy the kept list: drop ones with no ticks that aren't on Working On and you didn't add
+  const kept = (s.pieceTracks || []).filter(function(b) {
+    const k = libTitleKey(bookTitle(b));
+    return b.manual || hasAnyTicks(s, bookTitle(b)) || onWO[k];
+  });
+  if (kept.length !== (s.pieceTracks || []).length) { s.pieceTracks = kept; try { save(); } catch (e) {} }
+  const list = kept.slice();
+  const have = new Set(kept.map(function(b){ return libTitleKey(bookTitle(b)); }));
+  Object.keys(onWO).forEach(function(k) {
+    if (have.has(k)) return;
+    const lib = visibleLibraryPieces().find(function(p){ return libTitleKey(p.title) === k; });
+    list.push({ virtual: true, bankId: lib ? libBid(lib) : null, name: lib ? lib.title : onWO[k], studies: lib && lib.movements ? lib.movements.slice() : [] });
+  });
+  // Alphabetical, so a piece doesn't jump about when it's first ticked
+  return list.sort(function(a, b){ return bookTitle(a).localeCompare(bookTitle(b)); });
 }
 // A piece with no movements gets one tick box for the whole piece
 const WHOLE_PIECE = 'Whole piece';
@@ -7432,8 +7420,7 @@ function pieceTrackItems(book) {
   return st && st.length ? st : [WHOLE_PIECE];
 }
 function pieceTracksHTML(s) {
-  syncPieceTracks(s);
-  const books = s.pieceTracks || [];
+  const books = pieceTrackList(s);
   if (books.length === 0) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic">No pieces yet. Anything in Working On’s 🎵 Pieces appears here, or tap “＋ Add piece”.</p>';
   return books.map(function(book, bIdx) {
     const ticks = sharedTicks(s, bookTitle(book));
@@ -7445,10 +7432,10 @@ function pieceTracksHTML(s) {
     const ticksHTML = bookTicksHTML(studies, ticks, 'pieceTrackTick', s.id, bIdx);
     return '<details style="margin-top:10px">'
       + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
-      + '<span>' + esc(bookTitle(book)) + '</span>'
+      + '<span>' + esc(bookTitle(book)) + (book.virtual || (s.pieces || []).some(function(t){ return libTitleKey(t) === libTitleKey(bookTitle(book)); }) ? ' <span style="font-size:0.66rem;font-weight:400;color:var(--viola)">· on Working On</span>' : '') + '</span>'
       + '<span style="display:flex;align-items:center;gap:10px">'
       + '<span style="font-size:0.7rem;font-weight:400">' + done + ' / ' + total + '</span>'
-      + '<button onclick="event.stopPropagation();removePieceTrack(\'' + s.id + '\',' + bIdx + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:0 4px">×</button>'
+      + (book.virtual ? '' : '<button onclick="event.stopPropagation();removePieceTrack(\'' + s.id + '\',' + bIdx + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:0 4px">×</button>')
       + '</span></summary>'
       + '<div class="section-card" style="margin-top:6px">'
       + '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center">'
@@ -7459,27 +7446,38 @@ function pieceTracksHTML(s) {
   }).join('');
 }
 function pieceTrackTick(studentId, bookIdx, item) {
-  const s = getStudent(studentId); if (!s || !s.pieceTracks) return;
-  const book = s.pieceTracks[bookIdx]; if (!book) return;
+  const s = getStudent(studentId); if (!s) return;
+  const book = pieceTrackList(s)[bookIdx]; if (!book) return;
   const store = sharedTicks(s, bookTitle(book), true);
   store[item] = bookTickNext(store[item]);
+  if (book.virtual) {
+    // First tick: keep it, so the record stays after it leaves Working On
+    if (!s.pieceTracks) s.pieceTracks = [];
+    s.pieceTracks.push({ id: Date.now().toString(), bankId: book.bankId, name: book.name, studies: book.studies });
+  }
   save();
   rerenderKeepOpen('piece-tracks-' + studentId, pieceTracksHTML(s));
   refreshWorkingOnTicks(s);
 }
 function removePieceTrack(studentId, bookIdx) {
-  const s = getStudent(studentId); if (!s || !s.pieceTracks) return;
-  if (!confirm('Take "' + bookTitle(s.pieceTracks[bookIdx]) + '" off ' + s.name + '’s list? Their ticks are kept, so they come back if you add it again.')) return;
-  s.pieceTracks.splice(bookIdx, 1);
+  const s = getStudent(studentId); if (!s) return;
+  const book = pieceTrackList(s)[bookIdx]; if (!book || book.virtual) return;
+  if (!confirm('Take "' + bookTitle(book) + '" off ' + s.name + '’s list? Their ticks are kept, so they come back if you add it again.')) return;
+  s.pieceTracks = (s.pieceTracks || []).filter(function(b){ return b !== book; });
+  // Forget its ticks too only if you say so - by default they stay (and would bring it back)
+  if (hasAnyTicks(s, bookTitle(book)) && confirm('Also clear its ticks? (OK = clear, Cancel = keep them)')) {
+    if (s.pieceMvtTicks) delete s.pieceMvtTicks[libTitleKey(bookTitle(book))];
+  }
   save();
   document.getElementById('piece-tracks-' + studentId).innerHTML = pieceTracksHTML(s);
+  refreshWorkingOnTicks(s);
 }
 // Pick a piece with movements from the library (pupil's instrument first)
 function togglePieceTrackAdd(studentId) {
   const el = document.getElementById('piece-track-add-' + studentId); if (!el) return;
   if (el.style.display !== 'none') { el.style.display = 'none'; return; }
   const s = getStudent(studentId); if (!s) return;
-  const have = new Set((s.pieceTracks || []).map(function(b){ return libTitleKey(bookTitle(b)); }));
+  const have = new Set(pieceTrackList(s).map(function(b){ return libTitleKey(bookTitle(b)); }));
   const list = sortByTitle(visibleLibraryPieces().filter(function(p) {
     return libKind(p) === 'piece'
       && !have.has(libTitleKey(p.title)) && instrMatch(p, s.instrument === 'viola' || s.instrument === 'violin' ? s.instrument : '');
@@ -7496,12 +7494,13 @@ function togglePieceTrackAdd(studentId) {
 }
 function addPieceTrack(studentId, title) {
   const s = getStudent(studentId); if (!s) return;
-  if (!ensureTechBook(s, title)) {
-    const lib = visibleLibraryPieces().find(function(p){ return libTitleKey(p.title) === libTitleKey(title); });
-    if (!s.pieceTracks) s.pieceTracks = [];
-    if (!s.pieceTracks.some(function(b){ return libTitleKey(bookTitle(b)) === libTitleKey(title); }))
-      s.pieceTracks.push({ id: Date.now().toString(), bankId: lib ? libBid(lib) : null, name: lib ? lib.title : title, studies: [] });
-  }
+  const lib = visibleLibraryPieces().find(function(p){ return libTitleKey(p.title) === libTitleKey(title); });
+  if (!s.pieceTracks) s.pieceTracks = [];
+  const k = libTitleKey(title);
+  const had = s.pieceTracks.find(function(b){ return libTitleKey(bookTitle(b)) === k; });
+  if (had) had.manual = true;
+  else s.pieceTracks.push({ id: Date.now().toString(), bankId: lib ? libBid(lib) : null, name: lib ? lib.title : title,
+                            studies: lib && lib.movements ? lib.movements.slice() : [], manual: true });
   save();
   document.getElementById('piece-tracks-' + studentId).innerHTML = pieceTracksHTML(s);
   const el = document.getElementById('piece-track-add-' + studentId); if (el) el.style.display = 'none';
@@ -9782,7 +9781,7 @@ function showLibrarySection(name) {
   const tileName = name;
   if (name === 'pieces') libKindFilter = '';
   if (kindFor) { libKindFilter = kindFor; name = 'pieces'; }
-  if (name === 'pieces') { libNewKind = libKindFilter || 'piece'; libNewNumLabel = ''; renderLibKindChips(); renderLibNewChips(); renderLibPieces(); }
+  if (name === 'pieces') { renderLibKindChips(); renderLibPieces(); }
   document.querySelectorAll('#library-panels .admin-panel').forEach(p => {
     p.style.display = (p.id === 'lib-panel-' + name) ? 'block' : 'none';
   });
@@ -9814,7 +9813,7 @@ function populateCatFilters() {
   // Rebuild all four category selects (filter dropdowns + add + edit modals)
   // from their original built-in options, leaving out any you've deleted,
   // then add your own categories (before "+ New category…" where present).
-  ['lib-cat-filter','piece-cat-filter','lib-new-piece-cat','edit-lib-piece-cat'].forEach(id => {
+  ['lib-cat-filter','piece-cat-filter','edit-lib-piece-cat'].forEach(id => {
     const sel = document.getElementById(id); if (!sel) return;
     if (!sel._baseOpts) {
       sel._baseOpts = [...sel.querySelectorAll('option:not([data-custom-cat])')].map(o => ({ v: o.value, t: o.textContent }));
@@ -10096,11 +10095,7 @@ function visibleLibraryPieces() {
 // Which kind the Full library is showing ('' = everything)
 let libKindFilter = '';
 let libInstrFilter = '';
-let libNewInstr = 'both';
-function setLibInstrFilter(v) { libInstrFilter = v; libNewInstr = v || 'both'; renderLibNewChips(); renderLibPieces(); }
-function setLibNewInstr(v) { libNewInstr = v; renderLibNewChips(); }
-let libNewKind = 'piece';
-let libNewNumLabel = '';
+function setLibInstrFilter(v) { libInstrFilter = v; renderLibPieces(); }
 function kindChipHTML(on, label, onclick) {
   return '<button type="button" onclick="' + onclick + '" style="padding:6px 12px;border-radius:999px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.8rem;'
     + 'border:1.5px solid ' + (on ? 'var(--viola)' : '#d6ddd2') + ';background:' + (on ? 'var(--viola)' : '#fff') + ';color:' + (on ? '#fff' : 'var(--ink)') + '">'
@@ -10117,18 +10112,7 @@ function renderLibKindChips() {
 }
 function setLibKindFilter(k) {
   libKindFilter = k;
-  libNewKind = k || 'piece'; libNewNumLabel = '';
-  renderLibKindChips(); renderLibNewChips(); renderLibPieces();
-}
-// "It's a" and "Numbers are" chips in the Add form
-function renderLibNewChips() {
-  const kEl = document.getElementById('lib-new-piece-kind');
-  if (kEl) kEl.innerHTML = LIB_KINDS.map(function(k){ return kindChipHTML(libNewKind === k.id, k.icon + ' ' + k.one, 'libNewKind=\'' + k.id + '\';libNewNumLabel=\'\';renderLibNewChips()'); }).join('');
-  const iEl = document.getElementById('lib-new-piece-instr');
-  if (iEl) iEl.innerHTML = instrChipsHTML(libNewInstr, 'setLibNewInstr', false);
-  const nEl = document.getElementById('lib-new-piece-numlabel');
-  const cur = libNewNumLabel || (libNewKind === 'piece' ? 'Mvt.' : 'No.');
-  if (nEl) nEl.innerHTML = PIECE_NUM_LABELS.map(function(l){ return kindChipHTML(cur === l, l + ' 1', 'libNewNumLabel=\'' + l + '\';renderLibNewChips()'); }).join('');
+  renderLibKindChips(); renderLibPieces();
 }
 
 function renderLibPieces() {
@@ -10169,50 +10153,6 @@ function renderLibPieces() {
     </div>`).join('');
 }
 
-function toggleNewCatInput(val) {
-  const customInput = document.getElementById('lib-new-piece-cat-custom');
-  if (!customInput) return;
-  customInput.style.display = val === '__new__' ? 'block' : 'none';
-  if (val === '__new__') customInput.focus();
-}
-
-function addLibPiece() {
-  const title = document.getElementById('lib-new-piece-title').value.trim();
-  if (!title) return;
-  const composer = document.getElementById('lib-new-piece-composer').value.trim();
-  const grade    = document.getElementById('lib-new-piece-grade').value.trim();
-  let cat        = document.getElementById('lib-new-piece-cat').value;
-  if (cat === '__new__') {
-    const customCat = document.getElementById('lib-new-piece-cat-custom').value.trim();
-    if (!customCat) { document.getElementById('lib-new-piece-cat-custom').focus(); return; }
-    cat = customCat;
-  }
-  cat = normPieceCat(cat);
-  hiddenPieceCats = hiddenPieceCats.filter(c => c !== cat); // re-using a deleted name brings it back
-  if (customPieces.some(p => p.title.toLowerCase() === title.toLowerCase())) return;
-  const mvEl = document.getElementById('lib-new-piece-mvts');
-  const movements = parseStudiesInput(mvEl ? mvEl.value : '');
-  const piece = { title, composer, grade, cat };
-  const noteEl = document.getElementById('lib-new-piece-note');
-  if (noteEl && noteEl.value.trim()) { piece.note = noteEl.value.trim(); noteEl.value = ''; }
-  piece.kind = libNewKind;
-  piece.instr = libNewInstr;
-  if (libNewKind !== 'piece') piece.bid = newLibBid();
-  if (movements.length) piece.movements = movements;
-  const nl = libNewNumLabel || (libNewKind === 'piece' ? 'Mvt.' : 'No.');
-  if (movements.length && nl !== (libNewKind === 'piece' ? 'Mvt.' : 'No.')) piece.numLabel = nl;
-  customPieces.push(piece);
-  save();
-  if (mvEl) mvEl.value = '';
-  document.getElementById('lib-new-piece-title').value = '';
-  document.getElementById('lib-new-piece-composer').value = '';
-  document.getElementById('lib-new-piece-grade').value = '';
-  document.getElementById('lib-new-piece-cat').value = 'My Library';
-  document.getElementById('lib-new-piece-cat-custom').value = '';
-  document.getElementById('lib-new-piece-cat-custom').style.display = 'none';
-  populateCatFilters();
-  renderLibPieces();
-}
 
 // Find a piece by its title|||cat key, whether custom or built-in.
 function findLibPieceByKey(key) {
@@ -10221,9 +10161,37 @@ function findLibPieceByKey(key) {
   return PIECE_DB.find(bp => pieceKey(bp) === key) || null;
 }
 
+// ＋ Add to the library: the same window as Edit, starting empty
+function openNewLibPiece() {
+  populateCatFilters();
+  document.getElementById('edit-lib-piece-heading').textContent = 'Add to the library';
+  document.getElementById('edit-lib-piece-idx').value = '';
+  ['title', 'composer', 'grade', 'note', 'mvts', 'cat-custom'].forEach(function(f){ document.getElementById('edit-lib-piece-' + f).value = ''; });
+  const catSel = document.getElementById('edit-lib-piece-cat');
+  const cf = document.getElementById('lib-cat-filter');
+  catSel.value = (cf && cf.value) || 'My Library';
+  if (!catSel.value) catSel.value = 'My Library';
+  document.getElementById('edit-lib-piece-cat-custom').style.display = 'none';
+  editAlsoCats = [];
+  renderEditAlsoCats();
+  editKind = libKindFilter || 'piece';
+  editInstr = libInstrFilter || 'both';
+  editNumLabel = editKind === 'piece' ? 'Mvt.' : 'No.';
+  renderEditNumLabel();
+  document.getElementById('edit-lib-piece-modal').classList.add('open');
+  setTimeout(function(){ const t = document.getElementById('edit-lib-piece-title'); if (t) t.focus(); }, 80);
+}
+function editCatChanged(v) {
+  const c = document.getElementById('edit-lib-piece-cat-custom');
+  if (c) { c.style.display = v === '__new__' ? 'block' : 'none'; if (v === '__new__') c.focus(); }
+  renderEditAlsoCats();
+}
 function editLibPieceByKey(key) {
   const p = findLibPieceByKey(key); if (!p) return;
   populateCatFilters();
+  document.getElementById('edit-lib-piece-heading').textContent = 'Edit piece';
+  document.getElementById('edit-lib-piece-cat-custom').value = '';
+  document.getElementById('edit-lib-piece-cat-custom').style.display = 'none';
   // Store the ORIGINAL key so save can find the right row even if title/cat change.
   document.getElementById('edit-lib-piece-idx').value = key;
   document.getElementById('edit-lib-piece-title').value    = p.title    || '';
@@ -10310,6 +10278,20 @@ function saveEditLibPiece() {
     grade:    document.getElementById('edit-lib-piece-grade').value.trim(),
     cat:      document.getElementById('edit-lib-piece-cat').value,
   };
+  if (updated.cat === '__new__') {
+    const customCat = document.getElementById('edit-lib-piece-cat-custom').value.trim();
+    if (!customCat) { document.getElementById('edit-lib-piece-cat-custom').focus(); return; }
+    updated.cat = customCat;
+  }
+  updated.cat = normPieceCat(updated.cat || 'My Library');
+  hiddenPieceCats = hiddenPieceCats.filter(c => c !== updated.cat); // re-using a deleted name brings it back
+  if (!origKey) {
+    // Adding something new
+    if (!updated.title) { document.getElementById('edit-lib-piece-title').focus(); return; }
+    if (visibleLibraryPieces().some(p => libTitleKey(p.title) === libTitleKey(updated.title))) {
+      alert('"' + updated.title + '" is already in your library. Use Edit on it instead.'); return;
+    }
+  }
   const noteVal = document.getElementById('edit-lib-piece-note').value.trim();
   if (noteVal) updated.note = noteVal;
   const mvts = parseStudiesInput(document.getElementById('edit-lib-piece-mvts').value);
@@ -10327,8 +10309,10 @@ function saveEditLibPiece() {
   if (also.length) updated.also = also;
   if (!updated.title) return; // don't save a blank title
 
-  const existingIdx = customPieces.findIndex(cp => pieceKey(cp) === origKey);
-  if (existingIdx > -1) {
+  const existingIdx = origKey ? customPieces.findIndex(cp => pieceKey(cp) === origKey) : -1;
+  if (!origKey) {
+    customPieces.push(updated);
+  } else if (existingIdx > -1) {
     // Editing one of the user's own pieces - update it in place.
     customPieces[existingIdx] = updated;
   } else {
@@ -13724,11 +13708,12 @@ function renderPieceDB(items, onlyCat) {
     <div style="margin-bottom:14px">
       <div style="font-size:0.68rem;font-weight:800;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--warm);margin-bottom:6px">${esc(cat.replace(' - ',' - '))}</div>
       ${pieces.map(p => (p.movements && p.movements.length) ? libPickPieceWithMvtsHTML(p) : `
-        <div onclick="selectPiece('${escJs(p.title)}')"
-          style="padding:10px 12px;border-radius:9px;cursor:pointer;margin-bottom:4px;transition:background 0.12s"
-          onmouseover="this.style.background='var(--warm)'" onmouseout="this.style.background='transparent'">
-          <div style="font-size:0.9rem;font-weight:600">${instrPillHTML(p)}${esc(p.title)}</div>
-          <div style="font-size:0.75rem;color:var(--muted)">${[p.composer, p.grade].filter(Boolean).map(esc).join(' · ')}</div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;margin-bottom:4px">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.9rem;font-weight:600">${instrPillHTML(p)}${esc(p.title)}</div>
+            <div style="font-size:0.75rem;color:var(--muted)">${[p.composer, p.grade].filter(Boolean).map(esc).join(' · ')}</div>
+          </div>
+          <button onclick="selectPiece('${escJs(p.title)}')" style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-family:'Special Elite',cursive;font-size:0.72rem;cursor:pointer;white-space:nowrap">＋ Add</button>
         </div>`).join('')}
     </div>`).join('');
 }
@@ -13891,10 +13876,29 @@ function libPickItemsHTML(bk) {
 
 // Violaness sheets in the picker, grouped by your categories
 // Put one line where the "Add to" chip says. title = piece/book, ref = No. / item.
+// The last thing added from the picker, so it can be undone
+let libPickUndo = null;
+function libPickUndoLast() {
+  const u = libPickUndo; libPickUndo = null;
+  const toast = document.getElementById('libpick-toast'); if (toast) toast.style.display = 'none';
+  if (!u) return;
+  const s = getStudent(u.id); if (!s) return;
+  Object.keys(u.snap).forEach(function(k){ if (u.snap[k] === undefined) delete s[k]; else s[k] = JSON.parse(u.snap[k]); });
+  save();
+  const listEl = document.getElementById('pieces-list-' + s.id);
+  if (listEl) { listEl.innerHTML = buildPiecesHTML(s); listEl.querySelectorAll('.piece-name').forEach(growTick); }
+  const ta = document.getElementById('nextlesson-' + s.id); if (ta) ta.value = s.nextLesson || '';
+  refreshBookLists(s);
+}
 function libPickAdd(title, ref) {
   if (!pieceDBStudentId) return;
   const s = getStudent(pieceDBStudentId);
   if (!s || !title) return;
+  const snap = {};
+  ['pieces', 'pieceRefs', 'pieceGroups', 'pieceRefManual', 'nextLesson', 'studyBooks', 'methodBooks', 'albums'].forEach(function(k) {
+    snap[k] = s[k] === undefined ? undefined : JSON.stringify(s[k]);
+  });
+  libPickUndo = { id: s.id, snap: snap };
   const label = ref ? title + ' - ' + ref : title;
   if (libPickGetDest() === 'plan') {
     const cur = String(s.nextLesson || '').replace(/\s+$/, '');
@@ -13927,10 +13931,11 @@ function libPickAdd(title, ref) {
   const where = libPickGetDest() === 'plan' ? 'today’s plan' : 'Working On';
   const toast = document.getElementById('libpick-toast');
   if (toast) {
-    toast.textContent = '✓ ' + label + ' → ' + where;
-    toast.style.display = 'block';
+    toast.innerHTML = '<span style="flex:1">✓ ' + esc(label) + ' → ' + where + '</span>'
+      + '<button onclick="libPickUndoLast()" style="flex:0 0 auto;background:#fff;border:1.5px solid var(--viola);color:var(--viola);border-radius:8px;padding:4px 10px;font-family:\'Special Elite\',cursive;font-size:0.78rem;font-weight:700;cursor:pointer">↩ Undo</button>';
+    toast.style.display = 'flex';
     clearTimeout(libPickToastTimer);
-    libPickToastTimer = setTimeout(function(){ toast.style.display = 'none'; }, 2200);
+    libPickToastTimer = setTimeout(function(){ toast.style.display = 'none'; libPickUndo = null; }, 6000);
   }
 }
 
