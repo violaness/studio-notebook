@@ -3380,7 +3380,11 @@ function renderDetail(s, preserveTab = false) {
 
     <details class="section-card little-details-panel" id="little-details-${s.id}" style="margin-bottom:8px;padding:0">
       <summary style="display:none;list-style:none"></summary>
-      <div style="padding:18px 14px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px 0">
+        <span style="font-size:0.95rem;font-weight:700;color:var(--viola)">🐢 Details</span>
+        <button class="admin-panel-close" onclick="toggleLittleDetails('${s.id}')">✕ Close</button>
+      </div>
+      <div style="padding:12px 14px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
         ${[
           ['siblings',  '👨‍👩‍👧 Siblings'],
           ['pets',      '🐾 Pets'],
