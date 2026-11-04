@@ -3655,22 +3655,18 @@ function renderDetail(s, preserveTab = false) {
       <div class="admin-grid" style="grid-template-rows:none;grid-auto-flow:row">
         <button class="admin-tile" style="background:var(--string);color:var(--ink)" onclick="showTechniqueSection('${s.id}','studybooks')">
           <span class="admin-tile-icon">📖</span><span class="admin-tile-label">Study books</span>
-          <span class="rep-count" data-sid="${s.id}" data-kind="studybooks">${repTileCountHTML(s, 'studybooks')}</span>
         </button>
         <button class="admin-tile" style="background:var(--sky);color:var(--ink)" onclick="showTechniqueSection('${s.id}','scales')">
           <span class="admin-tile-icon">🎼</span><span class="admin-tile-label">Scale checklist</span>
         </button>
         <button class="admin-tile" style="background:var(--viola)" onclick="showTechniqueSection('${s.id}','albums')">
           <span class="admin-tile-icon">🎵</span><span class="admin-tile-label">Albums</span>
-          <span class="rep-count" data-sid="${s.id}" data-kind="albums">${repTileCountHTML(s, 'albums')}</span>
         </button>
         <button class="admin-tile" style="background:var(--violin)" onclick="showTechniqueSection('${s.id}','methodbooks')">
           <span class="admin-tile-icon">📘</span><span class="admin-tile-label">Method books</span>
-          <span class="rep-count" data-sid="${s.id}" data-kind="methodbooks">${repTileCountHTML(s, 'methodbooks')}</span>
         </button>
         <button class="admin-tile" style="background:var(--ink)" onclick="showTechniqueSection('${s.id}','piecetracks')">
           <span class="admin-tile-icon">🎶</span><span class="admin-tile-label">Pieces</span>
-          <span class="rep-count" data-sid="${s.id}" data-kind="piecetracks">${repTileCountHTML(s, 'piecetracks')}</span>
         </button>
         <button class="admin-tile" style="background:var(--deep)" onclick="showTechniqueSection('${s.id}','technique')">
           <span class="admin-tile-icon">🛠</span><span class="admin-tile-label">Technique checklist</span>
