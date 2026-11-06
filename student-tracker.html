@@ -786,6 +786,12 @@
 /* Progress counts on the Repertoire tab tiles */
 .rep-count:empty { display: none; }
 .rep-count { display: inline-flex; gap: 8px; align-items: center; background: rgba(255,255,255,0.88); color: var(--ink); border-radius: 999px; padding: 3px 10px; font-size: 0.78rem; font-weight: 600; margin-top: 2px; }
+
+/* Really important "next lesson" lines */
+.nt-imp { flex: 0 0 auto; background: none; border: none; font-size: 0.85rem; cursor: pointer; padding: 2px 2px 0; opacity: 0.22; filter: grayscale(1); }
+.nt-row.imp .nt-imp { opacity: 1; filter: none; }
+.nt-row.imp { background: #fde7e2; border-radius: 8px; padding-left: 4px; padding-right: 4px; }
+.nt-row.imp .nt-in { font-weight: 700; color: #a3321f; }
 </style>
 <script>
 // ── COLOUR THEMES ──────────────────────────────────────────────────────────
@@ -2903,11 +2909,13 @@ function weekRememberHTML() {
       return ((order[sa.day] ?? 9) - (order[sb.day] ?? 9)) || String(sa.time).localeCompare(String(sb.time));
     });
   const left = people.reduce(function(n, s){ return n + nextNoteLines(s).filter(function(x){ return !x.done; }).length; }, 0);
+  const imps = people.reduce(function(n, s){ return n + nextNoteLines(s).filter(function(x){ return !x.done && isImportantNote(x.text); }).length; }, 0);
   if (!people.length) return '';
   return '<details id="week-remember" ' + (weekRememberOpen ? 'open ' : '') + 'ontoggle="weekRememberOpen=this.open" style="grid-column:1/-1;background:#fff;border:1.5px solid var(--warm);border-radius:14px;padding:0;margin-bottom:14px;box-shadow:var(--shadow)">'
     + '<summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px 16px;font-size:0.95rem;font-weight:700;color:var(--ink)">'
     + '<span>📌 To remember</span>'
     + '<span style="font-size:0.75rem;font-weight:600;background:' + (left ? 'var(--string)' : 'var(--soft-green2)') + ';color:var(--ink);border-radius:999px;padding:2px 10px">' + (left ? left + ' to do' : 'all done ✓') + '</span>'
+    + (imps ? '<span style="font-size:0.75rem;font-weight:700;background:#fde7e2;color:#a3321f;border:1.5px solid #f0b4a8;border-radius:999px;padding:2px 10px">❗ ' + imps + ' important</span>' : '')
     + '<span style="margin-left:auto;font-size:0.75rem;color:var(--muted)">▾</span></summary>'
     + '<div style="padding:0 16px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px 18px">'
     + people.map(function(s) {
@@ -2915,14 +2923,29 @@ function weekRememberHTML() {
         return '<div>'
           + '<div onclick="openStudentFrom(\'' + s.id + '\',\'week\')" style="cursor:pointer;font-size:0.82rem;font-weight:700;color:var(--viola);border-bottom:1px solid var(--warm);padding-bottom:3px;margin-bottom:4px">'
           + esc(s.name) + ' <span style="font-weight:400;font-size:0.7rem;color:var(--muted)">' + esc((slot.day || '').slice(0, 3)) + (slot.time ? ' ' + esc(slot.time) : '') + ' ›</span></div>'
-          + nextNoteLines(s).map(function(x, i) {
-              return '<div style="display:flex;align-items:flex-start;gap:8px;padding:3px 0' + (x.done ? ';opacity:0.55' : '') + '">'
+          + nextNoteLines(s).map(function(x, i){ return { x: x, i: i }; })
+              // really important ones first
+              .sort(function(a, b){ return (isImportantNote(b.x.text) ? 1 : 0) - (isImportantNote(a.x.text) ? 1 : 0) || a.i - b.i; })
+              .map(function(o) {
+              const x = o.x, i = o.i, imp = isImportantNote(x.text);
+              return '<div style="display:flex;align-items:flex-start;gap:8px;padding:3px ' + (imp ? '6px' : '0') + (x.done ? ';opacity:0.55' : '') + (imp ? ';background:#fde7e2;border-radius:8px;margin:2px 0' : '') + '">'
                 + '<button onclick="weekRememberTick(\'' + s.id + '\',' + i + ')" title="' + (x.done ? 'Tap again to clear' : 'Tick') + '" style="flex:0 0 auto;width:22px;height:22px;border-radius:6px;border:2px solid var(--viola);background:' + (x.done ? 'var(--viola)' : '#fff') + ';color:#fff;font-size:0.8rem;line-height:1;cursor:pointer;padding:0">' + (x.done ? '✓' : '') + '</button>'
-                + '<span style="flex:1;font-size:0.85rem;color:var(--ink);' + (x.done ? 'text-decoration:line-through' : '') + '">' + esc(x.text) + '</span></div>';
+                + '<span style="flex:1;font-size:0.85rem;color:' + (imp ? '#a3321f;font-weight:700' : 'var(--ink)') + ';' + (x.done ? 'text-decoration:line-through' : '') + '">' + esc(x.text.replace(/^\s*❗\s*/, '')) + '</span>'
+                + '<button onclick="weekRememberImportant(\'' + s.id + '\',' + i + ')" title="' + (imp ? 'Not important' : 'Mark as really important') + '" style="flex:0 0 auto;background:none;border:none;cursor:pointer;font-size:0.85rem;padding:0 2px;' + (imp ? '' : 'opacity:0.22;filter:grayscale(1)') + '">❗</button></div>';
             }).join('')
           + '</div>';
       }).join('')
     + '</div></details>';
+}
+function weekRememberImportant(id, i) {
+  const s = getStudent(id); if (!s) return;
+  const lines = nextNoteLines(s); const x = lines[i]; if (!x) return;
+  x.text = isImportantNote(x.text) ? x.text.replace(/^\s*❗\s*/, '') : '❗ ' + x.text;
+  s.nextWeekNote = lines.map(function(l){ return (l.done ? '☑ ' : '☐ ') + l.text; }).join('\n');
+  save();
+  try { refreshNextTicks(s); } catch (e) {}
+  const el = document.getElementById('week-remember');
+  if (el) el.outerHTML = weekRememberHTML() || '';
 }
 function weekRememberTick(id, i) {
   const s = getStudent(id); if (!s) return;
@@ -4982,10 +5005,21 @@ function nextLessonItems(s) {
 function nextTicksBoxId(id, where) { return where === 'b' ? 'next-ticks-b-' + id : 'next-ticks-' + id; }
 function nextTickRowHTML(id, item, i, where) {
   const w = where === 'b' ? 'b' : 'a';
-  return '<div class="nt-row' + (item.done ? ' done' : '') + '" data-done="' + (item.done ? '1' : '0') + '">'
+  const imp = isImportantNote(item.text);
+  return '<div class="nt-row' + (item.done ? ' done' : '') + (imp ? ' imp' : '') + '" data-done="' + (item.done ? '1' : '0') + '">'
     + '<button type="button" class="nt-box' + (item.done ? ' done' : '') + '" onclick="toggleNextTick(\'' + id + '\',this,\'' + w + '\')" aria-label="Tick">' + (item.done ? '✓' : '') + '</button>'
     + '<textarea rows="1" class="nt-in" autocapitalize="sentences" autocorrect="off" spellcheck="false" placeholder="' + (i === 0 ? (w === 'b' ? 'Nothing noted last time' : 'What to focus on…') : '') + '"'
-    + ' oninput="autoGrow(this);collectNextTicks(\'' + id + '\',\'' + w + '\')" onkeydown="nextTickKey(event,\'' + id + '\',this,\'' + w + '\')">' + esc(item.text) + '</textarea></div>';
+    + ' oninput="autoGrow(this);this.closest(\'.nt-row\').classList.toggle(\'imp\',isImportantNote(this.value));collectNextTicks(\'' + id + '\',\'' + w + '\')" onkeydown="nextTickKey(event,\'' + id + '\',this,\'' + w + '\')">' + esc(item.text) + '</textarea>'
+    + '<button type="button" class="nt-imp" onclick="toggleNextImportant(\'' + id + '\',this,\'' + w + '\')" title="Mark as really important" aria-label="Important">❗</button></div>';
+}
+// A line starting with ❗ is a really important one
+function isImportantNote(t) { return /^\s*❗/.test(String(t || '')); }
+function toggleNextImportant(id, btn, where) {
+  const r = btn.closest('.nt-row'); const inp = r.querySelector('.nt-in');
+  const t = inp.value.trim(); if (!t) return;
+  inp.value = isImportantNote(t) ? t.replace(/^\s*❗\s*/, '') : '❗ ' + t;
+  r.classList.toggle('imp', isImportantNote(inp.value));
+  collectNextTicks(id, where);
 }
 function nextTicksHTML(s, where) {
   const items = nextLessonItems(s);
