@@ -2885,6 +2885,56 @@ function toggleAllCards() {
 }
 
 // ── WEEK VIEW ─────────────────────────────────────────────────────────────
+// ── 📌 TO REMEMBER: every pupil's "Next lesson" lines in one list ──
+// Same lines as the After tab (s.nextWeekNote, "☐ text" / "☑ text"), so ticking
+// here ticks there too. First tap ✓, second tap clears the line.
+let weekRememberOpen = true;
+function nextNoteLines(s) {
+  return String(s.nextWeekNote || '').split('\n').map(function(l){ return l.trim(); }).filter(Boolean).map(function(l) {
+    const done = l.charAt(0) === '☑';
+    return { done: done, text: l.replace(/^[☐☑]\s*/, '') };
+  }).filter(function(x){ return x.text; });
+}
+function weekRememberHTML() {
+  const order = {}; DAYS.forEach(function(d, i){ order[d] = i; });
+  const people = students.filter(function(s){ return !s.retired && nextNoteLines(s).length; })
+    .sort(function(a, b) {
+      const sa = effectiveSlot(a), sb = effectiveSlot(b);
+      return ((order[sa.day] ?? 9) - (order[sb.day] ?? 9)) || String(sa.time).localeCompare(String(sb.time));
+    });
+  const left = people.reduce(function(n, s){ return n + nextNoteLines(s).filter(function(x){ return !x.done; }).length; }, 0);
+  if (!people.length) return '';
+  return '<details id="week-remember" ' + (weekRememberOpen ? 'open ' : '') + 'ontoggle="weekRememberOpen=this.open" style="grid-column:1/-1;background:#fff;border:1.5px solid var(--warm);border-radius:14px;padding:0;margin-bottom:14px;box-shadow:var(--shadow)">'
+    + '<summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px 16px;font-size:0.95rem;font-weight:700;color:var(--ink)">'
+    + '<span>📌 To remember</span>'
+    + '<span style="font-size:0.75rem;font-weight:600;background:' + (left ? 'var(--string)' : 'var(--soft-green2)') + ';color:var(--ink);border-radius:999px;padding:2px 10px">' + (left ? left + ' to do' : 'all done ✓') + '</span>'
+    + '<span style="margin-left:auto;font-size:0.75rem;color:var(--muted)">▾</span></summary>'
+    + '<div style="padding:0 16px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px 18px">'
+    + people.map(function(s) {
+        const slot = effectiveSlot(s);
+        return '<div>'
+          + '<div onclick="openStudentFrom(\'' + s.id + '\',\'week\')" style="cursor:pointer;font-size:0.82rem;font-weight:700;color:var(--viola);border-bottom:1px solid var(--warm);padding-bottom:3px;margin-bottom:4px">'
+          + esc(s.name) + ' <span style="font-weight:400;font-size:0.7rem;color:var(--muted)">' + esc((slot.day || '').slice(0, 3)) + (slot.time ? ' ' + esc(slot.time) : '') + ' ›</span></div>'
+          + nextNoteLines(s).map(function(x, i) {
+              return '<div style="display:flex;align-items:flex-start;gap:8px;padding:3px 0' + (x.done ? ';opacity:0.55' : '') + '">'
+                + '<button onclick="weekRememberTick(\'' + s.id + '\',' + i + ')" title="' + (x.done ? 'Tap again to clear' : 'Tick') + '" style="flex:0 0 auto;width:22px;height:22px;border-radius:6px;border:2px solid var(--viola);background:' + (x.done ? 'var(--viola)' : '#fff') + ';color:#fff;font-size:0.8rem;line-height:1;cursor:pointer;padding:0">' + (x.done ? '✓' : '') + '</button>'
+                + '<span style="flex:1;font-size:0.85rem;color:var(--ink);' + (x.done ? 'text-decoration:line-through' : '') + '">' + esc(x.text) + '</span></div>';
+            }).join('')
+          + '</div>';
+      }).join('')
+    + '</div></details>';
+}
+function weekRememberTick(id, i) {
+  const s = getStudent(id); if (!s) return;
+  const lines = nextNoteLines(s); const x = lines[i]; if (!x) return;
+  if (!x.done) x.done = true; else lines.splice(i, 1);
+  s.nextWeekNote = lines.map(function(l){ return (l.done ? '☑ ' : '☐ ') + l.text; }).join('\n');
+  save();
+  try { refreshNextTicks(s); } catch (e) {}
+  const el = document.getElementById('week-remember');
+  if (el) el.outerHTML = weekRememberHTML() || '';
+}
+
 function renderWeek() {
   const todayName = todayDayName();
   const onHoliday = isHolidayWeek();
@@ -2916,6 +2966,7 @@ function renderWeek() {
       }).join('<span style="color:#e8b8c4">|</span>')}
     </div>`;
   }
+  html += weekRememberHTML();
   for (const day of DAYS) {
     const isToday = day === todayName;
     const dayStudents = sortByTime(students.filter(s => effectiveSlot(s).day === day && !s.retired));
