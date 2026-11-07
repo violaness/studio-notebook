@@ -10731,7 +10731,8 @@ function removeExtraFromOverview(studentId, satKey) {
 function nextPupilHTML(s) {
   const todayName = todayDayName();
   const todaySlots = students
-    .filter(p => effectiveSlot(p).day === todayName)
+    // Same pupils as the Today list: no retired or skipped ones (the current pupil always counts)
+    .filter(p => effectiveSlot(p).day === todayName && (p.id === s.id || (!p.retired && !isSkipped(p.id))))
     .sort((a,b) => (effectiveSlot(a).time||'').localeCompare(effectiveSlot(b).time||''));
   const idx = todaySlots.findIndex(p => p.id === s.id);
   if (idx === -1 || idx >= todaySlots.length - 1) return '';
