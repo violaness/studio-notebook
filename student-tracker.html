@@ -883,6 +883,7 @@ snApplyTheme();
   <div class="hdr-top">
     <h1>🎻 Studio Notebook</h1>
   <div class="hdr-right">
+    <button onclick="openSearchAll()" title="Search everything" aria-label="Search everything" style="background:rgba(255,255,255,0.14);border:1.5px solid rgba(255,255,255,0.35);color:#fff;border-radius:999px;padding:5px 12px;font-family:'Special Elite',cursive;font-size:0.82rem;cursor:pointer;margin-right:8px">🔍 Search</button>
     <span id="header-count"></span>
       </div>
   </div>
@@ -914,7 +915,7 @@ snApplyTheme();
   </div>
   <div id="wednesday-reminder" style="display:none;background:#fffbe6;border:1.5px solid #c9a84c;border-radius:12px;padding:12px 16px;margin-bottom:14px;align-items:center;gap:12px;flex-wrap:wrap">
     <span style="font-size:1.1rem">💾</span>
-    <span style="flex:1;font-size:0.88rem;color:#7a5c00">Wednesday - time for your weekly backup!</span>
+    <span id="backup-reminder-text" style="flex:1;font-size:0.88rem;color:#7a5c00">Wednesday - time for your weekly backup!</span>
     <button onclick="backupData();document.getElementById('wednesday-reminder').style.display='none'" style="background:#c9a84c;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:'Special Elite',cursive;font-size:0.82rem;cursor:pointer;white-space:nowrap">Back up now</button>
     <button onclick="localStorage.setItem('backup_reminder_dismissed',new Date().toDateString());document.getElementById('wednesday-reminder').style.display='none'" style="background:none;border:none;color:#c9a84c;cursor:pointer;font-size:1.1rem;padding:0 4px">×</button>
   </div>
@@ -1184,6 +1185,7 @@ snApplyTheme();
     <button class="admin-tile" style="background:var(--string);color:var(--ink)" onclick="showAdminSection('backup')">
       <span class="admin-tile-icon">🗄</span>
       <span class="admin-tile-label">Backup &amp; restore</span>
+      <span class="backup-age" data-style="pill"></span>
     </button>
     <button class="admin-tile" style="background:var(--viola)" onclick="showAdminSection('attendance')">
       <span class="admin-tile-icon">📊</span>
@@ -1406,8 +1408,10 @@ snApplyTheme();
     <div style="margin-top:10px">
       <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Back up saves a JSON file to your Files / Downloads. Keep it in iCloud Drive for safety. Restore loads a backup back in.</div>
       <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="backup-age" data-style="line" style="flex-basis:100%"></div>
         <button class="btn-primary" onclick="backupData()" style="min-height:48px">💾&nbsp; Back up all data</button>
         <button class="btn-primary" style="background:var(--violin);min-height:48px" onclick="document.getElementById('admin-restore-file-input').click()">📂&nbsp; Restore from backup</button>
+        <div id="old-sketches-box" style="display:none;border-top:1px dashed var(--warm);padding-top:10px;margin-top:4px"></div>
         <input type="file" id="admin-restore-file-input" accept=".json" style="display:none;opacity:0;position:absolute;width:1px;height:1px" onchange="restoreData(event)">
       </div>
     </div>
@@ -1597,13 +1601,19 @@ snApplyTheme();
 <!-- LESSON NOTES SUMMARY - pick a period -->
 <div class="modal-overlay" id="notes-summary-modal">
   <div class="modal">
-    <h2>📝 <span id="notes-sum-name"></span></h2>
-    <div style="font-size:0.8rem;color:var(--muted);margin:-6px 0 12px">All the lesson notes for…</div>
+    <h2><span id="notes-sum-icon">📝</span> <span id="notes-sum-name"></span></h2>
+    <input type="hidden" id="notes-sum-mode" value="notes">
+    <div id="notes-sum-intro" style="font-size:0.8rem;color:var(--muted);margin:-6px 0 12px">All the lesson notes for…</div>
     <select id="notes-sum-period" onchange="notesSummaryCount()" style="width:100%;font-family:'Special Elite',cursive;font-size:0.95rem;color:var(--deep);background:var(--paper);border:1.5px solid var(--tech-bd);border-radius:10px;padding:10px 12px"></select>
     <div id="notes-sum-count" style="font-size:0.75rem;color:var(--muted);margin:8px 2px 0"></div>
+    <div id="notes-sum-comment-box" style="display:none;margin-top:12px">
+      <div style="font-size:0.75rem;font-weight:700;color:var(--deep);margin-bottom:4px">💬 Your comment for parents (optional)</div>
+      <textarea id="notes-sum-comment" rows="3" placeholder="A sentence or two. Not saved, just printed on this report." style="width:100%;box-sizing:border-box;padding:8px 12px;border-radius:8px;font-size:0.88rem;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive"></textarea>
+    </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeNotesSummary()">Cancel</button>
-      <button class="btn-primary" onclick="makeNotesSummary()">📝 Make summary</button>
+      <button class="btn-primary" id="notes-sum-make-progress" style="display:none" onclick="makeProgressReport()">🌟 Make report</button>
+      <button class="btn-primary" id="notes-sum-make" onclick="makeNotesSummary()">📝 Make summary</button>
     </div>
   </div>
 </div>
@@ -2167,10 +2177,37 @@ snApplyTheme();
       <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">Tick any other categories, e.g. a duet that's also a study.</div>
       <div id="edit-lib-piece-also" style="display:flex;flex-wrap:wrap;gap:6px"></div>
     </div>
+    <div class="field-group" id="edit-lib-piece-merge-row" style="display:none">
+      <label class="field-label">🔗 Got this twice?</label>
+      <button type="button" onclick="openLibMerge()" style="background:#fff;border:1.5px solid var(--violin);color:var(--violin);border-radius:10px;padding:8px 14px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer">🔗 Merge a duplicate into this one</button>
+      <div style="font-size:0.72rem;color:var(--muted);margin-top:4px">This one stays. The duplicate goes, and pupils' ticks are combined.</div>
+    </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeEditLibPiece()">Cancel</button>
       <button class="btn-primary" onclick="saveEditLibPiece()">Save</button>
     </div>
+  </div>
+</div>
+
+<!-- MERGE A DUPLICATE (library) -->
+<div class="modal-overlay" id="lib-merge-modal" style="z-index:1200">
+  <div class="modal">
+    <h2>🔗 Merge a duplicate</h2>
+    <div style="font-size:0.82rem;color:var(--muted);margin:-6px 0 10px">Keeping: <strong id="lib-merge-keep" style="color:var(--ink)"></strong><br>Tap the duplicate to remove.</div>
+    <input type="text" id="lib-merge-search" placeholder="🔍 Search the library…" oninput="renderLibMergeList()" style="width:100%;box-sizing:border-box;margin-bottom:10px">
+    <div id="lib-merge-list" style="max-height:46vh;overflow-y:auto"></div>
+    <div class="modal-actions"><button class="btn-ghost" onclick="closeLibMerge()">Cancel</button></div>
+  </div>
+</div>
+
+<!-- SEARCH EVERYTHING -->
+<div class="modal-overlay" id="search-all-modal" onclick="if(event.target===this)closeSearchAll()">
+  <div class="modal">
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="search" id="search-all-input" placeholder="🔍 Pupil, piece or note…" oninput="renderSearchAll()" autocomplete="off" autocorrect="off" style="flex:1;min-width:0;font-size:1rem">
+      <button class="btn-ghost" onclick="closeSearchAll()">✕</button>
+    </div>
+    <div id="search-all-results" style="max-height:62vh;overflow-y:auto;margin-top:8px"></div>
   </div>
 </div>
 
@@ -2689,6 +2726,7 @@ function sortByTime(arr) {
 function showView(name) {
   // Leaving the Library any other way forgets the "Back to pupil" shortcut
   if (name !== 'library') libReturn = null;
+  if (name === 'admin') refreshBackupAge();
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.folder-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
@@ -2718,7 +2756,12 @@ function renderToday() {
   if (wedReminder) {
     const isWedEvening = now.getDay() === 3 && now.getHours() >= 17;
     const dismissedToday = localStorage.getItem('backup_reminder_dismissed') === new Date().toDateString();
-    wedReminder.style.display = (isWedEvening && !dismissedToday) ? 'flex' : 'none';
+    // Also nudge on any day once it's been more than a week since the last backup
+    const days = daysSinceBackup();
+    const overdue = days !== null && days > 7 && students.length > 0;
+    const txt = document.getElementById('backup-reminder-text');
+    if (txt) txt.textContent = overdue ? 'It’s been ' + days + ' days since your last backup.' : 'Wednesday - time for your weekly backup!';
+    wedReminder.style.display = ((isWedEvening || overdue) && !dismissedToday) ? 'flex' : 'none';
   }
   // Also include pupils with an extra lesson today
   const todayStudents = students.filter(s => effectiveSlot(s).day === dayName && !isSkipped(s.id) && !s.retired);
@@ -3312,7 +3355,6 @@ function switchMoment(tab, panel) {
   document.querySelectorAll('.moment-panel').forEach(p => p.classList.remove('active'));
   tab.classList.add('active');
   document.getElementById(panel).classList.add('active');
-  // (The sketch pad now lives on the After tab and starts up when you open it.)
   // Refresh refSummary on the After tab so piece refs are always current
   if (panel === 'panel-after') {
     const duringEl = document.getElementById('panel-during');
@@ -3642,15 +3684,6 @@ function renderDetail(s, preserveTab = false) {
           </div>
         </details>
 
-        ${(()=>{
-          const today = todayLogDate();
-          const todayEntry = (s.log||[]).find(e => e.date === today);
-          const sketches = todayEntry && todayEntry.sketches || s.canvasSaves && s.canvasSaves.filter(sv => sv.date === today).map(sv => sv.img) || [];
-          if (!sketches.length) return '';
-          return '<div style="margin-top:12px"><div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:8px">📎 Sketches from this lesson</div>'
-            + sketches.map((img,i) => '<div style="margin-bottom:8px"><img src="' + img + '" style="width:100%;border-radius:8px;border:1px solid #e0ddd8;display:block"></div>').join('')
-            + '</div>';
-        })()}
         <button class="save-btn" onclick="saveLog('${s.id}')">Save to lesson log</button>
         <div class="save-toast" id="toast-after-${s.id}">✓ Added to log</div>
       </div>
@@ -3688,39 +3721,6 @@ function renderDetail(s, preserveTab = false) {
             + '<div style="font-size:0.88rem;line-height:1.6">' + textHTML + '</div>';
         })()}</div>
       </div>
-      <details style="margin-bottom:10px" ontoggle="if(this.open){initCanvas('${s.id}');renderCanvasSaves('${s.id}');}">
-        <summary style="font-size:0.88rem;color:var(--viola);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">
-          <span>Sketch - bowings, fingerings, notation</span>
-          <span style="font-size:0.7rem;color:var(--muted)">▾</span>
-        </summary>
-        <div class="section-card" style="margin-top:6px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="display:flex;gap:6px">
-              <button onclick="undoCanvas('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;color:var(--muted)" title="Undo last stroke">↩ Undo</button>
-              <button onclick="clearCanvas('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;color:var(--muted)">Clear</button>
-              <button onclick="saveCanvas('${s.id}')" style="background:var(--viola);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;font-weight:600">Save sketch</button>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap">
-            <label style="font-size:0.75rem;color:var(--muted)">Colour:</label>
-            ${['#05270B','#2F5C1A','#29789E','#c0392b','#e67e22','#8e44ad'].map(col =>
-              `<button onclick="setDrawColour('${s.id}','${col}')" style="width:22px;height:22px;border-radius:50%;background:${col};border:2px solid transparent;cursor:pointer" class="colour-btn-${s.id}" data-col="${col}"></button>`
-            ).join('')}
-            <label style="font-size:0.75rem;color:var(--muted);margin-left:8px">Size:</label>
-            <input type="range" min="1" max="12" value="3" oninput="setDrawSize('${s.id}',this.value)" style="width:80px">
-            <button onclick="setDrawEraser('${s.id}')" style="background:none;border:1.5px solid #e0ddd8;border-radius:6px;padding:3px 8px;font-size:0.75rem;cursor:pointer;color:var(--muted)">Eraser</button>
-            <label style="font-size:0.75rem;color:var(--muted);margin-left:4px">
-              <input type="checkbox" id="stave-${s.id}" onchange="toggleStave('${s.id}')"> Stave
-            </label>
-          </div>
-          <canvas id="canvas-${s.id}"
-            style="width:100%;border-radius:8px;border:1.5px solid #e0ddd8;background:#fff;touch-action:none;display:block;cursor:crosshair"
-            height="220">
-          </canvas>
-          <div id="canvas-saves-${s.id}" style="margin-top:8px"></div>
-          <div class="save-toast" id="toast-canvas-${s.id}">✓ Sketch saved</div>
-        </div>
-      </details>
     </div>
 
     <!-- SCALES / TECHNIQUE -->
@@ -3965,6 +3965,8 @@ function renderDetail(s, preserveTab = false) {
           <span style="display:flex;align-items:center;gap:10px">
             <button onclick="event.preventDefault();event.stopPropagation();openNotesSummary('${s.id}')"
               style="background:var(--violin);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-family:'Special Elite',cursive;font-size:0.72rem;cursor:pointer">📝 Notes summary</button>
+            <button onclick="event.preventDefault();event.stopPropagation();openProgressReport('${s.id}')"
+              style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-family:'Special Elite',cursive;font-size:0.72rem;cursor:pointer">🌟 Progress report</button>
             <span style="font-size:0.7rem;font-weight:400">▴</span>
           </span>
         </summary>
@@ -5395,8 +5397,29 @@ function autoPieceRef(s, i) {
   s.pieceRefManual[i] = false;
 }
 // The short label for one movement / study: "Suite No. 2: Prélude", "Variation 1", "No. 3"
-function mvtShortLabel(head, item, numLabel) {
-  const part = /^\d+$/.test(item) ? (numLabel || 'Mvt.') + ' ' + item : mvtShortName(item);
+// A list of names (no plain numbers in it) gets numbered on screen too:
+// "No. 3 · Lady Bird". Names that already start with a number ("1. Prélude",
+// "IV. Finale") are left alone. Display only: ticks stay saved against the name.
+function itemAlreadyNumbered(it) { return /^\s*(\d+[a-z]?|[IVXLC]+)\s*[.):]/i.test(it) || /^\s*\d+\s/.test(it); }
+function autoItemNumber(list, idx) {
+  if (!Array.isArray(list) || idx < 0 || idx >= list.length) return 0;
+  const it = String(list[idx]);
+  if (isHeadingItem(it) || /^\d+$/.test(it) || itemAlreadyNumbered(it)) return 0;
+  if (list.some(function(x){ return /^\d+$/.test(String(x)); })) return 0;
+  let n = 0; for (let i = 0; i <= idx; i++) if (!isHeadingItem(list[i])) n++;
+  return n;
+}
+function itemLabel(list, idx, numLabel, short) {
+  const it = String(list[idx]); const lbl = numLabel || 'No.';
+  if (/^\d+$/.test(it)) return lbl + ' ' + it;
+  const nm = short ? mvtShortName(it) : it;
+  const n = autoItemNumber(list, idx);
+  return n ? lbl + ' ' + n + ' · ' + nm : nm;
+}
+// The No. / Mvt. word for a pupil's book (from its library item)
+function bookNumLabel(book) { const lib = libItemForBook(book); return lib ? pieceNumLabelOf(lib) : ((book && book.numLabel) || 'No.'); }
+function mvtShortLabel(head, item, numLabel, list, idx) {
+  const part = (list && idx !== undefined) ? itemLabel(list, idx, numLabel || 'Mvt.', true) : /^\d+$/.test(item) ? (numLabel || 'Mvt.') + ' ' + item : mvtShortName(item);
   return (head ? mvtShortName(String(head).split(',')[0]) + ': ' : '') + part;
 }
 // If a No. / mvt. box holds the full library wording of a movement or study
@@ -5413,7 +5436,7 @@ function tidyPieceRef(title, ref) {
       const it = items[n]; if (isHeadingItem(it)) continue;
       const head = headingFor(items, n);
       const part = /^\d+$/.test(it) ? (lists[L].num) + ' ' + it : it;
-      if (r === part || r === it || (head && r === head + ' - ' + part)) return mvtShortLabel(head, it, lists[L].num);
+      if (r === part || r === it || (head && r === head + ' - ' + part)) return mvtShortLabel(head, it, lists[L].num, items, n);
     }
   }
   return ref;
@@ -5427,7 +5450,7 @@ function mvtWorkingLabels(s, i) {
   mvts.forEach(function(m, n) {
     if (!isHeadingItem(m) && bookTickLevel(ticks[mkeys[n]]) === 1) {
       const h = headingFor(mvts, n);
-      out.push((h ? mvtShortName(h.split(',')[0]) + ': ' : '') + (/^\d+$/.test(m) ? pieceNumLabel(title) + ' ' + m : mvtShortName(m)));
+      out.push((h ? mvtShortName(h.split(',')[0]) + ': ' : '') + itemLabel(mvts, n, pieceNumLabel(title), true));
     }
   });
   return out;
@@ -5450,7 +5473,7 @@ function mvtTicksHTML(s, i) {
     if (!isHeadingItem(m) && bookTickLevel(ticks[mkeys[n]]) === 1) {
       const h = headingFor(mvts, n);
       const shortH = h ? shortName(h.split(',')[0]) + ': ' : '';
-      working.push(shortH + (/^\d+$/.test(m) ? numLbl + ' ' + m : shortName(m)));
+      working.push(shortH + itemLabel(mvts, n, numLbl, true));
     }
   });
   const toggle = '<button onclick="toggleMvtRow(\'' + s.id + '\',' + i + ')" style="display:flex;align-items:center;gap:6px;background:none;border:none;padding:2px 0;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.72rem;color:var(--muted);text-align:left">'
@@ -5465,7 +5488,7 @@ function mvtTicksHTML(s, i) {
         if (isHeadingItem(m)) return '<span style="flex-basis:100%;font-size:0.72rem;font-weight:700;color:var(--deep);margin-top:6px">' + esc(headingText(m)) + '</span>';
         const lv = bookTickLevel(ticks[mkeys[idx]]);
         const st = BOOK_TICK_STYLE[lv];
-        const label = /^\d+$/.test(m) ? numLbl + ' ' + m : m;
+        const label = itemLabel(mvts, idx, numLbl, false);
         // Numbers-only movements stay as small pills; named ones are a neat left-aligned list
         const isNum = /^\d+$/.test(m);
         return '<button onclick="mvtTick(\'' + s.id + '\',' + i + ',' + idx + ')" title="' + st.label + '" '
@@ -6719,27 +6742,11 @@ function buildCumulativeNote(s) {
   if ((s.scalesThisWeek||[]).length > 0) {
     parts.push('\ud83c\udfbb Scales this week: ' + s.scalesThisWeek.join(', '));
   }
-  // Include ticked scale checklist items
-  const cl = s.scaleChecklist || {};
-  const keyOctaves = s.scaleKeyOctaves || {};
-  const activeTypes = s.scaleActiveTypes || [];
-  const activeKeys = Object.keys(cl);
-  const tickedLines = [];
-  activeKeys.forEach(function(key) {
-    activeTypes.forEach(function(type) {
-      const ticks = (cl[key]||{})[type] || {};
-      const octs = keyOctaves[key] || ['1'];
-      const tickedOcts = octs.filter(function(o) { return ticks[o]; });
-      if (tickedOcts.length > 0) {
-        tickedLines.push(key + ' ' + type + (octs.length > 1 ? ' (' + tickedOcts.map(function(o){ return o + ' oct'; }).join(', ') + ')' : ''));
-      }
-    });
-  });
-  if (tickedLines.length > 0) {
-    parts.push('✅ Scales done this lesson:\n' + tickedLines.map(function(l){ return '• ' + l; }).join('\n'));
-  }
+  // (Scale checklist ticks no longer go into the lesson notes: they are a
+  // record of what's been learnt, not what was done today.)
   if (s.duringScratch && s.duringScratch.trim()) {
     let scratch = s.duringScratch.trim();
+    scratch = scratch.replace(/\n*✅ Scales done this lesson:[\s\S]*?(?=\n\n|\n📝|$)/, '').trim();
     scratch = scratch.replace(/^📌 Plan:\n?/, '').trim();
     scratch = scratch.replace(/^\ud83c\udfbb Scales this week:.*(\n|$)/m, '').trim();
     scratch = scratch.replace(/^📝 During lesson:\n?/m, '').trim();
@@ -6914,7 +6921,12 @@ function doubleStopCheck(studentId, key, type) {
   const s = getStudent(studentId); if (!s) return;
   if (!s.doubleStopsChecklist) s.doubleStopsChecklist = {};
   if (!s.doubleStopsChecklist[key]) s.doubleStopsChecklist[key] = {};
-  s.doubleStopsChecklist[key][type] = !s.doubleStopsChecklist[key][type];
+  if (!s.doubleStopsWorking) s.doubleStopsWorking = {};
+  if (!s.doubleStopsWorking[key]) s.doubleStopsWorking[key] = {};
+  const dsw = s.doubleStopsWorking[key];
+  if (s.doubleStopsChecklist[key][type]) { s.doubleStopsChecklist[key][type] = false; delete dsw[type]; }
+  else if (dsw[type]) { s.doubleStopsChecklist[key][type] = true; delete dsw[type]; }
+  else { dsw[type] = true; }
   save();
   document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
 }
@@ -7031,7 +7043,7 @@ function studyTickCell(it, level, tickFn, sid, bIdx, key) {
 }
 
 // One tick-box, named-row style (full-width, label after box, struck when done).
-function studyTickRow(it, level, tickFn, sid, bIdx, key) {
+function studyTickRow(it, level, tickFn, sid, bIdx, key, label) {
   const lv = bookTickLevel(level);
   const st = BOOK_TICK_STYLE[lv];
   return '<div style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;background:' + st.rowBg + ';margin-bottom:3px">'
@@ -7039,14 +7051,14 @@ function studyTickRow(it, level, tickFn, sid, bIdx, key) {
     + 'style="flex:0 0 auto;width:20px;height:20px;border-radius:5px;border:1.5px solid ' + st.border + ';'
     + 'background:' + st.bg + ';color:' + st.fg + ';cursor:pointer;font-size:0.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0">'
     + st.mark + '</button>'
-    + '<span style="flex:1;font-size:0.85rem;color:var(--ink);' + (lv === 2 ? 'text-decoration:line-through;opacity:0.65' : '') + '">' + esc(it) + '</span>'
+    + '<span style="flex:1;font-size:0.85rem;color:var(--ink);' + (lv === 2 ? 'text-decoration:line-through;opacity:0.65' : '') + '">' + esc(label || it) + '</span>'
     + (lv === 1 ? '<span style="font-size:0.7rem;color:#b7791f;white-space:nowrap">working on it</span>' : '')
   + '</div>';
 }
 
 // Render a book's studies: runs of plain numbers become a compact column grid,
 // named items each get their own readable row. tickFn is the tick handler name.
-function bookTicksHTML(studies, ticks, tickFn, sid, bIdx) {
+function bookTicksHTML(studies, ticks, tickFn, sid, bIdx, numLabel) {
   // Split into alternating segments of {numeric:true, items:[...]} / {numeric:false, items:[...]}
   const segments = [];
   const keys = uniqueItemKeys(studies);
@@ -7054,8 +7066,8 @@ function bookTicksHTML(studies, ticks, tickFn, sid, bIdx) {
     if (isHeadingItem(it)) { segments.push({ heading: it }); return; }
     const isNum = /^\d+$/.test(it);
     const last = segments[segments.length - 1];
-    if (last && !last.heading && last.numeric === isNum) { last.items.push(it); last.keys.push(keys[n]); }
-    else segments.push({ numeric: isNum, items: [it], keys: [keys[n]] });
+    if (last && !last.heading && last.numeric === isNum) { last.items.push(it); last.keys.push(keys[n]); last.idx.push(n); }
+    else segments.push({ numeric: isNum, items: [it], keys: [keys[n]], idx: [n] });
   });
   return segments.map(function(seg) {
     if (seg.heading) return headingLabelHTML(seg.heading);
@@ -7077,7 +7089,7 @@ function bookTicksHTML(studies, ticks, tickFn, sid, bIdx) {
     const cols = seg.items.length < 4 ? 1 : longest <= 24 ? 3 : longest <= 40 ? 2 : 1;
     const colStyle = cols > 1 ? 'columns:' + cols + ' 200px;column-gap:14px;' : '';
     return '<div style="' + colStyle + '">' + seg.items.map(function(it, j) {
-      return '<div style="break-inside:avoid;-webkit-column-break-inside:avoid">' + studyTickRow(it, ticks[seg.keys[j]], tickFn, sid, bIdx, seg.keys[j]) + '</div>';
+      return '<div style="break-inside:avoid;-webkit-column-break-inside:avoid">' + studyTickRow(it, ticks[seg.keys[j]], tickFn, sid, bIdx, seg.keys[j], itemLabel(studies, seg.idx[j], numLabel || 'No.', false)) + '</div>';
     }).join('') + '</div>';
   }).join('');
 }
@@ -7092,7 +7104,7 @@ function studyBooksHTML(s) {
     const tkeys = uniqueItemKeys(studies).filter(function(k, n){ return !isHeadingItem(studies[n]); });
     const done = tkeys.filter(function(k){ return bookTickLevel(ticks[k]) === 2; }).length;
     const working = tkeys.filter(function(k){ return bookTickLevel(ticks[k]) === 1; }).length;
-    const ticksHTML = bookTicksHTML(studies, ticks, 'studyBookTick', s.id, bIdx);
+    const ticksHTML = bookTicksHTML(studies, ticks, 'studyBookTick', s.id, bIdx, bookNumLabel(book));
     return '<details style="margin-top:10px">'
       + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
       + '<span>' + esc(bookTitle(book)) + '</span>'
@@ -7266,7 +7278,7 @@ function methodBooksHTML(s) {
     const tkeys = uniqueItemKeys(studies).filter(function(k, n){ return !isHeadingItem(studies[n]); });
     const done = tkeys.filter(function(k){ return bookTickLevel(ticks[k]) === 2; }).length;
     const working = tkeys.filter(function(k){ return bookTickLevel(ticks[k]) === 1; }).length;
-    const ticksHTML = bookTicksHTML(studies, ticks, 'methodBookTick', s.id, bIdx);
+    const ticksHTML = bookTicksHTML(studies, ticks, 'methodBookTick', s.id, bIdx, bookNumLabel(book));
     return '<details style="margin-top:10px">'
       + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
       + '<span>' + esc(bookTitle(book)) + '</span>'
@@ -7374,7 +7386,7 @@ function albumsHTML(s) {
     const tkeys = uniqueItemKeys(studies).filter(function(k, n){ return !isHeadingItem(studies[n]); });
     const done = tkeys.filter(function(k){ return bookTickLevel(ticks[k]) === 2; }).length;
     const working = tkeys.filter(function(k){ return bookTickLevel(ticks[k]) === 1; }).length;
-    const ticksHTML = bookTicksHTML(studies, ticks, 'albumTick', s.id, bIdx);
+    const ticksHTML = bookTicksHTML(studies, ticks, 'albumTick', s.id, bIdx, bookNumLabel(book));
     return '<details style="margin-top:10px">'
       + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
       + '<span>' + esc(bookTitle(book)) + '</span>'
@@ -7521,7 +7533,7 @@ function pieceTracksHTML(s) {
     const tkeys = uniqueItemKeys(studies).filter(function(k, n){ return !isHeadingItem(studies[n]); });
     const done = tkeys.filter(function(k){ return bookTickLevel(ticks[k]) === 2; }).length;
     const working = tkeys.filter(function(k){ return bookTickLevel(ticks[k]) === 1; }).length;
-    const ticksHTML = bookTicksHTML(studies, ticks, 'pieceTrackTick', s.id, bIdx);
+    const ticksHTML = bookTicksHTML(studies, ticks, 'pieceTrackTick', s.id, bIdx, bookNumLabel(book));
     return '<details style="margin-top:10px">'
       + '<summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:10px 14px;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow);list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:600">'
       + '<span>' + esc(bookTitle(book)) + (book.virtual || (s.pieces || []).some(function(t){ return libTitleKey(t) === libTitleKey(bookTitle(book)); }) ? ' <span style="font-size:0.66rem;font-weight:400;color:var(--viola)">· on Working On</span>' : '') + '</span>'
@@ -8112,6 +8124,20 @@ function loadTechSet(sid, mode) {
   if (el) el.innerHTML = techniqueChecklistHTML(s);
 }
 
+// Scale boxes have three steps, the same as the study numbers:
+//   empty → orange (working on it) → green tick (learnt)
+// "Learnt" stays in s.scaleChecklist as before; "working on it" is kept
+// separately (s.scaleWorking etc.) so reports only ever count learnt scales.
+function scaleBoxCSS(lvl) {
+  const st = BOOK_TICK_STYLE[lvl] || BOOK_TICK_STYLE[0];
+  return 'border:1.5px solid ' + st.border + ';background:' + st.bg + ';color:' + st.fg + ';';
+}
+function scaleWorkMap(s, key, type) {
+  if (!s.scaleWorking) s.scaleWorking = {};
+  if (!s.scaleWorking[key]) s.scaleWorking[key] = {};
+  if (!s.scaleWorking[key][type]) s.scaleWorking[key][type] = {};
+  return s.scaleWorking[key][type];
+}
 function scalesHTML(s) {
   const keys = s.scaleKeys || [];
   if (keys.length === 0) return '<p style="color:var(--muted);font-size:0.88rem">No keys added yet - tap \u201c+ Add key\u201d below.</p>';
@@ -8141,27 +8167,22 @@ function scalesHTML(s) {
     const cells = keys.map(function(key) {
       const octs = keyOctaves[key] || ['1','2','3'];
       const ticks = (cl[key] || {})[type] || {};
+      const work = (((s.scaleWorking || {})[key]) || {})[type] || {};
       if (octs.length === 1) {
         // Single octave - one box as before
-        const done = !!ticks[octs[0]];
+        const lvl = ticks[octs[0]] ? 2 : (work[octs[0]] ? 1 : 0);
         return '<td style="text-align:center;padding:3px 1px">'
-          + '<button onclick="scaleCheckCell(\'' + s.id + '\',\'' + key + '\',\'' + type + '\')" '
-          + 'style="width:26px;height:26px;border-radius:6px;border:1.5px solid ' + (done ? 'var(--viola)' : '#e0ddd8') + ';'
-          + 'background:' + (done ? 'var(--viola)' : 'transparent') + ';'
-          + 'color:' + (done ? '#fff' : '#ccc') + ';'
-          + 'cursor:pointer;font-size:0.8rem;font-weight:700;margin:auto;display:block">'
-          + (done ? '\u2713' : '') + '</button></td>';
+          + '<button onclick="scaleCheckCell(\'' + s.id + '\',\'' + key + '\',\'' + type + '\')" title="' + BOOK_TICK_STYLE[lvl].label + '" '
+          + 'style="width:26px;height:26px;border-radius:6px;' + scaleBoxCSS(lvl) + 'cursor:pointer;font-size:0.8rem;font-weight:700;margin:auto;display:block">'
+          + BOOK_TICK_STYLE[lvl].mark + '</button></td>';
       } else {
         // Multiple octaves - one small box per octave, stacked
         const boxes = octs.map(function(o) {
-          const done = !!ticks[o];
+          const lvl = ticks[o] ? 2 : (work[o] ? 1 : 0);
           return '<div style="display:flex;align-items:center;justify-content:center;gap:2px;margin-bottom:2px">'
             + '<button onclick="scaleCheckOctave(\'' + s.id + '\',\'' + key + '\',\'' + type + '\',\'' + o + '\')" '
-            + 'style="width:22px;height:22px;border-radius:5px;border:1.5px solid ' + (done ? 'var(--viola)' : '#e0ddd8') + ';'
-            + 'background:' + (done ? 'var(--viola)' : 'transparent') + ';'
-            + 'color:' + (done ? '#fff' : '#bbb') + ';'
-            + 'cursor:pointer;font-size:0.7rem;font-weight:700;display:block;padding:0">'
-            + (done ? '\u2713' : '') + '</button>'
+            + 'style="width:22px;height:22px;border-radius:5px;' + scaleBoxCSS(lvl) + 'cursor:pointer;font-size:0.7rem;font-weight:700;display:block;padding:0">'
+            + BOOK_TICK_STYLE[lvl].mark + '</button>'
             + '<span style="font-size:0.55rem;color:var(--muted);line-height:1">' + o + '</span>'
             + '</div>';
         }).join('');
@@ -8179,7 +8200,9 @@ function scalesHTML(s) {
     + '<tbody>' + typeRows + '</tbody>'
     + '</table></div>';
 
-  return mainTable + naturalMinorAndDoubleStopsHTML(s);
+  const lg = function(lvl) { return '<span style="display:inline-flex;align-items:center;gap:5px"><span style="display:inline-block;width:16px;height:16px;border-radius:4px;box-sizing:border-box;' + scaleBoxCSS(lvl) + 'font-size:0.62rem;font-weight:700;text-align:center;line-height:13px">' + BOOK_TICK_STYLE[lvl].mark + '</span>' + (lvl === 1 ? 'Tap once: working on it' : 'Tap twice: learnt') + '</span>'; };
+  const legend = '<div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:0.72rem;color:var(--muted);margin-bottom:10px">' + lg(1) + lg(2) + '</div>';
+  return legend + mainTable + naturalMinorAndDoubleStopsHTML(s);
 }
 
 // Natural minor and double-stop (3rds/6ths/Octaves) rows, in the same visual
@@ -8222,12 +8245,10 @@ function naturalMinorAndDoubleStopsHTML(s) {
     out += '<button onclick="openAddNaturalMinorModal(\'' + s.id + '\')" style="background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 14px;font-family:\'Special Elite\',cursive;font-size:0.78rem;cursor:pointer">+ Add key</button>';
   } else {
     const cells = nmKeys.map(function(key) {
-      const done = isNmDone(key);
+      const lvl = isNmDone(key) ? 2 : ((s.naturalMinorWorking || {})[key] ? 1 : 0);
       return '<td style="text-align:center;padding:3px 1px">'
         + '<button onclick="naturalMinorCheckCell(\'' + s.id + '\',\'' + key + '\')" '
-        + 'style="width:24px;height:24px;border-radius:6px;border:1.5px solid ' + (done ? 'var(--viola)' : '#e0ddd8') + ';'
-        + 'background:' + (done ? 'var(--viola)' : 'transparent') + ';color:' + (done ? '#fff' : '#ccc') + ';'
-        + 'cursor:pointer;font-size:0.72rem;font-weight:700;margin:auto;display:block">' + (done ? '\u2713' : '') + '</button></td>';
+        + 'style="width:24px;height:24px;border-radius:6px;' + scaleBoxCSS(lvl) + 'cursor:pointer;font-size:0.72rem;font-weight:700;margin:auto;display:block">' + BOOK_TICK_STYLE[lvl].mark + '</button></td>';
     }).join('');
     out += '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="border-collapse:collapse">'
       + '<thead><tr><th></th>' + keyHeader(nmKeys, 'openAddNaturalMinorModal', 'removeNaturalMinorKey') + '</tr></thead>'
@@ -8243,12 +8264,10 @@ function naturalMinorAndDoubleStopsHTML(s) {
   } else {
     const dsRows = DS_TYPES.map(function(type) {
       const cells = dsKeys.map(function(key) {
-        const done = isDsDone(key, type);
+        const lvl = isDsDone(key, type) ? 2 : ((((s.doubleStopsWorking || {})[key]) || {})[type] ? 1 : 0);
         return '<td style="text-align:center;padding:3px 1px">'
           + '<button onclick="doubleStopCheck(\'' + s.id + '\',\'' + key + '\',\'' + type + '\')" '
-          + 'style="width:24px;height:24px;border-radius:6px;border:1.5px solid ' + (done ? 'var(--viola)' : '#e0ddd8') + ';'
-          + 'background:' + (done ? 'var(--viola)' : 'transparent') + ';color:' + (done ? '#fff' : '#ccc') + ';'
-          + 'cursor:pointer;font-size:0.72rem;font-weight:700;margin:auto;display:block">' + (done ? '\u2713' : '') + '</button></td>';
+          + 'style="width:24px;height:24px;border-radius:6px;' + scaleBoxCSS(lvl) + 'cursor:pointer;font-size:0.72rem;font-weight:700;margin:auto;display:block">' + BOOK_TICK_STYLE[lvl].mark + '</button></td>';
       }).join('');
       return '<tr><td style="font-size:0.68rem;color:var(--muted);padding:3px 6px 3px 0;white-space:nowrap;text-align:left">' + esc(type) + '</td>' + cells + '<td></td></tr>';
     }).join('');
@@ -8270,7 +8289,12 @@ function naturalMinorCheckCell(studentId, key) {
   if (!s.naturalMinorChecklist[key]) s.naturalMinorChecklist[key] = {};
   const ticks = s.naturalMinorChecklist[key];
   const allDone = octs.every(function(o) { return ticks[o]; });
-  octs.forEach(function(o) { ticks[o] = !allDone; });
+  // empty → orange (working on it) → green (learnt) → empty
+  if (!s.naturalMinorWorking) s.naturalMinorWorking = {};
+  const working = !allDone && !!s.naturalMinorWorking[key];
+  if (allDone) { octs.forEach(function(o) { ticks[o] = false; }); delete s.naturalMinorWorking[key]; }
+  else if (working) { octs.forEach(function(o) { ticks[o] = true; }); delete s.naturalMinorWorking[key]; }
+  else { s.naturalMinorWorking[key] = true; }
   save();
   document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
 }
@@ -8286,7 +8310,12 @@ function scaleCheckCell(studentId, key, type) {
   if (!s.scaleChecklist[key][type]) s.scaleChecklist[key][type] = {};
   const ticks = s.scaleChecklist[key][type];
   const allDone = octs.every(function(o) { return ticks[o]; });
-  octs.forEach(function(o) { ticks[o] = !allDone; });
+  // empty → orange (working on it) → green (learnt) → empty
+  const work = scaleWorkMap(s, key, type);
+  const working = !allDone && octs.some(function(o) { return work[o]; });
+  if (allDone) octs.forEach(function(o) { ticks[o] = false; delete work[o]; });
+  else if (working) octs.forEach(function(o) { ticks[o] = true; delete work[o]; });
+  else octs.forEach(function(o) { if (!ticks[o]) work[o] = true; });
   save();
   document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
 }
@@ -8296,7 +8325,10 @@ function scaleCheckOctave(studentId, key, type, octave) {
   if (!s.scaleChecklist) s.scaleChecklist = {};
   if (!s.scaleChecklist[key]) s.scaleChecklist[key] = {};
   if (!s.scaleChecklist[key][type]) s.scaleChecklist[key][type] = {};
-  s.scaleChecklist[key][type][octave] = !s.scaleChecklist[key][type][octave];
+  const work = scaleWorkMap(s, key, type);
+  if (s.scaleChecklist[key][type][octave]) { s.scaleChecklist[key][type][octave] = false; delete work[octave]; }
+  else if (work[octave]) { s.scaleChecklist[key][type][octave] = true; delete work[octave]; }
+  else { work[octave] = true; }
   save();
   document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
 }
@@ -8474,226 +8506,6 @@ function removeScaleType(studentId, type) {
   s.scaleActiveTypes = active;
   save();
   document.getElementById('scales-list-' + studentId).innerHTML = scalesHTML(s);
-}
-
-
-const canvasState = {}; // per pupil: { colour, size, drawing, eraser }
-const canvasHistory = {}; // per pupil: array of image data snapshots for undo
-
-function initCanvas(id) {
-  const canvas = document.getElementById('canvas-' + id);
-  if (!canvas) return;
-
-  // Wait until canvas has a real width
-  const rect = canvas.getBoundingClientRect();
-  if (rect.width === 0) {
-    setTimeout(() => initCanvas(id), 100);
-    return;
-  }
-
-  if (canvas._initialized) return;
-  canvas._initialized = true;
-
-  // Set actual pixel size
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width  = rect.width * dpr;
-  canvas.height = 220 * dpr;
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-
-  // Restore saved image if any
-  const s = getStudent(id);
-  if (s && s.canvasCurrent) {
-    const img = new Image();
-    img.onload = () => ctx.drawImage(img, 0, 0, rect.width, 220);
-    img.src = s.canvasCurrent;
-  }
-
-  canvasState[id] = { colour: 'var(--ink)', size: 3, drawing: false, eraser: false, lastX: 0, lastY: 0 };
-
-  function getPos(e) {
-    const r = canvas.getBoundingClientRect();
-    const touch = e.touches ? e.touches[0] : e;
-    return { x: touch.clientX - r.left, y: touch.clientY - r.top };
-  }
-
-  function startDraw(e) {
-    e.preventDefault();
-    const state = canvasState[id];
-    if (!state) return;
-    state.drawing = true;
-    const pos = getPos(e);
-    state.lastX = pos.x; state.lastY = pos.y;
-    ctx.beginPath();
-    ctx.arc(pos.x, pos.y, (state.eraser ? state.size * 4 : state.size) / 2, 0, Math.PI * 2);
-    ctx.fillStyle = state.eraser ? '#ffffff' : state.colour;
-    ctx.fill();
-  }
-
-  function draw(e) {
-    e.preventDefault();
-    const state = canvasState[id];
-    if (!state || !state.drawing) return;
-    const pos = getPos(e);
-    ctx.beginPath();
-    ctx.moveTo(state.lastX, state.lastY);
-    ctx.lineTo(pos.x, pos.y);
-    ctx.strokeStyle = state.eraser ? '#ffffff' : state.colour;
-    ctx.lineWidth  = state.eraser ? state.size * 4 : state.size;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.stroke();
-    state.lastX = pos.x; state.lastY = pos.y;
-  }
-
-  function endDraw() {
-    if (canvasState[id]) canvasState[id].drawing = false;
-    // Save snapshot for undo
-    if (!canvasHistory[id]) canvasHistory[id] = [];
-    canvasHistory[id].push(canvas.toDataURL());
-    if (canvasHistory[id].length > 30) canvasHistory[id].shift(); // limit history
-    const s = getStudent(id);
-    if (s) { s.canvasCurrent = canvas.toDataURL(); save(); }
-  }
-
-  canvas.addEventListener('mousedown',  startDraw);
-  canvas.addEventListener('mousemove',  draw);
-  canvas.addEventListener('mouseup',    endDraw);
-  canvas.addEventListener('mouseleave', endDraw);
-  canvas.addEventListener('touchstart', startDraw, {passive:false});
-  canvas.addEventListener('touchmove',  draw,      {passive:false});
-  canvas.addEventListener('touchend',   endDraw);
-
-  highlightColourBtn(id, 'var(--ink)');
-}
-
-function undoCanvas(id) {
-  const canvas = document.getElementById('canvas-' + id); if (!canvas) return;
-  const history = canvasHistory[id];
-  if (!history || history.length === 0) return;
-  // Remove current state and restore previous
-  history.pop();
-  const ctx = canvas.getContext('2d');
-  const rect = canvas.getBoundingClientRect();
-  ctx.clearRect(0, 0, rect.width, 220);
-  if (history.length > 0) {
-    const img = new Image();
-    img.onload = () => ctx.drawImage(img, 0, 0, rect.width, 220);
-    img.src = history[history.length - 1];
-  }
-  const s = getStudent(id);
-  if (s) { s.canvasCurrent = history.length > 0 ? history[history.length-1] : ''; save(); }
-}
-
-function highlightColourBtn(id, col) {
-  document.querySelectorAll('.colour-btn-' + id).forEach(btn => {
-    btn.style.border = btn.dataset.col === col ? '2px solid var(--string)' : '2px solid transparent';
-  });
-}
-
-function setDrawColour(id, col) {
-  if (!canvasState[id]) return;
-  canvasState[id].colour = col;
-  canvasState[id].eraser = false;
-  highlightColourBtn(id, col);
-}
-
-function setDrawSize(id, size) {
-  if (canvasState[id]) canvasState[id].size = parseInt(size);
-}
-
-function setDrawEraser(id) {
-  if (canvasState[id]) canvasState[id].eraser = true;
-}
-
-function clearCanvas(id) {
-  const canvas = document.getElementById('canvas-' + id); if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const rect = canvas.getBoundingClientRect();
-  ctx.clearRect(0, 0, rect.width, 220);
-  // Redraw stave if active
-  if (document.getElementById('stave-' + id) && document.getElementById('stave-' + id).checked) {
-    drawStave(id);
-  }
-  const s = getStudent(id);
-  if (s) { s.canvasCurrent = ''; save(); }
-}
-
-function toggleStave(id) {
-  const canvas = document.getElementById('canvas-' + id); if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const rect = canvas.getBoundingClientRect();
-  if (document.getElementById('stave-' + id).checked) {
-    drawStave(id);
-  } else {
-    ctx.clearRect(0, 0, rect.width, 220);
-  }
-}
-
-function drawStave(id) {
-  const canvas = document.getElementById('canvas-' + id); if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const rect = canvas.getBoundingClientRect();
-  const w = rect.width;
-  // Draw 5 stave lines
-  const top = 40, spacing = 12;
-  ctx.strokeStyle = '#ccc';
-  ctx.lineWidth = 0.8;
-  for (let i = 0; i < 5; i++) {
-    const y = top + i * spacing;
-    ctx.beginPath(); ctx.moveTo(8, y); ctx.lineTo(w - 8, y); ctx.stroke();
-  }
-}
-
-function saveCanvas(id) {
-  const canvas = document.getElementById('canvas-' + id); if (!canvas) return;
-  const dataUrl = canvas.toDataURL();
-  const s = getStudent(id); if (!s) return;
-  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-
-  // Attach to today's log entry - create one if none exists for today
-  if (!s.log) s.log = [];
-  let entry = s.log.find(e => e.date === today);
-  if (!entry) {
-    entry = { date: today, text: '' };
-    s.log.push(entry);
-  }
-  if (!entry.sketches) entry.sketches = [];
-  entry.sketches.push(dataUrl);
-
-  // Also keep in canvasSaves for backwards compatibility / During tab display
-  if (!s.canvasSaves) s.canvasSaves = [];
-  s.canvasSaves.push({ date: today, img: dataUrl });
-  s.canvasCurrent = '';
-  save();
-
-  // Clear canvas
-  const ctx = canvas.getContext('2d');
-  const rect = canvas.getBoundingClientRect();
-  ctx.clearRect(0, 0, rect.width, 220);
-  renderCanvasSaves(id);
-  showToast('toast-canvas-' + id);
-}
-
-function renderCanvasSaves(id) {
-  const el = document.getElementById('canvas-saves-' + id); if (!el) return;
-  const s = getStudent(id); if (!s) return;
-  const saves = s.canvasSaves || [];
-  if (saves.length === 0) { el.innerHTML = ''; return; }
-  el.innerHTML = `<div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;font-weight:700;text-transform:uppercase">Saved sketches</div>` +
-    [...saves].reverse().map((sv, i) => `
-      <div style="margin-bottom:8px">
-        <div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px">${sv.date}
-          <button onclick="deleteCanvasSave('${id}',${saves.length-1-i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;margin-left:6px">×</button>
-        </div>
-        <img src="${sv.img}" style="width:100%;border-radius:6px;border:1px solid #e0ddd8">
-      </div>`).join('');
-}
-
-function deleteCanvasSave(id, idx) {
-  const s = getStudent(id); if (!s || !s.canvasSaves) return;
-  s.canvasSaves.splice(idx, 1);
-  save(); renderCanvasSaves(id);
 }
 
 
@@ -10053,6 +9865,7 @@ function updateAdminBadges() {
 // Open one Admin section panel, hide the rest, highlight its tile, scroll to it
 function showAdminSection(name) {
   if (name === 'theme') { themeDraft = null; renderThemePanel(); }
+  if (name === 'backup') { refreshBackupAge(); refreshOldSketches(); }
   const panels = document.querySelectorAll('#admin-panels .admin-panel');
   panels.forEach(p => { p.style.display = (p.id === 'panel-' + name) ? 'block' : 'none'; });
   const tiles = document.querySelectorAll('.admin-grid .admin-tile');
@@ -10461,6 +10274,7 @@ function findLibPieceByKey(key) {
 function openNewLibPiece() {
   populateCatFilters();
   document.getElementById('edit-lib-piece-heading').textContent = 'Add to the library';
+  document.getElementById('edit-lib-piece-merge-row').style.display = 'none';
   document.getElementById('edit-lib-piece-idx').value = '';
   ['title', 'composer', 'grade', 'note', 'mvts', 'cat-custom'].forEach(function(f){ document.getElementById('edit-lib-piece-' + f).value = ''; });
   const catSel = document.getElementById('edit-lib-piece-cat');
@@ -10486,6 +10300,7 @@ function editLibPieceByKey(key) {
   const p = findLibPieceByKey(key); if (!p) return;
   populateCatFilters();
   document.getElementById('edit-lib-piece-heading').textContent = 'Edit piece';
+  document.getElementById('edit-lib-piece-merge-row').style.display = 'block';
   document.getElementById('edit-lib-piece-cat-custom').value = '';
   document.getElementById('edit-lib-piece-cat-custom').style.display = 'none';
   // Store the ORIGINAL key so save can find the right row even if title/cat change.
@@ -12346,6 +12161,9 @@ function openNotesSummary(id) {
   notesSummaryPupil = id;
   _notePeriods = notePeriods();
   document.getElementById('notes-sum-name').textContent = s.name;
+  document.getElementById('notes-sum-mode').value = 'notes';
+  document.getElementById('notes-sum-comment').value = '';
+  notesSumModeUI();
   const sel = document.getElementById('notes-sum-period');
   let html = '', group = null;
   _notePeriods.forEach(function(p, i) {
@@ -12492,6 +12310,357 @@ function notesSummaryPdf(d) {
     });
     y += 7; rule(y, 0.4, '0.9 0.94 0.88');
   });
+  pages.push(c);
+  return pdfBuild(pages, null);
+}
+
+// ── MERGE DUPLICATES IN THE LIBRARY ──────────────────────────────────────
+// Open the one you want to KEEP, tap "Merge a duplicate into this", pick the
+// other one. Pupils' ticks are combined (the higher tick wins) and the
+// duplicate is removed from the library.
+let mergeKeepKey = '';
+function openLibMerge() {
+  mergeKeepKey = document.getElementById('edit-lib-piece-idx').value;
+  if (!mergeKeepKey) return;
+  const keep = findLibPieceByKey(mergeKeepKey); if (!keep) return;
+  document.getElementById('lib-merge-keep').textContent = keep.title;
+  document.getElementById('lib-merge-search').value = '';
+  renderLibMergeList();
+  document.getElementById('lib-merge-modal').classList.add('open');
+}
+function closeLibMerge() { document.getElementById('lib-merge-modal').classList.remove('open'); }
+function libMergeWords(t) { return libTitleKey(t).replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(function(w){ return w.length > 2; }); }
+function renderLibMergeList() {
+  const el = document.getElementById('lib-merge-list'); if (!el) return;
+  const keep = findLibPieceByKey(mergeKeepKey); if (!keep) { el.innerHTML = ''; return; }
+  const q = document.getElementById('lib-merge-search').value.trim().toLowerCase();
+  const kw = libMergeWords(keep.title + ' ' + (keep.composer || ''));
+  let list = visibleLibraryPieces().filter(function(p){ return pieceKey(p) !== mergeKeepKey; }).map(function(p) {
+    const pw = libMergeWords(p.title + ' ' + (p.composer || ''));
+    return { p: p, score: pw.filter(function(w){ return kw.indexOf(w) >= 0; }).length };
+  });
+  if (q) list = list.filter(function(x){ return (x.p.title + ' ' + (x.p.composer || '')).toLowerCase().indexOf(q) >= 0; });
+  else list = list.filter(function(x){ return x.score > 0; }); // look-alikes first
+  list.sort(function(a, b){ return b.score - a.score || a.p.title.localeCompare(b.p.title); });
+  if (!list.length) {
+    el.innerHTML = '<div style="font-size:0.82rem;color:var(--muted);font-style:italic;padding:10px 2px">' + (q ? 'Nothing matches.' : 'No look-alikes found. Type in the search box to find it.') + '</div>';
+    return;
+  }
+  el.innerHTML = list.slice(0, 40).map(function(x) {
+    const p = x.p; const k = LIB_KINDS.find(function(z){ return z.id === libKind(p); }) || LIB_KINDS[0];
+    const using = (students || []).filter(function(s){ return libPupilUses(s, p.title); }).length;
+    return '<button type="button" onclick="mergeLibPick(\'' + escJs(pieceKey(p)) + '\')" style="display:block;width:100%;text-align:left;background:#fff;border:1.5px solid var(--warm);border-radius:10px;padding:9px 12px;margin-bottom:6px;cursor:pointer;font-family:\'Special Elite\',cursive;color:var(--ink)">'
+      + '<div style="font-size:0.9rem;font-weight:700">' + k.icon + ' ' + esc(p.title) + '</div>'
+      + '<div style="font-size:0.72rem;color:var(--muted)">' + esc([p.composer, p.cat, (p.movements && p.movements.length ? tickableCount(p.movements) + ' parts' : ''), (using ? using + ' pupil' + (using === 1 ? '' : 's') : '')].filter(Boolean).join(' · ')) + '</div>'
+      + '</button>';
+  }).join('');
+}
+// Does this pupil have this title anywhere (Working On, a book list, or ticks)?
+function libPupilUses(s, title) {
+  const k = libTitleKey(title);
+  if ((s.pieces || []).some(function(x){ return libTitleKey(x) === k; })) return true;
+  if (['studyBooks', 'methodBooks', 'albums', 'pieceTracks'].some(function(f){ return (s[f] || []).some(function(b){ return libTitleKey(b.name) === k; }); })) return true;
+  return !!(s.pieceMvtTicks && s.pieceMvtTicks[k] && Object.keys(s.pieceMvtTicks[k]).length);
+}
+function mergeLibPick(dupKey) {
+  const keep = findLibPieceByKey(mergeKeepKey), dup = findLibPieceByKey(dupKey);
+  if (!keep || !dup || keep === dup) return;
+  const using = (students || []).filter(function(s){ return libPupilUses(s, dup.title); }).length;
+  if (!confirm('Merge these two?\n\nKEEP:  ' + keep.title + '\nREMOVE:  ' + dup.title + '\n\n'
+    + (using ? using + ' pupil' + (using === 1 ? ' has' : 's have') + ' the one being removed. They will be moved over and their ticks combined.' : 'No pupils are using the one being removed.'))) return;
+  mergeLibPieces(mergeKeepKey, dupKey);
+  closeLibMerge(); closeEditLibPiece();
+  renderLibPieces();
+  showMiniToast('✓ Merged into ' + keep.title);
+}
+function mergeLibPieces(keepKey, dupKey) {
+  let keep = findLibPieceByKey(keepKey); const dup = findLibPieceByKey(dupKey);
+  if (!keep || !dup || keep === dup) return false;
+  // Fill any gaps in the one we keep from the duplicate (needs our own copy of a built-in)
+  const gaps = (!((keep.movements || []).length) && (dup.movements || []).length) || (!keep.composer && dup.composer) || (!keep.grade && dup.grade) || (!keep.note && dup.note);
+  if (gaps) {
+    if (customPieces.indexOf(keep) === -1) { keep = JSON.parse(JSON.stringify(keep)); customPieces.unshift(keep); }
+    if (!((keep.movements || []).length) && (dup.movements || []).length) { keep.movements = dup.movements.slice(); if (dup.numLabel) keep.numLabel = dup.numLabel; }
+    ['composer', 'grade', 'note'].forEach(function(f){ if (!keep[f] && dup[f]) keep[f] = dup[f]; });
+  }
+  const kk = libTitleKey(keep.title);
+  if (libTitleKey(dup.title) !== kk) renameLibTitleForPupils(dup.title, keep.title);
+  const keepBid = libBid(keep), dupBid = libBid(dup);
+  (students || []).forEach(function(s) {
+    // Working On: the same title twice becomes one line (the first one stays)
+    if (Array.isArray(s.pieces)) {
+      let seen = false;
+      for (let i = 0; i < s.pieces.length; i++) {
+        if (libTitleKey(s.pieces[i]) !== kk || !String(s.pieces[i]).trim()) continue;
+        if (!seen) { seen = true; continue; }
+        s.pieces.splice(i, 1);
+        ['pieceRefs', 'pieceGroups', 'pieceRefManual'].forEach(function(f){ if (Array.isArray(s[f])) s[f].splice(i, 1); });
+        i--;
+      }
+    }
+    // Book lists: one entry, linked to the one we kept
+    ['studyBooks', 'methodBooks', 'albums', 'pieceTracks'].forEach(function(f) {
+      if (!Array.isArray(s[f])) return;
+      let seen = false;
+      s[f] = s[f].filter(function(b) {
+        if (!(libTitleKey(b.name) === kk || b.bankId === dupBid)) return true;
+        b.bankId = keepBid; b.name = keep.title;
+        if (seen) return false;
+        seen = true; return true;
+      });
+    });
+  });
+  // Take the duplicate out of the library (without redrawing twice)
+  const idx = customPieces.indexOf(dup);
+  if (idx > -1) customPieces.splice(idx, 1);
+  else if (hiddenPieces.indexOf(dupKey) === -1) hiddenPieces.push(dupKey);
+  save();
+  return true;
+}
+// A small message at the bottom of the screen that fades away
+function showMiniToast(msg) {
+  let t = document.getElementById('mini-toast');
+  if (!t) {
+    t = document.createElement('div'); t.id = 'mini-toast';
+    t.style.cssText = 'position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;font-size:0.85rem;z-index:9999;box-shadow:0 4px 14px rgba(0,0,0,0.25);max-width:90vw;text-align:center;transition:opacity .3s';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg; t.style.opacity = '1'; t.style.display = 'block';
+  clearTimeout(showMiniToast._t);
+  showMiniToast._t = setTimeout(function(){ t.style.opacity = '0'; setTimeout(function(){ t.style.display = 'none'; }, 320); }, 2600);
+}
+
+// ── SEARCH EVERYTHING ────────────────────────────────────────────────────
+// One box: pupils, what they're working on, the library, and every note.
+function openSearchAll() {
+  document.getElementById('search-all-modal').classList.add('open');
+  const i = document.getElementById('search-all-input'); i.value = '';
+  renderSearchAll();
+  setTimeout(function(){ i.focus(); }, 80);
+}
+function closeSearchAll() { document.getElementById('search-all-modal').classList.remove('open'); }
+function searchSnippet(text, q) {
+  const flat = String(text || '').replace(/\s+/g, ' ');
+  const at = flat.toLowerCase().indexOf(q); if (at < 0) return esc(flat.slice(0, 90));
+  const from = Math.max(0, at - 30), to = Math.min(flat.length, at + q.length + 60);
+  return (from ? '…' : '') + esc(flat.slice(from, at)) + '<mark style="background:#ffe58a;border-radius:3px;padding:0 1px">' + esc(flat.slice(at, at + q.length)) + '</mark>' + esc(flat.slice(at + q.length, to)) + (to < flat.length ? '…' : '');
+}
+function searchAllResults(qRaw) {
+  const q = String(qRaw || '').trim().toLowerCase();
+  const out = { pupils: [], working: [], library: [], notes: [] };
+  if (q.length < 2) return out;
+  const has = function(t){ return String(t || '').toLowerCase().indexOf(q) >= 0; };
+  (students || []).forEach(function(s) {
+    if (has(s.name)) out.pupils.push({ id: s.id, name: s.name, retired: !!s.retired, sub: s.instrument || '' });
+    const seen = {};
+    (s.pieces || []).forEach(function(t){ if (String(t).trim() && has(t) && !seen[libTitleKey(t)]) { seen[libTitleKey(t)] = 1; out.working.push({ id: s.id, name: s.name, text: t, tab: 'panel-before' }); } });
+    ['studyBooks', 'methodBooks', 'albums', 'pieceTracks'].forEach(function(f) {
+      (s[f] || []).forEach(function(b){ const t = bookTitle(b); if (t && has(t) && !seen[libTitleKey(t)]) { seen[libTitleKey(t)] = 1; out.working.push({ id: s.id, name: s.name, text: t, tab: 'panel-scales' }); } });
+    });
+    (s.log || []).forEach(function(e) {
+      if (has(e.text)) out.notes.push({ id: s.id, name: s.name, when: e.date || '', d: parseLogDate(e.date) || 0, text: e.text, tab: 'panel-history', kind: 'Lesson note' });
+    });
+    String(s.nextWeekNote || '').split('\n').forEach(function(l){ if (l.trim() && has(l)) out.notes.push({ id: s.id, name: s.name, when: 'Next lesson', d: Date.now(), text: l.replace(/^[☐☑]\s*/, ''), tab: 'panel-before', kind: 'To do' }); });
+    ['teacherNotes', 'pupilNotes'].forEach(function(f){ if (has(s[f])) out.notes.push({ id: s.id, name: s.name, when: 'Pupil notes', d: Date.now() - 1, text: s[f], tab: 'panel-before', kind: 'Note' }); });
+  });
+  out.notes.sort(function(a, b){ return b.d - a.d; });
+  visibleLibraryPieces().forEach(function(p) {
+    if (has(p.title) || has(p.composer)) out.library.push({ title: p.title, sub: [p.composer, p.cat].filter(Boolean).join(' · '), kind: libKind(p) });
+  });
+  try {
+    const dn = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
+    Object.keys(dn).forEach(function(day){ if (has(dn[day])) out.notes.push({ id: '', name: 'My daily notes', when: day, d: parseLogDate(day) || 0, text: dn[day], kind: 'Daily note' }); });
+  } catch (e) {}
+  return out;
+}
+let _searchHits = [];
+function renderSearchAll() {
+  const el = document.getElementById('search-all-results'); if (!el) return;
+  const qRaw = document.getElementById('search-all-input').value; const q = qRaw.trim().toLowerCase();
+  if (q.length < 2) { el.innerHTML = '<div style="font-size:0.85rem;color:var(--muted);padding:14px 4px;text-align:center">Type a pupil, a piece, or a word from a note.</div>'; return; }
+  const r = searchAllResults(q); _searchHits = [];
+  const row = function(icon, main, sub, hit) {
+    _searchHits.push(hit);
+    return '<button type="button" onclick="searchAllGo(' + (_searchHits.length - 1) + ')" style="display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:#fff;border:1.5px solid var(--warm);border-radius:10px;padding:9px 12px;margin-bottom:6px;cursor:pointer;font-family:\'Special Elite\',cursive;color:var(--ink)">'
+      + '<span style="font-size:1.1rem;flex:0 0 auto">' + icon + '</span><span style="min-width:0;flex:1"><span style="display:block;font-size:0.9rem;line-height:1.35">' + main + '</span>'
+      + (sub ? '<span style="display:block;font-size:0.72rem;color:var(--muted);margin-top:2px">' + sub + '</span>' : '') + '</span></button>';
+  };
+  const head = function(t, n, col) { return '<div style="font-size:0.75rem;font-weight:700;color:#fff;background:' + col + ';border-radius:8px;padding:4px 10px;margin:12px 0 6px;display:inline-block">' + t + ' · ' + n + '</div><div>'; };
+  let html = '';
+  if (r.pupils.length) html += head('🎻 Pupils', r.pupils.length, 'var(--viola)') + r.pupils.map(function(p){ return row('🎻', searchSnippet(p.name, q), esc(p.sub) + (p.retired ? ' · retired' : ''), { id: p.id, tab: 'panel-before' }); }).join('') + '</div>';
+  if (r.working.length) html += head('🎵 Pupils playing it', r.working.length, 'var(--deep)') + r.working.slice(0, 30).map(function(w){ return row('🎵', searchSnippet(w.text, q), esc(w.name), { id: w.id, tab: w.tab }); }).join('') + '</div>';
+  if (r.library.length) html += head('📚 Library', r.library.length, 'var(--violin)') + r.library.slice(0, 20).map(function(l){ return row('📚', searchSnippet(l.title, q), esc(l.sub), { lib: l.title }); }).join('') + (r.library.length > 20 ? '<div style="font-size:0.72rem;color:var(--muted);margin:0 0 6px 4px">and ' + (r.library.length - 20) + ' more in the library</div>' : '') + '</div>';
+  if (r.notes.length) html += head('📝 Notes', r.notes.length, '#b7791f') + r.notes.slice(0, 40).map(function(n){ return row('📝', searchSnippet(n.text, q), esc(n.name) + ' · ' + esc(n.when), n.id ? { id: n.id, tab: n.tab } : { today: true }); }).join('') + (r.notes.length > 40 ? '<div style="font-size:0.72rem;color:var(--muted);margin:0 0 6px 4px">Showing the newest 40 of ' + r.notes.length + '</div>' : '') + '</div>';
+  el.innerHTML = html || '<div style="font-size:0.9rem;color:var(--muted);padding:18px 4px;text-align:center">Nothing found for “' + esc(qRaw.trim()) + '”.</div>';
+}
+function searchAllGo(i) {
+  const h = _searchHits[i]; if (!h) return;
+  closeSearchAll();
+  if (h.id) {
+    showView('roster'); openStudentFrom(h.id, 'roster');
+    if (h.tab && h.tab !== 'panel-before') {
+      const tab = Array.from(document.querySelectorAll('.moment-tab')).find(function(t){ return (t.getAttribute('onclick') || '').indexOf("'" + h.tab + "'") >= 0; });
+      if (tab) switchMoment(tab, h.tab);
+    }
+    window.scrollTo(0, 0);
+  } else if (h.lib) {
+    showView('library'); showLibrarySection('pieces');
+    const s = document.getElementById('lib-piece-search'); if (s) { s.value = h.lib; renderLibPieces(); }
+  } else if (h.today) { showView('today'); }
+}
+
+// ── PROGRESS REPORT FOR PARENTS ──────────────────────────────────────────
+// One page per pupil, built from the ticks already in the app: what they
+// finished, what they're working on, technique progress and attendance.
+function openProgressReport(id) {
+  openNotesSummary(id);
+  document.getElementById('notes-sum-mode').value = 'progress';
+  notesSumModeUI();
+}
+function notesSumModeUI() {
+  const prog = document.getElementById('notes-sum-mode').value === 'progress';
+  document.getElementById('notes-sum-intro').textContent = prog ? 'A one-page progress report for…' : 'All the lesson notes for…';
+  document.getElementById('notes-sum-icon').textContent = prog ? '🌟' : '📝';
+  document.getElementById('notes-sum-comment-box').style.display = prog ? 'block' : 'none';
+  document.getElementById('notes-sum-make').style.display = prog ? 'none' : '';
+  document.getElementById('notes-sum-make-progress').style.display = prog ? '' : 'none';
+}
+function progressReportData(s, p, comment) {
+  const to = p.to ? new Date(p.to) : null; if (to) to.setHours(23, 59, 59, 999);
+  const inPeriod = function(str) { const d = parseLogDate(str); if (!d) return !p.from; return (!p.from || d >= p.from) && (!to || d <= to); };
+  const list = notesInPeriod(s, p);
+  const counts = { present: 0, 'absent-late': 0, 'absent-notice': 0, cancelled: 0 };
+  list.forEach(function(e){ if (counts[e.attendance] !== undefined) counts[e.attendance]++; });
+  const finished = [];
+  (s.completedPieces || []).forEach(function(c){ if (c && c.title && inPeriod(c.date)) finished.push({ title: c.title, date: c.date || '' }); });
+  (s.completedStudies || []).forEach(function(c){ if (c && c.title && inPeriod(c.date)) finished.push({ title: c.title, date: c.date || '' }); });
+  finished.sort(function(a, b){ return (parseLogDate(a.date) || 0) - (parseLogDate(b.date) || 0); });
+  const working = [];
+  (s.pieces || []).forEach(function(t) {
+    if (!String(t || '').trim()) return;
+    const mv = pieceMovements(t); let prog = '';
+    if (mv && tickableCount(mv)) {
+      const ticks = sharedTicks(s, t, false); const keys = uniqueItemKeys(mv); let done = 0, going = 0;
+      mv.forEach(function(it, i){ if (isHeadingItem(it)) return; const l = bookTickLevel(ticks[keys[i]]); if (l === 2) done++; else if (l === 1) going++; });
+      prog = done + ' of ' + tickableCount(mv) + ' finished' + (going ? ', ' + going + ' in progress' : '');
+    }
+    working.push({ title: String(t).trim(), prog: prog });
+  });
+  const tech = { secure: [], developing: [], introduced: [], total: 0 };
+  (Array.isArray(s.techniqueChecklist) ? s.techniqueChecklist : []).forEach(function(it) {
+    if (!it || !it.name || isHeadingItem(it.name)) return;
+    tech.total++;
+    const nm = techFill(it.name, s.instrument);
+    if (it.level === 3) tech.secure.push(nm); else if (it.level === 2) tech.developing.push(nm); else if (it.level === 1) tech.introduced.push(nm);
+  });
+  const slot = effectiveSlot(s);
+  return {
+    name: s.name, period: p.label, dates: p.dates,
+    sub: [s.instrument ? s.instrument.charAt(0).toUpperCase() + s.instrument.slice(1) : '', slot.day ? slot.day + (slot.time ? ' ' + slot.time : '') : ''].filter(Boolean).join(' · '),
+    att: counts, lessons: counts.present + counts['absent-late'] + counts['absent-notice'],
+    finished: finished, working: working, tech: tech, comment: String(comment || '').trim()
+  };
+}
+function makeProgressReport() {
+  const s = getStudent(notesSummaryPupil); const p = _notePeriods[parseInt(document.getElementById('notes-sum-period').value, 10)];
+  if (!s || !p) return;
+  const d = progressReportData(s, p, document.getElementById('notes-sum-comment').value);
+  closeNotesSummary();
+  const fileName = (s.name + ' - progress report - ' + p.label).replace(/[\/\\:*?"<>|]/g, '-');
+  const li = function(arr){ return arr.map(function(t){ return '<div class="n">• ' + t + '</div>'; }).join(''); };
+  const techRow = function(lbl, arr, col, bg) { return arr.length ? '<div class="tr"><span class="pill" style="background:' + bg + ';color:' + col + '">' + lbl + ' · ' + arr.length + '</span><div class="tl">' + esc(arr.join(', ')) + '</div></div>' : ''; };
+  const attBits = [d.att.present + ' attended', d.att['absent-notice'] ? d.att['absent-notice'] + ' missed (good notice)' : '', d.att['absent-late'] ? d.att['absent-late'] + ' missed (late cancel)' : '', d.att.cancelled ? d.att.cancelled + ' cancelled' : ''].filter(Boolean).join(' · ');
+  const t = d.tech; const bar = t.total ? '<div class="bar2">'
+    + '<i style="width:' + (100 * t.secure.length / t.total) + '%;background:#2F5C1A"></i><i style="width:' + (100 * t.developing.length / t.total) + '%;background:#e67e22"></i><i style="width:' + (100 * t.introduced.length / t.total) + '%;background:#46C6E5"></i></div>' : '';
+  const html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
+    + '<meta name="theme-color" content="#05270B"><title>' + esc(fileName) + '</title>'
+    + '<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet"><style>'
+    + 'html{background:#05270B}body{margin:0;min-height:100vh;background:#e9e9e9;font-family:"Special Elite","Courier New",monospace;color:#05270B}'
+    + '.bar{position:sticky;top:0;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:10px;padding-top:calc(10px + env(safe-area-inset-top));background:#05270B}'
+    + '.bar button{font-family:inherit;font-size:14px;padding:9px 18px;border-radius:8px;border:none;cursor:pointer}'
+    + '.page{box-sizing:border-box;max-width:210mm;margin:12px auto;padding:18mm 18mm;background:#fff}'
+    + 'h1{margin:0;font-size:22px}.sub{color:#6b8a6b;font-size:13px;margin-top:2px}'
+    + '.per{margin-top:14px;padding:10px 0;border-top:2px solid #2F5C1A;border-bottom:1px solid #d6e3cc;font-size:14px}.per .dt{color:#6b8a6b;font-size:12px}'
+    + 'h2{font-size:14px;color:#2F5C1A;margin:18px 0 6px}.n{font-size:13px;line-height:1.5;margin-left:8px}.g{color:#6b8a6b;font-size:12px}.none{color:#999;font-style:italic;font-size:13px;margin-left:8px}'
+    + '.bar2{display:flex;height:12px;border-radius:6px;overflow:hidden;background:#eee;margin:6px 0 10px}.bar2 i{display:block}'
+    + '.tr{margin:8px 0}.pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}.tl{font-size:12.5px;line-height:1.5;margin:4px 0 0 8px}'
+    + '.cm{white-space:pre-wrap;font-size:13px;line-height:1.5;background:#f4f8ef;border-left:3px solid #8AB640;padding:8px 10px;border-radius:4px}'
+    + '</style></head><body>'
+    + '<div class="bar"><button onclick="saveReportPdf()" style="background:#29789E;color:#fff">📤 Save PDF</button><button onclick="window.close()" style="background:#fff;color:#2F5C1A">← Close</button></div>'
+    + '<div class="page"><h1>' + esc(d.name) + '</h1><div class="sub">' + esc(d.sub) + '</div>'
+    + '<div class="per"><strong>Progress report: ' + esc(d.period) + '</strong><div class="dt">' + esc(d.dates) + '</div></div>'
+    + '<h2>📅 Lessons</h2><div class="n">' + esc(attBits) + '</div>'
+    + '<h2>🏆 Finished</h2>' + (d.finished.length ? li(d.finished.map(function(f){ return esc(f.title) + (f.date ? ' <span class="g">' + esc(f.date) + '</span>' : ''); })) : '<div class="none">Nothing marked as finished in this period</div>')
+    + '<h2>🎵 Working on now</h2>' + (d.working.length ? li(d.working.map(function(w){ return esc(w.title) + (w.prog ? ' <span class="g">' + esc(w.prog) + '</span>' : ''); })) : '<div class="none">Nothing listed</div>')
+    + (t.total ? '<h2>🎯 Technique</h2><div class="n g">' + t.secure.length + ' secure · ' + t.developing.length + ' developing · ' + t.introduced.length + ' introduced, out of ' + t.total + '</div>' + bar
+        + techRow('Secure', t.secure, '#2F5C1A', '#e4f1da') + techRow('Developing', t.developing, '#b7791f', '#fff3e0') + techRow('Introduced', t.introduced, '#29789E', '#e3f4fa') : '')
+    + (d.comment ? '<h2>💬 Teacher’s comment</h2><div class="cm">' + esc(d.comment) + '</div>' : '')
+    + '</div></body></html>';
+  const w = window.open('', '_blank');
+  if (!w) { alert('Please allow pop-ups to see the report.'); return; }
+  w.document.write(html); w.document.close();
+  w.saveReportPdf = function() {
+    try {
+      const bytes = progressReportPdf(d);
+      const file = new w.File([bytes], fileName + '.pdf', { type: 'application/pdf' });
+      const nav = w.navigator;
+      if (nav.canShare && nav.canShare({ files: [file] })) { nav.share({ files: [file] }).catch(function(){}); return; }
+      const a = w.document.createElement('a'); a.href = w.URL.createObjectURL(file); a.download = file.name;
+      w.document.body.appendChild(a); a.click(); a.remove();
+    } catch (e) { w.alert('Sorry, the PDF could not be made: ' + e.message); }
+  };
+}
+function progressReportPdf(d) {
+  const W = 595.28, H = 841.89, k = 2.83465, L = 18 * k, R = W - 18 * k, TOP = 18 * k, BOT = H - 16 * k;
+  const pages = []; let c = '', y = TOP;
+  const green = '0.184 0.361 0.102', ink = '0.02 0.153 0.043', muted = '0.42 0.54 0.42', orange = '0.902 0.494 0.133', sky = '0.275 0.776 0.898', blue = '0.161 0.471 0.62';
+  const text = function(str, x, size, col) { c += 'BT ' + col + ' rg /F1 ' + size + ' Tf ' + x.toFixed(2) + ' ' + (H - y).toFixed(2) + ' Td (' + pdfStr(str) + ') Tj ET\n'; };
+  const rule = function(yy, wd, col) { c += col + ' RG ' + wd + ' w ' + L.toFixed(2) + ' ' + (H - yy).toFixed(2) + ' m ' + R.toFixed(2) + ' ' + (H - yy).toFixed(2) + ' l S\n'; };
+  const box = function(x, yy, w, h, col) { if (w > 0) c += col + ' rg ' + x.toFixed(2) + ' ' + (H - yy - h).toFixed(2) + ' ' + w.toFixed(2) + ' ' + h.toFixed(2) + ' re f\n'; };
+  const newPage = function() { pages.push(c); c = ''; y = TOP; text(pdfClean(d.name) + ' · ' + pdfClean(d.period) + ' (continued)', L, 9, muted); y += 14; };
+  const need = function(h) { if (y + h > BOT) newPage(); };
+  const heading = function(t) { need(44); y += 26; text(t, L, 12, green); y += 4; };
+  const para = function(str, col, indent, size) {
+    pdfWrap(pdfClean(str), size || 10, R - L - (indent || 0) - 4).forEach(function(ln){ need(14); y += 14; text(ln, L + (indent || 0), size || 10, col || ink); });
+  };
+  const bullets = function(arr, empty) {
+    if (!arr.length) { need(14); y += 14; text(empty, L + 8, 10, muted); return; }
+    arr.forEach(function(it) {
+      const lines = pdfWrap(pdfClean(it.main), 10, R - L - 24);
+      lines.forEach(function(ln, i){ need(14); y += 14; text((i ? '  ' : '• ') + ln, L + 8, 10, ink); });
+      if (it.sub) { const lw = pdfWidth((lines.length > 1 ? '  ' : '• ') + lines[lines.length - 1], 10); if (L + 8 + lw + 10 + pdfWidth(pdfClean(it.sub), 8.5) < R) text(pdfClean(it.sub), L + 8 + lw + 10, 8.5, muted); else { need(12); y += 12; text(pdfClean(it.sub), L + 20, 8.5, muted); } }
+    });
+  };
+  y += 20; text(pdfClean(d.name), L, 20, ink);
+  if (d.sub) { y += 15; text(pdfClean(d.sub), L, 10, muted); }
+  y += 12; rule(y, 1.2, green);
+  y += 16; text('Progress report: ' + pdfClean(d.period), L, 12, ink);
+  y += 13; text(pdfClean(d.dates), L, 9, muted);
+  y += 9; rule(y, 0.5, '0.84 0.89 0.8');
+  heading('Lessons');
+  para([d.att.present + ' attended', d.att['absent-notice'] ? d.att['absent-notice'] + ' missed (good notice)' : '', d.att['absent-late'] ? d.att['absent-late'] + ' missed (late cancel)' : '', d.att.cancelled ? d.att.cancelled + ' cancelled' : ''].filter(Boolean).join(' · '), ink, 8);
+  heading('Finished');
+  bullets(d.finished.map(function(f){ return { main: f.title, sub: f.date }; }), 'Nothing marked as finished in this period');
+  heading('Working on now');
+  bullets(d.working.map(function(w){ return { main: w.title, sub: w.prog }; }), 'Nothing listed');
+  const t = d.tech;
+  if (t.total) {
+    heading('Technique');
+    para(t.secure.length + ' secure · ' + t.developing.length + ' developing · ' + t.introduced.length + ' introduced, out of ' + t.total, muted, 8, 9);
+    need(20); y += 8; const bw = R - L - 8; let bx = L + 8;
+    box(bx, y, bw, 8, '0.93 0.93 0.93');
+    [[t.secure.length, green], [t.developing.length, orange], [t.introduced.length, sky]].forEach(function(z){ const w = bw * z[0] / t.total; box(bx, y, w, 8, z[1]); bx += w; });
+    y += 10;
+    [['Secure', t.secure, green], ['Developing', t.developing, orange], ['Introduced', t.introduced, blue]].forEach(function(z) {
+      if (!z[1].length) return;
+      need(34); y += 18; box(L + 8, y - 7, 7, 7, z[2] === blue ? sky : z[2]); text(z[0] + ' · ' + z[1].length, L + 20, 10, z[2]);
+      para(z[1].join(', '), ink, 20, 9.5);
+    });
+  }
+  if (d.comment) {
+    heading('Teacher\'s comment');
+    d.comment.split('\n').forEach(function(l){ if (l.trim()) para(l, ink, 8); else y += 6; });
+  }
   pages.push(c);
   return pdfBuild(pages, null);
 }
@@ -14041,7 +14210,7 @@ function libPickPieceWithMvtsHTML(p) {
           if (isHeadingItem(m)) return headingLabelHTML(m);
           const isNum = /^\d+$/.test(m);
           return '<button onclick="libPickAddMvt(\'' + k + '\',' + idx + ')" style="' + (isNum ? 'display:inline-block;min-width:64px;margin:0 5px 5px 0;' : 'display:flex;width:100%;margin-bottom:4px;text-align:left;') + 'align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.85rem;border:1.5px solid #e0ddd8;background:#fff;color:var(--ink)">'
-            + '<span style="color:var(--viola);font-weight:700">＋</span> ' + esc(isNum ? pieceNumLabelOf(p) + ' ' + m : m) + '</button>';
+            + '<span style="color:var(--viola);font-weight:700">＋</span> ' + esc(itemLabel(p.movements, idx, pieceNumLabelOf(p), false)) + '</button>';
         }).join('')
       + '</div>';
   }
@@ -14052,7 +14221,7 @@ function libPickAddMvt(key, idx) {
   const p = visibleLibraryPieces().find(function(x){ return pieceKey(x) === key; });
   if (!p || !p.movements) return;
   const m = p.movements[idx]; if (m === undefined || isHeadingItem(m)) return;
-  libPickAdd(p.title, mvtShortLabel(headingFor(p.movements, idx), m, pieceNumLabelOf(p)));
+  libPickAdd(p.title, mvtShortLabel(headingFor(p.movements, idx), m, pieceNumLabelOf(p), p.movements, idx));
 }
 
 // The pupil's own copies of this kind of book, plus the studio bank (minus
@@ -14094,7 +14263,7 @@ function libPickAddWholeBook(key) {
 function libPickAddBookItem(key, idx) {
   const bk = libPickFindBook(key); if (!bk) return;
   const it = bk.items[idx]; if (it === undefined || isHeadingItem(it)) return;
-  libPickAdd(bk.name, mvtShortLabel(headingFor(bk.items, idx), it, bk.numLabel || 'No.'));
+  libPickAdd(bk.name, mvtShortLabel(headingFor(bk.items, idx), it, bk.numLabel || 'No.', bk.items, idx));
 }
 
 function renderLibPickBooks(search) {
@@ -14171,7 +14340,7 @@ function libPickItemsHTML(bk) {
       const lv = bookTickLevel(bk.ticks[ikeys[o.idx]]);
       return '<button onclick="libPickAddBookItem(\'' + k + '\',' + o.idx + ')" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:8px 10px;margin-bottom:4px;border-radius:8px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.85rem;'
         + 'border:1.5px solid ' + (lv === 2 ? 'var(--string)' : lv === 1 ? '#e67e22' : '#e0ddd8') + ';background:' + (lv === 2 ? 'var(--soft-green2)' : lv === 1 ? '#fff3e0' : '#fff') + ';color:var(--ink)">'
-        + '<span style="color:var(--viola);font-weight:700">＋</span><span style="flex:1">' + esc(o.it) + '</span>' + (lv === 2 ? '<span style="font-size:0.72rem;color:var(--viola)">✓</span>' : lv === 1 ? '<span style="font-size:0.72rem;color:#b7791f">working</span>' : '') + '</button>';
+        + '<span style="color:var(--viola);font-weight:700">＋</span><span style="flex:1">' + esc(itemLabel(bk.items, o.idx, bk.numLabel || 'No.', false)) + '</span>' + (lv === 2 ? '<span style="font-size:0.72rem;color:var(--viola)">✓</span>' : lv === 1 ? '<span style="font-size:0.72rem;color:#b7791f">working</span>' : '') + '</button>';
     }).join('') + '</div>';
   }).join('');
 }
@@ -14774,6 +14943,58 @@ function closeBackupModal() {
   document.getElementById('backup-modal').classList.remove('open');
 }
 
+// ── HOW LONG SINCE THE LAST BACKUP ──
+// The date of the last backup is kept on this device ('studio_last_backup').
+function daysSinceBackup() {
+  const t = localStorage.getItem('studio_last_backup'); if (!t) return null;
+  const d = new Date(t); if (isNaN(d)) return null;
+  const a = new Date(); a.setHours(0, 0, 0, 0); const b = new Date(d); b.setHours(0, 0, 0, 0);
+  return Math.max(0, Math.round((a - b) / 86400000));
+}
+function refreshBackupAge() {
+  const days = daysSinceBackup();
+  const words = days === null ? 'No backup yet' : days === 0 ? 'Backed up today' : days === 1 ? 'Backed up yesterday' : 'Last backup ' + days + ' days ago';
+  // green = this week, orange = over a week, red = over two weeks / never
+  const level = days === null || days > 14 ? 2 : days > 7 ? 1 : 0;
+  const bg = ['#e8f5e0', '#fff3e0', '#fde7e2'][level], fg = ['#2F5C1A', '#b7791f', '#a3321f'][level];
+  const icon = ['✓', '⚠️', '⚠️'][level];
+  document.querySelectorAll('.backup-age').forEach(function(el) {
+    if (el.dataset.style === 'pill') {
+      el.style.cssText = 'display:inline-block;margin-top:4px;padding:2px 10px;border-radius:999px;font-size:0.72rem;font-weight:700;background:' + bg + ';color:' + fg;
+      el.textContent = icon + ' ' + words;
+    } else {
+      el.style.cssText = 'flex-basis:100%;padding:8px 12px;border-radius:10px;font-size:0.85rem;font-weight:700;background:' + bg + ';color:' + fg;
+      el.textContent = icon + ' ' + words + (level ? '. Tap “Back up all data” below.' : '');
+    }
+  });
+}
+// Old drawings from the Sketch tool (now removed). They take up a lot of room.
+function oldSketchCount() {
+  let n = 0;
+  (students || []).forEach(function(s) {
+    if (s.canvasCurrent) n++;
+    n += (s.canvasSaves || []).length;
+    (s.log || []).forEach(function(e){ n += (e.sketches || []).length; });
+  });
+  return n;
+}
+function refreshOldSketches() {
+  const el = document.getElementById('old-sketches-box'); if (!el) return;
+  const n = oldSketchCount();
+  el.style.display = n ? 'block' : 'none';
+  if (n) el.innerHTML = '<div style="font-size:0.82rem;color:var(--muted);margin-bottom:6px">🖍 There ' + (n === 1 ? 'is 1 old sketch' : 'are ' + n + ' old sketches') + ' saved from the Sketch tool, which has been removed. They use a lot of storage.</div>'
+    + '<button onclick="deleteOldSketches()" style="background:none;border:1.5px solid #c0392b;color:#c0392b;border-radius:8px;padding:7px 14px;font-family:\'Special Elite\',cursive;font-size:0.82rem;cursor:pointer">🧹 Delete old sketches</button>';
+}
+function deleteOldSketches() {
+  const n = oldSketchCount(); if (!n) return;
+  if (!confirm('Delete ' + n + ' old sketch' + (n === 1 ? '' : 'es') + ' from all pupils? Lesson notes are not touched. This cannot be undone.')) return;
+  students.forEach(function(s) {
+    delete s.canvasCurrent; delete s.canvasSaves;
+    (s.log || []).forEach(function(e){ delete e.sketches; });
+  });
+  save(); refreshOldSketches();
+}
+
 function backupData() {
   const payload = {
     _version: 1,
@@ -14828,6 +15049,9 @@ function backupData() {
   a.download = `studio-notebook-backup-${date}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
+  try { localStorage.setItem('studio_last_backup', new Date().toISOString()); } catch (e) {}
+  refreshBackupAge();
+  const wr = document.getElementById('wednesday-reminder'); if (wr) wr.style.display = 'none';
   closeBackupModal();
 }
 
