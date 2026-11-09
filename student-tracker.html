@@ -14061,10 +14061,13 @@ function libPickBookSets(s) {
   const field = { studies: 'studyBooks', methods: 'methodBooks', albums: 'albums' }[libPickSource];
   const bank  = { studies: studyBookBank, methods: methodBookBank, albums: albumBank }[libPickSource] || [];
   const mine = ((s && s[field]) || []).map(function(b, i) {
+    // A book you've deleted from the library isn't offered here any more
+    // (it stays on the pupil's Repertoire tab with its ticks, as a record)
+    if (!libItemForBook(b)) return null;
     const fromBank = b.bankId ? bank.find(function(x){ return x.id === b.bankId; }) : null;
     return { key: 'p' + i, name: bookTitle(b), items: bookStudies(b), ticks: sharedTicks(s, bookTitle(b)), bankId: b.bankId || null,
              numLabel: b.numLabel || (fromBank && fromBank.numLabel) || 'No.' };
-  });
+  }).filter(Boolean);
   const mineBankIds = new Set(mine.map(function(b){ return b.bankId; }).filter(Boolean));
   const banked = sortByName(bank.filter(function(b){ return !mineBankIds.has(b.id); })).map(function(b) {
     return { key: 'b' + b.id, name: b.name, items: (b.studies || []).slice(), ticks: {}, numLabel: b.numLabel || 'No.', instr: b.instr || 'both' };
