@@ -10502,7 +10502,9 @@ let editAlsoCats = [];
 function renderEditAlsoCats() {
   const el = document.getElementById('edit-lib-piece-also'); if (!el) return;
   const main = document.getElementById('edit-lib-piece-cat').value;
-  const cats = pieceCatList().map(c => c.name).filter(c => c !== main);
+  // A to Z, ignoring capitals
+  const cats = pieceCatList().map(c => c.name).filter(c => c !== main)
+    .sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
   el.innerHTML = cats.map(c => {
     const on = editAlsoCats.includes(c);
     return '<button type="button" onclick="toggleEditAlsoCat(\'' + escJs(c) + '\')" style="padding:6px 10px;border-radius:999px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.78rem;'
