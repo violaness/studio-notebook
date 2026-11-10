@@ -2200,6 +2200,27 @@ snApplyTheme();
   </div>
 </div>
 
+<!-- VIDEO FOR A WORKING ON LINE -->
+<div class="modal-overlay" id="piece-vid-modal" onclick="if(event.target===this)closePieceVideo()">
+  <div class="modal">
+    <h2>🎬 Add a video</h2>
+    <div style="font-size:0.82rem;color:var(--muted);margin:-6px 0 10px">For: <strong id="piece-vid-for" style="color:var(--ink)"></strong></div>
+    <div style="font-size:0.75rem;font-weight:700;color:var(--deep);margin-bottom:4px">From your video library</div>
+    <input type="text" id="piece-vid-search" placeholder="🔍 Search videos…" oninput="renderPieceVidList()" style="width:100%;box-sizing:border-box;margin-bottom:8px">
+    <div id="piece-vid-list" style="max-height:32vh;overflow-y:auto;margin-bottom:12px"></div>
+    <div style="border-top:1px dashed var(--warm);padding-top:10px">
+      <div style="font-size:0.75rem;font-weight:700;color:var(--deep);margin-bottom:4px">Or paste a link</div>
+      <input type="url" id="piece-vid-url" placeholder="Paste a video link…" autocapitalize="off" autocorrect="off" spellcheck="false" style="width:100%;box-sizing:border-box;margin-bottom:6px">
+      <input type="text" id="piece-vid-name" placeholder="Name (optional), e.g. Gypsy Dance performance" style="width:100%;box-sizing:border-box;margin-bottom:6px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--muted);margin-bottom:4px"><input type="checkbox" id="piece-vid-save" checked> Also save it to my video library</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closePieceVideo()">Cancel</button>
+      <button class="btn-primary" onclick="addPastedPieceVideo()">🎬 Add link</button>
+    </div>
+  </div>
+</div>
+
 <!-- SEARCH EVERYTHING -->
 <div class="modal-overlay" id="search-all-modal" onclick="if(event.target===this)closeSearchAll()">
   <div class="modal">
@@ -4271,7 +4292,7 @@ function updateGoal(id, key, val) {
   save();
   showToast('toast-goals-' + id);
 }
-function updatePiece(id, i, val)    { const s=getStudent(id); if(s){if(!s.pieces)s.pieces=[];s.pieces[i]=val;if(ensureTechBook(s,val))refreshBookLists(s);save();} }
+function updatePiece(id, i, val)    { const s=getStudent(id); if(s){if(!s.pieces)s.pieces=[];movePieceVideos(s,i,s.pieces[i],val);s.pieces[i]=val;if(ensureTechBook(s,val))refreshBookLists(s);save();} }
 function updatePieceRef(id, i, val) {
   const s=getStudent(id); if(!s) return;
   if(!s.pieceRefs)s.pieceRefs=[]; s.pieceRefs[i]=val;
@@ -5031,6 +5052,37 @@ function nextTicksHTML(s, where) {
 }
 // Grow a tick line to fit its text (only when it's on screen - hidden ones measure 0)
 function growTick(el) { if (el && el.offsetParent !== null) autoGrow(el); }
+// Keep these auto-growing boxes the right height whenever their width
+// changes: switching Before/After (hidden boxes measure as 0 wide), turning
+// the iPad, or the Special Elite font finishing loading.
+(function() {
+  const SEL = 'textarea.nt-in, textarea.piece-name';
+  const regrowAll = function() { document.querySelectorAll(SEL).forEach(growTick); };
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(regrowAll);
+  window.addEventListener('orientationchange', function(){ setTimeout(regrowAll, 300); });
+  if (!('ResizeObserver' in window) || !('MutationObserver' in window)) return;
+  const widths = new WeakMap();
+  const ro = new ResizeObserver(function(entries) {
+    entries.forEach(function(e) {
+      const w = Math.round(e.contentRect.width);
+      if (!w || widths.get(e.target) === w) return;   // only width changes matter
+      widths.set(e.target, w);
+      requestAnimationFrame(function(){ growTick(e.target); });
+    });
+  });
+  const watch = function(el) { if (!el._growWatched) { el._growWatched = true; ro.observe(el); } };
+  const scan = function(root) {
+    if (root.nodeType !== 1) return;
+    if (root.matches(SEL)) watch(root);
+    root.querySelectorAll(SEL).forEach(watch);
+  };
+  const start = function() {
+    scan(document.body);
+    new MutationObserver(function(ms){ ms.forEach(function(m){ m.addedNodes.forEach(scan); }); })
+      .observe(document.body, { childList: true, subtree: true });
+  };
+  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+})();
 // Read the list being edited, save it, and refresh the copy on the other tab
 function collectNextTicks(id, where) {
   const w = where === 'b' ? 'b' : 'a';
@@ -5558,6 +5610,105 @@ function movePieceGroup(id, i) {
   save(); renderDetail(s, true);
 }
 
+// ── VIDEOS ON WORKING ON ─────────────────────────────────────────────────
+// Each Working On line can have video links. They're kept per pupil against
+// the piece's title (s.pieceVideos[titleKey] = [{title, url}]), so they stay
+// put week to week, and come back if the piece is added again later.
+function pieceVideoList(s, title) {
+  const k = libTitleKey(title || ''); if (!k) return [];
+  return ((s.pieceVideos || {})[k]) || [];
+}
+function pieceVideosRowHTML(s, i) {
+  const vids = pieceVideoList(s, (s.pieces || [])[i]);
+  if (!vids.length) return '';
+  return '<div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 4px 2px">'
+    + vids.map(function(v, n) {
+        return '<span style="display:inline-flex;align-items:center;gap:2px;background:var(--soft-blue2,#e3f4fa);border:1.5px solid var(--violin);border-radius:999px;padding:0 4px 0 0;max-width:100%">'
+          + '<button onclick="openVideoLink(\'' + escJs(v.url) + '\')" style="background:none;border:none;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.78rem;color:var(--ink);padding:4px 4px 4px 10px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px">🎬 ' + esc(v.title || v.url) + '</button>'
+          + '<button onclick="removePieceVideo(\'' + s.id + '\',' + i + ',' + n + ')" title="Remove this video" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:0.95rem;padding:2px 4px;line-height:1">×</button>'
+          + '</span>';
+      }).join('')
+    + '</div>';
+}
+function refreshPiecesList(s) {
+  const listEl = document.getElementById('pieces-list-' + s.id);
+  if (listEl) { listEl.innerHTML = buildPiecesHTML(s); listEl.querySelectorAll('.piece-name').forEach(growTick); }
+}
+function removePieceVideo(sid, i, n) {
+  const s = getStudent(sid); if (!s) return;
+  const list = pieceVideoList(s, (s.pieces || [])[i]); const v = list[n]; if (!v) return;
+  if (!confirm('Take “' + (v.title || v.url) + '” off this piece?\n\n(It stays in your video library.)')) return;
+  list.splice(n, 1);
+  if (!list.length) delete s.pieceVideos[libTitleKey(s.pieces[i])];
+  save(); refreshPiecesList(s);
+}
+// When a line's title is changed, its videos go with it (unless another line still has the old title)
+function movePieceVideos(s, i, oldT, newT) {
+  if (!s.pieceVideos) return;
+  const ok = libTitleKey(oldT || ''), nk = libTitleKey(newT || '');
+  if (!ok || ok === nk || !s.pieceVideos[ok]) return;
+  if ((s.pieces || []).some(function(x, j){ return j !== i && libTitleKey(x) === ok; })) return;
+  if (!nk) return; // cleared: keep them safe under the old title
+  if (!s.pieceVideos[nk]) s.pieceVideos[nk] = s.pieceVideos[ok];
+  delete s.pieceVideos[ok];
+}
+let pieceVidTarget = null;
+function openPieceVideo(sid, i) {
+  const s = getStudent(sid); if (!s) return;
+  const title = String((s.pieces || [])[i] || '').trim();
+  if (!title) { alert('Type the piece name first, then add its video.'); return; }
+  pieceVidTarget = { sid: sid, i: i };
+  document.getElementById('piece-vid-for').textContent = title;
+  document.getElementById('piece-vid-search').value = '';
+  document.getElementById('piece-vid-url').value = '';
+  document.getElementById('piece-vid-name').value = '';
+  document.getElementById('piece-vid-save').checked = true;
+  // Start the search with the piece name, so matching videos come up first
+  renderPieceVidList(title);
+  document.getElementById('piece-vid-modal').classList.add('open');
+}
+function closePieceVideo() { document.getElementById('piece-vid-modal').classList.remove('open'); pieceVidTarget = null; }
+function renderPieceVidList(hint) {
+  const el = document.getElementById('piece-vid-list'); if (!el) return;
+  const q = document.getElementById('piece-vid-search').value.trim().toLowerCase();
+  if (!videoLinks.length) { el.innerHTML = '<div style="font-size:0.82rem;color:var(--muted);font-style:italic;padding:6px 2px">Your video library is empty. Paste a link below.</div>'; return; }
+  const words = String(hint || '').toLowerCase().split(/[^a-z0-9à-ÿ]+/).filter(function(w){ return w.length > 3; });
+  let items = videoLinks.map(function(v, idx) {
+    const hay = ((v.title || '') + ' ' + (v.category || '') + ' ' + (v.presenter || '')).toLowerCase();
+    return { v: v, idx: idx, hay: hay, score: words.filter(function(w){ return hay.indexOf(w) >= 0; }).length };
+  });
+  if (q) items = items.filter(function(o){ return o.hay.indexOf(q) >= 0; });
+  items.sort(function(a, b){ return b.score - a.score || (a.v.title || '').localeCompare(b.v.title || ''); });
+  if (!items.length) { el.innerHTML = '<div style="font-size:0.82rem;color:var(--muted);font-style:italic;padding:6px 2px">No videos match.</div>'; return; }
+  el.innerHTML = items.slice(0, 60).map(function(o) {
+    return '<button type="button" onclick="pickPieceVideo(' + o.idx + ')" style="display:flex;gap:8px;align-items:center;width:100%;text-align:left;background:#fff;border:1.5px solid ' + (o.score ? 'var(--violin)' : 'var(--warm)') + ';border-radius:10px;padding:8px 12px;margin-bottom:5px;cursor:pointer;font-family:\'Special Elite\',cursive;color:var(--ink)">'
+      + '<span style="color:var(--violin);font-weight:700">＋</span><span style="flex:1;min-width:0"><span style="display:block;font-size:0.88rem">🎬 ' + esc(o.v.title || o.v.url) + '</span>'
+      + '<span style="display:block;font-size:0.7rem;color:var(--muted)">' + esc([o.v.category, o.v.presenter].filter(Boolean).join(' · ')) + '</span></span></button>';
+  }).join('');
+}
+function attachPieceVideo(title, url) {
+  if (!pieceVidTarget) return;
+  const s = getStudent(pieceVidTarget.sid); if (!s) return;
+  const k = libTitleKey((s.pieces || [])[pieceVidTarget.i] || ''); if (!k) return;
+  if (!s.pieceVideos) s.pieceVideos = {};
+  const list = s.pieceVideos[k] || (s.pieceVideos[k] = []);
+  if (!list.some(function(v){ return v.url === url; })) list.push({ title: title, url: url });
+  save(); closePieceVideo(); refreshPiecesList(s);
+}
+function pickPieceVideo(idx) { const v = videoLinks[idx]; if (v) attachPieceVideo(v.title || v.url, v.url); }
+function addPastedPieceVideo() {
+  const urlRaw = document.getElementById('piece-vid-url').value.trim();
+  const url = normaliseUrl(urlRaw);
+  if (!url) { document.getElementById('piece-vid-url').focus(); return; }
+  const s = getStudent(pieceVidTarget && pieceVidTarget.sid);
+  const name = document.getElementById('piece-vid-name').value.trim() || (s ? String(s.pieces[pieceVidTarget.i]).trim() : '') || urlRaw;
+  if (document.getElementById('piece-vid-save').checked && !videoLinks.some(function(v){ return v.url === url; })) {
+    videoLinks.push({ title: name, url: url, category: 'Other', presenter: '' });
+    videoLinks.sort(function(a, b){ const c = (a.category || '').localeCompare(b.category || ''); return c !== 0 ? c : (a.title || '').localeCompare(b.title || ''); });
+  }
+  attachPieceVideo(name, url);
+}
+
 function buildPiecesHTML(s) {
   const pieces = s.pieces && s.pieces.length ? s.pieces : [''];
   const refs   = s.pieceRefs || [];
@@ -5573,6 +5724,8 @@ function buildPiecesHTML(s) {
     const showMvts = p && !seenMvt[mk] && pieceMovements(p);
     if (showMvts) seenMvt[mk] = true;
     const mvtRow = showMvts ? '<div id="mvt-ticks-' + s.id + '-' + i + '" style="flex-basis:100%">' + mvtTicksHTML(s, i) + '</div>' : '';
+    const vk = libTitleKey(String(p || ''));
+    const vidRow = vk && !seenMvt['vid:' + vk] ? (seenMvt['vid:' + vk] = true, pieceVideosRowHTML(s, i)) : '';
     rows[g].push('<div class="piece-item" data-i="' + i + '" style="flex-wrap:wrap;gap:6px;align-items:center">'
       + '<textarea rows="1" class="piece-name" placeholder="Piece or exercise\u2026" style="flex:1;min-width:120px"'
       + ' oninput="autoGrow(this);updatePiece(\'' + s.id + '\',' + i + ',this.value)"'
@@ -5580,9 +5733,10 @@ function buildPiecesHTML(s) {
       + ' onblur="offerSavePieceToLibrary(\'' + s.id + '\',' + i + ',this.value)">' + esc(p) + '</textarea>'
       + '<input type="text" placeholder="No. / mvt. (optional)" value="' + esc(ref) + '" style="flex:1;min-width:80px;font-size:0.82rem"'
       + ' oninput="updatePieceRef(\'' + s.id + '\',' + i + ',this.value)">'
+      + '<button class="move-piece-btn" onclick="openPieceVideo(\'' + s.id + '\',' + i + ')" title="Add a video" style="font-size:0.9rem;opacity:' + (pieceVideoList(s, p).length ? '1' : '0.55') + '">🎬</button>'
       + '<button class="move-piece-btn" onclick="movePieceGroup(\'' + s.id + '\',' + i + ')" title="Move to ' + (g === 'tech' ? 'Pieces' : 'Technical') + '">\u21c5</button>'
       + '<button class="remove-piece-btn" onclick="removePiece(\'' + s.id + '\',' + i + ')" title="Remove">\u00d7</button>'
-      + mvtRow
+      + mvtRow + vidRow
       + '</div>');
   });
   const group = function(g, label) {
@@ -10370,6 +10524,11 @@ function renameLibTitleForPupils(oldT, newT) {
   const ok = libTitleKey(oldT), nk = libTitleKey(newT);
   (students || []).forEach(function(s) {
     if (Array.isArray(s.pieces)) s.pieces = s.pieces.map(function(x){ return libTitleKey(x) === ok ? newT : x; });
+    if (s.pieceVideos && s.pieceVideos[ok] && ok !== nk) {
+      const to = s.pieceVideos[nk] || (s.pieceVideos[nk] = []);
+      s.pieceVideos[ok].forEach(function(v){ if (!to.some(function(x){ return x.url === v.url; })) to.push(v); });
+      delete s.pieceVideos[ok];
+    }
     if (s.pieceMvtTicks && s.pieceMvtTicks[ok]) {
       const to = s.pieceMvtTicks[nk] || (s.pieceMvtTicks[nk] = {});
       Object.keys(s.pieceMvtTicks[ok]).forEach(function(k){ if (bookTickLevel(s.pieceMvtTicks[ok][k]) > bookTickLevel(to[k])) to[k] = s.pieceMvtTicks[ok][k]; });
@@ -12447,7 +12606,7 @@ function searchSnippet(text, q) {
 }
 function searchAllResults(qRaw) {
   const q = String(qRaw || '').trim().toLowerCase();
-  const out = { pupils: [], working: [], library: [], notes: [] };
+  const out = { pupils: [], working: [], library: [], items: [], notes: [] };
   if (q.length < 2) return out;
   const has = function(t){ return String(t || '').toLowerCase().indexOf(q) >= 0; };
   (students || []).forEach(function(s) {
@@ -12466,6 +12625,22 @@ function searchAllResults(qRaw) {
   out.notes.sort(function(a, b){ return b.d - a.d; });
   visibleLibraryPieces().forEach(function(p) {
     if (has(p.title) || has(p.composer)) out.library.push({ title: p.title, sub: [p.composer, p.cat].filter(Boolean).join(' · '), kind: libKind(p) });
+    // Inside the book: the studies / movements / pieces in its list
+    const mv = p.movements || []; if (!mv.length) return;
+    let keys = null, users = null;
+    mv.forEach(function(it, idx) {
+      if (isHeadingItem(it) || /^\d+$/.test(it) || !has(it)) return;
+      if (!keys) {
+        keys = uniqueItemKeys(mv);
+        users = (students || []).filter(function(st){ return !st.retired && libPupilUses(st, p.title); });
+      }
+      const head = headingFor(mv, idx);
+      const who = users.map(function(st) {
+        const lv = bookTickLevel(sharedTicks(st, p.title, false)[keys[idx]]);
+        return { id: st.id, name: st.name, lv: lv };
+      }).sort(function(a, b){ return b.lv - a.lv || a.name.localeCompare(b.name); });
+      out.items.push({ book: p.title, kind: libKind(p), label: itemLabel(mv, idx, pieceNumLabelOf(p), false), head: head ? headingText(head) : '', who: who });
+    });
   });
   try {
     const dn = JSON.parse(localStorage.getItem('studio_daily_notes') || '{}');
@@ -12490,6 +12665,15 @@ function renderSearchAll() {
   if (r.pupils.length) html += head('🎻 Pupils', r.pupils.length, 'var(--viola)') + r.pupils.map(function(p){ return row('🎻', searchSnippet(p.name, q), esc(p.sub) + (p.retired ? ' · retired' : ''), { id: p.id, tab: 'panel-before' }); }).join('') + '</div>';
   if (r.working.length) html += head('🎵 Pupils playing it', r.working.length, 'var(--deep)') + r.working.slice(0, 30).map(function(w){ return row('🎵', searchSnippet(w.text, q), esc(w.name), { id: w.id, tab: w.tab }); }).join('') + '</div>';
   if (r.library.length) html += head('📚 Library', r.library.length, 'var(--violin)') + r.library.slice(0, 20).map(function(l){ return row('📚', searchSnippet(l.title, q), esc(l.sub), { lib: l.title }); }).join('') + (r.library.length > 20 ? '<div style="font-size:0.72rem;color:var(--muted);margin:0 0 6px 4px">and ' + (r.library.length - 20) + ' more in the library</div>' : '') + '</div>';
+  if (r.items.length) html += head('📖 Inside books', r.items.length, 'var(--string)') + r.items.slice(0, 30).map(function(it) {
+    const k = LIB_KINDS.find(function(z){ return z.id === it.kind; }) || LIB_KINDS[0];
+    const who = it.who.length ? '<span style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">' + it.who.map(function(w) {
+        const st = BOOK_TICK_STYLE[w.lv];
+        return '<span style="font-size:0.7rem;padding:1px 8px;border-radius:999px;border:1.5px solid ' + (w.lv ? st.border : '#d6ddd2') + ';background:' + (w.lv ? st.rowBg : '#fff') + ';color:var(--ink)">' + (w.lv === 2 ? '✓ ' : w.lv === 1 ? '• ' : '') + esc(w.name) + '</span>';
+      }).join('') + '</span>' : '';
+    return row(k.icon, searchSnippet(it.label, q), '<span style="display:block">' + esc(it.book) + (it.head ? ' · ' + esc(it.head) : '') + '</span>' + who, { lib: it.book });
+  }).join('') + (r.items.length > 30 ? '<div style="font-size:0.72rem;color:var(--muted);margin:0 0 6px 4px">and ' + (r.items.length - 30) + ' more</div>' : '') + '</div>'
+    + (r.items.some(function(it){ return it.who.length; }) ? '<div style="font-size:0.68rem;color:var(--muted);margin:-2px 0 4px 4px"><span style="color:#e67e22">•</span> working on it · <span style="color:var(--viola)">✓</span> finished · plain = has the book</div>' : '');
   if (r.notes.length) html += head('📝 Notes', r.notes.length, '#b7791f') + r.notes.slice(0, 40).map(function(n){ return row('📝', searchSnippet(n.text, q), esc(n.name) + ' · ' + esc(n.when), n.id ? { id: n.id, tab: n.tab } : { today: true }); }).join('') + (r.notes.length > 40 ? '<div style="font-size:0.72rem;color:var(--muted);margin:0 0 6px 4px">Showing the newest 40 of ' + r.notes.length + '</div>' : '') + '</div>';
   el.innerHTML = html || '<div style="font-size:0.9rem;color:var(--muted);padding:18px 4px;text-align:center">Nothing found for “' + esc(qRaw.trim()) + '”.</div>';
 }
