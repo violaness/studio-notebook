@@ -433,6 +433,9 @@
   .piece-item input { flex: 1; }
   /* Piece names wrap onto a second line rather than being cut off */
   .piece-item textarea.piece-name { resize: none; overflow: hidden; min-height: 0; height: auto; line-height: 1.35; display: block; }
+  /* Collapsible boxes say what a tap will do */
+  .tap-hint::after { content: attr(data-closed) " ▾"; white-space: nowrap; }
+  details[open] > summary .tap-hint::after { content: "tap to close ▴"; }
   .remove-piece-btn { background: none; border: none; color: var(--muted); font-size: 1.1rem; cursor: pointer; padding: 4px; line-height: 1; flex-shrink: 0; }
   .remove-piece-btn:hover { color: #c0392b; }
   .add-piece-btn {
@@ -930,7 +933,7 @@ snApplyTheme();
   <div id="week-grid"></div>
   <details style="margin-top:24px;border-top:1px solid var(--warm);padding-top:16px">
     <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:8px 0;list-style:none;display:flex;align-items:center;gap:6px">
-      <span style="font-size:0.7rem">▶</span> Import / sync calendar
+      <span style="font-size:0.7rem">📅</span> Import / sync calendar <span class="tap-hint" data-closed="tap to open" style="font-size:0.7rem"></span>
     </summary>
     <div class="import-bar" style="margin-top:10px">
       <div class="import-bar-text">
@@ -1039,7 +1042,7 @@ snApplyTheme();
       <details style="margin-top:10px">
         <summary style="cursor:pointer;font-size:0.72rem;font-weight:700;color:var(--muted);list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 0">
           <span>🎨 Edit categories</span>
-          <span style="font-weight:400">▾</span>
+          <span class="tap-hint" data-closed="tap to open" style="font-weight:400"></span>
         </summary>
         <div style="margin-top:10px">
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
@@ -1108,7 +1111,7 @@ snApplyTheme();
     <button onclick="openNewLibPiece()" style="width:100%;margin-top:14px;background:none;border:1.5px dashed var(--viola);border-radius:10px;padding:10px;color:var(--viola);font-family:'Special Elite',cursive;font-size:0.88rem;font-weight:600;cursor:pointer">＋ Add to the library</button>
     <details style="margin-top:14px">
       <summary style="font-size:0.72rem;font-weight:700;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-        <span>🗂 Manage categories</span><span style="font-weight:400">▾</span>
+        <span>🗂 Manage categories</span><span class="tap-hint" data-closed="tap to open" style="font-weight:400"></span>
       </summary>
       <div style="margin-top:8px;background:var(--warm);border-radius:10px;padding:10px">
         <div style="font-size:0.7rem;color:var(--muted);margin-bottom:8px">Choose what type each category holds (e.g. Studies → 📖 Study books). Delete a category you don’t use: anything in it moves to “My Library”, nothing is lost.</div>
@@ -1228,7 +1231,7 @@ snApplyTheme();
     <div id="theme-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px"></div>
     <details style="margin-top:16px" ontoggle="if(!this.open)cancelThemeTry()">
       <summary style="font-size:0.85rem;font-weight:700;color:var(--ink);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:2px solid var(--warm)">
-        <span>✏️ Make my own palette</span><span style="font-weight:400;font-size:0.8rem;color:var(--muted)">▾</span>
+        <span>✏️ Make my own palette</span><span class="tap-hint" data-closed="tap to open" style="font-weight:400;font-size:0.8rem;color:var(--muted)"></span>
       </summary>
       <div style="font-size:0.72rem;color:var(--muted);margin:0 0 10px">Choose five colours, or type their codes (like #34986E). All the lighter shades are made for you.</div>
       <div class="theme-make">
@@ -1258,7 +1261,7 @@ snApplyTheme();
     <div id="billing-sheet"></div>
     <details id="income-box" style="margin-top:16px" ontoggle="if(this.open){renderIncomePanel();renderOtherIncome();}">
       <summary style="font-size:0.8rem;font-weight:700;color:var(--deep);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:2px solid var(--warm)">
-        <span>📊 Income for tax</span><span style="font-weight:400;font-size:0.7rem;color:var(--muted)">tap to open</span>
+        <span>📊 Income for tax</span><span style="font-weight:400;font-size:0.7rem;color:var(--muted)" class="tap-hint" data-closed="tap to open"></span>
       </summary>
       <div style="font-size:0.72rem;color:var(--muted);margin:4px 0 10px">Everything ticked Paid, by the date it arrived. For Making Tax Digital, or your accountant.</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
@@ -1282,14 +1285,14 @@ snApplyTheme();
     </details>
     <details id="invoice-settings-box" style="margin-top:16px" ontoggle="if(this.open)renderInvoiceSettings()">
       <summary style="font-size:0.8rem;font-weight:700;color:var(--deep);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:2px solid var(--warm)">
-        <span>🧾 Invoice details</span><span style="font-weight:400;font-size:0.7rem;color:var(--muted)">tap to set</span>
+        <span>🧾 Invoice details</span><span style="font-weight:400;font-size:0.7rem;color:var(--muted)" class="tap-hint" data-closed="tap to set"></span>
       </summary>
       <div style="font-size:0.72rem;color:var(--muted);margin:4px 0 10px">🔒 Saved on this iPad (and in backups) only, never in the app online.</div>
       <div id="invoice-settings-form" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
     </details>
     <details style="margin-top:16px" ontoggle="if(this.open)renderRatesEditor()">
       <summary style="font-size:0.8rem;font-weight:700;color:var(--deep);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:2px solid var(--warm)">
-        <span>💷 Standard lesson rates</span><span style="font-weight:400;font-size:0.7rem;color:var(--muted)">tap to set</span>
+        <span>💷 Standard lesson rates</span><span style="font-weight:400;font-size:0.7rem;color:var(--muted)" class="tap-hint" data-closed="tap to set"></span>
       </summary>
       <div style="font-size:0.72rem;color:var(--muted);margin:4px 0 10px">Set the price for each lesson length once. Every pupil uses the rate for their lesson length, unless you’ve given them their own rate in ✏️ Edit.</div>
       <div id="rates-editor"></div>
@@ -3061,7 +3064,7 @@ function weekRememberHTML() {
     + '<span>📌 To remember</span>'
     + '<span style="font-size:0.75rem;font-weight:600;background:' + (left ? 'var(--string)' : 'var(--soft-green2)') + ';color:var(--ink);border-radius:999px;padding:2px 10px">' + (left ? left + ' to do' : 'all done ✓') + '</span>'
     + (imps ? '<span style="font-size:0.75rem;font-weight:700;background:#fde7e2;color:#a3321f;border:1.5px solid #f0b4a8;border-radius:999px;padding:2px 10px">❗ ' + imps + ' important</span>' : '')
-    + '<span style="margin-left:auto;font-size:0.75rem;color:var(--muted)">▾</span></summary>'
+    + '<span class="tap-hint" data-closed="tap to open" style="margin-left:auto;font-size:0.75rem;color:var(--muted)"></span></summary>'
     + '<div style="padding:0 16px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px 18px">'
     + people.map(function(s) {
         const slot = effectiveSlot(s);
@@ -3597,7 +3600,7 @@ function renderDetail(s, preserveTab = false) {
         <div style="grid-column:1/-1">
           <details id="followup-box-${s.id}">
             <summary style="font-size:0.68rem;font-weight:700;color:#e67e22;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-              <span>🚩 Follow-up note</span><span style="font-weight:400;font-size:0.65rem">▾</span>
+              <span>🚩 Follow-up note</span><span class="tap-hint" data-closed="tap to open" style="font-weight:400;font-size:0.65rem"></span>
             </summary>
             <textarea placeholder="Reason for flag…" id="followup-note-${s.id}"
               oninput="autoGrow(this);updateLittleDetail('${s.id}','followUpNote',this.value)"
@@ -3605,7 +3608,7 @@ function renderDetail(s, preserveTab = false) {
           </details>
           <details style="margin-top:8px">
             <summary style="font-size:0.68rem;font-weight:700;color:var(--violin);text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-              <span>👁 Observations</span><span style="font-weight:400;font-size:0.65rem">▾</span>
+              <span>👁 Observations</span><span class="tap-hint" data-closed="tap to open" style="font-weight:400;font-size:0.65rem"></span>
             </summary>
             <textarea placeholder="Things you've noticed… learning style, what works, patterns, moments…"
               oninput="autoGrow(this);updateLittleDetail('${s.id}','observations',this.value)"
@@ -3613,7 +3616,7 @@ function renderDetail(s, preserveTab = false) {
           </details>
           <details style="margin-top:8px">
             <summary style="font-size:0.68rem;font-weight:700;color:#c0622f;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-              <span>🎁 Gifts</span><span style="font-weight:400;font-size:0.65rem">▾</span>
+              <span>🎁 Gifts</span><span class="tap-hint" data-closed="tap to open" style="font-weight:400;font-size:0.65rem"></span>
             </summary>
             <div id="gift-list-${s.id}">${giftListHTML(s)}</div>
             <div style="display:flex;gap:6px;margin-top:8px">
@@ -3625,7 +3628,7 @@ function renderDetail(s, preserveTab = false) {
           </details>
           <details style="margin-top:8px">
             <summary style="font-size:0.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-              <span>📝 Free notes</span><span style="font-weight:400;font-size:0.65rem">▾</span>
+              <span>📝 Free notes</span><span class="tap-hint" data-closed="tap to open" style="font-weight:400;font-size:0.65rem"></span>
             </summary>
             <textarea placeholder="Anything else to remember…"
               oninput="autoGrow(this);updateLittleDetail('${s.id}','freeNotes',this.value)"
@@ -3773,7 +3776,7 @@ function renderDetail(s, preserveTab = false) {
           onkeydown="if(event.key==='Enter')handleListEnter(event)">${(typeof s.afterDraft === 'string' && s.afterDraft.length) ? esc(s.afterDraft) : buildCumulativeNote(s)}</textarea>
         <details style="margin-top:10px">
           <summary style="list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:0.7rem;font-weight:700;color:var(--muted);padding:4px 0">
-            <span>🏷️ Tap to add to notes</span><span style="font-weight:400">▾</span>
+            <span>🏷️ Tap to add to notes</span><span class="tap-hint" data-closed="tap to open" style="font-weight:400"></span>
           </summary>
           <div class="tech-chips" style="margin:8px 0">
             ${allTech.filter(t => TECH_OPTIONS.includes(t) ? !deletedBuiltins.includes(t) : true).map(t => {
@@ -3958,7 +3961,7 @@ function renderDetail(s, preserveTab = false) {
       <!-- GOALS -->
       <details class="section-card" style="padding:0">
         <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
-          <span>🎯 Goals</span><span style="font-size:0.7rem;font-weight:400">▾</span>
+          <span>🎯 Goals</span><span class="tap-hint" data-closed="tap to open" style="font-size:0.7rem;font-weight:400"></span>
         </summary>
         <div style="padding:0 14px 14px">
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
@@ -3985,7 +3988,7 @@ function renderDetail(s, preserveTab = false) {
       <!-- COMPLETED PIECES -->
       <details class="section-card" style="padding:0">
         <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
-          <span>✓ Completed pieces</span><span style="font-size:0.7rem;font-weight:400">▾</span>
+          <span>✓ Completed pieces</span><span class="tap-hint" data-closed="tap to open" style="font-size:0.7rem;font-weight:400"></span>
         </summary>
         <div style="padding:0 14px 14px">${completedPiecesHTML(s)}</div>
       </details>
@@ -3993,7 +3996,7 @@ function renderDetail(s, preserveTab = false) {
       <!-- COMPLETED STUDIES -->
       <details class="section-card" style="padding:0">
         <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
-          <span>📖 Completed studies</span><span style="font-size:0.7rem;font-weight:400">▾</span>
+          <span>📖 Completed studies</span><span class="tap-hint" data-closed="tap to open" style="font-size:0.7rem;font-weight:400"></span>
         </summary>
         <div style="padding:0 14px 14px">${completedStudiesHTML(s)}</div>
       </details>
@@ -4001,7 +4004,7 @@ function renderDetail(s, preserveTab = false) {
       <!-- COMPLETED SCALES -->
       <details class="section-card" style="padding:0">
         <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
-          <span>🎼 Completed scales</span><span style="font-size:0.7rem;font-weight:400">▾</span>
+          <span>🎼 Completed scales</span><span class="tap-hint" data-closed="tap to open" style="font-size:0.7rem;font-weight:400"></span>
         </summary>
         <div style="padding:0 14px 14px">${completedScalesHTML(s)}</div>
       </details>
@@ -4009,7 +4012,7 @@ function renderDetail(s, preserveTab = false) {
       <!-- BOOKS PURCHASED -->
       <details class="section-card" style="padding:0">
         <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
-          <span>📚 Books purchased</span><span style="font-size:0.7rem;font-weight:400">▾</span>
+          <span>📚 Books purchased</span><span class="tap-hint" data-closed="tap to open" style="font-size:0.7rem;font-weight:400"></span>
         </summary>
         <div style="padding:0 14px 14px">
           <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">Keep track of which books this pupil already owns, so you don't recommend a duplicate.</div>
@@ -4039,7 +4042,7 @@ function renderDetail(s, preserveTab = false) {
       <!-- ATTENDANCE -->
       <details class="section-card" style="padding:0">
         <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
-          <span>Attendance</span><span style="font-size:0.7rem;font-weight:400">▾</span>
+          <span>Attendance</span><span class="tap-hint" data-closed="tap to open" style="font-size:0.7rem;font-weight:400"></span>
         </summary>
         <div style="padding:0 14px 14px">
           <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
@@ -4068,7 +4071,7 @@ function renderDetail(s, preserveTab = false) {
               style="background:var(--violin);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-family:'Special Elite',cursive;font-size:0.72rem;cursor:pointer">📝 Notes summary</button>
             <button onclick="event.preventDefault();event.stopPropagation();openProgressReport('${s.id}')"
               style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-family:'Special Elite',cursive;font-size:0.72rem;cursor:pointer">🌟 Progress report</button>
-            <span style="font-size:0.7rem;font-weight:400">▴</span>
+            <span class="tap-hint" data-closed="tap to open" style="font-size:0.7rem;font-weight:400"></span>
           </span>
         </summary>
         <div style="padding:0 14px 14px">
@@ -7070,7 +7073,7 @@ function refSummary(s) {
   return '<details open style="margin-bottom:10px">'
     + '<summary style="font-size:0.75rem;font-weight:700;color:var(--muted);cursor:pointer;padding:8px 12px;background:var(--warm);border-radius:10px;list-style:none;display:flex;align-items:center;justify-content:space-between">'
     + '<span>\ud83d\udccb Before - your plan &amp; notes</span>'
-    + '<span style="font-size:0.7rem;font-weight:400">▴</span>'
+    + '<span class="tap-hint" data-closed="tap to open" style="font-size:0.7rem;font-weight:400"></span>'
     + '</summary>'
     + '<div style="background:var(--warm);border-radius:0 0 10px 10px;padding:10px 12px;margin-top:2px">'
     + inner
@@ -7369,6 +7372,7 @@ function studyBooksHTML(s) {
       + '<span>' + esc(bookTitle(book)) + '</span>'
       + '<span style="display:flex;align-items:center;gap:10px">'
       + '<span style="font-size:0.7rem;font-weight:400">' + done + ' / ' + total + '</span>'
+      + '<span class="tap-hint" data-closed="tap to open" style="font-size:0.65rem;font-weight:400"></span>'
       + '<button onclick="event.stopPropagation();removeStudyBook(\'' + s.id + '\',' + bIdx + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:0 4px">×</button>'
       + '</span></summary>'
       + '<div class="section-card" style="margin-top:6px">'
@@ -7543,6 +7547,7 @@ function methodBooksHTML(s) {
       + '<span>' + esc(bookTitle(book)) + '</span>'
       + '<span style="display:flex;align-items:center;gap:10px">'
       + '<span style="font-size:0.7rem;font-weight:400">' + done + ' / ' + total + '</span>'
+      + '<span class="tap-hint" data-closed="tap to open" style="font-size:0.65rem;font-weight:400"></span>'
       + '<button onclick="event.stopPropagation();removeMethodBook(\'' + s.id + '\',' + bIdx + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:0 4px">×</button>'
       + '</span></summary>'
       + '<div class="section-card" style="margin-top:6px">'
@@ -7651,6 +7656,7 @@ function albumsHTML(s) {
       + '<span>' + esc(bookTitle(book)) + '</span>'
       + '<span style="display:flex;align-items:center;gap:10px">'
       + '<span style="font-size:0.7rem;font-weight:400">' + done + ' / ' + total + '</span>'
+      + '<span class="tap-hint" data-closed="tap to open" style="font-size:0.65rem;font-weight:400"></span>'
       + '<button onclick="event.stopPropagation();removeAlbum(\'' + s.id + '\',' + bIdx + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:0 4px">×</button>'
       + '</span></summary>'
       + '<div class="section-card" style="margin-top:6px">'
@@ -7798,6 +7804,7 @@ function pieceTracksHTML(s) {
       + '<span>' + esc(bookTitle(book)) + (book.virtual || (s.pieces || []).some(function(t){ return libTitleKey(t) === libTitleKey(bookTitle(book)); }) ? ' <span style="font-size:0.66rem;font-weight:400;color:var(--viola)">· on Working On</span>' : '') + '</span>'
       + '<span style="display:flex;align-items:center;gap:10px">'
       + '<span style="font-size:0.7rem;font-weight:400">' + done + ' / ' + total + '</span>'
+      + '<span class="tap-hint" data-closed="tap to open" style="font-size:0.65rem;font-weight:400"></span>'
       + (book.virtual ? '' : '<button onclick="event.stopPropagation();removePieceTrack(\'' + s.id + '\',' + bIdx + ')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:0 4px">×</button>')
       + '</span></summary>'
       + '<div class="section-card" style="margin-top:6px">'
@@ -8248,7 +8255,7 @@ function renderTechSets() {
         + 'style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box">'
         + '<button onclick="addTechSetItem(\'' + id + '\')" style="background:var(--deep);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:\'Special Elite\',cursive;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap">＋ Add</button>'
         + '</div>'
-        + '<details style="margin-top:8px"><summary style="cursor:pointer;list-style:none;font-size:0.8rem;color:var(--deep);font-weight:600;padding:6px 0">📋 Paste a list ▾</summary>'
+        + '<details style="margin-top:8px"><summary style="cursor:pointer;list-style:none;font-size:0.8rem;color:var(--deep);font-weight:600;padding:6px 0">📋 Paste a list <span class="tap-hint" data-closed="tap to open" style="font-weight:400;font-size:0.7rem;color:var(--muted)"></span></summary>'
         + '<div style="font-size:0.7rem;color:var(--muted);margin:2px 0 6px">One per line. ☐ boxes and bullets are removed; numbered lines like “1. Bow hold” (or lines starting with #) become section headings. Write {instrument} or {strings} to fit violin and viola.</div>'
         + '<textarea id="techset-paste-' + esc(set.id) + '" rows="6" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #d6ddd2;font-family:\'Special Elite\',cursive;font-size:0.82rem;box-sizing:border-box;resize:vertical"></textarea>'
         + '<button onclick="pasteTechSetItems(\'' + id + '\')" style="margin-top:6px;background:var(--deep);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:\'Special Elite\',cursive;font-size:0.82rem;font-weight:600;cursor:pointer">Add these lines</button>'
