@@ -915,10 +915,11 @@ snApplyTheme();
   </div>
   <div id="wednesday-reminder" style="display:none;background:#fffbe6;border:1.5px solid #c9a84c;border-radius:12px;padding:12px 16px;margin-bottom:14px;align-items:center;gap:12px;flex-wrap:wrap">
     <span style="font-size:1.1rem">💾</span>
-    <span id="backup-reminder-text" style="flex:1;font-size:0.88rem;color:#7a5c00">Wednesday - time for your weekly backup!</span>
+    <span id="backup-reminder-text" style="flex:1;font-size:0.88rem;color:#7a5c00">Thursday - time for your weekly backup!</span>
     <button onclick="backupData();document.getElementById('wednesday-reminder').style.display='none'" style="background:#c9a84c;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:'Special Elite',cursive;font-size:0.82rem;cursor:pointer;white-space:nowrap">Back up now</button>
     <button onclick="localStorage.setItem('backup_reminder_dismissed',new Date().toDateString());document.getElementById('wednesday-reminder').style.display='none'" style="background:none;border:none;color:#c9a84c;cursor:pointer;font-size:1.1rem;padding:0 4px">×</button>
   </div>
+  <div id="unlogged-box" style="display:none"></div>
   <div id="today-list"></div>
 </div>
 
@@ -2766,24 +2767,103 @@ function goBack() {
 }
 
 // ── TODAY VIEW ────────────────────────────────────────────────────────────
+// ── THURSDAY CHECK: LESSONS NOT LOGGED ───────────────────────────────────
+// On Thursday (the day after the teaching week ends) the Today page lists any
+// pupil on the timetable this week (Sat to Wed) with nothing in their log for
+// the week: no Present/Absent mark and no notes. Fortnightly pupils on their
+// week off are left out (skipped in Week, or they had a lesson last week).
+const TEACH_DAYS = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday'];
+function unloggedLessonsThisWeek() {
+  if (isHolidayWeek()) return [];
+  const [y, m, d] = currentWeek.split('-').map(Number);
+  const ws = new Date(y, m - 1, d), we = new Date(ws); we.setDate(ws.getDate() + 6);
+  const pws = new Date(ws); pws.setDate(ws.getDate() - 7);
+  const pwe = new Date(ws); pwe.setDate(ws.getDate() - 1);
+  const inRange = function(e, from, to) { const dt = parseLogDate(e.date); return dt && dt >= from && dt <= to; };
+  const today = new Date(); today.setHours(23, 59, 59, 999);
+  const out = [];
+  (students || []).forEach(function(s) {
+    if (s.retired || isSkipped(s.id)) return;
+    const slot = effectiveSlot(s); const off = TEACH_DAYS.indexOf(slot.day);
+    if (off < 0) return;
+    const log = s.log || [];
+    if (log.some(function(e){ return inRange(e, ws, we) && (e.attendance || String(e.text || '').trim()); })) return;
+    if (s.frequency === 'fortnightly' && log.some(function(e){ return inRange(e, pws, pwe) && e.attendance; })) return;
+    const date = new Date(ws); date.setDate(ws.getDate() + off);
+    if (date > today) return;
+    out.push({ s: s, day: slot.day, time: slot.time || '', date: date });
+  });
+  out.sort(function(a, b){ return a.date - b.date || a.time.localeCompare(b.time); });
+  return out;
+}
+function renderUnloggedBox(now) {
+  const box = document.getElementById('unlogged-box'); if (!box) return;
+  const hiddenToday = localStorage.getItem('unlogged_hidden') === new Date().toDateString();
+  if (now.getDay() !== 4 || hiddenToday || !students.length) { box.style.display = 'none'; return; }
+  const list = unloggedLessonsThisWeek();
+  box.style.display = 'block';
+  if (!list.length) {
+    box.innerHTML = '<div style="background:#eef6e6;border:1.5px solid var(--viola);border-radius:12px;padding:10px 16px;margin-bottom:14px;font-size:0.9rem;color:var(--deep)">✅ Every lesson this week is logged. Well done!</div>';
+    return;
+  }
+  const btn = function(id, ds, st, label, bg, fg, bd) {
+    return '<button onclick="logPastAttendance(\'' + id + '\',\'' + escJs(ds) + '\',\'' + st + '\')" style="background:' + bg + ';color:' + fg + ';border:1.5px solid ' + bd + ';border-radius:8px;padding:5px 9px;font-family:\'Special Elite\',cursive;font-size:0.74rem;cursor:pointer">' + label + '</button>';
+  };
+  box.innerHTML = '<div style="background:#fff4ec;border:2px solid #e67e22;border-radius:14px;padding:12px 14px;margin-bottom:14px">'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+    + '<span style="font-size:1.2rem">📋</span><strong style="flex:1;font-size:0.95rem;color:#8a4a10">' + list.length + ' lesson' + (list.length === 1 ? '' : 's') + ' not logged this week</strong>'
+    + '<button onclick="localStorage.setItem(\'unlogged_hidden\',new Date().toDateString());document.getElementById(\'unlogged-box\').style.display=\'none\'" style="background:none;border:none;color:#b7791f;font-family:\'Special Elite\',cursive;font-size:0.75rem;cursor:pointer;text-decoration:underline">Hide today</button></div>'
+    + list.map(function(x) {
+        const ds = x.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        return '<div style="background:#fff;border:1.5px solid #f3c99c;border-radius:10px;padding:8px 10px;margin-bottom:6px">'
+          + '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:6px">'
+          + '<button onclick="openStudentFrom(\'' + x.s.id + '\',\'today\')" style="background:none;border:none;padding:0;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.95rem;font-weight:700;color:var(--ink);text-decoration:underline">' + esc(x.s.name) + '</button>'
+          + '<span style="font-size:0.75rem;color:var(--muted)">' + esc(x.day.slice(0, 3) + ' ' + x.date.getDate() + (x.time ? ' · ' + x.time : '')) + '</span></div>'
+          + '<div style="display:flex;gap:5px;flex-wrap:wrap">'
+          + btn(x.s.id, ds, 'present', '✓ Present', 'var(--viola)', '#fff', 'var(--viola)')
+          + btn(x.s.id, ds, 'absent-late', '✕ Late cancel', '#fff', '#c0392b', '#e8b4ad')
+          + btn(x.s.id, ds, 'absent-notice', '– Good notice', '#fff', 'var(--ink)', '#d6ddd2')
+          + btn(x.s.id, ds, 'cancelled', '– Cancelled by me', '#fff', 'var(--ink)', '#d6ddd2')
+          + '</div></div>';
+      }).join('')
+    + '<div style="font-size:0.72rem;color:#8a4a10;margin-top:4px">Tap a name to open their notes, or mark them here. It\'s dated to the day of their lesson.</div>'
+    + '</div>';
+}
+function logPastAttendance(id, dateStr, status) {
+  const s = getStudent(id); if (!s) return;
+  if (!s.log) s.log = [];
+  let entry = s.log.find(function(e){ return e.date === dateStr; });
+  if (!entry) {
+    entry = { date: dateStr, text: '', attendance: status };
+    // keep the log in date order
+    const d = parseLogDate(dateStr); let at = s.log.length;
+    while (at > 0 && (parseLogDate(s.log[at - 1].date) || 0) > d) at--;
+    s.log.splice(at, 0, entry);
+  } else entry.attendance = status;
+  save();
+  renderUnloggedBox(effectiveNow());
+  showMiniToast('✓ ' + s.name + ' logged');
+}
 function renderToday() {
   const now = effectiveNow();
   const dayName = todayDayName();
   document.getElementById('today-heading').textContent =
     now.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
 
-  // Show Wednesday backup reminder after 5pm
+  // Show the weekly backup reminder on Thursday (or any day once a backup is over a week old)
   const wedReminder = document.getElementById('wednesday-reminder');
   if (wedReminder) {
-    const isWedEvening = now.getDay() === 3 && now.getHours() >= 17;
+    // Weekly backup day is Thursday, alongside the "not logged" check
+    const isWedEvening = now.getDay() === 4;
     const dismissedToday = localStorage.getItem('backup_reminder_dismissed') === new Date().toDateString();
     // Also nudge on any day once it's been more than a week since the last backup
     const days = daysSinceBackup();
     const overdue = days !== null && days > 7 && students.length > 0;
     const txt = document.getElementById('backup-reminder-text');
-    if (txt) txt.textContent = overdue ? 'It’s been ' + days + ' days since your last backup.' : 'Wednesday - time for your weekly backup!';
+    if (txt) txt.textContent = overdue ? 'It’s been ' + days + ' days since your last backup.' : 'Thursday - time for your weekly backup!';
     wedReminder.style.display = ((isWedEvening || overdue) && !dismissedToday) ? 'flex' : 'none';
   }
+  renderUnloggedBox(now);
   // Also include pupils with an extra lesson today
   const todayStudents = students.filter(s => effectiveSlot(s).day === dayName && !isSkipped(s.id) && !s.retired);
   const todayExtras = (extraLessons[currentWeek] || [])
