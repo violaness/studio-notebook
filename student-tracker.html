@@ -5655,7 +5655,7 @@ function movePieceVideos(s, i, oldT, newT) {
 let pieceVidTarget = null;
 function openPieceVideo(sid, i) {
   const s = getStudent(sid); if (!s) return;
-  const title = String((s.pieces || [])[i] || '').trim();
+  const title = i === -1 ? 'Videos to watch' : String((s.pieces || [])[i] || '').trim();
   if (!title) { alert('Type the piece name first, then add its video.'); return; }
   pieceVidTarget = { sid: sid, i: i };
   document.getElementById('piece-vid-for').textContent = title;
@@ -5664,7 +5664,7 @@ function openPieceVideo(sid, i) {
   document.getElementById('piece-vid-name').value = '';
   document.getElementById('piece-vid-save').checked = true;
   // Start the search with the piece name, so matching videos come up first
-  renderPieceVidList(title);
+  renderPieceVidList(i === -1 ? '' : title);
   document.getElementById('piece-vid-modal').classList.add('open');
 }
 function closePieceVideo() { document.getElementById('piece-vid-modal').classList.remove('open'); pieceVidTarget = null; }
@@ -5689,6 +5689,11 @@ function renderPieceVidList(hint) {
 function attachPieceVideo(title, url) {
   if (!pieceVidTarget) return;
   const s = getStudent(pieceVidTarget.sid); if (!s) return;
+  if (pieceVidTarget.i === -1) {
+    if (!s.watchVideos) s.watchVideos = [];
+    if (!s.watchVideos.some(function(v){ return v.url === url; })) s.watchVideos.push({ title: title, url: url });
+    save(); closePieceVideo(); refreshPiecesList(s); return;
+  }
   const k = libTitleKey((s.pieces || [])[pieceVidTarget.i] || ''); if (!k) return;
   if (!s.pieceVideos) s.pieceVideos = {};
   const list = s.pieceVideos[k] || (s.pieceVideos[k] = []);
@@ -5701,7 +5706,7 @@ function addPastedPieceVideo() {
   const url = normaliseUrl(urlRaw);
   if (!url) { document.getElementById('piece-vid-url').focus(); return; }
   const s = getStudent(pieceVidTarget && pieceVidTarget.sid);
-  const name = document.getElementById('piece-vid-name').value.trim() || (s ? String(s.pieces[pieceVidTarget.i]).trim() : '') || urlRaw;
+  const name = document.getElementById('piece-vid-name').value.trim() || (s && pieceVidTarget.i !== -1 ? String(s.pieces[pieceVidTarget.i]).trim() : '') || urlRaw;
   if (document.getElementById('piece-vid-save').checked && !videoLinks.some(function(v){ return v.url === url; })) {
     videoLinks.push({ title: name, url: url, category: 'Other', presenter: '' });
     videoLinks.sort(function(a, b){ const c = (a.category || '').localeCompare(b.category || ''); return c !== 0 ? c : (a.title || '').localeCompare(b.title || ''); });
@@ -5744,7 +5749,27 @@ function buildPiecesHTML(s) {
       + '<button class="wo-add" onclick="addPiece(\'' + s.id + '\',\'' + g + '\')">＋ Add</button></div>'
       + rows[g].join('') + '</div>';
   };
-  return group('tech', '🔧 Technical') + group('piece', '🎵 Pieces');
+  return group('tech', '🔧 Technical') + group('piece', '🎵 Pieces') + watchVideosHTML(s);
+}
+// Videos to watch that aren't tied to a piece (a masterclass, general technique…)
+function watchVideosHTML(s) {
+  const vids = s.watchVideos || [];
+  return '<div class="wo-group wo-watch"><div class="wo-label"><span>🎬 Videos to watch</span>'
+    + '<button class="wo-add" onclick="openPieceVideo(\'' + s.id + '\',-1)">＋ Add</button></div>'
+    + (vids.length ? '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px 2px">' + vids.map(function(v, n) {
+        return '<span style="display:inline-flex;align-items:center;gap:2px;background:#e3f4fa;border:1.5px solid var(--violin);border-radius:999px;padding:0 4px 0 0;max-width:100%">'
+          + '<button onclick="openVideoLink(\'' + escJs(v.url) + '\')" style="background:none;border:none;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.78rem;color:var(--ink);padding:4px 4px 4px 10px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px">🎬 ' + esc(v.title || v.url) + '</button>'
+          + '<button onclick="removeWatchVideo(\'' + s.id + '\',' + n + ')" title="Remove this video" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:0.95rem;padding:2px 4px;line-height:1">×</button>'
+          + '</span>';
+      }).join('') + '</div>'
+      : '<div style="font-size:0.75rem;color:var(--muted);font-style:italic;margin:0 0 4px 2px">A masterclass or technique video, not tied to a piece</div>')
+    + '</div>';
+}
+function removeWatchVideo(sid, n) {
+  const s = getStudent(sid); if (!s || !s.watchVideos || !s.watchVideos[n]) return;
+  if (!confirm('Take “' + (s.watchVideos[n].title || s.watchVideos[n].url) + '” off?\n\n(It stays in your video library.)')) return;
+  s.watchVideos.splice(n, 1);
+  save(); refreshPiecesList(s);
 }
 
 function allTechCategories() {
