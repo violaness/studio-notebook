@@ -6498,14 +6498,15 @@ function exportThisWeekIcs() {
   let count = 0;
 
   students.forEach(function(s) {
-    if (!s.lessonDay) return;
-    // Skip fortnightly pupils who are skipping this week
-    if (s.frequency === 'fortnightly' && skippedWeeks[currentWeek] && skippedWeeks[currentWeek].includes(s.id)) return;
+    if (!s.lessonDay || s.retired) return;   // retired pupils never go in the calendar
+    // Skip anyone marked "Not this week" in Week (fortnightly week off, etc.)
+    if (isSkipped(s.id)) return;
     // Skip if absent this week (requested absence covering this lesson's date)
     const slot = effectiveSlot(s);
     if (!slot.day) return;
     const lessonDate = dateForDayInWeek(slot.day);
-    const lessonDateStr = lessonDate.toISOString().slice(0,10);
+    // Local date (toISOString would give the day before during British Summer Time)
+    const lessonDateStr = lessonDate.getFullYear() + '-' + String(lessonDate.getMonth() + 1).padStart(2, '0') + '-' + String(lessonDate.getDate()).padStart(2, '0');
     const isAbsent = (s.absences||[]).some(function(a) { return a.date === lessonDateStr; });
     if (isAbsent) return;
 
@@ -6587,7 +6588,7 @@ function exportTimetableIcs() {
   let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Studio Notebook//EN\r\nCALSCALE:GREGORIAN\r\n';
 
   students.forEach(function(s) {
-    if (!s.lessonDay || !s.lessonTime) return;
+    if (!s.lessonDay || !s.lessonTime || s.retired) return;
     const startDate = nextDateForDay(s.lessonDay);
     const duration = parseInt(s.duration) || 30;
     const dtStart = fmtIcsDateTime(startDate, s.lessonTime);
