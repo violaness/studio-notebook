@@ -795,6 +795,16 @@
 .nt-row.imp .nt-imp { opacity: 1; filter: none; }
 .nt-row.imp { background: #fde7e2; border-radius: 8px; padding-left: 4px; padding-right: 4px; }
 .nt-row.imp .nt-in { font-weight: 700; color: #a3321f; }
+.nt-row.urgent .nt-imp { opacity: 1; filter: none; }
+.nt-row.urgent { background: #c0392b; border-radius: 8px; padding-left: 4px; padding-right: 4px; }
+.nt-row.urgent .nt-in { font-weight: 700; color: #fff; }
+.nt-row.urgent .nt-box { background: #fff; }
+/* Urgent banner: across the top of every page */
+#urgent-banner { display: none; background: #c0392b; color: #fff; padding: 6px 14px; gap: 6px 10px; flex-wrap: wrap; align-items: center; font-size: 0.82rem; }
+#urgent-banner.on { display: flex; }
+#urgent-banner .ub-item { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.14); border: 1.5px solid rgba(255,255,255,0.45); border-radius: 999px; padding: 2px 4px 2px 10px; max-width: 100%; }
+#urgent-banner .ub-name { background: none; border: none; color: #fff; font-family: 'Special Elite', cursive; font-size: 0.82rem; cursor: pointer; padding: 2px 0; text-align: left; }
+#urgent-banner .ub-tick { width: 22px; height: 22px; border-radius: 6px; border: 2px solid #fff; background: transparent; color: #fff; cursor: pointer; padding: 0; flex: 0 0 auto; }
 </style>
 <script>
 // ── COLOUR THEMES ──────────────────────────────────────────────────────────
@@ -898,6 +908,7 @@ snApplyTheme();
     <button class="folder-tab tab-admin"        onclick="showView('admin')">🗂 Admin</button>
     <button class="folder-tab tab-library"      onclick="showView('library')">📚 Library</button>
   </div>
+  <div id="urgent-banner" aria-live="polite"></div>
 </header>
 
 <!-- SEARCH BAR -->
@@ -923,6 +934,7 @@ snApplyTheme();
     <button onclick="localStorage.setItem('backup_reminder_dismissed',new Date().toDateString());document.getElementById('wednesday-reminder').style.display='none'" style="background:none;border:none;color:#c9a84c;cursor:pointer;font-size:1.1rem;padding:0 4px">×</button>
   </div>
   <div id="unlogged-box" style="display:none"></div>
+  <div id="friday-imp-box" style="display:none"></div>
   <div id="today-list"></div>
 </div>
 
@@ -2585,6 +2597,7 @@ let movingStudentId = null;
 // ── PERSISTENCE ───────────────────────────────────────────────────────────
 function save() {
   localStorage.setItem('studio_students',          JSON.stringify(students));
+  try { renderUrgentBanner(); } catch (e) {}
   localStorage.setItem('studio_custom_chips',      JSON.stringify(customChips));
   localStorage.setItem('studio_deleted_builtins',  JSON.stringify(deletedBuiltins));
   localStorage.setItem('studio_tech_categories',   JSON.stringify(techCategoryMap));
@@ -2773,15 +2786,13 @@ function goBack() {
 // ── THURSDAY CHECK: LESSONS NOT LOGGED ───────────────────────────────────
 // On Thursday (the day after the teaching week ends) the Today page lists any
 // pupil on the timetable this week (Sat to Wed) with nothing in their log for
-// the week: no Present/Absent mark and no notes. Fortnightly pupils on their
-// week off are left out (skipped in Week, or they had a lesson last week).
+// the week: no Present/Absent mark and no notes. The Week timetable decides:
+// anyone marked "Not this week" there (e.g. a fortnightly week off) is left out.
 const TEACH_DAYS = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday'];
 function unloggedLessonsThisWeek() {
   if (isHolidayWeek()) return [];
   const [y, m, d] = currentWeek.split('-').map(Number);
   const ws = new Date(y, m - 1, d), we = new Date(ws); we.setDate(ws.getDate() + 6);
-  const pws = new Date(ws); pws.setDate(ws.getDate() - 7);
-  const pwe = new Date(ws); pwe.setDate(ws.getDate() - 1);
   const inRange = function(e, from, to) { const dt = parseLogDate(e.date); return dt && dt >= from && dt <= to; };
   const today = new Date(); today.setHours(23, 59, 59, 999);
   const out = [];
@@ -2791,7 +2802,6 @@ function unloggedLessonsThisWeek() {
     if (off < 0) return;
     const log = s.log || [];
     if (log.some(function(e){ return inRange(e, ws, we) && (e.attendance || String(e.text || '').trim()); })) return;
-    if (s.frequency === 'fortnightly' && log.some(function(e){ return inRange(e, pws, pwe) && e.attendance; })) return;
     const date = new Date(ws); date.setDate(ws.getDate() + off);
     if (date > today) return;
     out.push({ s: s, day: slot.day, time: slot.time || '', date: date });
@@ -2827,10 +2837,17 @@ function renderUnloggedBox(now) {
           + btn(x.s.id, ds, 'absent-late', '✕ Late cancel', '#fff', '#c0392b', '#e8b4ad')
           + btn(x.s.id, ds, 'absent-notice', '– Good notice', '#fff', 'var(--ink)', '#d6ddd2')
           + btn(x.s.id, ds, 'cancelled', '– Cancelled by me', '#fff', 'var(--ink)', '#d6ddd2')
+          + (x.s.frequency === 'fortnightly' ? '<button onclick="unloggedNotThisWeek(\'' + x.s.id + '\')" style="background:var(--warm);color:var(--muted);border:1.5px solid #ccc;border-radius:8px;padding:5px 9px;font-family:\'Special Elite\',cursive;font-size:0.74rem;cursor:pointer">Not their week</button>' : '')
           + '</div></div>';
       }).join('')
     + '<div style="font-size:0.72rem;color:#8a4a10;margin-top:4px">Tap a name to open their notes, or mark them here. It\'s dated to the day of their lesson.</div>'
     + '</div>';
+}
+// A fortnightly pupil on the list who wasn't due this week: same as tapping
+// "Not this week" on the Week page
+function unloggedNotThisWeek(id) {
+  if (!isSkipped(id)) skipWeek(id);
+  renderUnloggedBox(effectiveNow());
 }
 function logPastAttendance(id, dateStr, status) {
   const s = getStudent(id); if (!s) return;
@@ -2867,6 +2884,7 @@ function renderToday() {
     wedReminder.style.display = ((isWedEvening || overdue) && !dismissedToday) ? 'flex' : 'none';
   }
   renderUnloggedBox(now);
+  renderFridayImportant(now);
   // Also include pupils with an extra lesson today
   const todayStudents = students.filter(s => effectiveSlot(s).day === dayName && !isSkipped(s.id) && !s.retired);
   const todayExtras = (extraLessons[currentWeek] || [])
@@ -3056,44 +3074,124 @@ function weekRememberHTML() {
       const sa = effectiveSlot(a), sb = effectiveSlot(b);
       return ((order[sa.day] ?? 9) - (order[sb.day] ?? 9)) || String(sa.time).localeCompare(String(sb.time));
     });
-  const left = people.reduce(function(n, s){ return n + nextNoteLines(s).filter(function(x){ return !x.done; }).length; }, 0);
-  const imps = people.reduce(function(n, s){ return n + nextNoteLines(s).filter(function(x){ return !x.done && isImportantNote(x.text); }).length; }, 0);
   if (!people.length) return '';
+  const count = function(test) { return people.reduce(function(n, s){ return n + nextNoteLines(s).filter(function(x){ return !x.done && test(x.text); }).length; }, 0); };
+  const jobs = count(isImportantNote), urgent = count(isUrgentNote), focus = count(function(t){ return !isImportantNote(t); });
+  const pill = function(txt, bg, fg, bd) { return '<span style="font-size:0.75rem;font-weight:700;background:' + bg + ';color:' + fg + ';border:1.5px solid ' + bd + ';border-radius:999px;padding:2px 10px">' + txt + '</span>'; };
+  // One section: each pupil with the lines that pass the test
+  const section = function(title, sub, test, colour) {
+    const blocks = people.map(function(s) {
+      const items = nextNoteLines(s).map(function(x, i){ return { x: x, i: i }; }).filter(function(o){ return test(o.x.text); })
+        .sort(function(a, b){ return noteLevel(b.x.text) - noteLevel(a.x.text) || a.i - b.i; });
+      if (!items.length) return '';
+      const slot = effectiveSlot(s);
+      return '<div>'
+        + '<div onclick="openStudentFrom(\'' + s.id + '\',\'week\')" style="cursor:pointer;font-size:0.82rem;font-weight:700;color:var(--viola);border-bottom:1px solid var(--warm);padding-bottom:3px;margin-bottom:4px">'
+        + esc(s.name) + ' <span style="font-weight:400;font-size:0.7rem;color:var(--muted)">' + esc((slot.day || '').slice(0, 3)) + (slot.time ? ' ' + esc(slot.time) : '') + ' ›</span></div>'
+        + items.map(function(o) {
+            const x = o.x, i = o.i, lvl = noteLevel(x.text);
+            const bg = lvl === 2 ? '#c0392b' : lvl === 1 ? '#fde7e2' : '';
+            const fg = lvl === 2 ? '#fff;font-weight:700' : lvl === 1 ? '#a3321f;font-weight:700' : 'var(--ink)';
+            return '<div style="display:flex;align-items:flex-start;gap:8px;padding:3px ' + (lvl ? '6px' : '0') + (x.done ? ';opacity:0.55' : '') + (lvl ? ';background:' + bg + ';border-radius:8px;margin:2px 0' : '') + '">'
+              + '<button onclick="weekRememberTick(\'' + s.id + '\',' + i + ')" title="' + (x.done ? 'Tap again to clear' : 'Tick') + '" style="flex:0 0 auto;width:22px;height:22px;border-radius:6px;border:2px solid ' + (lvl === 2 ? '#fff' : 'var(--viola)') + ';background:' + (x.done ? 'var(--viola)' : '#fff') + ';color:#fff;font-size:0.8rem;line-height:1;cursor:pointer;padding:0">' + (x.done ? '✓' : '') + '</button>'
+              + '<span style="flex:1;font-size:0.85rem;color:' + fg + ';' + (x.done ? 'text-decoration:line-through' : '') + '">' + esc(stripNoteLevel(x.text)) + '</span>'
+              + '<button onclick="weekRememberImportant(\'' + s.id + '\',' + i + ')" title="' + NOTE_LEVEL_TITLE + '" style="flex:0 0 auto;background:none;border:none;cursor:pointer;font-size:0.85rem;padding:0 2px;' + (lvl ? '' : 'opacity:0.22;filter:grayscale(1)') + '">' + (lvl === 2 ? '🚨' : '❗') + '</button></div>';
+          }).join('')
+        + '</div>';
+    }).join('');
+    if (!blocks) return '';
+    return '<div style="padding:4px 16px 12px">'
+      + '<div style="font-size:0.85rem;font-weight:700;color:' + colour + ';margin:4px 0 8px">' + title + ' <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">' + sub + '</span></div>'
+      + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px 18px">' + blocks + '</div></div>';
+  };
+  const left = jobs + focus;
   return '<details id="week-remember" ' + (weekRememberOpen ? 'open ' : '') + 'ontoggle="weekRememberOpen=this.open" style="grid-column:1/-1;background:#fff;border:1.5px solid var(--warm);border-radius:14px;padding:0;margin-bottom:14px;box-shadow:var(--shadow)">'
-    + '<summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px 16px;font-size:0.95rem;font-weight:700;color:var(--ink)">'
+    + '<summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 16px;font-size:0.95rem;font-weight:700;color:var(--ink)">'
     + '<span>📌 To remember</span>'
-    + '<span style="font-size:0.75rem;font-weight:600;background:' + (left ? 'var(--string)' : 'var(--soft-green2)') + ';color:var(--ink);border-radius:999px;padding:2px 10px">' + (left ? left + ' to do' : 'all done ✓') + '</span>'
-    + (imps ? '<span style="font-size:0.75rem;font-weight:700;background:#fde7e2;color:#a3321f;border:1.5px solid #f0b4a8;border-radius:999px;padding:2px 10px">❗ ' + imps + ' important</span>' : '')
+    + (left ? '' : pill('all done ✓', 'var(--soft-green2)', 'var(--ink)', 'var(--soft-green2)'))
+    + (urgent ? pill('🚨 ' + urgent + ' urgent', '#c0392b', '#fff', '#c0392b') : '')
+    + (jobs ? pill('❗ ' + jobs + ' to do before', '#fde7e2', '#a3321f', '#f0b4a8') : '')
+    + (focus ? pill('🎻 ' + focus + ' for the lesson', 'var(--string)', 'var(--ink)', 'var(--string)') : '')
     + '<span class="tap-hint" data-closed="tap to open" style="margin-left:auto;font-size:0.75rem;color:var(--muted)"></span></summary>'
-    + '<div style="padding:0 16px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px 18px">'
-    + people.map(function(s) {
-        const slot = effectiveSlot(s);
-        return '<div>'
-          + '<div onclick="openStudentFrom(\'' + s.id + '\',\'week\')" style="cursor:pointer;font-size:0.82rem;font-weight:700;color:var(--viola);border-bottom:1px solid var(--warm);padding-bottom:3px;margin-bottom:4px">'
-          + esc(s.name) + ' <span style="font-weight:400;font-size:0.7rem;color:var(--muted)">' + esc((slot.day || '').slice(0, 3)) + (slot.time ? ' ' + esc(slot.time) : '') + ' ›</span></div>'
-          + nextNoteLines(s).map(function(x, i){ return { x: x, i: i }; })
-              // really important ones first
-              .sort(function(a, b){ return (isImportantNote(b.x.text) ? 1 : 0) - (isImportantNote(a.x.text) ? 1 : 0) || a.i - b.i; })
-              .map(function(o) {
-              const x = o.x, i = o.i, imp = isImportantNote(x.text);
-              return '<div style="display:flex;align-items:flex-start;gap:8px;padding:3px ' + (imp ? '6px' : '0') + (x.done ? ';opacity:0.55' : '') + (imp ? ';background:#fde7e2;border-radius:8px;margin:2px 0' : '') + '">'
-                + '<button onclick="weekRememberTick(\'' + s.id + '\',' + i + ')" title="' + (x.done ? 'Tap again to clear' : 'Tick') + '" style="flex:0 0 auto;width:22px;height:22px;border-radius:6px;border:2px solid var(--viola);background:' + (x.done ? 'var(--viola)' : '#fff') + ';color:#fff;font-size:0.8rem;line-height:1;cursor:pointer;padding:0">' + (x.done ? '✓' : '') + '</button>'
-                + '<span style="flex:1;font-size:0.85rem;color:' + (imp ? '#a3321f;font-weight:700' : 'var(--ink)') + ';' + (x.done ? 'text-decoration:line-through' : '') + '">' + esc(x.text.replace(/^\s*❗\s*/, '')) + '</span>'
-                + '<button onclick="weekRememberImportant(\'' + s.id + '\',' + i + ')" title="' + (imp ? 'Not important' : 'Mark as really important') + '" style="flex:0 0 auto;background:none;border:none;cursor:pointer;font-size:0.85rem;padding:0 2px;' + (imp ? '' : 'opacity:0.22;filter:grayscale(1)') + '">❗</button></div>';
-            }).join('')
-          + '</div>';
-      }).join('')
-    + '</div></details>';
+    + section('❗ Jobs to do before the lesson', 'tick when done', isImportantNote, '#a3321f')
+    + section('🎻 For the lesson', 'shows on their Before tab', function(t){ return !isImportantNote(t); }, 'var(--deep)')
+    + '</details>';
 }
 function weekRememberImportant(id, i) {
   const s = getStudent(id); if (!s) return;
   const lines = nextNoteLines(s); const x = lines[i]; if (!x) return;
-  x.text = isImportantNote(x.text) ? x.text.replace(/^\s*❗\s*/, '') : '❗ ' + x.text;
+  x.text = nextNoteLevelText(x.text);
   s.nextWeekNote = lines.map(function(l){ return (l.done ? '☑ ' : '☐ ') + l.text; }).join('\n');
   save();
   try { refreshNextTicks(s); } catch (e) {}
   const el = document.getElementById('week-remember');
   if (el) el.outerHTML = weekRememberHTML() || '';
+}
+// ── URGENT BANNER (every page) ───────────────────────────────────────────
+// Any unticked 🚨 line from a pupil's "Next lesson" list shows in a red strip
+// under the tabs on every page until it's ticked off.
+function renderUrgentBanner() {
+  const el = document.getElementById('urgent-banner'); if (!el) return;
+  const items = [];
+  (students || []).forEach(function(s) {
+    if (s.retired) return;
+    nextNoteLines(s).forEach(function(x, i){ if (!x.done && isUrgentNote(x.text)) items.push({ s: s, i: i, text: stripNoteLevel(x.text) }); });
+  });
+  el.classList.toggle('on', items.length > 0);
+  el.innerHTML = items.length ? '<strong style="flex:0 0 auto">🚨 Urgent</strong>' + items.map(function(o) {
+      return '<span class="ub-item"><button class="ub-name" onclick="openStudentFrom(\'' + o.s.id + '\',\'today\')"><b>' + esc(o.s.name) + ':</b> ' + esc(o.text) + '</button>'
+        + '<button class="ub-tick" title="Done" onclick="weekRememberTick(\'' + o.s.id + '\',' + o.i + ')"></button></span>';
+    }).join('') : '';
+}
+setTimeout(function(){ try { renderUrgentBanner(); } catch (e) {} }, 0);
+// ── FRIDAY: THE IMPORTANT THINGS ─────────────────────────────────────────
+// On Friday the Today page gathers every ❗ important line from the pupils'
+// "Next lesson" lists that hasn't been ticked yet, so nothing gets forgotten.
+function fridayImportantItems() {
+  const order = {}; DAYS.forEach(function(d, i){ order[d] = i; });
+  return students.filter(function(s){ return !s.retired; })
+    .sort(function(a, b) {
+      const sa = effectiveSlot(a), sb = effectiveSlot(b);
+      return ((order[sa.day] ?? 9) - (order[sb.day] ?? 9)) || String(sa.time).localeCompare(String(sb.time));
+    })
+    .map(function(s) {
+      const items = nextNoteLines(s).map(function(x, i){ return { i: i, text: x.text, done: x.done }; })
+        .filter(function(x){ return !x.done && isImportantNote(x.text); })
+        .sort(function(a, b){ return noteLevel(b.text) - noteLevel(a.text) || a.i - b.i; });
+      return { s: s, items: items };
+    })
+    .filter(function(g){ return g.items.length; });
+}
+function renderFridayImportant(now) {
+  const box = document.getElementById('friday-imp-box'); if (!box) return;
+  now = now || effectiveNow();
+  const hiddenToday = localStorage.getItem('friday_imp_hidden') === new Date().toDateString();
+  if (now.getDay() !== 5 || hiddenToday || !students.length) { box.style.display = 'none'; return; }
+  const groups = fridayImportantItems();
+  box.style.display = 'block';
+  if (!groups.length) {
+    box.innerHTML = '<div style="background:#eef6e6;border:1.5px solid var(--viola);border-radius:12px;padding:10px 16px;margin-bottom:14px;font-size:0.9rem;color:var(--deep)">✅ All jobs done before next week.</div>';
+    return;
+  }
+  const n = groups.reduce(function(t, g){ return t + g.items.length; }, 0);
+  box.innerHTML = '<div style="background:#fdeeea;border:2px solid #e8a397;border-radius:14px;padding:12px 14px;margin-bottom:14px">'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+    + '<span style="font-size:1.2rem">📝</span><strong style="flex:1;font-size:0.95rem;color:#a3321f">Jobs to do before next week · ' + n + '</strong>'
+    + '<button onclick="localStorage.setItem(\'friday_imp_hidden\',new Date().toDateString());document.getElementById(\'friday-imp-box\').style.display=\'none\'" style="background:none;border:none;color:#a3321f;font-family:\'Special Elite\',cursive;font-size:0.75rem;cursor:pointer;text-decoration:underline">Hide today</button></div>'
+    + groups.map(function(g) {
+        const slot = effectiveSlot(g.s);
+        return '<div style="background:#fff;border:1.5px solid #f0c4bb;border-radius:10px;padding:8px 10px;margin-bottom:6px">'
+          + '<button onclick="openStudentFrom(\'' + g.s.id + '\',\'today\')" style="background:none;border:none;padding:0;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.9rem;font-weight:700;color:var(--ink);text-decoration:underline">' + esc(g.s.name) + '</button>'
+          + ' <span style="font-size:0.72rem;color:var(--muted)">' + esc((slot.day || '').slice(0, 3) + (slot.time ? ' ' + slot.time : '')) + '</span>'
+          + g.items.map(function(x) {
+              return '<div style="display:flex;align-items:flex-start;gap:10px;margin-top:6px">'
+                + '<button onclick="weekRememberTick(\'' + g.s.id + '\',' + x.i + ')" title="Done" style="flex:0 0 auto;width:28px;height:28px;border-radius:7px;border:2px solid #e8a397;background:#fff;cursor:pointer"></button>'
+                + '<span style="flex:1;font-size:0.92rem;line-height:1.4;color:#7a2416;font-weight:700;padding-top:3px">' + (isUrgentNote(x.text) ? '🚨 ' : '') + esc(stripNoteLevel(x.text)) + '</span></div>';
+            }).join('')
+          + '</div>';
+      }).join('')
+    + '<div style="font-size:0.72rem;color:#a3321f;margin-top:4px">Tick when done. It\'s ticked off on their Next lesson list too.</div>'
+    + '</div>';
 }
 function weekRememberTick(id, i) {
   const s = getStudent(id); if (!s) return;
@@ -3104,6 +3202,7 @@ function weekRememberTick(id, i) {
   try { refreshNextTicks(s); } catch (e) {}
   const el = document.getElementById('week-remember');
   if (el) el.outerHTML = weekRememberHTML() || '';
+  renderFridayImportant();
 }
 
 function renderWeek() {
@@ -5112,20 +5211,33 @@ function nextLessonItems(s) {
 function nextTicksBoxId(id, where) { return where === 'b' ? 'next-ticks-b-' + id : 'next-ticks-' + id; }
 function nextTickRowHTML(id, item, i, where) {
   const w = where === 'b' ? 'b' : 'a';
-  const imp = isImportantNote(item.text);
-  return '<div class="nt-row' + (item.done ? ' done' : '') + (imp ? ' imp' : '') + '" data-done="' + (item.done ? '1' : '0') + '">'
+  const lvl = noteLevel(item.text);
+  return '<div class="nt-row' + (item.done ? ' done' : '') + (lvl === 1 ? ' imp' : '') + (lvl === 2 ? ' urgent' : '') + '" data-done="' + (item.done ? '1' : '0') + '">'
     + '<button type="button" class="nt-box' + (item.done ? ' done' : '') + '" onclick="toggleNextTick(\'' + id + '\',this,\'' + w + '\')" aria-label="Tick">' + (item.done ? '✓' : '') + '</button>'
     + '<textarea rows="1" class="nt-in" autocapitalize="sentences" autocorrect="off" spellcheck="false" placeholder="' + (i === 0 ? (w === 'b' ? 'Nothing noted last time' : 'What to focus on…') : '') + '"'
-    + ' oninput="autoGrow(this);this.closest(\'.nt-row\').classList.toggle(\'imp\',isImportantNote(this.value));collectNextTicks(\'' + id + '\',\'' + w + '\')" onkeydown="nextTickKey(event,\'' + id + '\',this,\'' + w + '\')">' + esc(item.text) + '</textarea>'
-    + '<button type="button" class="nt-imp" onclick="toggleNextImportant(\'' + id + '\',this,\'' + w + '\')" title="Mark as really important" aria-label="Important">❗</button></div>';
+    + ' oninput="autoGrow(this);ntRowLevel(this.closest(\'.nt-row\'));collectNextTicks(\'' + id + '\',\'' + w + '\')" onkeydown="nextTickKey(event,\'' + id + '\',this,\'' + w + '\')">' + esc(item.text) + '</textarea>'
+    + '<button type="button" class="nt-imp" onclick="toggleNextImportant(\'' + id + '\',this,\'' + w + '\')" title="' + NOTE_LEVEL_TITLE + '" aria-label="Job or urgent">' + (lvl === 2 ? '🚨' : '❗') + '</button></div>';
 }
-// A line starting with ❗ is a really important one
-function isImportantNote(t) { return /^\s*❗/.test(String(t || '')); }
+// Three kinds of "next lesson" line, set by tapping the ❗ button:
+//   plain       = something for the lesson itself
+//   ❗ to do     = a job to do BEFORE the lesson (red)
+//   🚨 urgent   = time-sensitive job, shown in a banner on every page
+function noteLevel(t) { t = String(t || ''); return /^\s*🚨/.test(t) ? 2 : /^\s*❗/.test(t) ? 1 : 0; }
+function stripNoteLevel(t) { return String(t || '').replace(/^\s*(🚨|❗)\s*/, ''); }
+function nextNoteLevelText(t) { const l = noteLevel(t), b = stripNoteLevel(t); return l === 0 ? '❗ ' + b : l === 1 ? '🚨 ' + b : b; }
+function isImportantNote(t) { return noteLevel(t) >= 1; }   // any job to do before (incl. urgent)
+function isUrgentNote(t) { return noteLevel(t) === 2; }
+const NOTE_LEVEL_TITLE = 'Tap: ❗ job to do before the lesson → 🚨 urgent → plain';
+function ntRowLevel(row) {
+  const inp = row.querySelector('.nt-in'); const l = noteLevel(inp ? inp.value : '');
+  row.classList.toggle('imp', l === 1); row.classList.toggle('urgent', l === 2);
+  const b = row.querySelector('.nt-imp'); if (b) b.textContent = l === 2 ? '🚨' : '❗';
+}
 function toggleNextImportant(id, btn, where) {
   const r = btn.closest('.nt-row'); const inp = r.querySelector('.nt-in');
   const t = inp.value.trim(); if (!t) return;
-  inp.value = isImportantNote(t) ? t.replace(/^\s*❗\s*/, '') : '❗ ' + t;
-  r.classList.toggle('imp', isImportantNote(inp.value));
+  inp.value = nextNoteLevelText(t);
+  ntRowLevel(r);
   collectNextTicks(id, where);
 }
 function nextTicksHTML(s, where) {
