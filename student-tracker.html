@@ -3078,32 +3078,42 @@ function weekRememberHTML() {
   const count = function(test) { return people.reduce(function(n, s){ return n + nextNoteLines(s).filter(function(x){ return !x.done && test(x.text); }).length; }, 0); };
   const jobs = count(isImportantNote), urgent = count(isUrgentNote), focus = count(function(t){ return !isImportantNote(t); });
   const pill = function(txt, bg, fg, bd) { return '<span style="font-size:0.75rem;font-weight:700;background:' + bg + ';color:' + fg + ';border:1.5px solid ' + bd + ';border-radius:999px;padding:2px 10px">' + txt + '</span>'; };
-  // One section: each pupil with the lines that pass the test
-  const section = function(title, sub, test, colour) {
-    const blocks = people.map(function(s) {
-      const items = nextNoteLines(s).map(function(x, i){ return { x: x, i: i }; }).filter(function(o){ return test(o.x.text); })
-        .sort(function(a, b){ return noteLevel(b.x.text) - noteLevel(a.x.text) || a.i - b.i; });
-      if (!items.length) return '';
-      const slot = effectiveSlot(s);
-      return '<div>'
-        + '<div onclick="openStudentFrom(\'' + s.id + '\',\'week\')" style="cursor:pointer;font-size:0.82rem;font-weight:700;color:var(--viola);border-bottom:1px solid var(--warm);padding-bottom:3px;margin-bottom:4px">'
-        + esc(s.name) + ' <span style="font-weight:400;font-size:0.7rem;color:var(--muted)">' + esc((slot.day || '').slice(0, 3)) + (slot.time ? ' ' + esc(slot.time) : '') + ' ›</span></div>'
-        + items.map(function(o) {
-            const x = o.x, i = o.i, lvl = noteLevel(x.text);
-            const bg = lvl === 2 ? '#c0392b' : lvl === 1 ? '#fde7e2' : '';
-            const fg = lvl === 2 ? '#fff;font-weight:700' : lvl === 1 ? '#a3321f;font-weight:700' : 'var(--ink)';
-            return '<div style="display:flex;align-items:flex-start;gap:8px;padding:3px ' + (lvl ? '6px' : '0') + (x.done ? ';opacity:0.55' : '') + (lvl ? ';background:' + bg + ';border-radius:8px;margin:2px 0' : '') + '">'
-              + '<button onclick="weekRememberTick(\'' + s.id + '\',' + i + ')" title="' + (x.done ? 'Tap again to clear' : 'Tick') + '" style="flex:0 0 auto;width:22px;height:22px;border-radius:6px;border:2px solid ' + (lvl === 2 ? '#fff' : 'var(--viola)') + ';background:' + (x.done ? 'var(--viola)' : '#fff') + ';color:#fff;font-size:0.8rem;line-height:1;cursor:pointer;padding:0">' + (x.done ? '✓' : '') + '</button>'
-              + '<span style="flex:1;font-size:0.85rem;color:' + fg + ';' + (x.done ? 'text-decoration:line-through' : '') + '">' + esc(stripNoteLevel(x.text)) + '</span>'
-              + '<button onclick="weekRememberImportant(\'' + s.id + '\',' + i + ')" title="' + NOTE_LEVEL_TITLE + '" style="flex:0 0 auto;background:none;border:none;cursor:pointer;font-size:0.85rem;padding:0 2px;' + (lvl ? '' : 'opacity:0.22;filter:grayscale(1)') + '">' + (lvl === 2 ? '🚨' : '❗') + '</button></div>';
-          }).join('')
-        + '</div>';
-    }).join('');
-    if (!blocks) return '';
-    return '<div style="padding:4px 16px 12px">'
-      + '<div style="font-size:0.85rem;font-weight:700;color:' + colour + ';margin:4px 0 8px">' + title + ' <span style="font-weight:400;font-size:0.72rem;color:var(--muted)">' + sub + '</span></div>'
-      + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px 18px">' + blocks + '</div></div>';
+  // Each pupil in their own card. The header colour goes by lesson day,
+  // green (Saturday) through to blue (Wednesday), like the Library tiles.
+  // Inside: 🚨 urgent, then ❗ jobs to do before, then things for the lesson.
+  const DAY_TONES = {
+    Saturday:  ['var(--viola)',  '#fff'],
+    Sunday:    ['var(--string)', 'var(--ink)'],
+    Monday:    ['var(--sky)',    'var(--ink)'],
+    Tuesday:   ['var(--violin)', '#fff'],
+    Wednesday: ['var(--deep)',   '#fff']
   };
+  const cards = people.map(function(s) {
+    const slot = effectiveSlot(s);
+    const tone = DAY_TONES[slot.day] || ['var(--muted)', '#fff'];
+    const items = nextNoteLines(s).map(function(x, i){ return { x: x, i: i }; })
+      .sort(function(a, b){ return noteLevel(b.x.text) - noteLevel(a.x.text) || a.i - b.i; });
+    const firstPlain = items.findIndex(function(o){ return !noteLevel(o.x.text); });
+    const hasJobs = items.some(function(o){ return noteLevel(o.x.text); });
+    return '<div style="background:#fff;border:2px solid ' + tone[0] + ';border-radius:14px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.08)">'
+      + '<div onclick="openStudentFrom(\'' + s.id + '\',\'week\')" style="cursor:pointer;background:' + tone[0] + ';color:' + tone[1] + ';padding:7px 12px;display:flex;align-items:baseline;gap:8px">'
+      + '<span style="font-size:0.95rem;font-weight:700">' + esc(s.name) + '</span>'
+      + '<span style="font-size:0.72rem;opacity:0.85">' + esc((slot.day || '').slice(0, 3)) + (slot.time ? ' ' + esc(slot.time) : '') + '</span>'
+      + '<span style="margin-left:auto;font-size:0.8rem;opacity:0.85">›</span></div>'
+      + '<div style="padding:8px 10px">'
+      + items.map(function(o, n) {
+          const x = o.x, i = o.i, lvl = noteLevel(x.text);
+          const bg = lvl === 2 ? '#c0392b' : lvl === 1 ? '#fde7e2' : '';
+          const fg = lvl === 2 ? '#fff;font-weight:700' : lvl === 1 ? '#a3321f;font-weight:700' : 'var(--ink)';
+          // a thin line between the jobs and the lesson things
+          const divider = (hasJobs && n === firstPlain) ? '<div style="border-top:1.5px dashed var(--warm);margin:6px 0 4px"></div>' : '';
+          return divider + '<div style="display:flex;align-items:flex-start;gap:8px;padding:4px ' + (lvl ? '6px' : '2px') + (x.done ? ';opacity:0.55' : '') + (lvl ? ';background:' + bg + ';border-radius:8px;margin:3px 0' : '') + '">'
+            + '<button onclick="weekRememberTick(\'' + s.id + '\',' + i + ')" title="' + (x.done ? 'Tap again to clear' : 'Tick') + '" style="flex:0 0 auto;width:24px;height:24px;border-radius:6px;border:2px solid ' + (lvl === 2 ? '#fff' : 'var(--viola)') + ';background:' + (x.done ? 'var(--viola)' : '#fff') + ';color:#fff;font-size:0.8rem;line-height:1;cursor:pointer;padding:0">' + (x.done ? '✓' : '') + '</button>'
+            + '<span style="flex:1;font-size:0.88rem;line-height:1.35;color:' + fg + ';' + (x.done ? 'text-decoration:line-through' : '') + '">' + esc(stripNoteLevel(x.text)) + '</span>'
+            + '<button onclick="weekRememberImportant(\'' + s.id + '\',' + i + ')" title="' + NOTE_LEVEL_TITLE + '" style="flex:0 0 auto;background:none;border:none;cursor:pointer;font-size:0.85rem;padding:0 2px;' + (lvl ? '' : 'opacity:0.22;filter:grayscale(1)') + '">' + (lvl === 2 ? '🚨' : '❗') + '</button></div>';
+        }).join('')
+      + '</div></div>';
+  }).join('');
   const left = jobs + focus;
   return '<details id="week-remember" ' + (weekRememberOpen ? 'open ' : '') + 'ontoggle="weekRememberOpen=this.open" style="grid-column:1/-1;background:#fff;border:1.5px solid var(--warm);border-radius:14px;padding:0;margin-bottom:14px;box-shadow:var(--shadow)">'
     + '<summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 16px;font-size:0.95rem;font-weight:700;color:var(--ink)">'
@@ -3113,8 +3123,7 @@ function weekRememberHTML() {
     + (jobs ? pill('❗ ' + jobs + ' to do before', '#fde7e2', '#a3321f', '#f0b4a8') : '')
     + (focus ? pill('🎻 ' + focus + ' for the lesson', 'var(--string)', 'var(--ink)', 'var(--string)') : '')
     + '<span class="tap-hint" data-closed="tap to open" style="margin-left:auto;font-size:0.75rem;color:var(--muted)"></span></summary>'
-    + section('❗ Jobs to do before the lesson', 'tick when done', isImportantNote, '#a3321f')
-    + section('🎻 For the lesson', 'shows on their Before tab', function(t){ return !isImportantNote(t); }, 'var(--deep)')
+    + '<div style="padding:4px 14px 14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;align-items:start">' + cards + '</div>'
     + '</details>';
 }
 function weekRememberImportant(id, i) {
@@ -5241,7 +5250,10 @@ function toggleNextImportant(id, btn, where) {
   collectNextTicks(id, where);
 }
 function nextTicksHTML(s, where) {
-  const items = nextLessonItems(s);
+  // 🚨 urgent and ❗ jobs first, then things for the lesson (order kept within each)
+  const items = nextLessonItems(s).map(function(it, n){ return { it: it, n: n }; })
+    .sort(function(a, b){ return noteLevel(b.it.text) - noteLevel(a.it.text) || a.n - b.n; })
+    .map(function(o){ return o.it; });
   while (items.length < 5) items.push({ done: false, text: '' }); // start with five lines
   return items.map(function(it, i){ return nextTickRowHTML(s.id, it, i, where); }).join('');
 }
