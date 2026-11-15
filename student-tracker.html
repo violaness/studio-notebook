@@ -85,6 +85,7 @@
     box-shadow: 0 3px 10px rgba(5,39,11,0.14); transition: transform 0.08s ease, box-shadow 0.08s ease;
   }
   .before-tile-summary::-webkit-details-marker { display: none; }
+  .wo-watch > summary::-webkit-details-marker { display: none; }
   .before-tiles > details[open] .before-tile-summary { border-radius: 16px 16px 0 0; }
   .before-tiles > details > .before-tile-summary:active { transform: translateY(2px); box-shadow: 0 1px 6px rgba(5,39,11,0.18); }
   .before-tile-icon { font-size: 1.5rem; line-height: 1; }
@@ -4957,6 +4958,8 @@ function saveLog(id) {
     if (!okToLogSecondThisWeek(s, today, null)) return;
     s.log.push({ date: today, text: text, attendance: 'present' });
   }
+  // This lesson's notes become the plan for next lesson
+  s.nextLesson = planFromLessonNotes(text);
   s.duringScratch=''; s.afterDraft=''; save(); el.value=''; delete el.dataset.edited;
   showToast('toast-after-'+id); renderDetail(s, true);
 }
@@ -5897,6 +5900,7 @@ function attachPieceVideo(title, url) {
   if (!pieceVidTarget) return;
   const s = getStudent(pieceVidTarget.sid); if (!s) return;
   if (pieceVidTarget.i === -1) {
+    watchVideosOpen[s.id] = true;   // show the one just added
     if (!s.watchVideos) s.watchVideos = [];
     if (!s.watchVideos.some(function(v){ return v.url === url; })) s.watchVideos.push({ title: title, url: url });
     save(); closePieceVideo(); refreshPiecesList(s); return;
@@ -5959,10 +5963,15 @@ function buildPiecesHTML(s) {
   return group('tech', '🔧 Technical') + group('piece', '🎵 Pieces') + watchVideosHTML(s);
 }
 // Videos to watch that aren't tied to a piece (a masterclass, general technique…)
+// Collapsed until tapped; stays open while you're on that pupil
+const watchVideosOpen = {};
 function watchVideosHTML(s) {
   const vids = s.watchVideos || [];
-  return '<div class="wo-group wo-watch"><div class="wo-label"><span>🎬 Videos to watch</span>'
-    + '<button class="wo-add" onclick="openPieceVideo(\'' + s.id + '\',-1)">＋ Add</button></div>'
+  return '<details class="wo-group wo-watch"' + (watchVideosOpen[s.id] ? ' open' : '') + ' ontoggle="watchVideosOpen[\'' + s.id + '\']=this.open">'
+    + '<summary class="wo-label" style="list-style:none;cursor:pointer"><span>🎬 Videos to watch'
+    + (vids.length ? ' <span style="font-size:0.72rem;font-weight:700;background:#e3f4fa;color:var(--violin);border:1.5px solid var(--violin);border-radius:999px;padding:0 8px;margin-left:4px">' + vids.length + '</span>' : '')
+    + '</span><span class="tap-hint" data-closed="tap to open" style="margin-left:auto;font-size:0.72rem;font-weight:400;color:var(--muted)"></span></summary>'
+    + '<div style="display:flex;justify-content:flex-end;margin:2px 0 4px"><button class="wo-add" onclick="openPieceVideo(\'' + s.id + '\',-1)">＋ Add a video</button></div>'
     + (vids.length ? '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px 2px">' + vids.map(function(v, n) {
         return '<span style="display:inline-flex;align-items:center;gap:2px;background:#e3f4fa;border:1.5px solid var(--violin);border-radius:999px;padding:0 4px 0 0;max-width:100%">'
           + '<button onclick="openVideoLink(\'' + escJs(v.url) + '\')" style="background:none;border:none;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.78rem;color:var(--ink);padding:4px 4px 4px 10px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px">🎬 ' + esc(v.title || v.url) + '</button>'
@@ -5970,7 +5979,7 @@ function watchVideosHTML(s) {
           + '</span>';
       }).join('') + '</div>'
       : '<div style="font-size:0.75rem;color:var(--muted);font-style:italic;margin:0 0 4px 2px">A masterclass or technique video, not tied to a piece</div>')
-    + '</div>';
+    + '</details>';
 }
 function removeWatchVideo(sid, n) {
   const s = getStudent(sid); if (!s || !s.watchVideos || !s.watchVideos[n]) return;
@@ -12187,21 +12196,46 @@ function updateTermInfo() {
 }
 
 // ── COPY LAST LESSON ──────────────────────────────────────────────────────
+// What a lesson's notes become as the plan for the NEXT lesson: just the
+// notes from that lesson (the "During lesson" part), not the plan that was
+// already in them, so plans don't pile up week after week.
+function planFromLessonNotes(text) {
+  let t = String(text || '');
+  const during = t.search(/📝 During lesson:/);
+  if (during >= 0) t = t.slice(during).replace(/^📝 During lesson:\n?/, '');
+  else t = t.replace(/^📌 Plan:\n[\s\S]*?(\n\n|$)/, '');
+  t = t.replace(/^🎻 Scales this week:.*$/m, '')
+       .replace(/\n*✅ Scales done this lesson:[\s\S]*?(?=\n\n|\n📝|$)/m, '')
+       .trim();
+  if (!t) t = String(text || '').replace(/^📌 Plan:\n?/m, '').replace(/^📝 During lesson:\n?/m, '').trim();
+  return t;
+}
 function copyLastLesson(id) {
   const s = getStudent(id); if (!s) return;
   const lastNote = [...(s.log||[])].filter(e=>e.text).pop();
   if (!lastNote) return;
-  let text = lastNote.text;
-  text = text.replace(/^📌 Plan:\n?/m, '');
-  text = text.replace(/\n*🎻 Scales this week:.*$/m, '');
-  text = text.replace(/\n*✅ Scales done this lesson:[\s\S]*?(?=\n\n|\n📝|$)/m, '');
-  text = text.replace(/\n*📝 During lesson:\n?/m, '\n\n');
-  text = text.trim();
-  // If stripping left nothing useful, use the raw text instead
-  if (!text) text = lastNote.text.trim();
-  s.nextLesson = text;
+  s.nextLesson = planFromLessonNotes(lastNote.text);
   save(); renderDetail(s);
 }
+// One-time catch-up: any pupil whose plan was already used in their last
+// lesson (or is empty) gets that lesson's notes as their plan instead.
+// A plan written since the last lesson is left alone.
+(function planFromLastLessonOnce() {
+  try {
+    if (localStorage.getItem('studio_plan_from_last_v1')) return;
+    let changed = false;
+    students.forEach(function(s) {
+      const last = [...(s.log || [])].filter(function(e){ return e.text && e.text.trim(); }).pop();
+      if (!last) return;
+      const plan = String(s.nextLesson || '').replace(/^📌 Plan:\n?/, '').trim();
+      if (plan && last.text.indexOf(plan) === -1) return;   // a fresh plan: keep it
+      const next = planFromLessonNotes(last.text);
+      if (next && next !== plan) { s.nextLesson = next; changed = true; }
+    });
+    if (changed) localStorage.setItem('studio_students', JSON.stringify(students));
+    localStorage.setItem('studio_plan_from_last_v1', '1');
+  } catch (e) { console.error('plan catch-up', e); }
+})();
 
 // ── LESSON COUNT ──────────────────────────────────────────────────────────
 // Parse a log entry's date string ("17 Oct 2026") to a Date, robustly.
