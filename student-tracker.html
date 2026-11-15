@@ -2701,6 +2701,54 @@ function todayDayName() {
 // The date string a lesson is logged/matched against. Uses effectiveNow() so a
 // note or attendance saved after midnight (before 1am) is dated to the lesson
 // you actually taught, not the new calendar day - important for billing.
+// ── LESSON DATE (for logging a lesson a day or two late) ─────────────────
+// The After tab has a date next to "Save to lesson log". It starts on the
+// pupil's lesson day this week if that was in the last few days and hasn't
+// been written up yet; otherwise today. Saving notes and the attendance
+// buttons both use it.
+function logDateStr(d) { return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); }
+function isoLocal(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+// Add a log entry in date order (matters when logging a lesson late)
+function insertLogInOrder(s, entry) {
+  if (!s.log) s.log = [];
+  const d = parseLogDate(entry.date); let at = s.log.length;
+  if (d) while (at > 0 && (parseLogDate(s.log[at - 1].date) || 0) > d) at--;
+  s.log.splice(at, 0, entry);
+}
+function defaultLessonDate(s) {
+  const today = effectiveNow(); today.setHours(12, 0, 0, 0);
+  const day = effectiveSlot(s).day;
+  const jsDayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  if (!day || jsDayName[today.getDay()] === day) return today;
+  for (let back = 1; back <= 6; back++) {
+    const d = new Date(today); d.setDate(today.getDate() - back);
+    if (jsDayName[d.getDay()] !== day) continue;
+    const e = (s.log || []).find(function(x){ return x.date === logDateStr(d); });
+    return (e && String(e.text || '').trim()) ? today : d;   // already written up: use today
+  }
+  return today;
+}
+function lessonDateFor(s) {
+  const el = document.getElementById('log-date-' + s.id);
+  if (el && el.value) { const [y, m, d] = el.value.split('-').map(Number); return logDateStr(new Date(y, m - 1, d, 12)); }
+  return logDateStr(defaultLessonDate(s));
+}
+function lessonDateHint(id) {
+  const el = document.getElementById('log-date-' + id), h = document.getElementById('log-date-hint-' + id);
+  if (!el || !h) return;
+  const [y, m, d] = el.value.split('-').map(Number); const t = effectiveNow(); t.setHours(12, 0, 0, 0);
+  const diff = Math.round((t - new Date(y, m - 1, d, 12)) / 86400000);
+  h.textContent = diff === 0 ? 'today' : diff === 1 ? 'yesterday' : diff > 1 ? diff + ' days ago' : 'future';
+  el.style.borderColor = diff === 0 ? '#d6ddd2' : '#e67e22';
+  h.style.color = diff === 0 ? 'var(--muted)' : '#b7791f';
+}
+function lessonDatePickerHTML(s) {
+  const d = defaultLessonDate(s); const t = effectiveNow();
+  setTimeout(function(){ lessonDateHint(s.id); }, 0);
+  return '<label style="display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--muted)">📅'
+    + '<input type="date" id="log-date-' + s.id + '" value="' + isoLocal(d) + '" max="' + isoLocal(t) + '" onchange="lessonDateHint(\'' + s.id + '\')" style="font-family:\'Special Elite\',cursive;font-size:0.85rem;padding:6px 8px;border:1.5px solid #d6ddd2;border-radius:8px;background:#fff;color:var(--ink)">'
+    + '<span id="log-date-hint-' + s.id + '" style="font-size:0.75rem"></span></label>';
+}
 function todayLogDate() {
   return effectiveNow().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
 }
@@ -3897,7 +3945,10 @@ function renderDetail(s, preserveTab = false) {
           </div>
         </details>
 
-        <button class="save-btn" onclick="saveLog('${s.id}')">Save to lesson log</button>
+        <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:10px">
+          ${lessonDatePickerHTML(s)}
+          <button class="save-btn" style="margin:0" onclick="saveLog('${s.id}')">Save to lesson log</button>
+        </div>
         <div class="save-toast" id="toast-after-${s.id}">✓ Added to log</div>
       </div>
       <div class="section-card" style="background:var(--soft-green);border:1.5px solid var(--piece-bd)">
@@ -3912,7 +3963,7 @@ function renderDetail(s, preserveTab = false) {
       </div>
       <div class="section-card">
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
-          <span>Attendance - today's lesson <span class="save-toast" id="toast-attendance-${s.id}" style="display:inline;margin:0 0 0 8px;font-size:0.72rem">✓ Saved</span></span>
+          <span>Attendance - this lesson <span style="font-weight:400;font-size:0.7rem;color:var(--muted)">(uses the 📅 date above)</span> <span class="save-toast" id="toast-attendance-${s.id}" style="display:inline;margin:0 0 0 8px;font-size:0.72rem">✓ Saved</span></span>
           ${(()=>{ const last=(s.log||[]).slice(-1)[0]; return last&&last.attendance?`<button onclick="clearAttendance('${s.id}')" style="background:none;border:none;font-size:0.72rem;font-weight:400;color:var(--muted);cursor:pointer;padding:2px 6px;text-decoration:underline">Clear attendance</button>`:''; })()}
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -4943,7 +4994,7 @@ function saveLog(id) {
   if(!el)return;
   const text=el.value.trim(); if(!text)return;
   if(!s.log)s.log=[];
-  const today = todayLogDate();
+  const today = lessonDateFor(s);   // the date chosen next to the Save button
   // If an entry for today already exists (e.g. you tapped an attendance button
   // first), merge the notes into it rather than creating a duplicate. Otherwise
   // make a new entry. Either way, default attendance to Present when nothing has
@@ -4952,11 +5003,13 @@ function saveLog(id) {
   let entry = s.log.find(e => e.date === today);
   if (entry) {
     if (!entry.attendance && !okToLogSecondThisWeek(s, today, entry)) return;
+    if (entry.text && entry.text.trim() && entry.text.trim() !== text &&
+        !confirm('There are already notes saved for ' + today + '.\n\nReplace them with these?')) return;
     entry.text = text;
     if (!entry.attendance) entry.attendance = 'present';
   } else {
     if (!okToLogSecondThisWeek(s, today, null)) return;
-    s.log.push({ date: today, text: text, attendance: 'present' });
+    insertLogInOrder(s, { date: today, text: text, attendance: 'present' });
   }
   // This lesson's notes become the plan for next lesson
   s.nextLesson = planFromLessonNotes(text);
@@ -14038,10 +14091,10 @@ function resetInvoiceLogo() { delete invoiceSettings.logo; save(); renderInvoice
 function setAttendance(id, status) {
   const s = getStudent(id); if (!s) return;
   if (!s.log) s.log = [];
-  const today = todayLogDate();
+  const today = lessonDateFor(s);   // same date as the Save to lesson log button
   let entry = s.log.find(e => e.date === today);
   if ((!entry || !entry.attendance) && !okToLogSecondThisWeek(s, today, entry || null)) return;
-  if (!entry) { entry = { date: today, text: '', attendance: status }; s.log.push(entry); }
+  if (!entry) { entry = { date: today, text: '', attendance: status }; insertLogInOrder(s, entry); }
   else { entry.attendance = status; }
   save(); showToast('toast-attendance-' + id); renderDetail(s, true);
 }
