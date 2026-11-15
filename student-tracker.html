@@ -7155,7 +7155,9 @@ function buildCumulativeNote(s) {
 
 function refSummary(s) {
   var pieces        = piecesDisplay(s);
-  var scales        = (s.scales||[]);
+  // s.scales is left over from an old scale tracker that's no longer in the
+  // app (the Scale checklist replaced it), so it can't be edited: don't show it.
+  var scales        = [];
   var scalesWeek    = (s.scalesThisWeek||[]);
   var tech          = []; // Technical focus pills were taken off the Before tab
   var plan          = (s.nextLesson||'').trim();
