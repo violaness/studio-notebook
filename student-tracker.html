@@ -2934,6 +2934,7 @@ function renderToday() {
     wedReminder.style.display = ((isWedEvening || overdue) && !dismissedToday) ? 'flex' : 'none';
   }
   renderUnloggedBox(now);
+  refreshAllPlans();
   renderFridayImportant(now);
   // Also include pupils with an extra lesson today
   const todayStudents = students.filter(s => effectiveSlot(s).day === dayName && !isSkipped(s.id) && !s.retired);
@@ -3676,7 +3677,48 @@ function switchMoment(tab, panel) {
 // Tracks which <details> sections are open per student, persists across renderDetail calls
 const openDetailSections = {};
 
+// ── PLAN = LAST LESSON'S NOTES ───────────────────────────────────────────
+// Whenever a pupil is opened (or Today is shown), if a newer lesson has been
+// written up than the one the plan came from, and you haven't typed in the
+// plan since that lesson, the plan becomes that lesson's notes. Anything that
+// was in the plan before is kept: "↩ Previous plan" swaps it back.
+function updatePlan(id, val) {
+  const s = getStudent(id); if (!s) return;
+  s.nextLesson = val; s.planEditedAt = new Date().toISOString(); save();
+}
+function lastWrittenLesson(s) {
+  let best = null, bestD = null;
+  (s.log || []).forEach(function(e) {
+    if (!e.text || !String(e.text).trim()) return;
+    const d = parseLogDate(e.date); if (!d) return;
+    if (!bestD || d >= bestD) { best = e; bestD = d; }
+  });
+  return best ? { e: best, d: bestD } : null;
+}
+function refreshPlanFromLastLesson(s) {
+  if (!s || s.retired) return false;
+  const last = lastWrittenLesson(s); if (!last) return false;
+  if (s.planFromDate === last.e.date) return false;            // already from that lesson
+  if (s.planEditedAt && new Date(s.planEditedAt) >= last.d) return false;   // you wrote a plan since
+  const next = planFromLessonNotes(last.e.text);
+  const cur = String(s.nextLesson || '').trim();
+  if (cur && cur !== next && last.e.text.indexOf(cur) === -1) s.planPrevious = s.nextLesson;  // keep it
+  s.nextLesson = next; s.planFromDate = last.e.date; delete s.planEditedAt;
+  return true;
+}
+function refreshAllPlans() {
+  let changed = false;
+  (students || []).forEach(function(s){ if (refreshPlanFromLastLesson(s)) changed = true; });
+  if (changed) save();
+}
+function swapPreviousPlan(id) {
+  const s = getStudent(id); if (!s || !s.planPrevious) return;
+  const was = s.nextLesson; s.nextLesson = s.planPrevious; s.planPrevious = was;
+  s.planEditedAt = new Date().toISOString();
+  save(); renderDetail(s, true);
+}
 function renderDetail(s, preserveTab = false) {
+  if (refreshPlanFromLastLesson(s)) save();
   const el = document.getElementById('detail-content');
   const slot = effectiveSlot(s);
 
@@ -3831,12 +3873,13 @@ function renderDetail(s, preserveTab = false) {
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
           <span>📌 Plan for today's lesson</span>
           <span style="display:flex;gap:6px;align-items:center">
+            ${s.planPrevious ? `<button onclick="swapPreviousPlan('${s.id}')" title="Swap back to the plan that was here before" style="background:none;border:none;color:var(--violin);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">↩ Previous plan</button>` : ''}
             ${s.nextLesson ? `<button onclick="clearNextLessonPlan('${s.id}')" style="background:none;border:none;color:var(--muted);font-size:0.72rem;cursor:pointer;padding:2px 6px;text-decoration:underline">🗑 Clear</button>` : ''}
           </span>
         </div>
         <textarea autocorrect="off" autocapitalize="sentences" spellcheck="false" rows="10" placeholder="What you want to cover today…" class="lined-note"
           id="nextlesson-${s.id}"
-          oninput="updateField('${s.id}','nextLesson',this.value)">${esc(s.nextLesson||'')}</textarea>
+          oninput="updatePlan('${s.id}',this.value)">${esc(s.nextLesson||'')}</textarea>
         ${(s.log||[]).filter(e=>e.text).length > 0 && !(s.nextLesson||'').trim() ? '<button onclick="copyLastLesson(\'' + s.id + '\')" style="margin-top:8px;background:none;border:1.5px dashed var(--viola);color:var(--viola);border-radius:8px;padding:6px 12px;font-size:0.8rem;cursor:pointer;width:100%">\u2191 Copy last lesson notes as plan</button>' : ''}
       </div>
       </div>
@@ -4606,7 +4649,7 @@ function updateField(id, field, val) { const s=getStudent(id); if(s){s[field]=va
 function clearNextLessonPlan(id, fromDuring) {
   const s = getStudent(id); if (!s) return;
   if (!confirm('Clear the plan from last lesson?')) return;
-  s.nextLesson = '';
+  s.nextLesson = ''; s.planEditedAt = new Date().toISOString();
   save();
   renderDetail(s);
   document.querySelectorAll('.moment-tab').forEach(t => {
@@ -5100,6 +5143,7 @@ function saveLog(id) {
   }
   // This lesson's notes become the plan for next lesson
   s.nextLesson = planFromLessonNotes(text);
+  s.planFromDate = today; delete s.planEditedAt; delete s.planPrevious;
   s.duringScratch=''; s.afterDraft=''; save(); el.value=''; delete el.dataset.edited;
   showToast('toast-after-'+id); renderDetail(s, true);
 }
@@ -15042,6 +15086,7 @@ function libPickAdd(title, ref) {
   if (libPickGetDest() === 'plan') {
     const cur = String(s.nextLesson || '').replace(/\s+$/, '');
     s.nextLesson = cur ? cur + '\n' + label : label;
+    s.planEditedAt = new Date().toISOString();
     const ta = document.getElementById('nextlesson-' + s.id);
     if (ta) ta.value = s.nextLesson;
   } else {
