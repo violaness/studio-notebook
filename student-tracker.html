@@ -2143,7 +2143,8 @@ snApplyTheme();
     <input type="hidden" id="edit-lib-piece-idx">
     <div class="field-group">
       <label class="field-label">Title</label>
-      <input type="text" id="edit-lib-piece-title" placeholder="Title">
+      <input type="text" id="edit-lib-piece-title" placeholder="Title" oninput="libDupCheck()">
+      <div id="edit-lib-dup" style="display:none"></div>
     </div>
     <div class="field-group">
       <label class="field-label">Composer (optional)</label>
@@ -2984,7 +2985,7 @@ function renderToday() {
     const entry = (s.log||[]).find(e => e.date === todayStr2);
     return !entry || !entry.attendance || entry.attendance === 'present';
   });
-  const todayMins = presentToday.reduce((sum, s) => sum + parseInt(s.duration||60), 0);
+  const todayMins = presentToday.reduce((sum, s) => sum + lenOn(s, effectiveNow()), 0);
   const todayHrs = Math.floor(todayMins/60);
   const todayRemMins = todayMins % 60;
   const todayHrsLabel = todayHrs > 0 ? todayHrs + 'h' + (todayRemMins>0?' '+todayRemMins+'m':'') : todayRemMins+'m';
@@ -3015,7 +3016,7 @@ function renderToday() {
         <div class="ls-avatar avatar-${s.instrument}" style="${markedAbsentToday?'opacity:0.4;':''}">${getInitials(s.name)}</div>
         <div class="ls-info">
           <div class="ls-name" style="${markedAbsentToday?'color:var(--muted);text-decoration:line-through;':''}">${s.name}${isNext?`<span class="next-badge${isImminent?' imminent':''}">Next</span>`:''}${s.followUp?'<span style="font-size:0.85rem;margin-left:6px" title="Follow up">🚩</span>':''}${markedAbsentToday?'<span style="font-size:0.68rem;color:#c0392b;font-weight:700;margin-left:6px;text-decoration:none;display:inline-block">absent</span>':''}</div>
-          <div class="ls-time">${slot.time || 'time not set'} · ${instrDot(s.instrument)}${s.instrument} · ${s.level}</div>
+          <div class="ls-time">${slot.time || 'time not set'} · ${instrDot(s.instrument)}${s.instrument} · ${s.level}${lenBadge(lenOn(s, effectiveNow()), s, 'today')}</div>
         </div>
         <div class="ls-chevron">›</div>
       </div>
@@ -3315,7 +3316,7 @@ function renderWeek() {
       return att && att.attendance && att.attendance !== 'present';
     }
     const presentStudents = activeStudents.filter(s => !isAbsentThisWeek(s));
-    const dayMins = onHoliday ? 0 : (presentStudents.reduce((sum, s) => sum + parseInt(s.duration||60), 0)
+    const dayMins = onHoliday ? 0 : (presentStudents.reduce((sum, s) => sum + lenThisWeek(s, day), 0)
                   + dayExtras.reduce((sum, e) => { const st = getStudent(e.studentId); return sum + parseInt((st&&st.duration)||60); }, 0));
     weekTotalMins += dayMins;
     const dayHrs = Math.floor(dayMins/60), dayRem = dayMins%60;
@@ -3351,7 +3352,8 @@ function renderWeek() {
       if (prevEndMins !== null && slotStart - prevEndMins >= 30) {
         html += gapHTML(minsToTime(prevEndMins), slot.time||'');
       }
-      prevEndMins = slotStart + parseInt(s.duration||60);
+      const thisLen = lenThisWeek(s, day);
+      prevEndMins = slotStart + thisLen;
       const moved = oneOffMoves[s.id] && oneOffMoves[s.id].week === currentWeek;
       // Find attendance for this pupil in the current teaching week
       // (match any log entry whose date falls within Sat–Wed of this week)
@@ -3376,11 +3378,11 @@ function renderWeek() {
         ? `<span style="font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:999px;border:1.5px dashed #ccc;color:#999;margin-left:6px;vertical-align:middle" title="Cancelled">–</span>`
         : '';
       const isAbsent = att === 'absent-late' || att === 'absent-notice';
-      html += `<div class="week-slot ${s.instrument}-slot dur-${s.duration||'60'}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer${isAbsent ? ';border:1px dashed #ddd;opacity:0.4;background:#fafafa' : onHoliday ? ';opacity:0.35;filter:grayscale(0.5)' : ''}">
+      html += `<div class="week-slot ${s.instrument}-slot dur-${thisLen}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer${isAbsent ? ';border:1px dashed #ddd;opacity:0.4;background:#fafafa' : onHoliday ? ';opacity:0.35;filter:grayscale(0.5)' : ''}">
         <div class="slot-time">${slot.time||'-'}</div>
         <div class="slot-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
         <div class="slot-info">
-          <div class="slot-name">${s.name}${attBadge}${s.followUp?` <span style="font-size:0.85rem" title="Follow up">🚩</span>`:''}${moved?` <span style="font-size:0.68rem;color:var(--violin);font-weight:700">MOVED</span>`:''}${s.frequency==='fortnightly'?' <span style="font-size:0.68rem;color:var(--muted);font-weight:600">fortnightly</span>':''}
+          <div class="slot-name">${s.name}${attBadge}${lenBadge(thisLen, s)}${s.followUp?` <span style="font-size:0.85rem" title="Follow up">🚩</span>`:''}${moved?` <span style="font-size:0.68rem;color:var(--violin);font-weight:700">MOVED</span>`:''}${s.frequency==='fortnightly'?' <span style="font-size:0.68rem;color:var(--muted);font-weight:600">fortnightly</span>':''}
           </div>
         </div>
         <div class="slot-actions">
@@ -3757,23 +3759,23 @@ function renderDetail(s, preserveTab = false) {
         <div style="grid-column:1/-1">
           <details id="followup-box-${s.id}">
             <summary style="font-size:0.68rem;font-weight:700;color:#e67e22;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-              <span>🚩 Follow-up note</span><span class="tap-hint" data-closed="tap to open" style="font-weight:400;font-size:0.65rem"></span>
+              <span>🚩 Follow-up note ${ldCountHTML(s.id,'followUpNote',ldLineCount((s.littleDetails||{}).followUpNote),'#e67e22')}</span><span class="tap-hint" data-closed="tap to open" style="font-weight:400;font-size:0.65rem"></span>
             </summary>
             <textarea placeholder="Reason for flag…" id="followup-note-${s.id}"
-              oninput="autoGrow(this);updateLittleDetail('${s.id}','followUpNote',this.value)"
+              oninput="autoGrow(this);updateLittleDetail('${s.id}','followUpNote',this.value);ldCountRefresh('${s.id}','followUpNote',ldLineCount(this.value))"
               style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #f5c99a;font-family:'Special Elite',cursive;font-size:0.85rem;background:#fffaf5;color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:50px;margin-top:4px">${esc((s.littleDetails||{}).followUpNote||'')}</textarea>
           </details>
           <details style="margin-top:8px">
             <summary style="font-size:0.68rem;font-weight:700;color:var(--violin);text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-              <span>👁 Observations</span><span class="tap-hint" data-closed="tap to open" style="font-weight:400;font-size:0.65rem"></span>
+              <span>👁 Observations ${ldCountHTML(s.id,'observations',ldLineCount((s.littleDetails||{}).observations),'var(--violin)')}</span><span class="tap-hint" data-closed="tap to open" style="font-weight:400;font-size:0.65rem"></span>
             </summary>
             <textarea placeholder="Things you've noticed… learning style, what works, patterns, moments…"
-              oninput="autoGrow(this);updateLittleDetail('${s.id}','observations',this.value)"
+              oninput="autoGrow(this);updateLittleDetail('${s.id}','observations',this.value);ldCountRefresh('${s.id}','observations',ldLineCount(this.value))"
               style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #c8dce8;font-family:'Special Elite',cursive;font-size:0.85rem;background:#f5f9fc;color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:60px;margin-top:4px">${esc((s.littleDetails||{}).observations||'')}</textarea>
           </details>
           <details style="margin-top:8px">
             <summary style="font-size:0.68rem;font-weight:700;color:#c0622f;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-              <span>🎁 Gifts</span><span class="tap-hint" data-closed="tap to open" style="font-weight:400;font-size:0.65rem"></span>
+              <span>🎁 Gifts ${ldCountHTML(s.id,'gifts',getGiftList(s).length,'#c0622f')}</span><span class="tap-hint" data-closed="tap to open" style="font-weight:400;font-size:0.65rem"></span>
             </summary>
             <div id="gift-list-${s.id}">${giftListHTML(s)}</div>
             <div style="display:flex;gap:6px;margin-top:8px">
@@ -3785,10 +3787,10 @@ function renderDetail(s, preserveTab = false) {
           </details>
           <details style="margin-top:8px">
             <summary style="font-size:0.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-              <span>📝 Free notes</span><span class="tap-hint" data-closed="tap to open" style="font-weight:400;font-size:0.65rem"></span>
+              <span>📝 Free notes ${ldCountHTML(s.id,'freeNotes',ldLineCount((s.littleDetails||{}).freeNotes),'var(--muted)')}</span><span class="tap-hint" data-closed="tap to open" style="font-weight:400;font-size:0.65rem"></span>
             </summary>
             <textarea placeholder="Anything else to remember…"
-              oninput="autoGrow(this);updateLittleDetail('${s.id}','freeNotes',this.value)"
+              oninput="autoGrow(this);updateLittleDetail('${s.id}','freeNotes',this.value);ldCountRefresh('${s.id}','freeNotes',ldLineCount(this.value))"
               style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #e0ddd8;font-family:'Special Elite',cursive;font-size:0.85rem;background:var(--paper);color:var(--ink);box-sizing:border-box;resize:none;overflow:hidden;min-height:70px;margin-top:4px">${esc((s.littleDetails||{}).freeNotes||'')}</textarea>
           </details>
         </div>
@@ -3855,7 +3857,7 @@ function renderDetail(s, preserveTab = false) {
         <summary class="before-tile-summary" style="background:var(--violin)">
           <span class="before-tile-icon">🔁</span>
           <span class="before-tile-label">Lesson moves</span>
-          ${(s.requestedMoves&&s.requestedMoves.filter(m=>new Date(m.fromDate)>=new Date()).length)?`<span class="before-tile-badge">${s.requestedMoves.filter(m=>new Date(m.fromDate)>=new Date()).length}</span>`:''}
+          ${(()=>{ const n=(s.requestedMoves||[]).filter(m=>new Date(m.fromDate)>=new Date()).length + Object.keys(s.lengthChanges||{}).filter(k=>k>=isoLocal(new Date())).length; return n?`<span class="before-tile-badge">${n}</span>`:''; })()}
         </summary>
         <div class="section-card before-tile-body" style="margin-top:0;border:1.5px solid var(--violin);border-top:none">
           <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px">For a one-off lesson change on a future date - e.g. moving a lesson in 3 weeks' time. This doesn't change the pupil's regular weekly slot.</div>
@@ -3884,6 +3886,22 @@ function renderDetail(s, preserveTab = false) {
             </div>
             <button onclick="addRequestedMove('${s.id}')"
               style="background:var(--viola);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-family:'Special Elite',cursive;font-size:0.85rem;font-weight:600;cursor:pointer;display:block;margin:0 auto;min-width:160px">+ Add requested move</button>
+          </div>
+          <div style="border-top:1.5px dashed var(--warm);margin-top:14px;padding-top:12px">
+            <div style="font-size:0.85rem;font-weight:700;color:var(--deep);margin-bottom:4px">⏱ Longer or shorter lesson</div>
+            <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px">For one date only, e.g. an hour instead of half an hour. The invoice adds a line for the extra time.</div>
+            ${lengthChangesHTML(s)}
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:8px">
+              <label style="flex:1;min-width:150px;font-size:0.68rem;font-weight:700;color:var(--muted)">Date
+                <input type="date" id="len-date-${s.id}" style="display:block;width:100%;min-height:44px;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);box-sizing:border-box;margin-top:4px">
+              </label>
+              <label style="font-size:0.68rem;font-weight:700;color:var(--muted)">Length
+                <select id="len-mins-${s.id}" style="display:block;min-height:44px;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);margin-top:4px">
+                  ${[30,45,60,75,90,120].map(m => `<option value="${m}"${m === (normalLen(s) === 30 ? 60 : normalLen(s) + 30) ? ' selected' : ''}>${m} min</option>`).join('')}
+                </select>
+              </label>
+              <button onclick="addLengthChange('${s.id}')" style="background:#e67e22;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;min-height:44px">+ Add</button>
+            </div>
           </div>
         </div>
       </details>
@@ -4307,6 +4325,72 @@ function absencesHTML(s) {
   }).join('');
 }
 
+// ── LONGER (OR SHORTER) LESSON ON ONE DATE ───────────────────────────────
+// s.lengthChanges = { 'YYYY-MM-DD': minutes }. Changes the length for that
+// one lesson only: the Week and Today pages show it, and invoices add a line
+// for the extra time.
+function weekDayDate(day) {
+  const [y, m, d] = currentWeek.split('-').map(Number);
+  const dt = new Date(y, m - 1, d, 12); dt.setDate(dt.getDate() + Math.max(0, DAYS.indexOf(day)));
+  return dt;
+}
+function normalLen(s) { return parseInt((s && s.duration) || 60); }
+function lenOn(s, dt) { const ch = (s.lengthChanges || {})[isoLocal(dt)]; return parseInt(ch || normalLen(s)); }
+function lenThisWeek(s, day) { return lenOn(s, weekDayDate(day || effectiveSlot(s).day)); }
+function entryLen(s, e) { const d = parseLogDate(e.date); return d ? lenOn(s, d) : normalLen(s); }
+// What a lesson of a different length costs compared with a normal one
+function lenPriceDiff(s, len) {
+  const norm = normalLen(s), rate = pupilRate(s); if (!rate || len === norm) return 0;
+  if (!pupilRateIsOwn(s)) {
+    const pre = s.scheme === 'latestarter' ? 'ls' : '';
+    const a = parseFloat((studioRates || {})[pre + len]), b = parseFloat((studioRates || {})[pre + norm]);
+    if (a && b) return a - b;
+  }
+  return rate * (len / norm - 1);
+}
+function extraTimeLines(s, from, to) {
+  const norm = normalLen(s);
+  return (s.log || []).filter(function(e) {
+    if (e.attendance !== 'present' && e.attendance !== 'absent-late') return false;
+    const d = parseLogDate(e.date);
+    return d && (!from || d >= from) && (!to || d <= to) && entryLen(s, e) !== norm;
+  }).map(function(e) {
+    const len = entryLen(s, e);
+    return { text: (len > norm ? 'Extra time: ' : 'Shorter lesson: ') + e.date + ' (' + len + ' min instead of ' + norm + ')', amt: lenPriceDiff(s, len) };
+  }).filter(function(l){ return l.amt; });
+}
+function extraTimeAmount(s, from, to) { return extraTimeLines(s, from, to).reduce(function(t, l){ return t + l.amt; }, 0); }
+function lessonMoneyInRange(s, from, to) { return chargeableInRange(s, from, to) * pupilRate(s) + extraTimeAmount(s, from, to); }
+function lengthChangesHTML(s) {
+  const today = isoLocal(new Date());
+  const list = Object.keys(s.lengthChanges || {}).sort().filter(function(k){ return k >= today; });
+  if (!list.length) return '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;margin:4px 0">None booked.</p>';
+  return list.map(function(k) {
+    const [y, m, d] = k.split('-').map(Number);
+    const lbl = new Date(y, m - 1, d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--warm)">'
+      + '<span style="flex:1;font-size:0.88rem">⏱ ' + esc(lbl) + ': <strong>' + s.lengthChanges[k] + ' min</strong> <span style="color:var(--muted);font-size:0.75rem">(normally ' + normalLen(s) + ')</span></span>'
+      + '<button onclick="removeLengthChange(\'' + s.id + '\',\'' + k + '\')" title="Remove" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer">×</button></div>';
+  }).join('');
+}
+function addLengthChange(id) {
+  const s = getStudent(id); if (!s) return;
+  const dEl = document.getElementById('len-date-' + id), mEl = document.getElementById('len-mins-' + id);
+  if (!dEl.value) { dEl.focus(); return; }
+  const mins = parseInt(mEl.value, 10); if (!mins) return;
+  if (!s.lengthChanges) s.lengthChanges = {};
+  if (mins === normalLen(s)) delete s.lengthChanges[dEl.value]; else s.lengthChanges[dEl.value] = mins;
+  dEl.value = '';
+  save(); renderDetail(s);
+}
+function removeLengthChange(id, k) {
+  const s = getStudent(id); if (!s || !s.lengthChanges) return;
+  delete s.lengthChanges[k];
+  save(); renderDetail(s);
+}
+function lenBadge(len, s, when) {
+  return len !== normalLen(s) ? ' <span style="font-size:0.68rem;font-weight:700;color:#fff;background:#e67e22;padding:1px 7px;border-radius:999px;vertical-align:middle" title="Normally ' + normalLen(s) + ' min">⏱ ' + len + ' min' + (when ? ' ' + when : '') + '</span>' : '';
+}
 // ── REQUESTED LESSON MOVES ────────────────────────────────────────────────
 // Distinct from oneOffMoves (which only ever applies to the CURRENT week via
 // the Week view's "Move" button). This is for moving a specific future-dated
@@ -9200,7 +9284,7 @@ function exportAttendanceSpreadsheet() {
       r.present, r.late, r.notice, r.cancelled,
       { f: 'C' + row + '+D' + row, s: 'bold' },
       { v: pupilRate(s), s: 'money' },
-      { f: 'G' + row + '*H' + row, s: 'money' },
+      { f: 'G' + row + '*H' + row + (function(){ const x = Math.round(extraTimeAmount(s, fromDate, toDate) * 100) / 100; return x ? (x > 0 ? '+' : '') + x : ''; })(), s: 'money' },
       s.scheme === 'latestarter' ? 'Late Starter' : 'Private'
     ]);
   });
@@ -9577,7 +9661,7 @@ function renderStudioAttendance() {
     <div style="font-size:0.8rem;color:var(--muted);margin-bottom:10px;display:flex;gap:16px;flex-wrap:wrap">
       <span>📅 <strong style="color:var(--ink)">${sortedWeeks.length}</strong> week${sortedWeeks.length !== 1 ? 's' : ''} recorded</span>
       <span>✅ <strong style="color:var(--viola)">${totalPresentSlots}</strong> lesson${totalPresentSlots !== 1 ? 's' : ''} attended</span>
-      <span>💷 <strong style="color:var(--deep)">${money(activePupils.reduce((sum, s) => sum + chargeableInRange(s, fromDate, toDate) * pupilRate(s), 0))}</strong> chargeable</span>
+      <span>💷 <strong style="color:var(--deep)">${money(activePupils.reduce((sum, s) => sum + lessonMoneyInRange(s, fromDate, toDate), 0))}</strong> chargeable</span>
     </div>
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:10px">
       <table style="border-collapse:collapse;font-size:0.78rem;min-width:100%;font-family:'Special Elite',cursive">
@@ -9623,7 +9707,7 @@ function renderStudioAttendance() {
                 const rate = pupilRate(s);
                 const ch = chargeableInRange(s, fromDate, toDate);
                 return `<td style="text-align:center;padding:4px 8px;border-bottom:1px solid var(--warm);color:var(--muted);background:${rowBg};white-space:nowrap">${rate ? money(rate) : '<span title="Add a rate in the pupil\'s Edit" style="color:#e67e22">-</span>'}</td>
-                <td style="text-align:center;padding:4px 8px;border-bottom:1px solid var(--warm);font-weight:700;color:var(--deep);background:${rowBg};white-space:nowrap" title="${ch} chargeable × ${rate ? money(rate) : 'no rate'}">${rate ? money(ch * rate) : '-'}</td>`;
+                <td style="text-align:center;padding:4px 8px;border-bottom:1px solid var(--warm);font-weight:700;color:var(--deep);background:${rowBg};white-space:nowrap" title="${ch} chargeable × ${rate ? money(rate) : 'no rate'}${extraTimeAmount(s, fromDate, toDate) ? ' + longer lessons' : ''}">${rate ? money(lessonMoneyInRange(s, fromDate, toDate)) : '-'}</td>`;
               })()}
             </tr>`;
           }).join('')}
@@ -9787,8 +9871,8 @@ function exportStudioAttendancePDF() {
     }).join('');
     const rate = pupilRate(s);
     const ch = chargeableInRange(s, fromDate, toDate);
-    pdfTotal += ch * rate;
-    return `<tr style="${rowBg}"><td style="padding:4px 6px;white-space:nowrap;border-bottom:1px solid #e8e0d0;font-weight:500">${esc(s.name)}</td>${cells}<td style="text-align:center;padding:4px 6px;border-bottom:1px solid #e8e0d0;font-weight:700">${attended}</td><td style="text-align:center;padding:4px 6px;border-bottom:1px solid #e8e0d0;color:#777;white-space:nowrap">${rate ? money(rate) : '-'}</td><td style="text-align:center;padding:4px 6px;border-bottom:1px solid #e8e0d0;font-weight:700;color:#1a4a6b;white-space:nowrap">${rate ? money(ch * rate) : '-'}</td></tr>`;
+    pdfTotal += lessonMoneyInRange(s, fromDate, toDate);
+    return `<tr style="${rowBg}"><td style="padding:4px 6px;white-space:nowrap;border-bottom:1px solid #e8e0d0;font-weight:500">${esc(s.name)}</td>${cells}<td style="text-align:center;padding:4px 6px;border-bottom:1px solid #e8e0d0;font-weight:700">${attended}</td><td style="text-align:center;padding:4px 6px;border-bottom:1px solid #e8e0d0;color:#777;white-space:nowrap">${rate ? money(rate) : '-'}</td><td style="text-align:center;padding:4px 6px;border-bottom:1px solid #e8e0d0;font-weight:700;color:#1a4a6b;white-space:nowrap">${rate ? money(lessonMoneyInRange(s, fromDate, toDate)) : '-'}</td></tr>`;
   }).join('');
 
   const headerCells = sortedWeeks.map(wk => `<th style="padding:3px 4px;background:#f0ece0;text-align:center;white-space:nowrap;font-size:0.62rem;font-weight:700;${weekHasGapBefore[wk] ? 'border-left:2px dashed #b5a98a;' : ''}">${fmtWeek(wk)}</th>`).join('');
@@ -10390,12 +10474,16 @@ function populateCatFilters() {
       if (custom) opt.setAttribute('data-custom-cat', '1');
       sel.appendChild(opt);
     };
+    // "All categories" (no value) first, then every category A to Z
+    const list = [];
     sel._baseOpts.forEach(o => {
       if (o.v === '__new__') return;                     // goes last
       if (o.v && hiddenPieceCats.includes(o.v)) return;  // deleted category
-      add(o.v, o.t, false);
+      if (!o.v) { add(o.v, o.t, false); return; }
+      list.push({ v: o.v, t: o.t, custom: false });
     });
-    customCats.forEach(cat => { if (!hiddenPieceCats.includes(cat)) add(cat, cat, true); });
+    customCats.forEach(cat => { if (!hiddenPieceCats.includes(cat) && !list.some(x => x.v === cat)) list.push({ v: cat, t: cat, custom: true }); });
+    list.sort((a, b) => catSort(a.t, b.t)).forEach(x => add(x.v, x.t, x.custom));
     if (sel._baseOpts.some(o => o.v === '__new__')) add('__new__', '+ New category…', false);
     if ([...sel.options].some(o => o.value === current)) sel.value = current;
   });
@@ -10403,11 +10491,14 @@ function populateCatFilters() {
 }
 
 // Every category currently showing in the piece library, with how many pieces
+// Categories A to Z, ignoring capitals
+function catSort(a, b) { return String(a).localeCompare(String(b), 'en', { sensitivity: 'base' }); }
 function pieceCatList() {
   const all = visibleLibraryPieces();
   const cats = [];
   BUILTIN_CATS.forEach(c => { if (!hiddenPieceCats.includes(c)) cats.push(c); });
   all.forEach(p => pieceCats(p).forEach(c => { if (!cats.includes(c) && !hiddenPieceCats.includes(c)) cats.push(c); }));
+  cats.sort(catSort);
   return cats.map(c => ({ name: c, count: all.filter(p => pieceInCat(p, c)).length }));
 }
 
@@ -10641,7 +10732,10 @@ function groupPiecesByCat(pieces, onlyCat) {
       (groups[c] = groups[c] || []).push(p);
     });
   });
-  return groups;
+  // Show the categories A to Z
+  const sorted = {};
+  Object.keys(groups).sort(catSort).forEach(function(k){ sorted[k] = groups[k]; });
+  return sorted;
 }
 
 // Key a piece by title + category, used to match overrides and hidden entries.
@@ -10730,6 +10824,7 @@ function openNewLibPiece() {
   populateCatFilters();
   document.getElementById('edit-lib-piece-heading').textContent = 'Add to the library';
   document.getElementById('edit-lib-piece-merge-row').style.display = 'none';
+  { const dup = document.getElementById('edit-lib-dup'); if (dup) { dup.style.display = 'none'; dup.innerHTML = ''; } }
   document.getElementById('edit-lib-piece-idx').value = '';
   ['title', 'composer', 'grade', 'note', 'mvts', 'cat-custom'].forEach(function(f){ document.getElementById('edit-lib-piece-' + f).value = ''; });
   const catSel = document.getElementById('edit-lib-piece-cat');
@@ -10756,6 +10851,7 @@ function editLibPieceByKey(key) {
   populateCatFilters();
   document.getElementById('edit-lib-piece-heading').textContent = 'Edit piece';
   document.getElementById('edit-lib-piece-merge-row').style.display = 'block';
+  { const dup = document.getElementById('edit-lib-dup'); if (dup) { dup.style.display = 'none'; dup.innerHTML = ''; } }
   document.getElementById('edit-lib-piece-cat-custom').value = '';
   document.getElementById('edit-lib-piece-cat-custom').style.display = 'none';
   // Store the ORIGINAL key so save can find the right row even if title/cat change.
@@ -10843,6 +10939,49 @@ function renameLibTitleForPupils(oldT, newT) {
   });
 }
 
+// ── CATCH DUPLICATES BEFORE THEY'RE ADDED ────────────────────────────────
+// As you type a new title, anything in the library that looks the same is
+// shown underneath, with a button to edit that one instead.
+const LIB_DUP_SKIP = ['the','a','an','and','for','of','in','to','viola','violin','book','vol','volume','no','op','opus','bk','part','edition','ed','with','piano'];
+function libDupWords(t) {
+  return String(t || '').toLowerCase().replace(/[’'`]/g, '').replace(/[^a-z0-9à-ÿ]+/g, ' ').trim().split(' ')
+    .filter(function(w){ return w && LIB_DUP_SKIP.indexOf(w) === -1; });
+}
+function libLooksSame(a, b) {
+  const A = libDupWords(a), B = libDupWords(b);
+  if (!A.length || !B.length) return false;
+  const ja = A.join(' '), jb = B.join(' ');
+  if (ja === jb) return true;
+  if (Math.min(ja.length, jb.length) >= 6 && (ja.indexOf(jb) >= 0 || jb.indexOf(ja) >= 0)) return true;
+  // Share most of their important words (numbers must match too)
+  const shared = A.filter(function(w){ return B.indexOf(w) >= 0; });
+  // Numbers in one must all be in the other (Op. 84 is not Op. 68)
+  const nums = function(L){ return L.filter(function(w){ return /\d/.test(w); }); };
+  const nA = nums(A), nB = nums(B);
+  const inside = function(x, y){ return x.every(function(w){ return y.indexOf(w) >= 0; }); };
+  if (!inside(nA, nB) && !inside(nB, nA)) return false;
+  return shared.length >= 2 && shared.length >= Math.ceil(Math.min(A.length, B.length) * 0.75);
+}
+function libFindLookalikes(title, exceptKey) {
+  if (!String(title || '').trim()) return [];
+  return visibleLibraryPieces().filter(function(p){ return pieceKey(p) !== exceptKey && libLooksSame(title, p.title); }).slice(0, 5);
+}
+function libDupCheck() {
+  const box = document.getElementById('edit-lib-dup'); if (!box) return;
+  const origKey = document.getElementById('edit-lib-piece-idx').value;
+  const t = document.getElementById('edit-lib-piece-title').value;
+  const hits = origKey ? [] : libFindLookalikes(t, '');   // only when adding something new
+  if (!hits.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  box.style.display = 'block';
+  box.innerHTML = '<div style="margin-top:6px;background:#fff4ec;border:1.5px solid #e67e22;border-radius:10px;padding:8px 10px">'
+    + '<div style="font-size:0.8rem;font-weight:700;color:#8a4a10;margin-bottom:4px">⚠️ Already in your library?</div>'
+    + hits.map(function(p) {
+        return '<div style="display:flex;align-items:center;gap:8px;margin-top:4px">'
+          + '<span style="flex:1;font-size:0.82rem;color:var(--ink)">' + esc(p.title) + ' <span style="color:var(--muted);font-size:0.72rem">' + esc([p.composer, p.cat].filter(Boolean).join(' · ')) + '</span></span>'
+          + '<button type="button" onclick="editLibPieceByKey(\'' + escJs(pieceKey(p)) + '\')" style="background:#fff;border:1.5px solid #e67e22;color:#8a4a10;border-radius:8px;padding:3px 10px;font-family:\'Special Elite\',cursive;font-size:0.75rem;cursor:pointer;white-space:nowrap">Edit that one</button></div>';
+      }).join('')
+    + '<div style="font-size:0.7rem;color:#8a4a10;margin-top:6px">If it\'s different, carry on and Save.</div></div>';
+}
 function saveEditLibPiece() {
   const origKey = document.getElementById('edit-lib-piece-idx').value;
   const updated = {
@@ -10864,6 +11003,8 @@ function saveEditLibPiece() {
     if (visibleLibraryPieces().some(p => libTitleKey(p.title) === libTitleKey(updated.title))) {
       alert('"' + updated.title + '" is already in your library. Use Edit on it instead.'); return;
     }
+    const alike = libFindLookalikes(updated.title, '');
+    if (alike.length && !confirm('This looks like something already in your library:\n\n' + alike.map(p => '• ' + p.title).join('\n') + '\n\nAdd it anyway?')) return;
   }
   const noteVal = document.getElementById('edit-lib-piece-note').value.trim();
   if (noteVal) updated.note = noteVal;
@@ -12522,12 +12663,13 @@ function renderBilling() {
     const n = countChargeable(s, block);
     grand += n;
     const rate = pupilRate(s);
-    if (rate) grandMoney += n * rate; else if (n) missingRate++;
+    const extraT = rate ? extraTimeAmount(s, block.start, block.end) : 0;   // longer / shorter lessons
+    if (rate) grandMoney += n * rate + extraT; else if (n) missingRate++;
     // Instrument rental fee (per half-term) goes on top of lessons
     const rentFee = (s.rental && s.rental.on && s.rental.fee) ? s.rental.fee : 0;
     const manualAmt = invSum(invManual(s, block));
     grandMoney += rentFee + manualAmt;
-    const own = (rate ? n * rate : 0) + rentFee + manualAmt;
+    const own = (rate ? n * rate + extraT : 0) + rentFee + manualAmt;
     const arrLines = invArrearsLines(s, block);
     const total = own + invSum(arrLines);
     const paid = !!paidMap[s.id];
@@ -13280,7 +13422,7 @@ function invIncomeSnap(s, block, date) {
   const n = countChargeable(s, block), rate = pupilRate(s);
   return {
     date: date, n: n, rate: rate,
-    tuition: rate ? n * rate : 0,
+    tuition: rate ? n * rate + extraTimeAmount(s, block.start, block.end) : 0,
     hire: (s.rental && s.rental.on && s.rental.fee) ? (parseFloat(s.rental.fee) || 0) : 0,
     extras: invSum(invManual(s, block))
   };
@@ -13532,6 +13674,7 @@ function invBaseLines(s, block) {
   const n = countChargeable(s, block);
   const rate = pupilRate(s);
   if (n && rate) lines.push({ text: n + ' week' + (n === 1 ? '' : 's') + ' ' + invInstrument(s) + ' tuition @ ' + invPounds(rate), amt: n * rate });
+  if (n && rate) extraTimeLines(s, block.start, block.end).forEach(function(l){ lines.push(l); });
   if (s.rental && s.rental.on && s.rental.fee) {
     lines.push({ text: 'Instrument hire' + (s.rental.what ? ' (' + s.rental.what + ')' : ''), amt: parseFloat(s.rental.fee) || 0 });
   }
@@ -14391,8 +14534,18 @@ function getGiftList(s) {
 }
 
 // The running list shown on a pupil's own page - full history, no tick boxes.
+// Little counters on the closed Details sections (how many notes / gifts)
+function ldLineCount(t) { return String(t || '').split('\n').filter(function(l){ return l.trim(); }).length; }
+function ldCountHTML(id, field, n, col) {
+  return '<span id="ldc-' + field + '-' + id + '" style="display:' + (n ? 'inline-block' : 'none') + ';margin-left:6px;min-width:18px;text-align:center;font-size:0.68rem;letter-spacing:0;background:' + col + ';color:#fff;border-radius:999px;padding:1px 7px">' + (n || '') + '</span>';
+}
+function ldCountRefresh(id, field, n) {
+  const el = document.getElementById('ldc-' + field + '-' + id); if (!el) return;
+  el.textContent = n || ''; el.style.display = n ? 'inline-block' : 'none';
+}
 function giftListHTML(s) {
   const gifts = getGiftList(s);
+  setTimeout(function(){ ldCountRefresh(s.id, 'gifts', gifts.length); }, 0);
   if (gifts.length === 0) {
     return '<p style="color:var(--muted);font-size:0.8rem;font-style:italic;margin:4px 0">Nothing noted yet.</p>';
   }
