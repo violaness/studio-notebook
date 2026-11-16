@@ -3131,21 +3131,22 @@ function weekRememberHTML() {
   // Each pupil in their own card. The header colour goes by lesson day,
   // green (Saturday) through to blue (Wednesday), like the Library tiles.
   // Inside: 🚨 urgent, then ❗ jobs to do before, then things for the lesson.
+  // Pastel versions: [header colour, text colour, border colour]
   const DAY_TONES = {
-    Saturday:  ['var(--viola)',  '#fff'],
-    Sunday:    ['var(--string)', 'var(--ink)'],
-    Monday:    ['var(--sky)',    'var(--ink)'],
-    Tuesday:   ['var(--violin)', '#fff'],
-    Wednesday: ['var(--deep)',   '#fff']
+    Saturday:  ['#d9ead0', '#2F5C1A', '#bcd9ad'],
+    Sunday:    ['#eaf4d6', '#4a6b1e', '#d3e6b0'],
+    Monday:    ['#dcf2f8', '#1f5f7a', '#b9e2ee'],
+    Tuesday:   ['#dbe9f2', '#29789E', '#bcd5e6'],
+    Wednesday: ['#e2e6f0', '#2c3e66', '#c9d0e2']
   };
   const cards = people.map(function(s) {
     const slot = effectiveSlot(s);
-    const tone = DAY_TONES[slot.day] || ['var(--muted)', '#fff'];
+    const tone = DAY_TONES[slot.day] || ['#eceae6', 'var(--ink)', '#dcd8d2'];
     const items = nextNoteLines(s).map(function(x, i){ return { x: x, i: i }; })
       .sort(function(a, b){ return noteLevel(b.x.text) - noteLevel(a.x.text) || a.i - b.i; });
     const firstPlain = items.findIndex(function(o){ return !noteLevel(o.x.text); });
     const hasJobs = items.some(function(o){ return noteLevel(o.x.text); });
-    return '<div style="background:#fff;border:2px solid ' + tone[0] + ';border-radius:14px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.08)">'
+    return '<div style="background:#fff;border:2px solid ' + tone[2] + ';border-radius:14px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.05)">'
       + '<div onclick="openStudentFrom(\'' + s.id + '\',\'week\')" style="cursor:pointer;background:' + tone[0] + ';color:' + tone[1] + ';padding:7px 12px;display:flex;align-items:baseline;gap:8px">'
       + '<span style="font-size:0.95rem;font-weight:700">' + esc(s.name) + '</span>'
       + '<span style="font-size:0.72rem;opacity:0.85">' + esc((slot.day || '').slice(0, 3)) + (slot.time ? ' ' + esc(slot.time) : '') + '</span>'
@@ -3171,7 +3172,7 @@ function weekRememberHTML() {
     + (left ? '' : pill('all done ✓', 'var(--soft-green2)', 'var(--ink)', 'var(--soft-green2)'))
     + (urgent ? pill('🚨 ' + urgent + ' urgent', '#c0392b', '#fff', '#c0392b') : '')
     + (jobs ? pill('❗ ' + jobs + ' to do before', '#fde7e2', '#a3321f', '#f0b4a8') : '')
-    + (focus ? pill('🎻 ' + focus + ' for the lesson', 'var(--string)', 'var(--ink)', 'var(--string)') : '')
+    + (focus ? pill('🎻 ' + focus + ' for the lesson', '#e8f5e0', '#2F5C1A', '#bcd9ad') : '')
     + '<span class="tap-hint" data-closed="tap to open" style="margin-left:auto;font-size:0.75rem;color:var(--muted)"></span></summary>'
     + '<div style="padding:4px 14px 14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;align-items:start">' + cards + '</div>'
     + '</details>';
@@ -3891,16 +3892,18 @@ function renderDetail(s, preserveTab = false) {
             <div style="font-size:0.85rem;font-weight:700;color:var(--deep);margin-bottom:4px">⏱ Longer or shorter lesson</div>
             <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px">For one date only, e.g. an hour instead of half an hour. The invoice adds a line for the extra time.</div>
             ${lengthChangesHTML(s)}
-            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:8px">
-              <label style="flex:1;min-width:150px;font-size:0.68rem;font-weight:700;color:var(--muted)">Date
-                <input type="date" id="len-date-${s.id}" style="display:block;width:100%;min-height:44px;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);box-sizing:border-box;margin-top:4px">
-              </label>
-              <label style="font-size:0.68rem;font-weight:700;color:var(--muted)">Length
-                <select id="len-mins-${s.id}" style="display:block;min-height:44px;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);margin-top:4px">
+            <div style="margin-top:8px">
+              <label for="len-date-${s.id}" style="font-size:0.68rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Date</label>
+              <input type="date" id="len-date-${s.id}" style="display:block;width:100%;min-height:44px;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none">
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-end;margin-top:8px">
+              <div style="flex:1">
+                <label for="len-mins-${s.id}" style="font-size:0.68rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Length</label>
+                <select id="len-mins-${s.id}" style="display:block;width:100%;min-height:44px;padding:8px 10px;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Special Elite',cursive;font-size:0.88rem;background:var(--paper);color:var(--ink);box-sizing:border-box">
                   ${[30,45,60,75,90,120].map(m => `<option value="${m}"${m === (normalLen(s) === 30 ? 60 : normalLen(s) + 30) ? ' selected' : ''}>${m} min</option>`).join('')}
                 </select>
-              </label>
-              <button onclick="addLengthChange('${s.id}')" style="background:#e67e22;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;min-height:44px">+ Add</button>
+              </div>
+              <button onclick="addLengthChange('${s.id}')" style="flex:0 0 auto;background:#e67e22;color:#fff;border:none;border-radius:8px;padding:10px 22px;font-family:'Special Elite',cursive;font-size:0.85rem;cursor:pointer;min-height:44px">+ Add</button>
             </div>
           </div>
         </div>
