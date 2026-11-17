@@ -2702,6 +2702,97 @@ function todayDayName() {
 // The date string a lesson is logged/matched against. Uses effectiveNow() so a
 // note or attendance saved after midnight (before 1am) is dated to the lesson
 // you actually taught, not the new calendar day - important for billing.
+// ── PRACTICE RATING ──────────────────────────────────────────────────────
+// One tap beside "Save to lesson log": how much practice you think happened.
+// 1 = lots … 5 = very little. Saved on that lesson in the log (e.practice),
+// and shown as a coloured strip on the History tab to spot patterns.
+const PRACTICE_LEVELS = [null,
+  { label: 'Lots',        bg: '#2F5C1A', fg: '#fff' },
+  { label: 'Good',        bg: '#8AB640', fg: '#fff' },
+  { label: 'Some',        bg: '#e8b923', fg: '#3a2e00' },
+  { label: 'A little',    bg: '#e67e22', fg: '#fff' },
+  { label: 'Very little', bg: '#c0392b', fg: '#fff' }
+];
+// The rating for the lesson date chosen next to the Save button
+function practiceFor(s) {
+  const d = lessonDateFor(s);
+  const e = (s.log || []).find(function(x){ return x.date === d; });
+  if (e && e.practice) return e.practice;
+  return (s.practiceDraft && s.practiceDraft.date === d) ? s.practiceDraft.level : 0;
+}
+function practicePickerHTML(s) {
+  const cur = practiceFor(s);
+  return '<div id="practice-pick-' + s.id + '" style="display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap">'
+    + '<span style="font-size:0.75rem;color:var(--muted);margin-right:2px">Practice</span>'
+    + [1, 2, 3, 4, 5].map(function(n) {
+        const L = PRACTICE_LEVELS[n], on = cur === n;
+        return '<button type="button" onclick="setPractice(\'' + s.id + '\',' + n + ')" title="' + n + ': ' + L.label + '" aria-label="Practice ' + L.label + '"'
+          + ' style="width:' + (on ? 'auto' : '30px') + ';min-width:30px;height:30px;border-radius:999px;cursor:pointer;font-family:\'Special Elite\',cursive;font-size:0.75rem;font-weight:700;padding:0 ' + (on ? '10px' : '0') + ';'
+          + 'border:2px solid ' + L.bg + ';background:' + (on ? L.bg : '#fff') + ';color:' + (on ? L.fg : L.bg) + (cur && !on ? ';opacity:0.45' : '') + '">'
+          + (on ? n + ' ' + L.label : n) + '</button>';
+      }).join('')
+    + '</div>';
+}
+function setPractice(id, n) {
+  const s = getStudent(id); if (!s) return;
+  const d = lessonDateFor(s);
+  const e = (s.log || []).find(function(x){ return x.date === d; });
+  const cur = practiceFor(s), val = cur === n ? 0 : n;   // tap the same one again to clear
+  if (e) { if (val) e.practice = val; else delete e.practice; delete s.practiceDraft; }
+  else if (val) s.practiceDraft = { date: d, level: val };
+  else delete s.practiceDraft;
+  save();
+  const el = document.getElementById('practice-pick-' + id); if (el) el.outerHTML = practicePickerHTML(s);
+}
+// Put a waiting rating onto the lesson once it's in the log
+function applyPracticeDraft(s, entry) {
+  if (s.practiceDraft && entry && s.practiceDraft.date === entry.date) { entry.practice = s.practiceDraft.level; delete s.practiceDraft; }
+}
+function practiceRatings(s) {
+  return (s.log || []).filter(function(e){ return e.practice; })
+    .map(function(e){ return { date: e.date, d: parseLogDate(e.date), v: e.practice }; })
+    .sort(function(a, b){ return (a.d || 0) - (b.d || 0); });
+}
+// Worth a nudge: the last three ratings all 4 or 5
+function practiceConcern(s) {
+  const r = practiceRatings(s).slice(-3);
+  return r.length === 3 && r.every(function(x){ return x.v >= 4; });
+}
+function practiceBadge(v) {
+  const L = PRACTICE_LEVELS[v]; if (!L) return '';
+  return ' <span title="Practice: ' + L.label + '" style="font-size:0.66rem;font-weight:700;background:' + L.bg + ';color:' + L.fg + ';border-radius:999px;padding:1px 7px;vertical-align:middle">🎻 ' + L.label + '</span>';
+}
+function practiceHistoryHTML(s) {
+  const r = practiceRatings(s);
+  if (!r.length) return '<div style="font-size:0.8rem;color:var(--muted);font-style:italic">No practice ratings yet. Tap 1 to 5 beside “Save to lesson log” on the After tab.</div>';
+  const last = r.slice(-20);
+  const avg = function(list){ return list.reduce(function(t, x){ return t + x.v; }, 0) / list.length; };
+  const avgAll = avg(r), avg4 = avg(r.slice(-4)), prev4 = r.length > 4 ? avg(r.slice(-8, -4)) : null;
+  const word = function(a){ return PRACTICE_LEVELS[Math.min(5, Math.max(1, Math.round(a)))].label.toLowerCase(); };
+  let trend = '';
+  if (prev4 !== null) {
+    if (avg4 < prev4 - 0.5) trend = '📈 Practice is going up lately';
+    else if (avg4 > prev4 + 0.5) trend = '📉 Practice has dropped lately';
+    else trend = '➡️ About the same lately';
+  }
+  // Bars: taller = more practice
+  const bars = last.map(function(x) {
+    const L = PRACTICE_LEVELS[x.v], h = 14 + (6 - x.v) * 12;
+    return '<div title="' + esc(x.date) + ': ' + L.label + '" style="flex:1;min-width:14px;max-width:34px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px">'
+      + '<div style="width:100%;height:' + h + 'px;background:' + L.bg + ';border-radius:6px 6px 3px 3px"></div>'
+      + '<div style="font-size:0.58rem;color:var(--muted);white-space:nowrap">' + (x.d ? x.d.getDate() + '/' + (x.d.getMonth() + 1) : '') + '</div></div>';
+  }).join('');
+  return (practiceConcern(s) ? '<div style="background:#fdeeea;border:1.5px solid #e8a397;color:#a3321f;border-radius:10px;padding:6px 10px;font-size:0.82rem;font-weight:700;margin-bottom:10px">⚠️ Little practice for the last 3 lessons. Worth a chat?</div>' : '')
+    + '<div style="display:flex;gap:4px;align-items:flex-end;height:92px;padding:4px 2px;border-bottom:1.5px solid var(--warm)">' + bars + '</div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:6px 16px;font-size:0.78rem;color:var(--ink);margin-top:8px">'
+    + '<span>Usually: <strong>' + word(avgAll) + '</strong></span>'
+    + '<span>Last 4 lessons: <strong>' + word(avg4) + '</strong></span>'
+    + (trend ? '<span>' + trend + '</span>' : '')
+    + '<span style="color:var(--muted)">' + r.length + ' rating' + (r.length === 1 ? '' : 's') + '</span></div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;font-size:0.68rem;color:var(--muted)">'
+    + [1, 2, 3, 4, 5].map(function(n){ return '<span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:' + PRACTICE_LEVELS[n].bg + '"></span>' + n + ' ' + PRACTICE_LEVELS[n].label + '</span>'; }).join('')
+    + '</div>';
+}
 // ── LESSON DATE (for logging a lesson a day or two late) ─────────────────
 // The After tab has a date next to "Save to lesson log". It starts on the
 // pupil's lesson day this week if that was in the last few days and hasn't
@@ -2739,6 +2830,8 @@ function lessonDateHint(id) {
   if (!el || !h) return;
   const [y, m, d] = el.value.split('-').map(Number); const t = effectiveNow(); t.setHours(12, 0, 0, 0);
   const diff = Math.round((t - new Date(y, m - 1, d, 12)) / 86400000);
+  const pp = document.getElementById('practice-pick-' + id); const ps = getStudent(id);
+  if (pp && ps) pp.outerHTML = practicePickerHTML(ps);
   h.textContent = diff === 0 ? 'today' : diff === 1 ? 'yesterday' : diff > 1 ? diff + ' days ago' : 'future';
   el.style.borderColor = diff === 0 ? '#d6ddd2' : '#e67e22';
   h.style.color = diff === 0 ? 'var(--muted)' : '#b7791f';
@@ -3017,7 +3110,7 @@ function renderToday() {
         <div class="ls-avatar avatar-${s.instrument}" style="${markedAbsentToday?'opacity:0.4;':''}">${getInitials(s.name)}</div>
         <div class="ls-info">
           <div class="ls-name" style="${markedAbsentToday?'color:var(--muted);text-decoration:line-through;':''}">${s.name}${isNext?`<span class="next-badge${isImminent?' imminent':''}">Next</span>`:''}${s.followUp?'<span style="font-size:0.85rem;margin-left:6px" title="Follow up">🚩</span>':''}${markedAbsentToday?'<span style="font-size:0.68rem;color:#c0392b;font-weight:700;margin-left:6px;text-decoration:none;display:inline-block">absent</span>':''}</div>
-          <div class="ls-time">${slot.time || 'time not set'} · ${instrDot(s.instrument)}${s.instrument} · ${s.level}${lenBadge(lenOn(s, effectiveNow()), s, 'today')}</div>
+          <div class="ls-time">${slot.time || 'time not set'} · ${instrDot(s.instrument)}${s.instrument} · ${s.level}${lenBadge(lenOn(s, effectiveNow()), s, 'today')}${practiceConcern(s) ? ' <span title="Little practice for the last 3 lessons" style="font-size:0.68rem;font-weight:700;color:#a3321f;background:#fdeeea;border:1px solid #e8a397;padding:1px 7px;border-radius:999px">⚠️ practice</span>' : ''}</div>
         </div>
         <div class="ls-chevron">›</div>
       </div>
@@ -4011,6 +4104,7 @@ function renderDetail(s, preserveTab = false) {
 
         <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:10px">
           ${lessonDatePickerHTML(s)}
+          ${practicePickerHTML(s)}
           <button class="save-btn" style="margin:0" onclick="saveLog('${s.id}')">Save to lesson log</button>
         </div>
         <div class="save-toast" id="toast-after-${s.id}">✓ Added to log</div>
@@ -4181,6 +4275,14 @@ function renderDetail(s, preserveTab = false) {
     <!-- CONTACTS -->
     <!-- HISTORY -->
     <div class="moment-panel" id="panel-history">
+
+      <!-- PRACTICE PATTERN -->
+      <details class="section-card" style="padding:0">
+        <summary style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none;font-size:0.82rem;font-weight:700;color:var(--muted)">
+          <span>🎻 Practice${practiceConcern(s) ? ' <span style="color:#c0392b">⚠️</span>' : ''}</span><span class="tap-hint" data-closed="tap to open" style="font-size:0.7rem;font-weight:400"></span>
+        </summary>
+        <div style="padding:0 14px 14px">${practiceHistoryHTML(s)}</div>
+      </details>
 
       <!-- GOALS -->
       <details class="section-card" style="padding:0">
@@ -5140,6 +5242,7 @@ function saveLog(id) {
   } else {
     if (!okToLogSecondThisWeek(s, today, null)) return;
     insertLogInOrder(s, { date: today, text: text, attendance: 'present' });
+    applyPracticeDraft(s, s.log.find(e => e.date === today));
   }
   // This lesson's notes become the plan for next lesson
   s.nextLesson = planFromLessonNotes(text);
@@ -6230,7 +6333,7 @@ function buildLogHTML(s) {
         + '</div>'
       : '<div style="font-size:0.8rem;color:var(--muted);font-style:italic">No notes</div>';
     return '<div class="log-entry" style="position:relative;padding-right:80px;' + (isAbsent?'opacity:0.55;background:#f8f0f0;':'') + '">'
-      + '<div class="log-date"' + (isAbsent?' style="text-decoration:line-through;color:var(--muted);"':'') + '>' + esc(e.date) + attBadge + '</div>'
+      + '<div class="log-date"' + (isAbsent?' style="text-decoration:line-through;color:var(--muted);"':'') + '>' + esc(e.date) + attBadge + (e.practice ? practiceBadge(e.practice) : '') + '</div>'
       + textHTML + sketches
       + '<div style="position:absolute;top:8px;right:8px;display:flex;gap:4px">'
       + '<button onclick="openEditLogModal(\'' + s.id + '\',' + realIdx + ')" style="background:var(--warm);border:none;border-radius:6px;color:var(--viola);cursor:pointer;font-size:0.78rem;padding:3px 8px" title="Edit">Edit</button>'
@@ -14286,6 +14389,7 @@ function setAttendance(id, status) {
   if ((!entry || !entry.attendance) && !okToLogSecondThisWeek(s, today, entry || null)) return;
   if (!entry) { entry = { date: today, text: '', attendance: status }; insertLogInOrder(s, entry); }
   else { entry.attendance = status; }
+  applyPracticeDraft(s, entry);
   save(); showToast('toast-attendance-' + id); renderDetail(s, true);
 }
 
