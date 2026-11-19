@@ -4887,6 +4887,51 @@ function deleteBuiltinChip(chip, studentId) {
   const s=getStudent(studentId); if(s)renderDetail(s);
 }
 
+// ── SCALES DONE → LESSON NOTES ───────────────────────────────────────────
+const SCALES_DONE = '🎻 Scales done:';
+function scaleNoteEl(id) {
+  const afterPanel = document.getElementById('panel-after');
+  return (afterPanel && afterPanel.classList.contains('active')) ? document.getElementById('after-note-' + id) : document.getElementById('during-scratch-' + id);
+}
+function scalesDoneInText(t) {
+  const line = String(t || '').split('\n').find(function(l){ return l.indexOf(SCALES_DONE) === 0; });
+  return line ? line.slice(SCALES_DONE.length).split(',').map(function(x){ return x.trim(); }).filter(Boolean) : [];
+}
+function scaleNoteChipHTML(s, k, thisWeek) {
+  const el = scaleNoteEl(s.id);
+  const done = scalesDoneInText(el ? el.value : (s.afterDraft || '')).indexOf(k) >= 0;
+  return '<span class="scale-note-chip" data-key="' + esc(k) + '" onclick="toggleScaleInNotes(\'' + s.id + '\',\'' + escJs(k) + '\',this)" title="Tap to add to the lesson notes"'
+    + ' style="display:inline-block;cursor:pointer;border-radius:999px;padding:2px 10px;font-size:0.78rem;font-weight:700;margin:2px;'
+    + (done ? 'background:var(--viola);border:1.5px solid var(--viola);color:#fff'
+            : 'background:var(--card-bg);border:1.5px ' + (thisWeek ? 'solid var(--viola)' : 'dashed #c9c4bc') + ';color:' + (thisWeek ? 'var(--viola)' : 'var(--muted)'))
+    + '">' + (done ? '✓ ' : '') + esc(k) + '</span>';
+}
+function toggleScaleInNotes(id, key, chip) {
+  const el = scaleNoteEl(id); if (!el) return;
+  const lines = el.value.split('\n');
+  let at = lines.findIndex(function(l){ return l.indexOf(SCALES_DONE) === 0; });
+  let keys = at >= 0 ? scalesDoneInText(el.value) : [];
+  const i = keys.indexOf(key);
+  if (i >= 0) keys.splice(i, 1); else keys.push(key);
+  if (at >= 0) {
+    if (keys.length) lines[at] = SCALES_DONE + ' ' + keys.join(', ');
+    else lines.splice(at, 1);
+    el.value = lines.join('\n');
+  } else {
+    el.value = el.value.replace(/\s+$/, '') + (el.value.trim() ? '\n' : '') + SCALES_DONE + ' ' + keys.join(', ');
+  }
+  autoGrow(el);
+  const s = getStudent(id);
+  if (s) {
+    const afterPanel = document.getElementById('panel-after');
+    if (afterPanel && afterPanel.classList.contains('active')) { el.dataset.edited = '1'; saveAfterDraft(id, el.value); }
+    else { s.duringScratch = el.value; save(); }
+    // refresh every copy of this chip
+    document.querySelectorAll('.scale-note-chip').forEach(function(c) {
+      if (c.dataset.key === key) c.outerHTML = scaleNoteChipHTML(s, key, (s.scalesThisWeek || []).indexOf(key) >= 0);
+    });
+  }
+}
 function insertIntoScratch(id, text) {
   // Insert into whichever note textarea is currently visible
   // (During → during-scratch, After → after-note, otherwise fall back to during-scratch)
@@ -7467,7 +7512,12 @@ function refSummary(s) {
   var woSub = function(label, html) {
     return '<div style="display:flex;align-items:flex-start;gap:8px;margin:3px 0"><span style="flex:0 0 7em;white-space:nowrap;font-size:0.72rem;font-weight:700;color:var(--muted);padding-top:5px">' + label + '</span><div style="flex:1;min-width:0">' + html + '</div></div>';
   };
-  var piecesHTML = (scalesWeek.length ? woSub('🎻 Scales', scalesWeek.map(function(k){ return '<span style="display:inline-block;background:var(--card-bg);border:1.5px solid var(--viola);border-radius:999px;padding:2px 10px;font-size:0.78rem;font-weight:700;color:var(--viola);margin:2px">' + esc(k) + '</span>'; }).join('')) : '')
+  // Scales: every key they have; this week's are filled in. Tap one to add it
+  // to the "🎻 Scales done:" line in the lesson notes (tap again to take it off).
+  var allScaleKeys = (s.scaleKeys || []).slice();
+  scalesWeek.forEach(function(k){ if (allScaleKeys.indexOf(k) === -1) allScaleKeys.push(k); });
+  var piecesHTML = (allScaleKeys.length ? woSub('🎻 Scales', allScaleKeys.map(function(k){ return scaleNoteChipHTML(s, k, scalesWeek.indexOf(k) >= 0); }).join('')
+      + '<div style="font-size:0.66rem;color:var(--muted);margin:2px 0 0 2px">Tap the ones you did to add them to the notes</div>') : '')
     + (woTech.length ? woSub('🔧 Technical', woTech.join('')) : '')
     + (woPieces.length ? woSub('🎵 Pieces', woPieces.join('')) : '');
 
@@ -12551,6 +12601,7 @@ function planFromLessonNotes(text) {
   if (during >= 0) t = t.slice(during).replace(/^📝 During lesson:\n?/, '');
   else t = t.replace(/^📌 Plan:\n[\s\S]*?(\n\n|$)/, '');
   t = t.replace(/^🎻 Scales this week:.*$/m, '')
+       .replace(/^🎻 Scales done:/m, '🎻 Scales last time:')
        .replace(/\n*✅ Scales done this lesson:[\s\S]*?(?=\n\n|\n📝|$)/m, '')
        .trim();
   if (!t) t = String(text || '').replace(/^📌 Plan:\n?/m, '').replace(/^📝 During lesson:\n?/m, '').trim();
