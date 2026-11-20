@@ -11409,7 +11409,7 @@ function nextPupilHTML(s) {
   const btn = 'border:none;border-radius:10px;padding:12px 14px;font-family:\'Special Elite\',cursive;font-size:0.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:10px';
   return '<div style="margin-top:10px;display:flex;gap:8px">'
     + (prev ? '<button onclick="stepPupil(\'' + s.id + '\',-1)" title="Previous pupil" style="' + btn + ';flex:0 1 auto;max-width:40%;background:var(--warm);color:var(--ink)"><span>←</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(prev.name) + '</span></button>' : '')
-    + (next ? '<button onclick="stepPupil(\'' + s.id + '\',1)" style="' + btn + ';flex:1;justify-content:space-between;background:' + bg + ';color:' + fg + '"><span>' + (run.mode === 'week' ? 'Next in week' : 'Next') + ' →</span><span>' + esc(next.name) + ' · ' + esc(lbl(next)) + '</span></button>' : '<div style="flex:1;text-align:right;font-size:0.78rem;color:var(--muted);padding:12px 6px">' + (run.mode === 'week' ? 'Last pupil of the week' : 'Last pupil today') + '</div>')
+    + (next ? '<button onclick="stepPupil(\'' + s.id + '\',1)" style="' + btn + ';flex:1;justify-content:space-between;background:' + bg + ';color:' + fg + '"><span>' + 'Next →</span><span>' + esc(next.name) + ' · ' + esc(lbl(next)) + '</span></button>' : '<div style="flex:1;text-align:right;font-size:0.78rem;color:var(--muted);padding:12px 6px">' + (run.mode === 'week' ? 'Last pupil of the week' : 'Last pupil today') + '</div>')
     + '</div>';
 }
 // Go to the previous / next pupil, staying on the same tab (Before, After…)
