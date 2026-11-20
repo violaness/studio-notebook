@@ -255,6 +255,13 @@
   }
   .week-day-header.today-header { color: var(--viola); border-bottom-color: var(--viola); }
   .today-dot { width: 7px; height: 7px; background: var(--viola); border-radius: 50%; }
+  /* Today's day in the Week timetable: outlined and lightly tinted */
+  .week-day.today-day { border: 2px solid var(--viola); border-radius: 14px; padding: 6px 10px 2px; background: rgba(138,182,64,0.08); }
+  .week-day.today-day .week-day-header { border-bottom-color: var(--viola); }
+  .week-now-line { display: flex; align-items: center; gap: 8px; margin: 2px 0 8px; color: #c0392b; font-size: 0.72rem; font-weight: 700; }
+  .week-now-line::before, .week-now-line::after { content: ''; flex: 1; border-top: 2px solid #c0392b; }
+  .week-now-line::before { flex: 0 0 10px; }
+  .week-slot.now-slot { outline: 2.5px solid #c0392b; outline-offset: 1px; }
 
   .week-slot {
     background: var(--card-bg); border-radius: 10px;
@@ -3204,7 +3211,7 @@ function toggleAllCards() {
 // ── 📌 TO REMEMBER: every pupil's "Next lesson" lines in one list ──
 // Same lines as the After tab (s.nextWeekNote, "☐ text" / "☑ text"), so ticking
 // here ticks there too. First tap ✓, second tap clears the line.
-let weekRememberOpen = true;
+let weekRememberOpen = false;   // starts closed so the timetable is on screen; tap to open
 function nextNoteLines(s) {
   return String(s.nextWeekNote || '').split('\n').map(function(l){ return l.trim(); }).filter(Boolean).map(function(l) {
     const done = l.charAt(0) === '☑';
@@ -3359,6 +3366,15 @@ function weekRememberTick(id, i) {
   renderFridayImportant();
 }
 
+// Keep the "now" line moving: redraw the Week page once a minute while it's
+// on screen (not while you're typing in it)
+setInterval(function() {
+  try {
+    const v = document.getElementById('view-week');
+    const a = document.activeElement;
+    if (v && v.classList.contains('active') && !(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName))) renderWeek();
+  } catch (e) {}
+}, 60000);
 function renderWeek() {
   const todayName = todayDayName();
   const onHoliday = isHolidayWeek();
@@ -3417,7 +3433,12 @@ function renderWeek() {
     const dayHrs = Math.floor(dayMins/60), dayRem = dayMins%60;
     const dayHrsLabel = dayMins > 0 ? (dayHrs>0?dayHrs+'h':'') + (dayRem>0?(dayHrs>0?' ':'')+dayRem+'m':'') : '';
 
-    html += `<div class="week-day">
+    // Really today (this week, today's date) rather than just the same weekday
+    const isRealToday = isToday && isoLocal(weekDayDate(day)) === isoLocal(effectiveNow());
+    const nowD = new Date(), nowMins = nowD.getHours() * 60 + nowD.getMinutes();
+    const nowLabel = String(nowD.getHours()).padStart(2, '0') + ':' + String(nowD.getMinutes()).padStart(2, '0');
+    let nowShown = false;
+    html += `<div class="week-day${isRealToday ? ' today-day' : ''}">
       <div class="week-day-header ${isToday?'today-header':''}">
         ${isToday?'<div class="today-dot"></div>':''}
         ${day}${isToday?' - Today':''}
@@ -3448,6 +3469,12 @@ function renderWeek() {
         html += gapHTML(minsToTime(prevEndMins), slot.time||'');
       }
       const thisLen = lenThisWeek(s, day);
+      // "Now" line: before the next lesson that hasn't started yet
+      const inProgress = isRealToday && !onHoliday && nowMins >= slotStart && nowMins < slotStart + thisLen;
+      if (isRealToday && !onHoliday && !nowShown && nowMins < slotStart) {
+        html += '<div class="week-now-line">now ' + nowLabel + '</div>'; nowShown = true;
+      }
+      if (inProgress) nowShown = true;
       prevEndMins = slotStart + thisLen;
       const moved = oneOffMoves[s.id] && oneOffMoves[s.id].week === currentWeek;
       // Find attendance for this pupil in the current teaching week
@@ -3473,11 +3500,11 @@ function renderWeek() {
         ? `<span style="font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:999px;border:1.5px dashed #ccc;color:#999;margin-left:6px;vertical-align:middle" title="Cancelled">–</span>`
         : '';
       const isAbsent = att === 'absent-late' || att === 'absent-notice';
-      html += `<div class="week-slot ${s.instrument}-slot dur-${thisLen}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer${isAbsent ? ';border:1px dashed #ddd;opacity:0.4;background:#fafafa' : onHoliday ? ';opacity:0.35;filter:grayscale(0.5)' : ''}">
+      html += `<div class="week-slot ${s.instrument}-slot dur-${thisLen}${inProgress ? ' now-slot' : ''}" onclick="openStudentFrom('${s.id}','week')" style="cursor:pointer${isAbsent ? ';border:1px dashed #ddd;opacity:0.4;background:#fafafa' : onHoliday ? ';opacity:0.35;filter:grayscale(0.5)' : ''}">
         <div class="slot-time">${slot.time||'-'}</div>
         <div class="slot-avatar avatar-${s.instrument}">${getInitials(s.name)}</div>
         <div class="slot-info">
-          <div class="slot-name">${s.name}${attBadge}${lenBadge(thisLen, s)}${s.followUp?` <span style="font-size:0.85rem" title="Follow up">🚩</span>`:''}${moved?` <span style="font-size:0.68rem;color:var(--violin);font-weight:700">MOVED</span>`:''}${s.frequency==='fortnightly'?' <span style="font-size:0.68rem;color:var(--muted);font-weight:600">fortnightly</span>':''}
+          <div class="slot-name">${s.name}${inProgress ? ' <span style="font-size:0.66rem;font-weight:700;color:#fff;background:#c0392b;border-radius:999px;padding:1px 7px;vertical-align:middle">now</span>' : ''}${attBadge}${lenBadge(thisLen, s)}${s.followUp?` <span style="font-size:0.85rem" title="Follow up">🚩</span>`:''}${moved?` <span style="font-size:0.68rem;color:var(--violin);font-weight:700">MOVED</span>`:''}${s.frequency==='fortnightly'?' <span style="font-size:0.68rem;color:var(--muted);font-weight:600">fortnightly</span>':''}
           </div>
         </div>
         <div class="slot-actions">
@@ -11347,35 +11374,79 @@ function removeExtraFromOverview(studentId, satKey) {
 }
 
 
-function nextPupilHTML(s) {
-  const todayName = todayDayName();
-  const todaySlots = students
-    // Same pupils as the Today list: no retired or skipped ones (the current pupil always counts)
-    .filter(p => effectiveSlot(p).day === todayName && (p.id === s.id || (!p.retired && !isSkipped(p.id))))
-    .sort((a,b) => (effectiveSlot(a).time||'').localeCompare(effectiveSlot(b).time||''));
-  const idx = todaySlots.findIndex(p => p.id === s.id);
-  if (idx === -1 || idx >= todaySlots.length - 1) return '';
-  const next = todaySlots[idx + 1];
-  const slot = effectiveSlot(next);
-  // Check if the next lesson is within 5 minutes
-  let imminent = false;
-  if (slot.time) {
-    const now = new Date();
-    const nowMins = now.getHours()*60 + now.getMinutes();
-    const [h,m] = slot.time.split(':').map(Number);
-    const diff = (h*60+m) - nowMins;
-    imminent = diff >= 0 && diff <= 5;
+// ── PREVIOUS / NEXT PUPIL ────────────────────────────────────────────────
+// Opened from Today: steps through today's pupils. Opened from anywhere else
+// (Week, Pupils, search): steps through the whole teaching week in timetable
+// order, Saturday to Wednesday. Swipe left/right on the pupil's name card too.
+function pupilRunList(s) {
+  const ok = function(p){ return p.id === s.id || (!p.retired && !isSkipped(p.id)); };
+  const byTime = function(a, b){ return (effectiveSlot(a).time || '').localeCompare(effectiveSlot(b).time || ''); };
+  if (prevView === 'today') {
+    const todayName = todayDayName();
+    const list = students.filter(function(p){ return effectiveSlot(p).day === todayName && ok(p); }).sort(byTime);
+    if (list.some(function(p){ return p.id === s.id; })) return { mode: 'today', list: list };
   }
-  const bg = imminent ? '#e67e22' : 'var(--string)';
-  const fg = imminent ? '#fff' : 'var(--ink)';
-  return `<div style="margin-top:10px">
-    <button onclick="openStudentFrom('${next.id}','today')"
-      style="width:100%;background:${bg};color:${fg};border:none;border-radius:10px;padding:12px 16px;font-family:'Special Elite',cursive;font-size:0.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
-      <span>Next →</span>
-      <span>${next.name}${slot.time ? ' · ' + slot.time : ''}</span>
-    </button>
-  </div>`;
+  const order = {}; DAYS.forEach(function(d, i){ order[d] = i; });
+  const list = students.filter(function(p){ const d = effectiveSlot(p).day; return d && order[d] !== undefined && ok(p); })
+    .sort(function(a, b){ return (order[effectiveSlot(a).day] - order[effectiveSlot(b).day]) || byTime(a, b); });
+  return { mode: 'week', list: list };
 }
+function nextPupilHTML(s) {
+  const run = pupilRunList(s), list = run.list;
+  const idx = list.findIndex(function(p){ return p.id === s.id; });
+  if (idx === -1) return '';
+  const prev = list[idx - 1], next = list[idx + 1];
+  if (!prev && !next) return '';
+  const lbl = function(p) { const sl = effectiveSlot(p); return (run.mode === 'week' ? (sl.day || '').slice(0, 3) + ' ' : '') + (sl.time || ''); };
+  // Next lesson within 5 minutes: orange (today only)
+  let imminent = false;
+  if (next && run.mode === 'today' && effectiveSlot(next).time) {
+    const now = new Date(), nowMins = now.getHours() * 60 + now.getMinutes();
+    const [h, m] = effectiveSlot(next).time.split(':').map(Number);
+    const diff = (h * 60 + m) - nowMins; imminent = diff >= 0 && diff <= 5;
+  }
+  const bg = imminent ? '#e67e22' : 'var(--string)', fg = imminent ? '#fff' : 'var(--ink)';
+  const btn = 'border:none;border-radius:10px;padding:12px 14px;font-family:\'Special Elite\',cursive;font-size:0.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:10px';
+  return '<div style="margin-top:10px;display:flex;gap:8px">'
+    + (prev ? '<button onclick="stepPupil(\'' + s.id + '\',-1)" title="Previous pupil" style="' + btn + ';flex:0 1 auto;max-width:40%;background:var(--warm);color:var(--ink)"><span>←</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(prev.name) + '</span></button>' : '')
+    + (next ? '<button onclick="stepPupil(\'' + s.id + '\',1)" style="' + btn + ';flex:1;justify-content:space-between;background:' + bg + ';color:' + fg + '"><span>' + (run.mode === 'week' ? 'Next in week' : 'Next') + ' →</span><span>' + esc(next.name) + ' · ' + esc(lbl(next)) + '</span></button>' : '<div style="flex:1;text-align:right;font-size:0.78rem;color:var(--muted);padding:12px 6px">' + (run.mode === 'week' ? 'Last pupil of the week' : 'Last pupil today') + '</div>')
+    + '</div>';
+}
+// Go to the previous / next pupil, staying on the same tab (Before, After…)
+function stepPupil(id, dir) {
+  const s = getStudent(id); if (!s) return;
+  const list = pupilRunList(s).list;
+  const idx = list.findIndex(function(p){ return p.id === id; });
+  const to = list[idx + dir]; if (!to) return;
+  const activeTab = document.querySelector('#view-detail .moment-tab.active');
+  const tabName = activeTab ? activeTab.textContent.trim() : '';
+  const keep = prevView;
+  openStudentFrom(to.id, keep);
+  if (tabName && tabName !== 'Before') {
+    const t = [...document.querySelectorAll('#view-detail .moment-tab')].find(function(x){ return x.textContent.trim() === tabName; });
+    if (t) t.click();
+  }
+  window.scrollTo(0, 0);
+}
+// Swipe on the pupil's name card (the top card) to move between pupils
+(function() {
+  let sx = 0, sy = 0, st = 0, ok = false;
+  document.addEventListener('touchstart', function(e) {
+    const v = document.getElementById('view-detail');
+    ok = !!(v && v.classList.contains('active') && e.touches.length === 1 && e.target.closest('.detail-header, #next-pupil-banner')
+      && !e.target.closest('input, textarea, select'));
+    if (!ok) return;
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now();
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    if (!ok) return; ok = false;
+    const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) < 70 || Math.abs(dy) > 50 || Date.now() - st > 700) return;
+    const nameEl = document.querySelector('#view-detail .detail-name');
+    const s = nameEl && students.find(function(p){ return p.name === nameEl.textContent.trim(); });
+    if (s) stepPupil(s.id, dx < 0 ? 1 : -1);   // swipe left = next, right = previous
+  }, { passive: true });
+})();
 
 // ── LESSON TIMER ──────────────────────────────────────────────────────────
 let timerInterval = null;
