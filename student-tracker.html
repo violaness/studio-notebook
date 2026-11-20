@@ -3240,25 +3240,31 @@ function weekRememberHTML() {
     Tuesday:   ['#dbe9f2', '#29789E', '#bcd5e6'],
     Wednesday: ['#e2e6f0', '#2c3e66', '#c9d0e2']
   };
-  const cards = people.map(function(s) {
+  // Sticky notes: a pastel post-it per pupil, colour by lesson day, pinned
+  // to a cork board with a slight tilt. Tap the name to open the pupil.
+  const NOTE_COLOURS = { Saturday: '#e3f0d4', Sunday: '#f3f7c8', Monday: '#d6eef6', Tuesday: '#dde6f3', Wednesday: '#e9e2f3' };
+  const TILTS = [-1.6, 1.2, -0.7, 1.5, -1.1, 0.8];
+  const cards = people.map(function(s, idx) {
     const slot = effectiveSlot(s);
     const tone = DAY_TONES[slot.day] || ['#eceae6', 'var(--ink)', '#dcd8d2'];
+    const paper = NOTE_COLOURS[slot.day] || '#efede8';
     const items = nextNoteLines(s).map(function(x, i){ return { x: x, i: i }; })
       .sort(function(a, b){ return noteLevel(b.x.text) - noteLevel(a.x.text) || a.i - b.i; });
     const firstPlain = items.findIndex(function(o){ return !noteLevel(o.x.text); });
     const hasJobs = items.some(function(o){ return noteLevel(o.x.text); });
-    return '<div style="background:#fff;border:2px solid ' + tone[2] + ';border-radius:14px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.05)">'
-      + '<div onclick="openStudentFrom(\'' + s.id + '\',\'week\')" style="cursor:pointer;background:' + tone[0] + ';color:' + tone[1] + ';padding:7px 12px;display:flex;align-items:baseline;gap:8px">'
-      + '<span style="font-size:0.95rem;font-weight:700">' + esc(s.name) + '</span>'
+    return '<div class="sticky-note" style="position:relative;background:' + paper + ';border-radius:3px 3px 10px 3px;padding:14px 12px 12px;box-shadow:0 5px 10px rgba(60,40,10,0.18);transform:rotate(' + TILTS[idx % TILTS.length] + 'deg)">'
+      + '<span style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);font-size:1.05rem">📌</span>'
+      + '<div onclick="openStudentFrom(\'' + s.id + '\',\'week\')" style="cursor:pointer;color:' + tone[1] + ';display:flex;align-items:baseline;gap:8px;margin-bottom:6px;border-bottom:1.5px dashed rgba(0,0,0,0.12);padding-bottom:5px">'
+      + '<span style="font-size:1rem;font-weight:700">' + esc(s.name) + '</span>'
       + '<span style="font-size:0.72rem;opacity:0.85">' + esc((slot.day || '').slice(0, 3)) + (slot.time ? ' ' + esc(slot.time) : '') + '</span>'
-      + '<span style="margin-left:auto;font-size:0.8rem;opacity:0.85">›</span></div>'
-      + '<div style="padding:8px 10px">'
+      + '<span style="margin-left:auto;font-size:0.8rem;opacity:0.7">›</span></div>'
+      + '<div>'
       + items.map(function(o, n) {
           const x = o.x, i = o.i, lvl = noteLevel(x.text);
           const bg = lvl === 2 ? '#c0392b' : lvl === 1 ? '#fde7e2' : '';
           const fg = lvl === 2 ? '#fff;font-weight:700' : lvl === 1 ? '#a3321f;font-weight:700' : 'var(--ink)';
           // a thin line between the jobs and the lesson things
-          const divider = (hasJobs && n === firstPlain) ? '<div style="border-top:1.5px dashed var(--warm);margin:6px 0 4px"></div>' : '';
+          const divider = (hasJobs && n === firstPlain) ? '<div style="border-top:1.5px dashed rgba(0,0,0,0.12);margin:6px 0 4px"></div>' : '';
           return divider + '<div style="display:flex;align-items:flex-start;gap:8px;padding:4px ' + (lvl ? '6px' : '2px') + (x.done ? ';opacity:0.55' : '') + (lvl ? ';background:' + bg + ';border-radius:8px;margin:3px 0' : '') + '">'
             + '<button onclick="weekRememberTick(\'' + s.id + '\',' + i + ')" title="' + (x.done ? 'Tap again to clear' : 'Tick') + '" style="flex:0 0 auto;width:24px;height:24px;border-radius:6px;border:2px solid ' + (lvl === 2 ? '#fff' : 'var(--viola)') + ';background:' + (x.done ? 'var(--viola)' : '#fff') + ';color:#fff;font-size:0.8rem;line-height:1;cursor:pointer;padding:0">' + (x.done ? '✓' : '') + '</button>'
             + '<span style="flex:1;font-size:0.88rem;line-height:1.35;color:' + fg + ';' + (x.done ? 'text-decoration:line-through' : '') + '">' + esc(stripNoteLevel(x.text)) + '</span>'
@@ -3275,7 +3281,7 @@ function weekRememberHTML() {
     + (jobs ? pill('❗ ' + jobs + ' to do before', '#fde7e2', '#a3321f', '#f0b4a8') : '')
     + (focus ? pill('🎻 ' + focus + ' for the lesson', '#e8f5e0', '#2F5C1A', '#bcd9ad') : '')
     + '<span class="tap-hint" data-closed="tap to open" style="margin-left:auto;font-size:0.75rem;color:var(--muted)"></span></summary>'
-    + '<div style="padding:4px 14px 14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;align-items:start">' + cards + '</div>'
+    + '<div style="margin:2px 12px 14px;padding:22px 16px 18px;background:#efe6d6;border-radius:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:24px 18px;align-items:start">' + cards + '</div>'
     + '</details>';
 }
 function weekRememberImportant(id, i) {
