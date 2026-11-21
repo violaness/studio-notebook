@@ -90,7 +90,9 @@
   .before-tiles > details > .before-tile-summary:active { transform: translateY(2px); box-shadow: 0 1px 6px rgba(5,39,11,0.18); }
   .before-tile-icon { font-size: 1.5rem; line-height: 1; }
   .before-tile-label { font-size: 0.8rem; font-weight: 600; line-height: 1.2; }
-  .before-tile-badge { display: inline-block; min-width: 20px; padding: 0 6px; border-radius: 999px; background: rgba(255,255,255,0.3); color: #fff; font-size: 0.72rem; font-weight: 700; margin-top: 2px; }
+  /* Count bubble sits in the top-right corner so every tile stays the same size */
+  .before-tile-summary { position: relative; }
+  .before-tile-badge { position: absolute; top: 8px; right: 10px; min-width: 22px; height: 22px; line-height: 22px; padding: 0 6px; box-sizing: border-box; border-radius: 999px; background: #e67e22; color: #fff; font-size: 0.74rem; font-weight: 700; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.25); margin: 0; }
   .before-tile-body { border-radius: 0 0 14px 14px; }
 
   /* ── NAV / FOLDER HEADER ── */
